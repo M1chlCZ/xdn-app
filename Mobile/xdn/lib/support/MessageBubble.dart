@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
-import 'package:konjungate/support/Swipeable.dart';
+import 'package:digitalnote/support/Swipeable.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../support/ColorScheme.dart';

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:konjungate/support/Dialogs.dart';
-import 'package:konjungate/support/NetInterface.dart';
-import 'package:konjungate/support/QCodeScanner.dart';
-import 'package:konjungate/support/RoundButton.dart';
+import 'package:digitalnote/support/Dialogs.dart';
+import 'package:digitalnote/support/NetInterface.dart';
+import 'package:digitalnote/support/QCodeScanner.dart';
+import 'package:digitalnote/support/RoundButton.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../support/CardHeader.dart';
@@ -14,10 +14,10 @@ class AddressAddScreen extends StatefulWidget {
   const AddressAddScreen({Key? key}) : super(key: key);
 
   @override
-  _AddressAddScreenState createState() => _AddressAddScreenState();
+  AddressAddScreenState createState() => AddressAddScreenState();
 }
 
-class _AddressAddScreenState extends State<AddressAddScreen> {
+class AddressAddScreenState extends State<AddressAddScreen> {
   final TextEditingController _controller = TextEditingController();
   final TextEditingController _controllerAddr = TextEditingController();
 

@@ -1,4 +1,4 @@
-library konjungate.globals;
+library digitalnote.globals;
 
 bool isLoggedIn = false;
 const String SERVER_URL = 'http://194.60.201.213:3000';

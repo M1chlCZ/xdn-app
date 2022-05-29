@@ -26,12 +26,13 @@ class DetailScreenState extends State<DetailScreenWidget>
   final GlobalKey<TransactionWidgetState> _keyTran = GlobalKey();
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
 
-  Future? _getBalance;
+  Future<Map<String, dynamic>>? _getBalance;
 
   AnimationController? animationController;
   AnimationController? animationSendController;
   Animation<double>? tween;
-
+  Animation<Offset>? sendTween;
+  Animation<double>? opacityTween;
   bool _forward = false;
 
   void refreshBalance() {
@@ -57,7 +58,13 @@ class DetailScreenState extends State<DetailScreenWidget>
         AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
     animationSendController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+
+    sendTween = Tween<Offset>(begin: const Offset(0, 0), end: const Offset(0, 0.28)).animate(
+        CurvedAnimation(parent: animationSendController!, curve: Curves.easeOut));
+
+    opacityTween = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: animationSendController!, curve: Curves.easeOut));
 
     tween = Tween<double>(begin: 1.0, end: 0.0).animate(
         CurvedAnimation(parent: animationController!, curve: Curves.easeOut));
@@ -77,7 +84,7 @@ class DetailScreenState extends State<DetailScreenWidget>
 
   void refreshDataScroll() {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(AppLocalizations.of(context)!.wl_refreshing + "..."),
+      content: Text("${AppLocalizations.of(context)!.wl_refreshing}..."),
       duration: const Duration(seconds: 1),
       backgroundColor: Colors.green,
       behavior: SnackBarBehavior.fixed,
@@ -126,7 +133,22 @@ class DetailScreenState extends State<DetailScreenWidget>
             decoration: const BoxDecoration(
               borderRadius: BorderRadius.all(Radius.circular(15.0)),
             ),
-            child: Stack(children: [
+            child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    child: FadeTransition(
+                      opacity: opacityTween!,
+                      child: SlideTransition(
+                        position: sendTween!,
+                        child: SendWidget(
+                          key: _key,
+                          func: shrinkSendView,
+                          balance: _getBalance,
+                        ),
+                      ),
+                    ),
+                  ),
               Column(
                 children: [
                   Padding(
@@ -137,9 +159,10 @@ class DetailScreenState extends State<DetailScreenWidget>
                       onPressSend: showTransactions,
                     ),
                   ),
-                  Stack(
-                    children: [
-                      FadeTransition(
+                  Expanded(
+                    child: IgnorePointer(
+                      ignoring: _forward ? true : false,
+                      child: FadeTransition(
                         opacity: tween!,
                         child: Container(
                           margin: const EdgeInsets.only(top: 10.0),
@@ -149,21 +172,7 @@ class DetailScreenState extends State<DetailScreenWidget>
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 0.0),
-                        child: SizeTransition(
-                          sizeFactor: CurvedAnimation(
-                              curve: Curves.decelerate, parent: animationSendController!),
-                          axis: Axis.vertical,
-                          axisAlignment: 3.0,
-                          child: SendWidget(
-                            key: _key,
-                            func: shrinkSendView,
-                            balance: _getBalance,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),

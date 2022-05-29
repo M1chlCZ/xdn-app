@@ -93,7 +93,7 @@ class TransactionView extends StatelessWidget {
             child: Container(
               alignment: Alignment.centerLeft,
               width: 280.0,
-              height: 62.0,
+              height: 64.0,
               padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
               child: Flex(
                 direction: Axis.horizontal,

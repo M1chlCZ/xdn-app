@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:konjungate/support/Message.dart';
+import 'package:digitalnote/support/Message.dart';
 
 import '../globals.dart' as globals;
 import '../support/AppDatabase.dart';
@@ -88,9 +88,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   }
 
   Future<List<dynamic>> _getMessages() async {
-    String? ss = await NetInterface.getBalance(details: true);
-    var sjson = json.decode(ss!);
-    _balance = (double.parse(sjson["balance"]));
+    Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
+    _balance = (double.parse(ss?["balance"]));
     _addr = await _storage.read(key: globals.ADR);
     var s = await AppDatabase().getMessages(_addr!, widget.mgroup.sentAddressOrignal!);
 

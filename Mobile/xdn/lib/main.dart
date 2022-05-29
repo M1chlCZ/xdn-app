@@ -11,6 +11,7 @@ import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'firebase_options.dart';
 import 'globals.dart' as globals;
 import 'screens/loginscreen.dart';
 import 'screens/mainMenuScreen.dart';
@@ -33,7 +34,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await SystemChrome.setPreferredOrientations(
     [
@@ -52,12 +55,12 @@ class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
-  _MyAppState createState() => _MyAppState();
-  static _MyAppState? of(BuildContext context) => context.findAncestorStateOfType<_MyAppState>();
+  MyAppState createState() => MyAppState();
+  static MyAppState? of(BuildContext context) => context.findAncestorStateOfType<MyAppState>();
 
 }
 
-class _MyAppState extends State<MyApp> {
+class MyAppState extends State<MyApp> {
   final storage = const FlutterSecureStorage();
   bool pinUsed = false;
   var ms= '';
@@ -105,6 +108,7 @@ class _MyAppState extends State<MyApp> {
     _setOptimalDisplayMode();
     super.initState();
     _getSetLang();
+    // storage.deleteAll();
   }
 
   Locale? _locale;

@@ -3,12 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
 import '../globals.dart' as globals;
@@ -16,7 +17,6 @@ import '../support/AppDatabase.dart';
 import '../support/ColorScheme.dart';
 import '../support/Contact.dart';
 import '../support/Dialogs.dart';
-import '../support/Encrypt.dart';
 import '../support/NetInterface.dart';
 import '../support/QCodeScanner.dart';
 import '../support/Utils.dart';
@@ -126,35 +126,31 @@ class SendWidgetState extends State<SendWidget> {
   void _sendCoins() async {
     Navigator.of(context).pop();
     try {
-      const storage = FlutterSecureStorage();
-      String? jwt = await storage.read(key: "jwt");
-      String? user = await storage.read(key: globals.USERNAME);
-      String? id = await storage.read(key: globals.ID);
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      String? user = await SecureStorage.read(key: globals.USERNAME);
+      String? id = await SecureStorage.read(key: globals.ID);
 
       String addr = _controllerAddress.text;
       String amnt = _controllerAmount.text;
-
+      Map<String, dynamic>? m;
       if (double.parse(amnt) > _balance!) {
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");
+        if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
         return;
       }
 
       if (double.parse(amnt) == 0.0) {
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.amount_empty);
+        if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.amount_empty);
         return;
       }
 
-      String? s;
-
-      if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
+      if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
         if (_recipient != null) {
           addr = _recipient!.addr!;
         } else {
-          displayDialog(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
+          if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
           return;
         }
       }
-
       setState(() {
         wait = true;
         succ = false;
@@ -163,16 +159,15 @@ class SendWidgetState extends State<SendWidget> {
       });
 
       if (_recipient == null) {
-        Map<String, dynamic> m = {
+        m = {
           "Authorization": jwt,
           "User": user,
           "request": "sendTransaction",
           "param1": addr,
           "param2": amnt,
         };
-        s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       } else {
-        Map<String, dynamic> mr = {
+        m = {
           "Authorization": jwt,
           "User": user,
           "id": id,
@@ -181,31 +176,16 @@ class SendWidgetState extends State<SendWidget> {
           "param2": amnt,
           "param3": _recipient!.name,
         };
-        s = encryptAESCryptoJS(json.encode(mr), "rp9ww*jK8KX_!537e%Crmf");
       }
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        setState(() {
-          wait = false;
-          succ = true;
-          fail = false;
-          sendView = false;
-          widget.func!();
-        });
-      } else {
-        setState(() {
-          wait = false;
-          succ = false;
-          fail = true;
-          sendView = false;
-          widget.func!();
-        });
-      }
+      ComInterface ci = ComInterface();
+      await ci.get("/data", request: m, debug: true);
+      setState(() {
+        wait = false;
+        succ = true;
+        fail = false;
+        sendView = false;
+        widget.func!();
+      });
     } on TimeoutException catch (_) {
       setState(() {
         succ = false;
@@ -266,8 +246,7 @@ class SendWidgetState extends State<SendWidget> {
   void _getCurrentBalance() async {
     var result = await widget.balance;
     setState(() {
-      Map m = json.decode(result);
-      _balance = double.parse(m['balance'].toString());
+      _balance = double.parse(result['balance'].toString());
     });
   }
 
@@ -277,11 +256,25 @@ class SendWidgetState extends State<SendWidget> {
     Future.delayed(const Duration(milliseconds: 200), () async {
       var status = await Permission.camera.status;
       if (await Permission.camera.isPermanentlyDenied) {
-        await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
+        if (mounted) await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
         openAppSettings();
       } else if (status.isDenied) {
         var r = await Permission.camera.request();
         if (r.isGranted) {
+          if (mounted) {
+            Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+              return QScanWidget(
+                scanResult: (String s) {
+                  _controllerAddress.text = s;
+                },
+              );
+            }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+              return FadeTransition(opacity: animation, child: child);
+            }));
+          }
+        }
+      } else {
+        if (mounted) {
           Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
             return QScanWidget(
               scanResult: (String s) {
@@ -292,16 +285,6 @@ class SendWidgetState extends State<SendWidget> {
             return FadeTransition(opacity: animation, child: child);
           }));
         }
-      } else {
-        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-          return QScanWidget(
-            scanResult: (String s) {
-              _controllerAddress.text = s;
-            },
-          );
-        }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-          return FadeTransition(opacity: animation, child: child);
-        }));
       }
     });
   }
@@ -322,18 +305,18 @@ class SendWidgetState extends State<SendWidget> {
           decoration: BoxDecoration(color: const Color(0xFF79ad66), border: Border.all(color: Colors.green), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width - 80,
-                  child: AutoSizeText(
-                    AppLocalizations.of(context)!.succ +'!',
-                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
-                    minFontSize: 8,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )),
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width - 80,
+              child: AutoSizeText(
+                '${AppLocalizations.of(context)!.succ}!',
+                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
+                minFontSize: 8,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )),
         ),
       ),
       Visibility(
@@ -373,7 +356,7 @@ class SendWidgetState extends State<SendWidget> {
             child: SizedBox(
               width: MediaQuery.of(context).size.width - 80,
               child: AutoSizeText(
-                AppLocalizations.of(context)!.st_insufficient +'!',
+                '${AppLocalizations.of(context)!.st_insufficient}!',
                 style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
                 minFontSize: 8,
                 maxLines: 1,
@@ -417,7 +400,6 @@ class SendWidgetState extends State<SendWidget> {
                                 noItemsFoundBuilder: (context) {
                                   return const SizedBox(width: 0, height: 0);
                                 },
-
                                 textFieldConfiguration: TextFieldConfiguration(
                                   maxLength: 40,
                                   maxLines: 1,
@@ -434,7 +416,7 @@ class SendWidgetState extends State<SendWidget> {
                                     hoverColor: Colors.white60,
                                     focusColor: Colors.white60,
                                     labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
-                                    hintText: AppLocalizations.of(context)!.address + ' / ' + AppLocalizations.of(context)!.contact,
+                                    hintText: '${AppLocalizations.of(context)!.address} / ${AppLocalizations.of(context)!.contact}',
                                     hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white),
                                   ),
                                 ),
@@ -559,8 +541,9 @@ class SendWidgetState extends State<SendWidget> {
                                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                         RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                 onPressed: () async {
-                                  String? s = await NetInterface.getBalance();
-                                  double max = double.parse(s!) - 0.001;
+                                  Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
+                                  _balance = double.parse(ss?["balance"]);
+                                  double max = _balance! - 0.001;
                                   _controllerAmount.text = max.toString();
                                   _controllerAmount.selection = TextSelection.fromPosition(TextPosition(offset: _controllerAmount.text.length));
                                 },
@@ -588,7 +571,7 @@ class SendWidgetState extends State<SendWidget> {
                                     ),
                                     label: Text(
                                       AppLocalizations.of(context)!.send.toUpperCase(),
-                                      style: Theme.of(context).textTheme.bodyText1,
+                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 22.0),
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),

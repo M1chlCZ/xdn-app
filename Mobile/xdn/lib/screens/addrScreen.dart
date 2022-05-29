@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:konjungate/screens/addrAddScreen.dart';
-import 'package:konjungate/support/MessageGroup.dart';
-import 'package:konjungate/support/NetInterface.dart';
+import 'package:digitalnote/screens/addrAddScreen.dart';
+import 'package:digitalnote/support/MessageGroup.dart';
+import 'package:digitalnote/support/NetInterface.dart';
 
 import '../globals.dart' as globals;
 import '../screens/messageComposeScreen.dart';
@@ -116,9 +116,8 @@ class AddressScreenState extends State<AddressScreen> {
   }
 
   void _sendBoxCallback(String amount, String name, String addr) async {
-    String? ss = await NetInterface.getBalance(details: true);
-    var sjson = json.decode(ss!);
-    double _balance = (double.parse(sjson["balance"]));
+    Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
+    double _balance = (double.parse(ss?["balance"]));
     Navigator.of(context).pop();
     if(double.parse(amount) > _balance) {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");

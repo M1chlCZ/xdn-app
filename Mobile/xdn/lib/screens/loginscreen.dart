@@ -2,26 +2,25 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:konjungate/globals.dart' as globals;
-import 'package:konjungate/screens/mainMenuScreen.dart';
-import 'package:konjungate/screens/registerscreen.dart';
-import 'package:konjungate/support/Encrypt.dart';
-import 'package:konjungate/widgets/BackgroundWidget.dart';
+import 'package:digitalnote/globals.dart' as globals;
+import 'package:digitalnote/screens/mainMenuScreen.dart';
+import 'package:digitalnote/screens/registerscreen.dart';
+import 'package:digitalnote/support/Encrypt.dart';
+import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:styled_text/styled_text.dart';
 
 import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
 
 const SERVER_IP = globals.SERVER_URL;
-const storage = FlutterSecureStorage();
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -48,21 +47,27 @@ class _LoginState extends State<LoginPage> {
     }).timeout(const Duration(seconds: 10));
 
     if (res.contentLength == 0) {
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, "Failure!",
-          "There is an issue with service, please try again later");
+      if (mounted) {
+        Navigator.of(context).pop();
+        Dialogs.openAlertBox(context, "Failure!",
+            "There is an issue with service, please try again later");
+      }
       return null;
     }
 
     if (res.statusCode == 200) {
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, "Success!",
-          "Your new password has been sent to your e-mail");
+      if (mounted) {
+        Navigator.of(context).pop();
+        Dialogs.openAlertBox(context, "Success!",
+            "Your new password has been sent to your e-mail");
+      }
       return res.body;
     } else {
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, "Failure!",
-          "There are no matching credentials in KONJUNGATE database");
+      if (mounted) {
+        Navigator.of(context).pop();
+        Dialogs.openAlertBox(context, "Failure!",
+            "There are no matching credentials in KONJUNGATE database");
+      }
       return null;
     }
   }
@@ -101,15 +106,15 @@ class _LoginState extends State<LoginPage> {
         var adminPriv = r["admin"];
         var nickname = r["nickname"];
 
-        storage.write(key: globals.USERNAME, value: username);
-        storage.write(key: globals.ADR, value: addr);
-        storage.write(key: globals.ID, value: userID.toString());
-        storage.write(key: globals.TOKEN, value: jwt);
-        storage.write(key: globals.ADMINPRIV, value: adminPriv.toString());
-        storage.write(key: globals.NICKNAME, value: nickname.toString());
+        SecureStorage.write(key: globals.USERNAME, value: username);
+        SecureStorage.write(key: globals.ADR, value: addr);
+        SecureStorage.write(key: globals.ID, value: userID.toString());
+        SecureStorage.write(key: globals.TOKEN, value: jwt);
+        SecureStorage.write(key: globals.ADMINPRIV, value: adminPriv.toString());
+        SecureStorage.write(key: globals.NICKNAME, value: nickname.toString());
 
         String udid = await FlutterUdid.consistentUdid;
-        storage.write(key: globals.UDID, value: udid);
+        SecureStorage.write(key: globals.UDID, value: udid);
         Map<String, dynamic> m = {
           "error": false,
           "message": res.body,
@@ -160,7 +165,7 @@ class _LoginState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    Locale _myLocale = Localizations.localeOf(context);
+    Locale myLocale = Localizations.localeOf(context);
     return Stack(
       children: [
         const BackgroundWidget(
@@ -202,6 +207,7 @@ class _LoginState extends State<LoginPage> {
           backgroundColor: Colors.transparent,
           bottomNavigationBar: BottomAppBar(
             color: Colors.transparent,
+            elevation: 0,
             child: GestureDetector(
               onTap: () {
                 Dialogs.openForgotPasswordBox(context, _checkSendEmail);
@@ -216,7 +222,6 @@ class _LoginState extends State<LoginPage> {
                     fontSize: 16.0),
               ),
             ),
-            elevation: 0,
           ),
           body: Padding(
             padding: const EdgeInsets.all(25.0),
@@ -246,7 +251,7 @@ class _LoginState extends State<LoginPage> {
                                 decoration: InputDecoration(
                                   fillColor: Colors.black26,
                                   filled: true,
-                                  hintText: AppLocalizations.of(context)!.username + " | " + AppLocalizations.of(context)!.email,
+                                  hintText: "${AppLocalizations.of(context)!.username} | ${AppLocalizations.of(context)!.email}",
                                   hintStyle:
                                       Theme.of(context).textTheme.subtitle1,
                                   contentPadding: const EdgeInsets.fromLTRB(
@@ -308,7 +313,7 @@ class _LoginState extends State<LoginPage> {
                             Container(
                               width: double.infinity,
                               margin: const EdgeInsets.all(5.0),
-                              child: _myLocale.languageCode == "fi" ? StyledText(
+                              child: myLocale.languageCode == "fi" ? StyledText(
                                 style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
                                 textAlign: TextAlign.center,
                                 text: AppLocalizations.of(context)!.login_can_use,
@@ -323,7 +328,7 @@ class _LoginState extends State<LoginPage> {
                                   children: <TextSpan>[
                                     TextSpan(text: ' wendy.network', style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, fontWeight: FontWeight.bold)),
                                 TextSpan(
-                                  text: ' ' + AppLocalizations.of(context)!.login.toString().toLowerCase(),
+                                  text: ' ${AppLocalizations.of(context)!.login.toString().toLowerCase()}',
                                   style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
                                 )],
                                 ),
@@ -349,11 +354,11 @@ class _LoginState extends State<LoginPage> {
                                     child: InkWell(
                                         splashColor: Theme.of(context).konjCardColor,
                                         onTap: () async {
-                                          var _username =
+                                          var username =
                                               _usernameController.text;
-                                          var _password =
+                                          var password =
                                               _passwordController.text;
-                                          if(_username.isEmpty || _password.isEmpty) {
+                                          if(username.isEmpty || password.isEmpty) {
                                             Dialogs.openAlertBox(
                                                 context,
                                                 AppLocalizations.of(context)!.warning,
@@ -362,21 +367,24 @@ class _LoginState extends State<LoginPage> {
                                           }
                                           Dialogs.openWaitBox(context);
                                           var jwt = await attemptLogIn(context,
-                                              _username, _password);
+                                              username, password);
                                           if (jwt['error'] == false) {
-                                            Navigator.of(context).pop();
-                                            // storage.write(key: "jwt", value: jwt);
-                                            Navigator.pushReplacement(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const MainMenuScreen()));
+                                            if (mounted) {
+                                              Navigator.of(context).pop();
+                                              Navigator.pushReplacement(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const MainMenuScreen()));
+                                            }
                                           } else {
-                                            Navigator.of(context).pop();
-                                            Dialogs.openAlertBox(
-                                                context,
-                                                AppLocalizations.of(context)!.error_occur,
-                                                jwt['message']);
+                                            if (mounted) {
+                                              Navigator.of(context).pop();
+                                              Dialogs.openAlertBox(
+                                                  context,
+                                                  AppLocalizations.of(context)!.error_occur,
+                                                  jwt['message']);
+                                            }
                                           }
                                         },
                                         child: Padding(

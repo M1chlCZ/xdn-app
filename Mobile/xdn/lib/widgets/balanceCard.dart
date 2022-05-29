@@ -10,7 +10,7 @@ import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
 
 class BalanceCard extends StatefulWidget {
-  final Future? getBalanceFuture;
+  final Future<Map<String,dynamic>>? getBalanceFuture;
   final VoidCallback? onPressSend;
 
   BalanceCard({Key? key, this.getBalanceFuture, this.onPressSend}) : super(key: key);
@@ -44,11 +44,11 @@ class BalanceCardState extends State<BalanceCard> {
               Column(
                 children: <Widget>[
                   SizedBox(height: 10),
-                  FutureBuilder(
+                  FutureBuilder<Map<String, dynamic>>(
                       future: widget.getBalanceFuture,
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
-                          Map m = json.decode(snapshot.data.toString());
+                          Map<String, dynamic> m = snapshot.data!;
                           var balance = m['balance'].toString();
                           var immature = m['immature'].toString();
                           var textImature = immature == '0.000' ? '' : AppLocalizations.of(context)!.immature + ": " + immature + " KONJ";

@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:konjungate/support/Dialogs.dart';
-import 'package:konjungate/support/MessageGroup.dart';
-import 'package:konjungate/widgets/AvatarPicker.dart';
+import 'package:digitalnote/support/Dialogs.dart';
+import 'package:digitalnote/support/MessageGroup.dart';
+import 'package:digitalnote/widgets/AvatarPicker.dart';
 
 import '../support/ColorScheme.dart';
 import '../support/SimpleRichText.dart';

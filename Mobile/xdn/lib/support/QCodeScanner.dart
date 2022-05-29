@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:konjungate/support/CardHeader.dart';
+import 'package:digitalnote/support/CardHeader.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class QScanWidget extends StatefulWidget {

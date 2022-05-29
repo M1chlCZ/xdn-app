@@ -1,2 +1,2 @@
-# Konjugate-app-wallet
-App Wallet for the KONJUNGATE project
+# XDN-app-wallet
+App Wallet for the XDN project

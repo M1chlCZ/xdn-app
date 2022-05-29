@@ -27,7 +27,7 @@ class AvatarPicker extends StatefulWidget {
 }
 
 class _AvatarPickerState extends State<AvatarPicker> {
-  var storage = FlutterSecureStorage();
+  var storage = const FlutterSecureStorage();
 
   var _image64;
   File? _imageFile;
@@ -159,8 +159,8 @@ class _AvatarPickerState extends State<AvatarPicker> {
                 CropAspectRatioPreset.square,
               ],
         androidUiSettings:
-            AndroidUiSettings(toolbarTitle: '', toolbarColor: Colors.deepPurpleAccent, toolbarWidgetColor: Colors.white, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: true),
-        iosUiSettings: IOSUiSettings(
+            const AndroidUiSettings(toolbarTitle: '', toolbarColor: Colors.deepPurpleAccent, toolbarWidgetColor: Colors.white, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: true),
+        iosUiSettings: const IOSUiSettings(
           rectHeight: 512.0,
           rectWidth: 512.0,
           rectX: 0,
@@ -175,7 +175,7 @@ class _AvatarPickerState extends State<AvatarPicker> {
         ));
     if (croppedFile == null) return;
 
-    imageCache!.clear();
+    imageCache.clear();
 
     ImageProperties properties = await FlutterNativeImage.getImageProperties(croppedFile.path);
     File compressedFile = await FlutterNativeImage.compressImage(croppedFile.path, quality: 80, targetWidth: 512, targetHeight: (properties.height! * 512 / properties.width!.toInt()).round());
@@ -198,7 +198,7 @@ class _AvatarPickerState extends State<AvatarPicker> {
       return Image.file(_imageFile!);
     } else {
       if (_image64 != null) return Image.memory(base64Decode(_image64));
-      return Icon(
+      return const Icon(
         FontAwesomeIcons.userAstronaut,
         size: 55.0,
       );

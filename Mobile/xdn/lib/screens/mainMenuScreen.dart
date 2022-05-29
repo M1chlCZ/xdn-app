@@ -11,7 +11,7 @@ import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:konjungate/support/AppDatabase.dart';
+import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
 
@@ -35,10 +35,10 @@ class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({Key? key, this.locale}) : super(key: key);
 
   @override
-  _MainMenuScreenState createState() => _MainMenuScreenState();
+  MainMenuScreenState createState() => MainMenuScreenState();
 }
 
-class _MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
+class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
   final GlobalKey<MessageScreenState> _messageScreenKey = GlobalKey<MessageScreenState>();
   final GlobalKey<DetailScreenState> _walletScreenKey = GlobalKey<DetailScreenState>();
   final GlobalKey<StakingScreenState> _stakingScreenKey = GlobalKey<StakingScreenState>();
@@ -55,7 +55,6 @@ class _MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
 
 
   void _callback(String name) {
-
       if(name == AppLocalizations.of(context)!.menu_wallet) {
         Navigator.of(context).push(CupertinoPageRoute(
             builder: (context) => DetailScreenWidget(
@@ -174,7 +173,7 @@ class _MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
                             //   message += '_' +_myLocale.scriptCode!;
                             // }
                             // Dialogs.openAlertBox(context, 'Info', message);
-                            _launchURL("https://konjungate.net");
+                            _launchURL("https://digitalnote.net");
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(15.5),

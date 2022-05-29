@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:konjungate/support/AppDatabase.dart';
+import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:vector_math/vector_math.dart' show radians;
 
 import '../support/MenuButton.dart';

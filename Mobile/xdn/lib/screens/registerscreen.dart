@@ -5,20 +5,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:http/http.dart' as http;
-import 'package:konjungate/globals.dart' as globals;
-import 'package:konjungate/screens/loginscreen.dart';
-import 'package:konjungate/support/Dialogs.dart';
-import 'package:konjungate/support/Encrypt.dart';
-import 'package:konjungate/widgets/BackgroundWidget.dart';
+import 'package:digitalnote/globals.dart' as globals;
+import 'package:digitalnote/screens/loginscreen.dart';
+import 'package:digitalnote/support/Dialogs.dart';
+import 'package:digitalnote/support/Encrypt.dart';
+import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:styled_text/styled_text.dart';
 
 import '../support/ColorScheme.dart';
 
 const SERVER_IP = globals.SERVER_URL;
-const storage = FlutterSecureStorage();
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);

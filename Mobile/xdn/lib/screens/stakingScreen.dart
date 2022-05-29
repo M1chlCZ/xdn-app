@@ -36,8 +36,7 @@ class StakingScreen extends StatefulWidget {
   StakingScreenState createState() => StakingScreenState();
 }
 
-class StakingScreenState extends LifecycleWatcherState<StakingScreen>
-    with TickerProviderStateMixin {
+class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   var _dropdownValue = 0;
   var _getBalanceFuture;
   final _controller = TextEditingController();
@@ -146,20 +145,24 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
 
       _serverStatus = await NetInterface.sendStakeCoins(amnt.toString());
       if (_serverStatus == 2) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
-            AppLocalizations.of(context)!.st_cannot_stake);
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
+              AppLocalizations.of(context)!.st_cannot_stake);
+        }
         return;
       } else if (_serverStatus == 4) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
-            AppLocalizations.of(context)!.st_not_balance);
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
+              AppLocalizations.of(context)!.st_not_balance);
+        }
         return;
       }
-      var _endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
-      _storage.write(key: globals.COUNTDOWN, value: _endTime.toString());
+      var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
+      _storage.write(key: globals.COUNTDOWN, value: endTime.toString());
       setState(() {
-        endTime = _endTime;
+        endTime = endTime;
         FocusScope.of(context).unfocus();
       });
       _awaitingNot = true;
@@ -203,9 +206,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
       }
     });
     if (i == 2) {
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert,
-          AppLocalizations.of(context)!.st_24h_timeout);
+      if (mounted) {
+        Navigator.of(context).pop();
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert,
+            AppLocalizations.of(context)!.st_24h_timeout);
+      }
       return;
     }
   }
@@ -247,17 +252,19 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
   static List<StakeData> _getData(String response) {
     try {
       List responseList = json.decode(response);
-      var _amount = 0.0;
+      var amount = 0.0;
       var l = List.generate(responseList.length, (i) {
-        _amount = _amount + responseList[i]['amount'];
+        amount = amount + responseList[i]['amount'];
         return StakeData(
           date: DateTime.parse(responseList[i]['date']),
-          amount: _amount,
+          amount: amount,
         );
       });
       return l;
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
       return [];
     }
   }
@@ -285,7 +292,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
         return max;
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
     return max;
   }
@@ -340,13 +349,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
   }
 
   void _checkCountdown() async {
-    var _countDown = await _storage.read(key: globals.COUNTDOWN);
-    if (_countDown != null) {
+    var countDown = await _storage.read(key: globals.COUNTDOWN);
+    if (countDown != null) {
       int nowDate = DateTime.now().millisecondsSinceEpoch;
-      int countTime = int.parse(_countDown);
+      int countTime = int.parse(countDown);
       if (nowDate < countTime) {
         setState(() {
-          endTime = int.parse(_countDown);
+          endTime = int.parse(countDown);
         });
       } else {
         setState(() {
@@ -370,8 +379,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
     }
 
     if (data.isNotEmpty) {
-      List<FlSpot>? _valuesData;
-      _valuesData = data
+      List<FlSpot>? valuesData;
+      valuesData = data
           .map((stakeData) {
             if (_dropdownValue == 0) {
               var hours = Jiffy(stakeData.date).hour;
@@ -392,7 +401,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
           .cast<FlSpot>()
           .toList();
 
-      values!.addAll(_valuesData);
+      values!.addAll(valuesData);
     }
 
     try {
@@ -405,7 +414,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
   @override
   Widget build(BuildContext context) {
     final List<int> showIndexes = [values!.length - 1];
-    final _lineBarData = [
+    final lineBarData = [
       LineChartBarData(
         spots: values,
         showingIndicators: showIndexes,
@@ -453,10 +462,10 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
           maxY: _maxY,
           showingTooltipIndicators: showIndexes.map((index) {
             return ShowingTooltipIndicators([
-              LineBarSpot(_lineBarData[0], 0, values![index]),
+              LineBarSpot(lineBarData[0], 0, values![index]),
             ]);
           }).toList(),
-          lineBarsData: _lineBarData,
+          lineBarsData: lineBarData,
           lineTouchData: LineTouchData(
               touchCallback:
                   (FlTouchEvent? event, LineTouchResponse? touchResponse) {
@@ -523,7 +532,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                             fontSize: 12),
                         children: [
                           TextSpan(
-                            text: flSpot.y.toStringAsFixed(3) + " KONJ",
+                            text: "${flSpot.y.toStringAsFixed(3)} KONJ",
                             style: Theme.of(context)
                                 .textTheme
                                 .headline5!
@@ -580,9 +589,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                               size: 20,
                             ),
                             currentIndex: _dropdownValue,
-                            child: const Text(
-                              'dropdown',
-                            ),
                             onChange: (int value, int index) {
                               values!.clear();
                               setState(() {});
@@ -635,6 +641,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                   ),
                                 )
                                 .toList(),
+                            child: const Text(
+                              'dropdown',
+                            ),
                           ),
                         ),
 
@@ -767,7 +776,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                       });
                                       return Expanded(
                                         child: AutoSizeText(
-                                          _balance + " KONJ",
+                                          "$_balance KONJ",
                                           minFontSize: 8.0,
                                           maxLines: 1,
                                           overflow: TextOverflow.fade,
@@ -794,13 +803,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                                 CrossAxisAlignment.center,
                                             children: const <Widget>[
                                               SizedBox(
+                                                  height: 24.0,
+                                                  width: 24.0,
                                                   child:
                                                       CircularProgressIndicator(
                                                     backgroundColor:
                                                         Colors.black45,
-                                                  ),
-                                                  height: 24.0,
-                                                  width: 24.0),
+                                                  )),
                                             ]),
                                       );
                                     }
@@ -825,7 +834,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                               fontSize: 14.0,
                                               color: Colors.white38)),
                                   Expanded(
-                                    child: AutoSizeText(_imature + " KONJ",
+                                    child: AutoSizeText("$_imature KONJ",
                                         minFontSize: 8.0,
                                         maxLines: 1,
                                         overflow: TextOverflow.fade,
@@ -851,7 +860,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                   style: Theme.of(context).textTheme.headline5),
                               Expanded(
                                 child: AutoSizeText(
-                                  _stakeAmount.toString() + " KONJ",
+                                  "$_stakeAmount KONJ",
                                   minFontSize: 8.0,
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
@@ -911,7 +920,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  _locked.toString() + " KONJ",
+                                                  "$_locked KONJ",
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .headline6!
@@ -942,7 +951,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  _reward.toString() + " KONJ",
+                                                  "$_reward KONJ",
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .headline6!
@@ -1225,17 +1234,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                         height: 47,
                                         width: 100,
                                         child: TextButton(
-                                          child: Text(
-                                              AppLocalizations.of(context)!
-                                                  .send
-                                                  .toUpperCase(),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline6!
-                                                  .copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 14.0)),
                                           style: ButtonStyle(
                                               backgroundColor:
                                                   MaterialStateProperty.resolveWith(
@@ -1252,6 +1250,17 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                                               .transparent)))),
                                           onPressed: () =>
                                               _sendStakeCoins(_controller.text),
+                                          child: Text(
+                                              AppLocalizations.of(context)!
+                                                  .send
+                                                  .toUpperCase(),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headline6!
+                                                  .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 14.0)),
                                         ),
                                       ),
                                     )
@@ -1373,13 +1382,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                             _unstakeCoins(1);
                             // Dialogs.openUserQR(context);
                           },
-                          child: Text(
-                            AppLocalizations.of(context)!.st_withdraw_reward,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(fontSize: 18.0),
-                          ),
                           style: ButtonStyle(
                               backgroundColor:
                                   MaterialStateProperty.resolveWith(
@@ -1391,6 +1393,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                       side: BorderSide(
                                           color: Theme.of(context)
                                               .konjHeaderColor)))),
+                          child: Text(
+                            AppLocalizations.of(context)!.st_withdraw_reward,
+                            style: Theme.of(context)
+                                .textTheme
+                                .headline5!
+                                .copyWith(fontSize: 18.0),
+                          ),
                         ),
                       ),
                     ),
@@ -1410,13 +1419,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                 _unstakeCoins(0);
                                 // Dialogs.openUserQR(context);
                               },
-                              child: Text(
-                                AppLocalizations.of(context)!.st_withdraw_all,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline5!
-                                    .copyWith(fontSize: 18.0),
-                              ),
                               style: ButtonStyle(
                                   backgroundColor:
                                       MaterialStateProperty.resolveWith(
@@ -1428,6 +1430,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                               BorderRadius.circular(10.0),
                                           side: const BorderSide(
                                               color: Colors.transparent)))),
+                              child: Text(
+                                AppLocalizations.of(context)!.st_withdraw_all,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headline5!
+                                    .copyWith(fontSize: 18.0),
+                              ),
                             ),
                           ),
                         ),
@@ -1463,16 +1472,15 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
 
   String _getToolTip(int time) {
     if (_dropdownValue == 0) {
-      return _getMeTime("0000-00-00 " +
-              Duration(minutes: time).toHoursMinutes().toString()) +
-          '\n';
+      return '${_getMeTime("0000-00-00 " +
+              Duration(minutes: time).toHoursMinutes().toString())}\n';
       // return '${Duration(minutes: time).toHoursMinutes().toString()} \n';
     } else if (_dropdownValue == 1) {
       // print(_date);
       List<String> dateParts = _date.toString().split("-");
-      String _tm = time < 10 ? "0" + time.toString() : time.toString();
-      String _dt = dateParts[0] + "-" + dateParts[1] + "-" + _tm;
-      return _getMeDate(_dt) + '\n';
+      String tm = time < 10 ? "0$time" : time.toString();
+      String dt = "${dateParts[0]}-${dateParts[1]}-$tm";
+      return '${_getMeDate(dt)}\n';
       // return '${_formatCountdownTime(Duration(days: time).inDays.toInt()) + "." + dateParts[1] + "." + dateParts[0]} \n';
     } else {
       return '${Duration(days: time * 31).inDays.toString()} \n';
@@ -1484,7 +1492,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
       return "00";
     } else if (time < 10) {
       var s = time.toString();
-      return '0' + s;
+      return '0$s';
     } else {
       return time.toString();
     }
@@ -1524,16 +1532,16 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
           .copyWith(color: Colors.white54, fontSize: 10.0),
       getTitles: (value) {
         if (_dropdownValue == 0) {
-          String _d = Duration(minutes: value.toInt()).toHoursMinutes();
-          String _dd = _getMeTime("0000-00-00 " + _d);
-          List<String> _dateParts = _dd.toString().split(" ");
-          String _finalDate = "";
-          if (_dateParts.length == 1) {
-            _finalDate = _dd;
+          String d = Duration(minutes: value.toInt()).toHoursMinutes();
+          String dd = _getMeTime("0000-00-00 $d");
+          List<String> dateParts = dd.toString().split(" ");
+          String finalDate = "";
+          if (dateParts.length == 1) {
+            finalDate = dd;
           } else {
-            _finalDate = _dateParts[0] + _dateParts[1];
+            finalDate = dateParts[0] + dateParts[1];
           }
-          return _finalDate;
+          return finalDate;
         } else if (_dropdownValue == 1) {
           Duration d = Duration(days: value.toInt());
           return d.inDays.toString();
@@ -1594,9 +1602,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
 
   String _formatTitles(int i) {
     if (i >= 1000) {
-      return (i / 1000).round().toString() + "k";
+      return "${(i / 1000).round()}k";
     } else if (i >= 500) {
-      return (i / 1000).toString() + "k";
+      return "${i / 1000}k";
     } else {
       return i.toString();
     }

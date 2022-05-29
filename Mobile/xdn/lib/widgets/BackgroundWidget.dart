@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:konjungate/support/BackgroundArc.dart';
+import 'package:digitalnote/support/BackgroundArc.dart';
 
 class BackgroundWidget extends StatefulWidget {
   final bool mainMenu;

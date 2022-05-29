@@ -45,7 +45,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.m1chl.konjungate"
+        applicationId "com.m1chl.xdn"
         minSdkVersion 21
         targetSdkVersion 31
         versionCode flutterVersionCode.toInteger()
