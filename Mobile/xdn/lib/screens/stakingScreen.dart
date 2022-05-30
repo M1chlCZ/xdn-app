@@ -38,7 +38,7 @@ class StakingScreen extends StatefulWidget {
 
 class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   var _dropdownValue = 0;
-  var _getBalanceFuture;
+  Future? _getBalanceFuture;
   final _controller = TextEditingController();
   final _storage = const FlutterSecureStorage();
   AnimationController? animationStakeController;
@@ -74,12 +74,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   @override
   void initState() {
     super.initState();
-
     animationStakeController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));
     _getBalance();
     // _graphByDay();
-    _checkCountdown();
+    // _checkCountdown();
     t = Timer.periodic(const Duration(minutes: 1), (Timer t) {
       if (!_paused && mounted) {
         if (_dropdownValue == 0) {
@@ -761,7 +760,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData) {
                                       Map m =
-                                          json.decode(snapshot.data.toString());
+                                          snapshot.data as Map<String, dynamic>;
                                       _balance = m['balance'].toString();
                                       _imature = m['immature'].toString();
                                       t = Timer(

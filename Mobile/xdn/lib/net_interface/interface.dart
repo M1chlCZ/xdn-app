@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:requests/requests.dart';
 import '../globals.dart' as globals;
 
@@ -17,79 +16,64 @@ class ComInterface {
   static const int typeJson = 3;
   final String _baseUrl = "https://www.exbitron.com/api/v2/peatio/";
 
-  static BuildContext? _ctx;
-
-  static void passContext(BuildContext context) {
-    _ctx = context;
-  }
-
   Future<dynamic> get(String url,
       {required Map<String, dynamic> request, bool wholeURL = false, Map<String, dynamic>? query, dynamic body, int type = 0, int typeContent = typeJson, bool debug = false}) async {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
-    String? id = await SecureStorage.read(key: globals.ID);
     dynamic responseJson;
-    dynamic _body;
-    dynamic response;
+    dynamic mBody;
+    Response response;
     if (body != null) {
-      _body = json.encode(body);
+      mBody = json.encode(body);
     }
-    try {
-      var _url = "";
-      if (!wholeURL) {
-        _url = globals.SERVER_URL + url;
-      } else {
-        _url = url;
-      }
-      Map<String, String> mHeaders = {
-        "Authorization": jwt!,
-        "Content-Type": "application/json",
-        "payload": encryptAESCryptoJS(json.encode(request), "rp9ww*jK8KX_!537e%Crmf"),
-      };
 
-      response = await Requests.get(_url, headers: mHeaders, queryParameters: query, json: _body, timeoutSeconds: 20);
-      if (debug) {
-        debugPrint(_url);
-        var rr = response as Response;
-        var data = decryptAESCryptoJS(rr.content().toString(), "rp9ww*jK8KX_!537e%Crmf");
-        debugPrint(data);
-      }
-      if (typeContent == typePlain) {
-        return response;
-      }
-      responseJson = _returnResponse(response);
-    } on SocketException {
-      Map<String, dynamic> error = {
-        "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
-        "statusCode": response.statusCode,
-        "messageBody": response.content().toString(),
-      };
-      throw FetchDataException(error);
+    var mUrl = "";
+    if (!wholeURL) {
+      mUrl = globals.SERVER_URL + url;
+    } else {
+      mUrl = url;
     }
+    Map<String, String> mHeaders = {
+      "Authorization": jwt!,
+      "Content-Type": "application/json",
+      "payload": encryptAESCryptoJS(json.encode(request), "rp9ww*jK8KX_!537e%Crmf"),
+    };
+
+    response = await Requests.get(mUrl, headers: mHeaders, queryParameters: query, json: mBody, timeoutSeconds: 20);
+    if (debug) {
+      debugPrint(mUrl);
+      var rr = response;
+      var data = decryptAESCryptoJS(rr.content().toString(), "rp9ww*jK8KX_!537e%Crmf");
+      debugPrint(data);
+    }
+    if (typeContent == typePlain) {
+      return response;
+    }
+    responseJson = compute(_returnResponse, response);
+
     return responseJson;
   }
 
   Future<dynamic> post(String url, {required Map<String, dynamic> request, int type = 0, dynamic body, int typeContent = typeJson, bool debug = false, bool bandwidth = false}) async {
-    SecureStorage.read(key: "JWT");
-    String? jwt = await SecureStorage.read(key: "jwt");
+    String? jwt = await SecureStorage.read(key: globals.TOKEN);
     dynamic responseJson;
     Response response;
 
-    var _url = _baseUrl + url;
+    var mUrl = _baseUrl + url;
     Map<String, String> mHeaders = {
       "Authorization": jwt ?? "",
       "Content-Type": "application/json",
       "payload": encryptAESCryptoJS(json.encode(request), "rp9ww*jK8KX_!537e%Crmf"),
     };
-    response = await Requests.post(_url, verify: false, headers: mHeaders, timeoutSeconds: 20);
+    response = await Requests.post(mUrl, verify: false, headers: mHeaders, timeoutSeconds: 20);
     if (debug) {
-      debugPrint(_url);
+      debugPrint(mUrl);
       var rr = response;
       debugPrint(rr.content());
     }
     if (typeContent == typePlain) {
       return response;
     }
-    responseJson = _returnResponse(response, type: type);
+    responseJson = compute(_returnResponse, response);
   }
 
   // Future<dynamic> delete(String url, {Map<String, dynamic>? query, int type = 0, dynamic body, int typeContent = typeJson, bool debug = false}) async {
@@ -116,7 +100,7 @@ class ComInterface {
   //   return responseJson;
   // }
 
-  dynamic _returnResponse(Response response, {int type = 0}) async {
+  dynamic _returnResponse(Response response) {
     switch (response.statusCode) {
       case 200:
       case 201:
@@ -126,21 +110,13 @@ class ComInterface {
       case 400:
         throw BadRequestException(response.content().toString());
       case 401:
-        if (type != typeBarong) {
-          try {
-            Requests.clearStoredCookies(_baseUrl);
-            Phoenix.rebirth(_ctx!);
-          } catch (e) {
-            debugPrint(e.toString());
-          }
-        } else {
-          Map<String, dynamic> error = {
-            "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
-            "statusCode": response.statusCode,
-            "messageBody": response.content().toString(),
-          };
-          throw UnauthorisedException(error);
-        }
+        Map<String, dynamic> error = {
+          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
+          "statusCode": response.statusCode,
+          "messageBody": response.content().toString(),
+        };
+        throw UnauthorisedException(error);
+
         break;
       case 403:
       case 422:
