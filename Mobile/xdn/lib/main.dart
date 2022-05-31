@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -19,16 +20,14 @@ import 'screens/pinscreen.dart';
 import 'support/MaterialColorGenerator.dart';
 import 'widgets/BackgroundWidget.dart';
 
-const storage = FlutterSecureStorage();
 bool pinUsed = false;
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  var storage = const FlutterSecureStorage();
   bool b = await FlutterAppBadger.isAppBadgeSupported();
   if (b) {
     FlutterAppBadger.updateBadgeCount(1);
   }
-  storage.write(key: globals.APP_NOT, value: "yes");
+  SecureStorage.write(key: globals.APP_NOT, value: "yes");
   print("Handling a background message: ${message.messageId}");
 }
 
@@ -56,28 +55,28 @@ class MyApp extends StatefulWidget {
 
   @override
   MyAppState createState() => MyAppState();
-  static MyAppState? of(BuildContext context) => context.findAncestorStateOfType<MyAppState>();
 
+  static MyAppState? of(BuildContext context) => context.findAncestorStateOfType<MyAppState>();
 }
 
 class MyAppState extends State<MyApp> {
-  final storage = const FlutterSecureStorage();
   bool pinUsed = false;
-  var ms= '';
+  var ms = '';
 
   Future<String> get jwtOrEmpty async {
-    await precacheImage(const AssetImage('images/wendyicon.png'), context);
-    await precacheImage(const AssetImage('images/menubutton.png'), context);
-    await precacheImage(const AssetImage('images/konjicon.png'), context);
-    await precacheImage(const AssetImage('images/mainmenubg.png'), context);
-    await precacheImage(const AssetImage('images/QR.png'), context);
-    var jwt = await storage.read(key: "jwt");
+    if (mounted) await precacheImage(const AssetImage('images/wendyicon.png'), context);
+    if (mounted) await precacheImage(const AssetImage('images/menubutton.png'), context);
+    if (mounted) await precacheImage(const AssetImage('images/konjicon.png'), context);
+    if (mounted) await precacheImage(const AssetImage('images/mainmenubg.png'), context);
+    if (mounted) await precacheImage(const AssetImage('images/QR.png'), context);
+
+    var jwt = await SecureStorage.read(key: globals.TOKEN);
     if (jwt == null) return "";
     return jwt;
   }
 
   Future getPinFuture() async {
-    var s = storage.read(key: globals.PIN);
+    var s = SecureStorage.read(key: globals.PIN);
     return s;
   }
 
@@ -87,17 +86,16 @@ class MyAppState extends State<MyApp> {
   }
 
   void _getSetLang() async {
-    String? ll = await storage.read(key: globals.LOCALE_APP);
-    if(ll != null) {
+    String? ll = await SecureStorage.read(key: globals.LOCALE_APP);
+    if (ll != null) {
       Locale l;
       List<String> ls = ll.split('_');
-      if(ls.length == 1) {
+      if (ls.length == 1) {
         l = Locale(ls[0], '');
-      }else if (ls.length == 2) {
+      } else if (ls.length == 2) {
         l = Locale(ls[0], ls[1]);
       } else {
-        l = Locale.fromSubtags(
-            countryCode: ls[2], scriptCode: ls[1], languageCode: ls[0]);
+        l = Locale.fromSubtags(countryCode: ls[2], scriptCode: ls[1], languageCode: ls[0]);
       }
       setLocale(l);
     }
@@ -126,15 +124,10 @@ class MyAppState extends State<MyApp> {
       final List<DisplayMode> supported = await FlutterDisplayMode.supported;
       final DisplayMode active = await FlutterDisplayMode.active;
 
-      final List<DisplayMode> sameResolution = supported.where(
-                  (DisplayMode m) => m.width == active.width
-                  && m.height == active.height).toList()..sort(
-                  (DisplayMode a, DisplayMode b) =>
-                  b.refreshRate.compareTo(a.refreshRate));
+      final List<DisplayMode> sameResolution = supported.where((DisplayMode m) => m.width == active.width && m.height == active.height).toList()
+        ..sort((DisplayMode a, DisplayMode b) => b.refreshRate.compareTo(a.refreshRate));
 
-      final DisplayMode mostOptimalMode = sameResolution.isNotEmpty
-              ? sameResolution.first
-              : active;
+      final DisplayMode mostOptimalMode = sameResolution.isNotEmpty ? sameResolution.first : active;
 
       await FlutterDisplayMode.setPreferredMode(mostOptimalMode);
     } catch (e) {
@@ -149,7 +142,7 @@ class MyAppState extends State<MyApp> {
       locale: _locale,
       title: 'Konjungate APP',
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      localeListResolutionCallback: (locales, supportedLocales)  {
+      localeListResolutionCallback: (locales, supportedLocales) {
         ms = 'device locales=$locales supported locales=$supportedLocales';
         for (Locale locale in locales!) {
           if (supportedLocales.contains(locale)) {
@@ -161,7 +154,7 @@ class MyAppState extends State<MyApp> {
       supportedLocales: const [
         Locale('cs', 'CZ'),
         Locale('en', ''),
-        Locale('fi','FI'),
+        Locale('fi', 'FI'),
         Locale.fromSubtags(languageCode: 'sr', scriptCode: 'Cyrl', countryCode: 'RS'),
         Locale.fromSubtags(languageCode: 'sr', scriptCode: 'Latn', countryCode: 'RS'),
         Locale('sr', 'RS'),
@@ -248,10 +241,10 @@ class MyAppState extends State<MyApp> {
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return Stack(
-              children: const [
-                BackgroundWidget(mainMenu: true),
-              ],
-            );
+                children: const [
+                  BackgroundWidget(mainMenu: true),
+                ],
+              );
             }
             if (snapshot.data != "") {
               String str = snapshot.data as String;
@@ -259,10 +252,8 @@ class MyAppState extends State<MyApp> {
               if (jwt.length != 3) {
                 return const LoginPage();
               } else {
-                var payload = json.decode(
-                    ascii.decode(base64.decode(base64.normalize(jwt[1]))));
-                if (DateTime.fromMillisecondsSinceEpoch(payload["exp"] * 1000)
-                    .isAfter(DateTime.now())) {
+                var payload = json.decode(ascii.decode(base64.decode(base64.normalize(jwt[1]))));
+                if (DateTime.fromMillisecondsSinceEpoch(payload["exp"] * 1000).isAfter(DateTime.now())) {
                   if (pinUsed) {
                     return const PinScreen();
                   } else {

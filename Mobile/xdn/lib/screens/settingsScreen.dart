@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -38,7 +39,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsState extends State<SettingsScreen> {
   final StreamController<bool> _verificationNotifier = StreamController<bool>.broadcast();
-  final storage = const FlutterSecureStorage();
   PackageInfo? packageInfo;
   bool isAuthenticated = false;
   int confirmation = 1;
@@ -53,9 +53,9 @@ class _SettingsState extends State<SettingsScreen> {
 
   void _removePinHandler(String pin) async {
     Navigator.of(context).pop();
-    String? s = await storage.read(key: globals.PIN);
+    String? s = await SecureStorage.read(key: globals.PIN);
     if (pin == s) {
-      await storage.delete(key: globals.PIN);
+      await SecureStorage.deleteStorage(key: globals.PIN);
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.succ,AppLocalizations.of(context)!.set_pin_removed );
     } else {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,AppLocalizations.of(context)!.set_pin_not_match );
@@ -176,8 +176,8 @@ class _SettingsState extends State<SettingsScreen> {
                                           splashColor: Colors.white,
                                           // splash color
                                           onTap: () async {
-                                            var s = await storage.containsKey(key: globals.PIN);
-                                            if (s) {
+                                            var s = await SecureStorage.read(key: globals.PIN);
+                                            if (s!.isNotEmpty) {
                                               Dialogs.openPinRemoveBox(context, _removePinHandler);
                                               return;
                                             }
@@ -208,7 +208,7 @@ class _SettingsState extends State<SettingsScreen> {
                                                 width: 15.0,
                                               ),
                                               FutureBuilder(
-                                                  future: storage.read(key: globals.PIN),
+                                                  future: SecureStorage.read(key: globals.PIN),
                                                   builder: (context, snapshot) {
                                                     if (!snapshot.hasData) {
                                                       return SizedBox(
@@ -254,7 +254,7 @@ class _SettingsState extends State<SettingsScreen> {
                                           splashColor: Colors.white,
                                           // splash color
                                           onTap: () async {
-                                            var name = await storage.read(key: globals.NICKNAME);
+                                            var name = await SecureStorage.read(key: globals.NICKNAME);
                                             Dialogs.openRenameBox(context, name!, _renameboxCallback);
                                           },
                                           // button pressed
@@ -570,7 +570,7 @@ class _SettingsState extends State<SettingsScreen> {
                                           splashColor: Colors.white,
                                           // splash color
                                           onTap: () {
-                                            Dialogs.openLogoutConfirmationBox(context, storage);
+                                            Dialogs.openLogoutConfirmationBox(context);
                                           },
                                           // button pressed
                                           child: Row(
@@ -677,7 +677,7 @@ class _SettingsState extends State<SettingsScreen> {
         );
       } else {
         bool isValid = firstPass == enteredPasscode;
-        storage.write(key: globals.PIN, value: enteredPasscode);
+        SecureStorage.write(key: globals.PIN, value: enteredPasscode);
         _verificationNotifier.add(isValid);
         if (isValid) {
           setState(() {

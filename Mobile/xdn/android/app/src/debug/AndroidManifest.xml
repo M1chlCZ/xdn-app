@@ -19,7 +19,7 @@
     </queries>
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="Konjungate"
+        android:label="DigitalNote"
         android:exported="true"
         android:requestLegacyExternalStorage="true"
         >

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -32,7 +33,6 @@ class AddressScreen extends StatefulWidget {
 class AddressScreenState extends State<AddressScreen> {
   final TextEditingController _controller = TextEditingController();
   Contact? _tempContact;
-  final storage = const FlutterSecureStorage();
   Future<List<Contact>>? _getUserFuture;
   String user = "";
 
@@ -83,7 +83,7 @@ class AddressScreenState extends State<AddressScreen> {
   void _contactShareCallBack(Contact c) async {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
-    var sharemessage = AppLocalizations.of(context)!.contact +' ' + _tempContact!.name! + ':';
+    var sharemessage = '${AppLocalizations.of(context)!.contact} ${_tempContact!.name!}:';
     await NetInterface.sendMessage(c.addr!, sharemessage, 0);
     Future.delayed(const Duration(seconds: 3), () async {
       await NetInterface.sendMessage(c.addr!, _tempContact!.addr!, 0);
@@ -120,7 +120,7 @@ class AddressScreenState extends State<AddressScreen> {
     double _balance = (double.parse(ss?["balance"]));
     Navigator.of(context).pop();
     if(double.parse(amount) > _balance) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
       return;
 
     }
@@ -134,18 +134,16 @@ class AddressScreenState extends State<AddressScreen> {
           elevation: 5.0,
         ));
       } else {
-        const storage = FlutterSecureStorage();
-        String? jwt = await storage.read(key: "jwt");
-        String? id = await storage.read(key: globals.ID);
-        String? user = await storage.read(key: globals.USERNAME);
+        String? jwt = await SecureStorage.read(key: globals.TOKEN);
+        String? id = await SecureStorage.read(key: globals.ID);
+        String? user = await SecureStorage.read(key: globals.USERNAME);
 
         if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
-          Dialogs.displayDialog(context, "Error", "Invalid KONJ address");
+          if(mounted) Dialogs.displayDialog(context, "Error", "Invalid KONJ address");
           return;
         }
 
         Map<String, dynamic> m = {
-          "Authorization": jwt,
           "User": user,
           "id": id,
           "request": "sendContactTransaction",
@@ -155,7 +153,8 @@ class AddressScreenState extends State<AddressScreen> {
         };
 
         var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-        final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
+        final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+          "Authorization": jwt!,
           "Content-Type": "application/json",
           "payload": s,
         }).timeout(const Duration(seconds: 10));
@@ -192,15 +191,14 @@ class AddressScreenState extends State<AddressScreen> {
 
   void _deleteContact(int contactID) async {
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? jwt = await SecureStorage.read(key: "jwt");
+      String? id = await SecureStorage.read(key: globals.ID);
 
       List<Contact> details = await AppDatabase().getContact(contactID);
       String? addr = details[0].addr;
       String? name = details[0].name;
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "request": "deleteContact",
         "param1": name,
@@ -209,7 +207,8 @@ class AddressScreenState extends State<AddressScreen> {
 
       var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
 
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
+      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+        "Authorization": jwt!,
         "Content-Type": "application/json",
         "payload": s,
       }).timeout(const Duration(seconds: 10));

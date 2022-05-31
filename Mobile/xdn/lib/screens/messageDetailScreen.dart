@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -33,7 +34,6 @@ class MessageDetailScreen extends StatefulWidget {
 
 class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen> {
   Future<List<dynamic>>? _messages;
-  final _storage = const FlutterSecureStorage();
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   String? _addr;
@@ -90,7 +90,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   Future<List<dynamic>> _getMessages() async {
     Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
     _balance = (double.parse(ss?["balance"]));
-    _addr = await _storage.read(key: globals.ADR);
+    _addr = await SecureStorage.read(key: globals.ADR);
     var s = await AppDatabase().getMessages(_addr!, widget.mgroup.sentAddressOrignal!);
 
     return s!;
@@ -121,7 +121,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   }
 
   void _checkForMessages() async {
-    _addr = await _storage.read(key: globals.ADR);
+    _addr = await SecureStorage.read(key: globals.ADR);
     if (_busy) return;
     setState(() {
       _busy = true;
@@ -200,7 +200,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         _circleVisible = true;
       });
       int _i = await NetInterface.sendContactCoins(amount, name, addr);
-      var _nick = await _storage.read(key: globals.NICKNAME);
+      var _nick = await SecureStorage.read(key: globals.NICKNAME);
       if (_i == 1) {
         var _text = _nick! + " " + AppLocalizations.of(context)!.message_tipped +" " + widget.mgroup.sentAddr! + " " + amount.toString() + " KONJ!";
         await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, _text, _replyid);

@@ -40,4 +40,16 @@ class SecureStorage {
     }
   }
 
+  static Future<void> deleteAllStorage() {
+    try {
+      const FlutterSecureStorage mstorage = FlutterSecureStorage();
+      const optionsApple = IOSOptions(accessibility: IOSAccessibility.first_unlock);
+      const optionsAndroid = AndroidOptions(encryptedSharedPreferences: true);
+      return   mstorage.deleteAll(iOptions: optionsApple, aOptions: optionsAndroid);
+    } catch (e) {
+      print(e);
+      return Future.value(null);
+    }
+  }
+
 }

@@ -71,7 +71,7 @@ app.post('/signup', async function (req, res) {
   }
   console.log(payload);
   const jsonResponse = JSON.parse(payload);
-  var username = jsonResponse.username;
+  let username = jsonResponse.username;
   var passUser = jsonResponse.password;
   var email = jsonResponse.email;
   var realname = jsonResponse.realname;
@@ -148,7 +148,7 @@ app.post('/login', async function (req, res) {
       var ciphertext = CryptoJS.AES.encrypt(json, process.env.ENC_PASS).toString();
       res.write(ciphertext);
       res.end();
-      return;
+
 
     }
   } catch (e) {
@@ -158,7 +158,7 @@ app.post('/login', async function (req, res) {
     res.setHeader("Content-Type", "text/html");
     res.send("Bad Request");
     res.end();
-    return;
+
   }
 });
 
@@ -220,14 +220,14 @@ app.post('/apiAvatar', async function (req, res) {
           console.error("Failure");
           res.status(401);
           res.send("There is some problem");
-          return;
+
         }
       });
       await con.query("UPDATE users SET av = av + 1 WHERE id = ?", [id]);
       console.log("Success");
       res.status(200);
       res.send("ok");
-      return;
+
     } else {
       let filename = Math.random().toString(36).substring(3);
       fs.writeFile(__dirname + "/avatars/" + filename + ".xdf", param1, function (err) {
@@ -235,7 +235,7 @@ app.post('/apiAvatar', async function (req, res) {
           console.error("Failure");
           res.status(401);
           res.send("There is some problem");
-          return;
+
         }
       });
       await con.query("UPDATE users SET avatar = ? WHERE id = ?", [filename, id]);
@@ -243,7 +243,7 @@ app.post('/apiAvatar', async function (req, res) {
       console.log("Success");
       res.status(200);
       res.send("ok");
-      return;
+
     }
   } else {
     var ID;
@@ -262,11 +262,11 @@ app.post('/apiAvatar', async function (req, res) {
     if (r == null) {
       res.status(200);
       res.send("ok");
-      return;
+
     } else if (r[0][0].avatar == null) {
       res.status(200);
       res.send("ok");
-      return;
+
     } else {
       filename = r[0][0].avatar;
       console.log(filename);
@@ -282,7 +282,7 @@ app.post('/apiAvatar', async function (req, res) {
         res.setHeader("Content-Type", "text/html");
         res.write(data);
         res.end();
-        return;
+
       });
     }
   }
@@ -765,7 +765,7 @@ app.get('/data', async (req, res) => {
         res.setHeader("Content-Type", "text/html");
         res.write("ko");
         res.end();
-        return;
+
       }
       else {
         res.statusCode = 200;
@@ -773,7 +773,7 @@ app.get('/data', async (req, res) => {
         var ciphertext = CryptoJS.AES.encrypt(t.toString(), process.env.ENC_PASS).toString();
         res.write(ciphertext);
         res.end();
-        return;
+
       }
     }
 
@@ -1389,7 +1389,7 @@ async function inserMessages(js, idReply) {
     var receiveAddr = json['messages'][i].to;
     var sentTimeDate = new Date(json['messages'][i].sent);
     var sentTime = sentTimeDate.toISOString().slice(0, 19).replace('T', ' ');
-    var receiveTimeDate = new Date(json['messages'][i].sent);;
+    var receiveTimeDate = new Date(json['messages'][i].sent);
     var receiveTime = receiveTimeDate.toISOString().slice(0, 19).replace('T', ' ')
     var text = json['messages'][i].text;
     // console.log(js);

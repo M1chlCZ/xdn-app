@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -42,8 +43,6 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
   final GlobalKey<MessageScreenState> _messageScreenKey = GlobalKey<MessageScreenState>();
   final GlobalKey<DetailScreenState> _walletScreenKey = GlobalKey<DetailScreenState>();
   final GlobalKey<StakingScreenState> _stakingScreenKey = GlobalKey<StakingScreenState>();
-
-  final storage = const FlutterSecureStorage();
 
   FirebaseMessaging? _messaging;
 
@@ -264,7 +263,7 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
 
   void _getLocale() async {
     var timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
-    await storage.write(key: globals.LOCALE, value: timeZoneName);
+    await SecureStorage.write(key: globals.LOCALE, value: timeZoneName);
 
     // context.findAncestorWidgetOfExactType<MaterialApp>()?.supportedLocales.forEach((element) {
     //   print(element.toString());
@@ -279,11 +278,11 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
   }
 
   void _setUsernameID(Map map) async {
-    await storage.write(key: globals.NICKNAME, value: map['nick']);
-    await storage.write(key: globals.ADMINPRIV, value: map['admin'].toString());
-    await storage.write(key: globals.LEVEL, value: map['level'].toString());
+    await SecureStorage.write(key: globals.NICKNAME, value: map['nick']);
+    await SecureStorage.write(key: globals.ADMINPRIV, value: map['admin'].toString());
+    await SecureStorage.write(key: globals.LEVEL, value: map['level'].toString());
     var udid = await FlutterUdid.consistentUdid;
-    storage.write(key: globals.UDID, value: udid);
+    SecureStorage.write(key: globals.UDID, value: udid);
 
   }
 
@@ -389,7 +388,7 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
   }
 
   Future _getPinFuture() async {
-    var s = storage.read(key: globals.PIN);
+    var s = SecureStorage.read(key: globals.PIN);
     return s;
   }
 

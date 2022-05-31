@@ -6,6 +6,7 @@ import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   var _dropdownValue = 0;
   Future? _getBalanceFuture;
   final _controller = TextEditingController();
-  final _storage = const FlutterSecureStorage();
   AnimationController? animationStakeController;
   var _touch = false;
   var _liveVisible = 0;
@@ -159,7 +159,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
         return;
       }
       var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
-      _storage.write(key: globals.COUNTDOWN, value: endTime.toString());
+      SecureStorage.write(key: globals.COUNTDOWN, value: endTime.toString());
       setState(() {
         endTime = endTime;
         FocusScope.of(context).unfocus();
@@ -348,7 +348,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   }
 
   void _checkCountdown() async {
-    var countDown = await _storage.read(key: globals.COUNTDOWN);
+    var countDown = await SecureStorage.read(key: globals.COUNTDOWN);
     if (countDown != null) {
       int nowDate = DateTime.now().millisecondsSinceEpoch;
       int countTime = int.parse(countDown);

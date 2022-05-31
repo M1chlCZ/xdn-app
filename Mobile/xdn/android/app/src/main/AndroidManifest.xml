@@ -20,7 +20,7 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
-        android:label="Konjungate"
+        android:label="DigitalNote"
         android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"

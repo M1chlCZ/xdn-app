@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -22,7 +23,6 @@ class PinScreen extends StatefulWidget {
 class _PinScreenState extends State<PinScreen> {
   final StreamController<bool> _verificationNotifier =
       StreamController<bool>.broadcast();
-  final storage = const FlutterSecureStorage();
   bool isAuthenticated = false;
   late BuildContext b;
   bool showPinScreen = true;
@@ -118,7 +118,7 @@ class _PinScreenState extends State<PinScreen> {
   }
 
   _onPasscodeEntered(String enteredPasscode) async {
-    var s = await storage.read(key: globals.PIN);
+    var s = await SecureStorage.read(key: globals.PIN);
     bool isValid = enteredPasscode == s;
     _verificationNotifier.add(isValid);
 

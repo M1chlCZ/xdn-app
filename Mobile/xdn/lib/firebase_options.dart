@@ -53,6 +53,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '121483500104',
     projectId: 'xdn-project',
     storageBucket: 'xdn-project.appspot.com',
+    androidClientId: '121483500104-idfnmjr3l0mkmmue5vkppl30oif9ovrr.apps.googleusercontent.com',
     iosClientId: '121483500104-q7f9gd5absk730vqbn400mbq8koqjojd.apps.googleusercontent.com',
     iosBundleId: 'com.m1chl.xdn',
   );

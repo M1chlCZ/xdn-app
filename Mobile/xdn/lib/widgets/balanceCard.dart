@@ -13,13 +13,13 @@ class BalanceCard extends StatefulWidget {
   final Future<Map<String,dynamic>>? getBalanceFuture;
   final VoidCallback? onPressSend;
 
-  BalanceCard({Key? key, this.getBalanceFuture, this.onPressSend}) : super(key: key);
+  const BalanceCard({Key? key, this.getBalanceFuture, this.onPressSend}) : super(key: key);
 
   BalanceCardState createState() => BalanceCardState();
 }
 
 class BalanceCardState extends State<BalanceCard> {
-  final key = new GlobalKey<ScaffoldState>();
+  final key = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {

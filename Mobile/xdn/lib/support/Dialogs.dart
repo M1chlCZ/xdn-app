@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -37,7 +38,7 @@ class Dialogs {
             onTap: () {
               func(textController.text, name, addr);
             },
-            header:AppLocalizations.of(context)!.send + " " + name,
+            header:"${AppLocalizations.of(context)!.send} $name",
             child: Padding(
               padding: const EdgeInsets.only(
                   top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
@@ -80,7 +81,7 @@ class Dialogs {
             onTap: () {
               func(textController.text, name, addr);
             },
-            header: AppLocalizations.of(context)!.tip +" " + name,
+            header: "${AppLocalizations.of(context)!.tip} $name",
             child: Padding(
               padding: const EdgeInsets.only(
                   top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
@@ -123,7 +124,7 @@ class Dialogs {
             onTap: () {
               func(textController.text, name, addr);
             },
-            header: AppLocalizations.of(context)!.send_to +' ' + name,
+            header: '${AppLocalizations.of(context)!.send_to} $name',
             child: Padding(
               padding: const EdgeInsets.only(
                   top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
@@ -163,7 +164,7 @@ class Dialogs {
         context: context,
         builder: (BuildContext context) {
           return DialogBody(
-            header: AppLocalizations.of(context)!.rename +" " + name,
+            header: "${AppLocalizations.of(context)!.rename} $name",
             buttonLabel: 'OK',
             onTap: () {
               func(textController.text);
@@ -428,7 +429,7 @@ fontSize: 22.0, color: Colors.white70),
   }
 
   static void openLogoutConfirmationBox(
-      context, FlutterSecureStorage storage) async {
+      context) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -438,7 +439,7 @@ fontSize: 22.0, color: Colors.white70),
             buttonLabel: AppLocalizations.of(context)!.yes,
             onTap: () async {
               Navigator.of(context).pop();
-              storage.deleteAll();
+              SecureStorage.deleteAllStorage();
               AppDatabase().deleteTableAddr();
               AppDatabase().deleteTableMessages();
               AppDatabase().deleteTableMgroup();
@@ -555,7 +556,7 @@ fontSize: 22.0, color: Colors.white70),
               child: SizedBox(
                 width: 380,
                 child: AutoSizeText(
-                  AppLocalizations.of(context)!.dl_not_enough_coins+"!",
+                  "${AppLocalizations.of(context)!.dl_not_enough_coins}!",
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
@@ -948,7 +949,7 @@ fontSize: 22.0, color: Colors.white70),
         barrierDismissible: true,
         context: context,
         builder: (BuildContext context) {
-          var link = "https://chainz.cryptoid.info/konj/tx.dws?" + tx.txid!;
+          var link = "https://chainz.cryptoid.info/konj/tx.dws?${tx.txid!}";
           return DialogBody(
             header: AppLocalizations.of(context)!.dl_tx_detail,
             buttonLabel: AppLocalizations.of(context)!.dl_explorer,
@@ -1056,7 +1057,7 @@ fontSize: 22.0, color: Colors.white70),
                           width: 350,
                           height: 20,
                           child: AutoSizeText(
-                            tx.amount! + " KONJ",
+                            "${tx.amount!} KONJ",
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -1268,8 +1269,7 @@ fontSize: 22.0, color: Colors.white70),
   }
 
   static void openUserQR(context) async {
-    const storage = FlutterSecureStorage();
-    var qr = await storage.read(key: globals.ADR);
+    var qr = await SecureStorage.read(key: globals.ADR);
     showDialog(
         context: context,
         builder: (context) {
@@ -1311,7 +1311,7 @@ fontSize: 22.0, color: Colors.white70),
                       ),
                       Center(
                           child: Text(
-                        '('+AppLocalizations.of(context)!.dl_share+')',
+                        '(${AppLocalizations.of(context)!.dl_share})',
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
@@ -1409,7 +1409,7 @@ fontSize: 22.0, color: Colors.white70),
                       ),
                       Center(
                           child: Text(
-                            '('+AppLocalizations.of(context)!.dl_share+')',
+                            '(${AppLocalizations.of(context)!.dl_share})',
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
@@ -1561,7 +1561,7 @@ fontSize: 22.0, color: Colors.white70),
                           },
                           child: Center(
                             child: Text(
-                              AppLocalizations.of(context)!.dl_send_konj + ' ' + name,
+                              '${AppLocalizations.of(context)!.dl_send_konj} $name',
                               style: Theme.of(context)
                                   .textTheme
                                   .headline5!
@@ -1591,7 +1591,7 @@ fontSize: 22.0, color: Colors.white70),
                           },
                           child: Center(
                             child: Text(
-                              AppLocalizations.of(context)!.share + ' ' + name + ' ' + AppLocalizations.of(context)!.contact.toLowerCase(),
+                              '${AppLocalizations.of(context)!.share} $name ${AppLocalizations.of(context)!.contact.toLowerCase()}',
                               style: Theme.of(context)
                                   .textTheme
                                   .headline5!
@@ -1636,7 +1636,7 @@ fontSize: 22.0, color: Colors.white70),
                         child: SizedBox(
                           width: 380,
                           child: AutoSizeText(
-                            _myLocale.countryCode == "FI" ? AppLocalizations.of(context)!.to : AppLocalizations.of(context)!.share + ' ' + AppLocalizations.of(context)!.contact.toLowerCase() + ' ' + AppLocalizations.of(context)!.to,
+                            _myLocale.countryCode == "FI" ? AppLocalizations.of(context)!.to : '${AppLocalizations.of(context)!.share} ${AppLocalizations.of(context)!.contact.toLowerCase()} ${AppLocalizations.of(context)!.to}',
                             textAlign: TextAlign.center,
                             overflow: TextOverflow.ellipsis,
                             minFontSize: 8.0,

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,12 +13,11 @@ class RadioAlertWidget extends StatefulWidget {
   const RadioAlertWidget({Key? key, required this.func}) : super(key: key);
 
   @override
-  _RadioAlertState createState() => _RadioAlertState();
+  RadioAlertState createState() => RadioAlertState();
 }
 
-class _RadioAlertState extends State<RadioAlertWidget> {
+class RadioAlertState extends State<RadioAlertWidget> {
   int _crtIndex = 0;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -76,7 +76,7 @@ class _RadioAlertState extends State<RadioAlertWidget> {
                 l = Locale.fromSubtags(countryCode: ls[2], scriptCode: ls[1], languageCode: ls[0]);
               }
               MyApp.of(context)?.setLocale(l);
-              _storage.write(key: globals.LOCALE_APP, value: globals.LANGUAGES_CODES[val]);
+              SecureStorage.write(key: globals.LOCALE_APP, value: globals.LANGUAGES_CODES[val]);
             });
           }));
     }

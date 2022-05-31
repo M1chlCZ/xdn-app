@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -23,11 +24,10 @@ class AvatarPicker extends StatefulWidget {
   const AvatarPicker({Key? key, this.userID, this.borderRadius = 8.0, this.color = Colors.white24, this.size = 125.0, this.padding = 5.0}) : super(key: key);
 
   @override
-  _AvatarPickerState createState() => _AvatarPickerState();
+  AvatarPickerState createState() => AvatarPickerState();
 }
 
-class _AvatarPickerState extends State<AvatarPicker> {
-  var storage = const FlutterSecureStorage();
+class AvatarPickerState extends State<AvatarPicker> {
 
   var _image64;
   File? _imageFile;
@@ -122,11 +122,11 @@ class _AvatarPickerState extends State<AvatarPicker> {
     if (widget.userID is String) {
       _saveToCache(widget.userID);
     } else {
-      String? localUser = await storage.read(key: globals.ID);
+      String? localUser = await SecureStorage.read(key: globals.ID);
       if (widget.userID == null || int.parse(localUser!) == widget.userID) {
         this.localUser = true;
         bool file = await _checkForFile();
-        var addr = await storage.read(key: globals.ADR);
+        var addr = await SecureStorage.read(key: globals.ADR);
         int i = await NetInterface.getAvatarVersion(addr);
         if (!file || i == 1) {
           _downloadPictureLocal(widget.userID);
