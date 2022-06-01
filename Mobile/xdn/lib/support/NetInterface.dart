@@ -42,7 +42,10 @@ class NetInterface {
               "Content-Type": "application/json",
               "payload": s,
             },
-            headers: {"Content-Type": "application/x-www-form-urlencoded", "Authorization": jwt!,},
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "Authorization": jwt!,
+            },
             encoding: Encoding.getByName('utf-8'),
           )
           .timeout(const Duration(seconds: 10));
@@ -64,7 +67,7 @@ class NetInterface {
   static Future<Uint8List?> downloadCSV(BuildContext context) async {
     var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key:globals.TOKEN);
+      String? jwt = await storage.read(key: globals.TOKEN);
       String? id = await storage.read(key: globals.USERNAME);
 
       Map<String, dynamic> m = {"User": id, "request": "getcsv"};
@@ -252,7 +255,7 @@ class NetInterface {
     }
 
     ComInterface ci = ComInterface();
-    Map <String, dynamic> rt = await ci.get("/data", request: m);
+    Map<String, dynamic> rt = await ci.get("/data", request: m);
     return rt;
   }
 
@@ -279,7 +282,7 @@ class NetInterface {
   }
 
   static Future<int> saveContact(String name, String addr, BuildContext context) async {
-    if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
+    if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
       Dialogs.openAlertBox(context, "Error", "Invalid KONJ address");
       return 0;
     }
@@ -302,7 +305,8 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      List responseList = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      List responseList = await ci.get("/data", request: m, debug: true);
+      responseList.forEach((element) {print(element);});
       List<Contact> l = responseList.map((data) => Contact.fromJson(data)).toList();
       var db = await AppDatabase().addAddrBook(l);
       if (db == 1) {
@@ -327,6 +331,7 @@ class NetInterface {
       print("Timeout");
       return 0;
     } catch (e) {
+
       print(e);
       return 0;
     }
@@ -345,7 +350,7 @@ class NetInterface {
       List rt = await ci.get("/data", request: m, debug: true, type: ComInterface.typePlain);
       List<MessageGroup> list = rt.map((data) => MessageGroup.fromJson(data)).toList();
       // List<MessageGroup>? l = await compute(parseMessagesGroup, rt.body);
-        await AppDatabase().addMessageGroup(list);
+      await AppDatabase().addMessageGroup(list);
       // List<MessageGroup>? l = rt.map((data) => MessageGroup.fromJson(data)).toList();
       // await AppDatabase().addMessageGroup(l!);
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
@@ -393,27 +398,10 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
-
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        try {
-          // var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-          // print(data);
-          final l = await compute(parseMessages, response.body);
-          int i = await AppDatabase().addMessages(l!);
-          return i;
-        } catch (e) {
-          print(e);
-          return 0;
-        }
-      }
-      return 0;
+      List<dynamic> response = await ci.get("/data", request: m);
+      List<Message> l = response.map((data) => Message.fromJson(data)).toList();
+      int i = await AppDatabase().addMessages(l);
+      return i;
     } on TimeoutException catch (_) {
       print('Service unreachable');
       return 0;
@@ -819,7 +807,6 @@ class NetInterface {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
     try {
-
       String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
@@ -837,7 +824,7 @@ class NetInterface {
       // }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        if (context.owner != null ) {
+        if (context.owner != null) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Your password has been changed!"),
@@ -864,7 +851,6 @@ class NetInterface {
 
   static Future<int> getAvatarVersion(String? addr) async {
     try {
-
       Map<String, dynamic> m = {
         "param1": addr,
         "request": "avatarVersion",
@@ -989,7 +975,6 @@ class NetInterface {
       String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {"id": id, "request": "getPoolStats"};
-
 
       ComInterface ci = ComInterface();
       Map response = await ci.get("/data", request: m);

@@ -26,8 +26,7 @@ import 'TranSaction.dart';
 import 'Utils.dart';
 
 class Dialogs {
-  static void openContactSendBox(context, String name, String addr,
-      Function(String amount, String name, String addr) func) async {
+  static void openContactSendBox(context, String name, String addr, Function(String amount, String name, String addr) func) async {
     TextEditingController textController = TextEditingController();
     return showDialog(
         barrierDismissible: false,
@@ -38,28 +37,19 @@ class Dialogs {
             onTap: () {
               func(textController.text, name, addr);
             },
-            header:"${AppLocalizations.of(context)!.send} $name",
+            header: "${AppLocalizations.of(context)!.send} $name",
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
               child: TextField(
                 autofocus: true,
                 controller: textController,
-                keyboardType: Platform.isIOS
-                    ? const TextInputType.numberWithOptions(signed: true)
-                    : TextInputType.number,
+                keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
-                style: Theme.of(context).textTheme.headline6!.copyWith(
-                    fontStyle: FontStyle.normal,
-                    fontSize: 32.0,
-                    color: Colors.white.withOpacity(0.8)),
+                style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                 decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline6!.copyWith(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 32.0,
-                      color: Colors.white54),
+                  hintStyle: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                   hintText: AppLocalizations.of(context)!.amount,
                   border: InputBorder.none,
                 ),
@@ -69,8 +59,7 @@ class Dialogs {
         });
   }
 
-  static void openMessageTipBox(context, String name, String addr,
-      Function(String amount, String name, String addr) func) async {
+  static void openMessageTipBox(context, String name, String addr, Function(String amount, String name, String addr) func) async {
     TextEditingController textController = TextEditingController();
     return showDialog(
         barrierDismissible: false,
@@ -83,26 +72,17 @@ class Dialogs {
             },
             header: "${AppLocalizations.of(context)!.tip} $name",
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
               child: TextField(
                 autofocus: true,
                 controller: textController,
-                keyboardType: Platform.isIOS
-                    ? const TextInputType.numberWithOptions(signed: true)
-                    : TextInputType.number,
+                keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
-                style: Theme.of(context).textTheme.headline6!.copyWith(
-                    fontStyle: FontStyle.normal,
-                    fontSize: 32.0,
-                    color: Colors.white.withOpacity(0.8)),
+                style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                 decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 32.0,
-                      color: Colors.white54),
+                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                   hintText: AppLocalizations.of(context)!.amount,
                   border: InputBorder.none,
                 ),
@@ -112,8 +92,7 @@ class Dialogs {
         });
   }
 
-  static void openAmbassadorSendBox(context, String name, String addr,
-      Function(String amount, String name, String addr) func) async {
+  static void openAmbassadorSendBox(context, String name, String addr, Function(String amount, String name, String addr) func) async {
     TextEditingController textController = TextEditingController();
     return showDialog(
         barrierDismissible: false,
@@ -126,26 +105,17 @@ class Dialogs {
             },
             header: '${AppLocalizations.of(context)!.send_to} $name',
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
               child: TextField(
                 autofocus: true,
                 controller: textController,
-                keyboardType: Platform.isIOS
-                    ? const TextInputType.numberWithOptions(signed: true)
-                    : TextInputType.number,
+                keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
-                style: Theme.of(context).textTheme.headline6!.copyWith(
-                    fontStyle: FontStyle.normal,
-                    fontSize: 32.0,
-                    color: Colors.white.withOpacity(0.8)),
+                style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                 decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 32.0,
-                      color: Colors.white54),
+                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                   hintText: AppLocalizations.of(context)!.amount,
                   border: InputBorder.none,
                 ),
@@ -155,8 +125,7 @@ class Dialogs {
         });
   }
 
-  static void openRenameBox(
-      context, String name, Function(String nickname) func) async {
+  static void openRenameBox(context, String name, Function(String nickname) func) async {
     TextEditingController textController = TextEditingController();
     textController.text = name;
     return showDialog(
@@ -170,8 +139,7 @@ class Dialogs {
               func(textController.text);
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
               child: TextField(
                 autofocus: true,
                 controller: textController,
@@ -179,13 +147,9 @@ class Dialogs {
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+')),
                 ],
-                style: Theme.of(context).textTheme.headline5!.copyWith(
-                    color: Colors.white.withOpacity(0.8), fontSize: 32),
+                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                 decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 32.0,
-                      color: Colors.white54),
+                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                   hintText: AppLocalizations.of(context)!.new_name,
                   border: InputBorder.none,
                 ),
@@ -208,8 +172,7 @@ class Dialogs {
               func(textController.text);
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
               child: TextField(
                 obscureText: true,
                 autofocus: true,
@@ -220,13 +183,9 @@ class Dialogs {
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+')),
                 ],
-                style: Theme.of(context).textTheme.headline5!.copyWith(
-                    color: Colors.white.withOpacity(0.8), fontSize: 48),
+                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
                 decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 32.0,
-                      color: Colors.white54),
+                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                   hintText: AppLocalizations.of(context)!.dl_enter_pin,
                   border: InputBorder.none,
                 ),
@@ -241,15 +200,13 @@ class Dialogs {
         context: context,
         builder: (context) {
           return Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)), //this right here
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
             child: Wrap(children: [
               Container(
                 width: 310.0,
                 padding: const EdgeInsets.all(15.0),
                 child: QrImage(
-                  dataModuleStyle: const QrDataModuleStyle(
-                      dataModuleShape: QrDataModuleShape.square),
+                  dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
                   eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
                   errorCorrectionLevel: QrErrorCorrectLevel.H,
                   data: code,
@@ -268,12 +225,7 @@ class Dialogs {
         });
   }
 
-  static void openSendContactConfirmBox(
-      context,
-      String name,
-      String addr,
-      String amount,
-      Function(String amount, String name, String addr) func) async {
+  static void openSendContactConfirmBox(context, String name, String addr, String amount, Function(String amount, String name, String addr) func) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -294,8 +246,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -303,8 +254,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openContactDeteleBox(
-      context, int id, Function(int id) func) async {
+  static void openContactDeteleBox(context, int id, Function(int id) func) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -326,8 +276,7 @@ fontSize: 22.0, color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -356,8 +305,7 @@ fontSize: 22.0, color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -365,8 +313,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openAmbassadorConfirmBox(
-      context, bool val, Function(bool val) func) async {
+  static void openAmbassadorConfirmBox(context, bool val, Function(bool val) func) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -382,15 +329,12 @@ fontSize: 22.0, color: Colors.white70),
               child: SizedBox(
                 width: 380,
                 child: AutoSizeText(
-                  val == true
-                      ? "Do you really want to change status to Ambassador?"
-                      : "Do you really want to cancel Ambassador status?",
+                  val == true ? "Do you really want to change status to Ambassador?" : "Do you really want to cancel Ambassador status?",
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -419,8 +363,7 @@ fontSize: 22.0, color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -428,8 +371,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openLogoutConfirmationBox(
-      context) async {
+  static void openLogoutConfirmationBox(context) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -453,8 +395,7 @@ fontSize: 22.0, color: Colors.white70),
               } catch (e) {
                 print(e);
               }
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
             },
             child: Padding(
               padding: const EdgeInsets.all(10),
@@ -466,8 +407,7 @@ fontSize: 22.0, color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -496,8 +436,7 @@ fontSize: 22.0, color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -505,8 +444,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static Future<void> openAlertBox(
-      context, String header, String message) async {
+  static Future<void> openAlertBox(context, String header, String message) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -528,10 +466,7 @@ fontSize: 22.0, color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
                   minFontSize: 8.0,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headline6!
-                      .copyWith(fontSize: 16.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 16.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -561,8 +496,7 @@ fontSize: 22.0, color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -577,9 +511,7 @@ fontSize: 22.0, color: Colors.white70),
         builder: (BuildContext context) {
           return AlertDialog(
             backgroundColor: Theme.of(context).konjHeaderColor,
-            shape: RoundedRectangleBorder(
-                side: BorderSide(color: Theme.of(context).konjHeaderColor),
-                borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+            shape: RoundedRectangleBorder(side: BorderSide(color: Theme.of(context).konjHeaderColor), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
             contentPadding: const EdgeInsets.only(top: 0.01),
             content: SizedBox(
               width: 400.0,
@@ -590,8 +522,7 @@ fontSize: 22.0, color: Colors.white70),
                 children: <Widget>[
                   Center(
                     child: Padding(
-                      padding: const EdgeInsets.only(
-                          top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
+                      padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
                       child: SizedBox(
                         width: 380,
                         child: AutoSizeText(
@@ -599,10 +530,7 @@ fontSize: 22.0, color: Colors.white70),
                           overflow: TextOverflow.ellipsis,
                           minFontSize: 8.0,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headline6!
-                              .copyWith(fontSize: 22.0, color: Colors.white70),
+                          style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 22.0, color: Colors.white70),
                         ),
                       ),
                     ),
@@ -631,8 +559,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openForgotPasswordBox(
-      context, Function(String nickname) func) async {
+  static void openForgotPasswordBox(context, Function(String nickname) func) async {
     TextEditingController textController = TextEditingController();
     return showDialog(
         context: context,
@@ -644,22 +571,16 @@ fontSize: 22.0, color: Colors.white70),
               func(textController.text);
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
+              padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
               child: SizedBox(
                 width: 350,
                 child: AutoSizeTextField(
                   autofocus: true,
                   controller: textController,
                   keyboardType: TextInputType.text,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                      color: Colors.white.withOpacity(0.8), fontSize: 32),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                   decoration: InputDecoration(
-                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(
-                        fontStyle: FontStyle.normal,
-                        fontSize: 32.0,
-                        color: Colors.white54),
+                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                     hintText: AppLocalizations.of(context)!.email,
                     border: InputBorder.none,
                   ),
@@ -681,29 +602,21 @@ fontSize: 22.0, color: Colors.white70),
             header: AppLocalizations.of(context)!.dl_edit_name,
             buttonLabel: AppLocalizations.of(context)!.save,
             onTap: () async {
-              await AppDatabase()
-                  .editContact(textController.text, c.id.toString());
+              await AppDatabase().editContact(textController.text, c.id.toString());
               func();
               Navigator.of(context).pop();
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
               child: TextField(
                 autofocus: true,
                 controller: textController,
                 inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.allow(
-                      RegExp(r'^[a-zA-Z0-9_-\s]+')),
+                  FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9_-\s]+')),
                 ],
-                style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                    color: Colors.white.withOpacity(0.8), fontSize: 32),
+                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                 decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 32.0,
-                      color: Colors.white54),
+                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                   hintText: AppLocalizations.of(context)!.name,
                   border: InputBorder.none,
                 ),
@@ -713,11 +626,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openContactAddBox(
-      context,
-      Function(String name, String addr) func,
-      Function func2,
-      String addr) async {
+  static void openContactAddBox(context, Function(String name, String addr) func, Function func2, String addr) async {
     TextEditingController _textControllerName = TextEditingController();
     TextEditingController _textControllerAddr = TextEditingController();
     _textControllerAddr.text = addr;
@@ -732,8 +641,7 @@ fontSize: 22.0, color: Colors.white70),
               func(_textControllerName.text, _textControllerAddr.text);
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 5.0, left: 10.0, right: 10.0, bottom: 5.0),
+              padding: const EdgeInsets.only(top: 5.0, left: 10.0, right: 10.0, bottom: 5.0),
               child: Column(children: [
                 SizedBox(
                   width: 350,
@@ -741,17 +649,9 @@ fontSize: 22.0, color: Colors.white70),
                     autofocus: true,
                     controller: _textControllerName,
                     keyboardType: TextInputType.text,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                        color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context)
-                          .textTheme
-                          .headline5!
-                          .copyWith(
-                              fontStyle: FontStyle.normal,
-                              fontSize: 32.0,
-                              color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.name,
                       border: InputBorder.none,
                     ),
@@ -770,17 +670,9 @@ fontSize: 22.0, color: Colors.white70),
                     autofocus: false,
                     controller: _textControllerAddr,
                     keyboardType: TextInputType.text,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                        color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context)
-                          .textTheme
-                          .headline5!
-                          .copyWith(
-                              fontStyle: FontStyle.normal,
-                              fontSize: 32.0,
-                              color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.address,
                       border: InputBorder.none,
                     ),
@@ -802,14 +694,10 @@ fontSize: 22.0, color: Colors.white70),
                     ),
                     label: Text(
                       'QR',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline5!
-                          .copyWith(fontSize: 18.0, color: Colors.white54),
+                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.white54),
                     ),
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.resolveWith(
-                          (states) => qrColors(states)),
+                      backgroundColor: MaterialStateProperty.resolveWith((states) => qrColors(states)),
                     ),
                     onPressed: () {
                       func2();
@@ -848,8 +736,7 @@ fontSize: 22.0, color: Colors.white70),
               Navigator.of(context).pop();
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 5.0, left: 10.0, right: 10.0, bottom: 5.0),
+              padding: const EdgeInsets.only(top: 5.0, left: 10.0, right: 10.0, bottom: 5.0),
               child: Column(children: [
                 SizedBox(
                   width: 350,
@@ -857,17 +744,9 @@ fontSize: 22.0, color: Colors.white70),
                     autofocus: true,
                     controller: _textControllerName,
                     keyboardType: TextInputType.text,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                        color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context)
-                          .textTheme
-                          .headline5!
-                          .copyWith(
-                              fontStyle: FontStyle.normal,
-                              fontSize: 32.0,
-                              color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.name,
                       border: InputBorder.none,
                     ),
@@ -890,9 +769,7 @@ fontSize: 22.0, color: Colors.white70),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                       minFontSize: 24,
-                      style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                          color: Colors.white.withOpacity(0.8), fontSize: 32),
+                      style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     ),
                   ),
                 ),
@@ -905,8 +782,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openPasswordChangeBox(
-      context, Function(String password) func) async {
+  static void openPasswordChangeBox(context, Function(String password) func) async {
     TextEditingController textController = TextEditingController();
     return showDialog(
         barrierDismissible: false,
@@ -919,22 +795,16 @@ fontSize: 22.0, color: Colors.white70),
               func(textController.text);
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
               child: TextField(
                 obscureText: true,
                 autofocus: true,
                 textAlignVertical: TextAlignVertical.center,
                 textAlign: TextAlign.left,
                 controller: textController,
-                style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                    color: Colors.white.withOpacity(0.8), fontSize: 48),
+                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
                 decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(
-                      fontStyle: FontStyle.normal,
-                      fontSize: 32.0,
-                      color: Colors.white54),
+                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                   hintText: AppLocalizations.of(context)!.dl_enter_pass,
                   border: InputBorder.none,
                 ),
@@ -963,8 +833,7 @@ fontSize: 22.0, color: Colors.white70),
               }
             },
             child: Padding(
-                padding: const EdgeInsets.only(
-                    top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
+                padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -977,13 +846,7 @@ fontSize: 22.0, color: Colors.white70),
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.txid,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(
-                                      fontStyle: FontStyle.normal,
-                                      fontSize: 18.0,
-                                      color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -994,8 +857,7 @@ fontSize: 22.0, color: Colors.white70),
                           onTap: () {
                             Clipboard.setData(ClipboardData(text: tx.txid));
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content:
-                                  Text(AppLocalizations.of(context)!.dl_tx_copy),
+                              content: Text(AppLocalizations.of(context)!.dl_tx_copy),
                               duration: const Duration(seconds: 3),
                               backgroundColor: Colors.green,
                               behavior: SnackBarBehavior.fixed,
@@ -1009,13 +871,7 @@ fontSize: 22.0, color: Colors.white70),
                               tx.txid!,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(
-                                      fontStyle: FontStyle.normal,
-                                      fontSize: 18.0,
-                                      color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1040,13 +896,7 @@ fontSize: 22.0, color: Colors.white70),
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.amount,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(
-                                      fontStyle: FontStyle.normal,
-                                      fontSize: 18.0,
-                                      color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1061,13 +911,7 @@ fontSize: 22.0, color: Colors.white70),
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(
-                                    fontStyle: FontStyle.normal,
-                                    fontSize: 18.0,
-                                    color: Colors.white70),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1091,13 +935,7 @@ fontSize: 22.0, color: Colors.white70),
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.date,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(
-                                      fontStyle: FontStyle.normal,
-                                      fontSize: 18.0,
-                                      color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1112,13 +950,7 @@ fontSize: 22.0, color: Colors.white70),
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(
-                                    fontStyle: FontStyle.normal,
-                                    fontSize: 18.0,
-                                    color: Colors.white70),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1142,13 +974,7 @@ fontSize: 22.0, color: Colors.white70),
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.confirmations.capitalize(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(
-                                      fontStyle: FontStyle.normal,
-                                      fontSize: 18.0,
-                                      color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1163,13 +989,7 @@ fontSize: 22.0, color: Colors.white70),
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(
-                                    fontStyle: FontStyle.normal,
-                                    fontSize: 18.0,
-                                    color: Colors.white70),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1180,8 +1000,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openPasswordConfirmBox(
-      context, Function(String password) func) async {
+  static void openPasswordConfirmBox(context, Function(String password) func) async {
     TextEditingController textController = TextEditingController();
     TextEditingController textController2 = TextEditingController();
     return showDialog(
@@ -1210,25 +1029,16 @@ fontSize: 22.0, color: Colors.white70),
                 SizedBox(
                   height: 60.0,
                   child: Padding(
-                    padding: const EdgeInsets.only(
-                        top: 0.0, left: 10.0, right: 10.0, bottom: 0.0),
+                    padding: const EdgeInsets.only(top: 0.0, left: 10.0, right: 10.0, bottom: 0.0),
                     child: TextField(
                       obscureText: true,
                       autofocus: true,
                       textAlignVertical: TextAlignVertical.center,
                       textAlign: TextAlign.left,
                       controller: textController,
-                      style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                          color: Colors.white.withOpacity(0.8), fontSize: 22),
+                      style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 22),
                       decoration: InputDecoration(
-                        hintStyle: Theme.of(context)
-                            .textTheme
-                            .headline5!
-                            .copyWith(
-                                fontStyle: FontStyle.normal,
-                                fontSize: 22.0,
-                                color: Colors.white54),
+                        hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
                         hintText: AppLocalizations.of(context)!.dl_new_enter_pass,
                         border: InputBorder.none,
                       ),
@@ -1240,25 +1050,16 @@ fontSize: 22.0, color: Colors.white70),
                   height: 4.0,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      top: 0.0, left: 10.0, right: 10.0, bottom: 5.0),
+                  padding: const EdgeInsets.only(top: 0.0, left: 10.0, right: 10.0, bottom: 5.0),
                   child: TextField(
                     obscureText: true,
                     autofocus: true,
                     textAlignVertical: TextAlignVertical.center,
                     textAlign: TextAlign.left,
                     controller: textController2,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(
-
-                        color: Colors.white.withOpacity(0.8), fontSize: 22),
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 22),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context)
-                          .textTheme
-                          .headline5!
-                          .copyWith(
-                              fontStyle: FontStyle.normal,
-                              fontSize: 22.0,
-                              color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.dl_conf_new_pass,
                       border: InputBorder.none,
                     ),
@@ -1277,9 +1078,7 @@ fontSize: 22.0, color: Colors.white70),
             filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
             child: Dialog(
               backgroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: Color(0xFF9F9FA4)),
-                  borderRadius: BorderRadius.all(Radius.circular(20.0))),
+              shape: const RoundedRectangleBorder(side: BorderSide(color: Color(0xFF9F9FA4)), borderRadius: BorderRadius.all(Radius.circular(20.0))),
               child: Wrap(children: [
                 Container(
                   width: 400.0,
@@ -1291,8 +1090,7 @@ fontSize: 22.0, color: Colors.white70),
                     children: [
                       Center(
                         child: Padding(
-                          padding: const EdgeInsets.only(
-                              top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
+                          padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
                           child: SizedBox(
                             width: 380,
                             child: AutoSizeText(
@@ -1300,11 +1098,7 @@ fontSize: 22.0, color: Colors.white70),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                               minFontSize: 8.0,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(
-                                      fontSize: 22.0, color: Colors.black87),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.black87),
                             ),
                           ),
                         ),
@@ -1313,10 +1107,7 @@ fontSize: 22.0, color: Colors.white70),
                           child: Text(
                         '(${AppLocalizations.of(context)!.dl_share})',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headline5!
-                            .copyWith(fontSize: 14.0, color: Colors.black54),
+                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.black54),
                       )),
                       const SizedBox(
                         height: 5.0,
@@ -1345,8 +1136,7 @@ fontSize: 22.0, color: Colors.white70),
                             Navigator.pop(context);
                           },
                           child: QrImage(
-                            dataModuleStyle: const QrDataModuleStyle(
-                                dataModuleShape: QrDataModuleShape.square),
+                            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
                             eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
                             errorCorrectionLevel: QrErrorCorrectLevel.H,
                             data: qr.toString(),
@@ -1375,9 +1165,7 @@ fontSize: 22.0, color: Colors.white70),
             filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
             child: Dialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.grey.withOpacity(0.5)),
-                  borderRadius: const BorderRadius.all(Radius.circular(20.0))),
+              shape: RoundedRectangleBorder(side: BorderSide(color: Colors.grey.withOpacity(0.5)), borderRadius: const BorderRadius.all(Radius.circular(20.0))),
               child: Wrap(children: [
                 Container(
                   width: 400.0,
@@ -1389,8 +1177,7 @@ fontSize: 22.0, color: Colors.white70),
                     children: [
                       Center(
                         child: Padding(
-                          padding: const EdgeInsets.only(
-                              top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
+                          padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
                           child: SizedBox(
                             width: 380,
                             child: AutoSizeText(
@@ -1398,23 +1185,16 @@ fontSize: 22.0, color: Colors.white70),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                               minFontSize: 8.0,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(
-                                      fontSize: 22.0, color: Colors.black87),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.black87),
                             ),
                           ),
                         ),
                       ),
                       Center(
                           child: Text(
-                            '(${AppLocalizations.of(context)!.dl_share})',
+                        '(${AppLocalizations.of(context)!.dl_share})',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headline5!
-                            .copyWith(fontSize: 14.0, color: Colors.black87),
+                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.black87),
                       )),
                       const SizedBox(
                         height: 5.0,
@@ -1443,8 +1223,7 @@ fontSize: 22.0, color: Colors.white70),
                             Navigator.pop(context);
                           },
                           child: QrImage(
-                            dataModuleStyle: const QrDataModuleStyle(
-                                dataModuleShape: QrDataModuleShape.square),
+                            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
                             eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
                             errorCorrectionLevel: QrErrorCorrectLevel.H,
                             data: qr.toString(),
@@ -1464,22 +1243,14 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openSelectContactDialog(
-      context,
-      String addr,
-      String name,
-      Function? func,
-      Function(String a, String b)? func2,
-      Function? func3) async {
+  static void openSelectContactDialog(context, String addr, String name, Function? func, Function(String a, String b)? func2, Function? func3) async {
     showDialog(
         context: context,
         builder: (context) {
           Locale _myLocale = Localizations.localeOf(context);
           return AlertDialog(
               backgroundColor: Theme.of(context).konjHeaderColor,
-              shape: RoundedRectangleBorder(
-                  side: BorderSide(color: Theme.of(context).konjHeaderColor),
-                  borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+              shape: RoundedRectangleBorder(side: BorderSide(color: Theme.of(context).konjHeaderColor), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
               contentPadding: const EdgeInsets.only(top: 0.01),
               content: SizedBox(
                 width: 400.0,
@@ -1490,8 +1261,7 @@ fontSize: 22.0, color: Colors.white70),
                   children: <Widget>[
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
+                        padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
                         child: SizedBox(
                           width: 380,
                           child: AutoSizeText(
@@ -1499,11 +1269,7 @@ fontSize: 22.0, color: Colors.white70),
                             textAlign: TextAlign.center,
                             overflow: TextOverflow.ellipsis,
                             minFontSize: 8.0,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline6!
-                                .copyWith(
-                                    fontSize: 22.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 22.0, color: Colors.white70),
                           ),
                         ),
                       ),
@@ -1532,10 +1298,7 @@ fontSize: 22.0, color: Colors.white70),
                           child: Center(
                             child: Text(
                               AppLocalizations.of(context)!.dl_send_message,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(fontSize: 18.0),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                             ),
                           ),
                         ),
@@ -1562,10 +1325,7 @@ fontSize: 22.0, color: Colors.white70),
                           child: Center(
                             child: Text(
                               '${AppLocalizations.of(context)!.dl_send_konj} $name',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(fontSize: 18.0),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                             ),
                           ),
                         ),
@@ -1592,10 +1352,7 @@ fontSize: 22.0, color: Colors.white70),
                           child: Center(
                             child: Text(
                               '${AppLocalizations.of(context)!.share} $name ${AppLocalizations.of(context)!.contact.toLowerCase()}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(fontSize: 18.0),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                             ),
                           ),
                         ),
@@ -1610,17 +1367,14 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openSelectContactListDialog(
-      context, String name, Function(Contact c)? func) async {
+  static void openSelectContactListDialog(context, String name, Function(Contact c)? func) async {
     showDialog(
         context: context,
         builder: (context) {
           Locale _myLocale = Localizations.localeOf(context);
           return AlertDialog(
               backgroundColor: Theme.of(context).konjHeaderColor,
-              shape: RoundedRectangleBorder(
-                  side: BorderSide(color: Theme.of(context).konjHeaderColor),
-                  borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+              shape: RoundedRectangleBorder(side: BorderSide(color: Theme.of(context).konjHeaderColor), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
               contentPadding: const EdgeInsets.only(top: 0.01),
               content: SizedBox(
                 width: 400.0,
@@ -1631,20 +1385,17 @@ fontSize: 22.0, color: Colors.white70),
                   children: <Widget>[
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
+                        padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
                         child: SizedBox(
                           width: 380,
                           child: AutoSizeText(
-                            _myLocale.countryCode == "FI" ? AppLocalizations.of(context)!.to : '${AppLocalizations.of(context)!.share} ${AppLocalizations.of(context)!.contact.toLowerCase()} ${AppLocalizations.of(context)!.to}',
+                            _myLocale.countryCode == "FI"
+                                ? AppLocalizations.of(context)!.to
+                                : '${AppLocalizations.of(context)!.share} ${AppLocalizations.of(context)!.contact.toLowerCase()} ${AppLocalizations.of(context)!.to}',
                             textAlign: TextAlign.center,
                             overflow: TextOverflow.ellipsis,
                             minFontSize: 8.0,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline6!
-                                .copyWith(
-                                    fontSize: 22.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 22.0, color: Colors.white70),
                           ),
                         ),
                       ),
@@ -1672,8 +1423,7 @@ fontSize: 22.0, color: Colors.white70),
                                     shrinkWrap: true,
                                     physics: const NeverScrollableScrollPhysics(),
                                     itemCount: list!.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
+                                    itemBuilder: (BuildContext context, int index) {
                                       var cont = list[index];
                                       return Column(
                                         mainAxisSize: MainAxisSize.min,
@@ -1689,10 +1439,7 @@ fontSize: 22.0, color: Colors.white70),
                                                 cont.getName()!,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headline5!
-                                                    .copyWith(
+                                                style: Theme.of(context).textTheme.headline5!.copyWith(
                                                       color: Colors.white70,
                                                     ),
                                               ),
@@ -1703,24 +1450,17 @@ fontSize: 22.0, color: Colors.white70),
                                                 cont.getAddr()!,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headline5!
-                                                    .copyWith(
-                                                      color: Colors.white
-                                                          .withOpacity(0.5),
+                                                style: Theme.of(context).textTheme.headline5!.copyWith(
+                                                      color: Colors.white.withOpacity(0.5),
                                                     ),
                                               ),
                                             ),
                                           ),
                                           Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 8.0, right: 8.0),
+                                            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                                             child: SizedBox(
                                               height: 1,
-                                              child: Container(
-                                                  color: Colors.white
-                                                      .withOpacity(0.2)),
+                                              child: Container(color: Colors.white.withOpacity(0.2)),
                                             ),
                                           )
                                         ],
@@ -1741,8 +1481,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static Future<dynamic> openAlertBoxReturn(
-      context, String header, String message) async {
+  static Future<dynamic> openAlertBoxReturn(context, String header, String message) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -1764,8 +1503,7 @@ fontSize: 22.0, color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(
-fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -1773,8 +1511,7 @@ fontSize: 22.0, color: Colors.white70),
         });
   }
 
-  static void openLanguageDialog(context, Function(int value) func,
-      Function(bool save) func2, int val) async {
+  static void openLanguageDialog(context, Function(int value) func, Function(bool save) func2, int val) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -1793,8 +1530,7 @@ fontSize: 22.0, color: Colors.white70),
 
   static void displayDialog(context, title, text) => showDialog(
         context: context,
-        builder: (context) =>
-            AlertDialog(title: Text(title), content: Text(text)),
+        builder: (context) => AlertDialog(title: Text(title), content: Text(text)),
       );
 
   static Color qrColors(Set<MaterialState> states) {

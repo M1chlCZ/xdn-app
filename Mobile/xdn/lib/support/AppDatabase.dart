@@ -222,13 +222,6 @@ class AppDatabase {
     // await dbClient.execute(tableMessageGroup);
     // print(input.length.toString());
     for (var _i = 0; _i < input.length; _i++) {
-      if (input[_i].text!.contains("<!DOCTYPE")) {
-        var s = parse(input[_i].text);
-        var innerBody = s.body!.innerHtml;
-        final startIndex = innerBody.indexOf(">");
-        final endIndex = innerBody.indexOf("<", startIndex + ">".length);
-        input[_i].setText(innerBody.substring(startIndex + ">".length, endIndex)); // print(s.body.innerHtml.);
-      }
       var check = await dbClient.query(globals.TABLE_MGROUP, where: globals.MGROUP_SENT_ADDR + " = ? ", whereArgs: [input[_i].sentAddr]);
       if (check.isNotEmpty) {
         var getUnread = await dbClient.query(globals.TABLE_MGROUP, columns: [globals.MGROUP_UNREAD], where: globals.MGROUP_SENT_ADDR + " = ? ", whereArgs: [input[_i].sentAddr]);

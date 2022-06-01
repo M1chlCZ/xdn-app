@@ -23,10 +23,10 @@ class MessageBubble extends StatefulWidget {
   const MessageBubble({Key? key, required this.messages, required this.userMessage, required this.replyCallback}) : super(key: key);
 
   @override
-  _MessageBubbleState createState() => _MessageBubbleState();
+  MessageBubbleState createState() => MessageBubbleState();
 }
 
-class _MessageBubbleState extends State<MessageBubble> with TickerProviderStateMixin {
+class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMixin {
   final RegExp regexEmoji = RegExp(r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])');
   String? _replyText;
   bool _rb = false;
@@ -242,7 +242,7 @@ class _MessageBubbleState extends State<MessageBubble> with TickerProviderStateM
                             switchInCurve: Curves.bounceOut,
                             switchOutCurve: Curves.bounceOut,
                             transitionBuilder: (Widget child, Animation<double> animation) {
-                              return ScaleTransition(child: child, scale: animation);
+                              return ScaleTransition(scale: animation, child: child);
                             },
                             child: _heartLeft,
                           ),

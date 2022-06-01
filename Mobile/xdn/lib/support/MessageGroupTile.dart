@@ -20,10 +20,10 @@ class MessageGroupTile extends StatefulWidget {
   const MessageGroupTile({Key? key, required this.mgroup, this.func, this.callbackMgroup, this.func3}) : super(key: key);
 
   @override
-  _MessageGroupTileState createState() => _MessageGroupTileState();
+  MessageGroupTileState createState() => MessageGroupTileState();
 }
 
-class _MessageGroupTileState extends State<MessageGroupTile> {
+class MessageGroupTileState extends State<MessageGroupTile> {
   @override
   void initState() {
     super.initState();

@@ -138,7 +138,7 @@ class AddressScreenState extends State<AddressScreen> {
         String? id = await SecureStorage.read(key: globals.ID);
         String? user = await SecureStorage.read(key: globals.USERNAME);
 
-        if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
+        if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
           if(mounted) Dialogs.displayDialog(context, "Error", "Invalid KONJ address");
           return;
         }
