@@ -62,7 +62,7 @@ class _MainMenuNewState extends State<MainMenuNew> {
                 ),
                 SizedBox(
                   width: 200.0,
-                    child: Image.asset("images/logo.png")),
+                    child: Image.asset("images/logo.png", color: Colors.white70,)),
                 const SizedBox(
                   height: 10,
                 ),
@@ -140,14 +140,14 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                       color: Colors.white10),
                                   child: Padding(
                                     padding: const EdgeInsets.only(
-                                        left: 15.0,
-                                        right: 15.0,
+                                        left: 10.0,
+                                        right: 10.0,
                                         top: 2.0,
                                         bottom: 2.0),
                                     child: Row(
                                       children: [
                                         Text(
-                                          "Daemon status",
+                                          "Wallet daemon status",
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyText1!
@@ -168,7 +168,7 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                   ),
                                 ),
                                 const SizedBox(
-                                  width: 20.0,
+                                  width: 10.0,
                                 ),
                                 Container(
                                   decoration: BoxDecoration(
@@ -176,8 +176,8 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                       color: Colors.white10),
                                   child: Padding(
                                     padding: const EdgeInsets.only(
-                                        left: 15.0,
-                                        right: 15.0,
+                                        left: 10.0,
+                                        right: 10.0,
                                         top: 2.0,
                                         bottom: 2.0),
                                     child: Row(

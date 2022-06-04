@@ -58,7 +58,7 @@ class AvatarPickerState extends State<AvatarPicker> {
           height: widget.size,
           decoration: BoxDecoration(
               color: widget.color,
-            borderRadius: BorderRadius.all(Radius.circular(20.0))
+            borderRadius: const BorderRadius.all(Radius.circular(20.0))
           ),
           child: GestureDetector(
             onTap: () {
@@ -68,7 +68,7 @@ class AvatarPickerState extends State<AvatarPicker> {
             },
             child: Center(
               child: ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                borderRadius: const BorderRadius.all(Radius.circular(15.0)),
                 child: Container(
                   decoration: BoxDecoration(
                       color: widget.color,
@@ -150,7 +150,7 @@ class AvatarPickerState extends State<AvatarPicker> {
     }
   }
 
-  Future<Null> _pickImage() async {
+  Future<void> _pickImage() async {
     final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
     _imageFile = pickedImage != null ? File(pickedImage.path) : _imageFile;
     if (pickedImage != null) {
