@@ -74,8 +74,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   @override
   void initState() {
     super.initState();
-    animationStakeController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
+    animationStakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _getBalance();
     // _graphByDay();
     // _checkCountdown();
@@ -134,11 +133,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   void _sendStakeCoins(String amount) async {
     double amnt = double.parse(amount) - 0.01;
     if (double.parse(_balance) < double.parse(amount)) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert,
-          AppLocalizations.of(context)!.st_insufficient);
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_insufficient);
     } else if (amnt < 0) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
-          AppLocalizations.of(context)!.st_in_fees);
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_in_fees);
     } else {
       Dialogs.openWaitBox(context);
 
@@ -146,15 +143,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       if (_serverStatus == 2) {
         if (mounted) {
           Navigator.of(context).pop();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
-              AppLocalizations.of(context)!.st_cannot_stake);
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_cannot_stake);
         }
         return;
       } else if (_serverStatus == 4) {
         if (mounted) {
           Navigator.of(context).pop();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
-              AppLocalizations.of(context)!.st_not_balance);
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_not_balance);
         }
         return;
       }
@@ -207,8 +202,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     if (i == 2) {
       if (mounted) {
         Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert,
-            AppLocalizations.of(context)!.st_24h_timeout);
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_24h_timeout);
       }
       return;
     }
@@ -310,7 +304,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     Future.delayed(const Duration(milliseconds: 100), () {
       animationStakeController!.forward();
     });
-
   }
 
   Future<void> _checkStaking() async {
@@ -417,19 +410,20 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       LineChartBarData(
         spots: values,
         showingIndicators: showIndexes,
-        colors: [Colors.white70],
+        color: Colors.white70,
         barWidth: 1.2,
         isStrokeCapRound: true,
         isCurved: true,
         curveSmoothness: 0.25,
         dotData: FlDotData(show: false),
         belowBarData: BarAreaData(
-          show: true,
-          colors: _gradientColors,
-          gradientColorStops: const [0, 0.5, 0.7, 0.95],
-          gradientFrom: const Offset(0.25, 0),
-          gradientTo: const Offset(0.25, 1),
-        ),
+            show: true,
+            gradient: LinearGradient(
+              colors: _gradientColors,
+              stops: const [0, 0.5, 0.7, 0.95],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )),
       ),
     ];
 
@@ -445,15 +439,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
           ]),
           titlesData: FlTitlesData(
             show: true,
-            topTitles: SideTitles(),
-            rightTitles: SideTitles(),
+            topTitles: AxisTitles(sideTitles: SideTitles()),
+            rightTitles: AxisTitles(sideTitles: SideTitles()),
             bottomTitles: _bottomTitles(),
             leftTitles: _leftTitles(),
           ),
           borderData: FlBorderData(
-            border: const Border(
-                bottom: BorderSide(color: Colors.white30, width: 0.5),
-                left: BorderSide(color: Colors.white30, width: 0.5)),
+            border: const Border(bottom: BorderSide(color: Colors.white30, width: 0.5), left: BorderSide(color: Colors.white30, width: 0.5)),
           ),
           minX: _minX,
           maxX: _maxX,
@@ -466,11 +458,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
           }).toList(),
           lineBarsData: lineBarData,
           lineTouchData: LineTouchData(
-              touchCallback:
-                  (FlTouchEvent? event, LineTouchResponse? touchResponse) {
-                if (event is FlTapDownEvent ||
-                    event is FlPointerHoverEvent ||
-                    event is FlPanDownEvent) {
+              touchCallback: (FlTouchEvent? event, LineTouchResponse? touchResponse) {
+                if (event is FlTapDownEvent || event is FlPointerHoverEvent || event is FlPanDownEvent) {
                   setState(() {
                     _touch = true;
                   });
@@ -482,32 +471,25 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                   setState(() {
                     _touch = false;
                   });
-                } else if (event is FlPanStartEvent ||
-                    event is FlLongPressMoveUpdate) {
+                } else if (event is FlPanStartEvent || event is FlLongPressMoveUpdate) {
                   setState(() {
                     _touch = true;
                   });
-                } else if (event is FlPanEndEvent ||
-                    event is FlPanCancelEvent) {
+                } else if (event is FlPanEndEvent || event is FlPanCancelEvent) {
                   setState(() {
                     _touch = false;
                   });
                 }
               },
               enabled: _touch,
-              getTouchedSpotIndicator:
-                  (LineChartBarData barData, List<int> spotIndexes) {
+              getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
                 return spotIndexes.map((spotIndex) {
                   return TouchedSpotIndicatorData(
                     FlLine(color: Colors.white54, strokeWidth: 0.8),
                     FlDotData(
                         show: true,
-                        getDotPainter: (FlSpot spot, double radius,
-                            LineChartBarData lc, int i) {
-                          return FlDotCirclePainter(
-                              color: const Color(0xFF312d53).withOpacity(0.5),
-                              strokeColor: Colors.white54,
-                              radius: 3.0);
+                        getDotPainter: (FlSpot spot, double radius, LineChartBarData lc, int i) {
+                          return FlDotCirclePainter(color: const Color(0xFF312d53).withOpacity(0.5), strokeColor: Colors.white54, radius: 3.0);
                         }),
                   );
                 }).toList();
@@ -525,21 +507,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                         // Duration d =  value.toInt());
                         _getToolTip(flSpot.x.toInt()),
                         // '${Duration(minutes: flSpot.x.toInt()).toHoursMinutes().toString()} \n',
-                        GoogleFonts.montserrat(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 12),
+                        GoogleFonts.montserrat(color: Colors.white70, fontWeight: FontWeight.w400, fontSize: 12),
                         children: [
                           TextSpan(
                             text: "${flSpot.y.toStringAsFixed(3)} XDN",
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(
-                                    fontStyle: FontStyle.normal,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14.0,
-                                    color: Colors.white),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontWeight: FontWeight.bold, fontSize: 14.0, color: Colors.white),
                           ),
                         ],
                       );
@@ -566,16 +538,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                 height: 10,
               ),
               Padding(
-                padding: const EdgeInsets.only(
-                    left: 10.0, right: 10.0, bottom: 10.0),
+                padding: const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
                 child: ClipRect(
                   child: Container(
                     padding: const EdgeInsets.only(top: 0.0, bottom: 0.0),
-                    decoration: BoxDecoration(
-                        color: Theme.of(context).konjHeaderColor,
-                        border: Border.all(color: Colors.transparent),
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(10.0))),
+                    decoration: BoxDecoration(color: Theme.of(context).konjHeaderColor, border: Border.all(color: Colors.transparent), borderRadius: const BorderRadius.all(Radius.circular(10.0))),
                     child: Column(
                       children: [
                         Align(
@@ -629,13 +596,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     value: item.key + 1,
                                     child: Padding(
                                       padding: const EdgeInsets.all(10.0),
-                                      child: Text(item.value,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .button!
-                                              .copyWith(
-                                                  fontSize: 16.0,
-                                                  color: Colors.white70)),
+                                      child: Text(item.value, style: Theme.of(context).textTheme.button!.copyWith(fontSize: 16.0, color: Colors.white70)),
                                     ),
                                   ),
                                 )
@@ -654,61 +615,43 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                               duration: const Duration(milliseconds: 500),
                               child: Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.only(
-                                    right: 35.0, top: 5.0),
-                                child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(top: 0.8),
-                                        child: AvatarGlow(
-                                            glowColor: Colors.white,
-                                            endRadius: 5.5,
-                                            duration: const Duration(
-                                                milliseconds: 1500),
-                                            repeat: true,
-                                            showTwoGlows: true,
-                                            curve: Curves.easeOut,
-                                            repeatPauseDuration: const Duration(
-                                                milliseconds: 100),
-                                            child: Container(
-                                              height: 5.0,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white
-                                                    .withOpacity(0.5),
-                                                shape: BoxShape.circle,
-                                              ),
-                                            )),
-                                      ),
-                                      const SizedBox(
-                                        width: 2.0,
-                                      ),
-                                      Text(
-                                        AppLocalizations.of(context)!
-                                            .st_live
-                                            .toUpperCase(),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline5!
-                                            .copyWith(
-                                                fontSize: 8.0,
-                                                fontWeight: FontWeight.w300,
-                                                color: Colors.white54),
-                                      ),
-                                    ]),
+                                padding: const EdgeInsets.only(right: 35.0, top: 5.0),
+                                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 0.8),
+                                    child: AvatarGlow(
+                                        glowColor: Colors.white,
+                                        endRadius: 5.5,
+                                        duration: const Duration(milliseconds: 1500),
+                                        repeat: true,
+                                        showTwoGlows: true,
+                                        curve: Curves.easeOut,
+                                        repeatPauseDuration: const Duration(milliseconds: 100),
+                                        child: Container(
+                                          height: 5.0,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.5),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        )),
+                                  ),
+                                  const SizedBox(
+                                    width: 2.0,
+                                  ),
+                                  Text(
+                                    AppLocalizations.of(context)!.st_live.toUpperCase(),
+                                    style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, fontWeight: FontWeight.w300, color: Colors.white54),
+                                  ),
+                                ]),
                               ),
                             ),
                             Align(
                               alignment: Alignment.topLeft,
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.only(top: 8.0, left: 5),
+                                padding: const EdgeInsets.only(top: 8.0, left: 5),
                                 child: SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.2,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.85,
+                                  height: MediaQuery.of(context).size.height * 0.2,
+                                  width: MediaQuery.of(context).size.width * 0.85,
                                   child: values!.isEmpty
                                       ? const Center(
                                           child: CircularProgressIndicator(
@@ -718,10 +661,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                         )
                                       : LineChart(
                                           _mainData(),
-                                          swapAnimationDuration:
-                                              const Duration(milliseconds: 500),
-                                          swapAnimationCurve:
-                                              Curves.linearToEaseOut,
+                                          swapAnimationDuration: const Duration(milliseconds: 500),
+                                          swapAnimationCurve: Curves.linearToEaseOut,
                                         ),
                                 ),
                               ),
@@ -738,38 +679,29 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                   child: ClipRect(
                       child: Container(
                     decoration: BoxDecoration(
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(10.0)),
-                      border:
-                          Border.all(color: Theme.of(context).konjHeaderColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(10.0)),
+                      border: Border.all(color: Theme.of(context).konjHeaderColor),
                       color: Theme.of(context).konjHeaderColor,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(
-                              top: 10, left: 17.0, right: 25.0),
+                          padding: const EdgeInsets.only(top: 10, left: 17.0, right: 25.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(AppLocalizations.of(context)!.available,
-                                  style: Theme.of(context).textTheme.headline5),
+                              Text(AppLocalizations.of(context)!.available, style: Theme.of(context).textTheme.headline5),
                               FutureBuilder(
                                   future: _getBalanceFuture,
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData) {
-                                      Map m =
-                                          snapshot.data as Map<String, dynamic>;
+                                      Map m = snapshot.data as Map<String, dynamic>;
                                       _balance = m['balance'].toString();
                                       _imature = m['immature'].toString();
-                                      t = Timer(
-                                          const Duration(milliseconds: 100),
-                                          () {
+                                      t = Timer(const Duration(milliseconds: 100), () {
                                         setState(() {
-                                          _imatureVisible = _imature == "0.000"
-                                              ? false
-                                              : true;
+                                          _imatureVisible = _imature == "0.000" ? false : true;
                                           t!.cancel();
                                         });
                                       });
@@ -780,36 +712,25 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                           maxLines: 1,
                                           overflow: TextOverflow.fade,
                                           textAlign: TextAlign.right,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline6!
-                                              .copyWith(fontSize: 20.0),
+                                          style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 20.0),
                                         ),
                                       );
                                     } else if (snapshot.hasError) {
                                       return Center(
                                           child: Text(
                                         snapshot.error.toString(),
-                                        style: GoogleFonts.montserrat(
-                                            fontStyle: FontStyle.normal,
-                                            fontSize: 24,
-                                            color: Colors.red),
+                                        style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 24, color: Colors.red),
                                       ));
                                     } else {
                                       return Center(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: const <Widget>[
-                                              SizedBox(
-                                                  height: 24.0,
-                                                  width: 24.0,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    backgroundColor:
-                                                        Colors.black45,
-                                                  )),
-                                            ]),
+                                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
+                                          SizedBox(
+                                              height: 24.0,
+                                              width: 24.0,
+                                              child: CircularProgressIndicator(
+                                                backgroundColor: Colors.black45,
+                                              )),
+                                        ]),
                                       );
                                     }
                                   }),
@@ -819,44 +740,27 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                         Visibility(
                           visible: _imatureVisible,
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                                top: 5, left: 17.0, right: 25.0),
-                            child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(AppLocalizations.of(context)!.immature,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline5!
-                                          .copyWith(
-                                              fontSize: 14.0,
-                                              color: Colors.white38)),
-                                  Expanded(
-                                    child: AutoSizeText("$_imature XDN",
-                                        minFontSize: 8.0,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.fade,
-                                        textAlign: TextAlign.right,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline6!
-                                            .copyWith(
-                                                fontSize: 14.0,
-                                                color: Colors.white38)),
-                                  )
-                                ]),
+                            padding: const EdgeInsets.only(top: 5, left: 17.0, right: 25.0),
+                            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                              Text(AppLocalizations.of(context)!.immature, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                              Expanded(
+                                child: AutoSizeText("$_imature XDN",
+                                    minFontSize: 8.0,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.fade,
+                                    textAlign: TextAlign.right,
+                                    style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                              )
+                            ]),
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(
-                              top: 5, left: 17.0, right: 25.0),
+                          padding: const EdgeInsets.only(top: 5, left: 17.0, right: 25.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(AppLocalizations.of(context)!.st_headline,
-                                  style: Theme.of(context).textTheme.headline5),
+                              Text(AppLocalizations.of(context)!.st_headline, style: Theme.of(context).textTheme.headline5),
                               Expanded(
                                 child: AutoSizeText(
                                   "$_stakeAmount XDN",
@@ -864,19 +768,14 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
                                   textAlign: TextAlign.right,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headline6!
-                                      .copyWith(fontSize: 20.0),
+                                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 20.0),
                                 ),
                               )
                             ],
                           ),
                         ),
                         SizeTransition(
-                          sizeFactor: CurvedAnimation(
-                              curve: Curves.elasticOut,
-                              parent: animationStakeController!),
+                          sizeFactor: CurvedAnimation(curve: Curves.elasticOut, parent: animationStakeController!),
                           axis: Axis.vertical,
                           axisAlignment: 3.0,
                           child: Column(
@@ -889,8 +788,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       height: 10,
                                     ),
                                     const Padding(
-                                      padding: EdgeInsets.only(
-                                          left: 8.0, right: 8.0),
+                                      padding: EdgeInsets.only(left: 8.0, right: 8.0),
                                       child: Divider(
                                         height: 1,
                                         color: Colors.white60,
@@ -900,65 +798,36 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       height: 10,
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 0,
-                                          left: 17.0,
-                                          right: 25.0,
-                                          bottom: 10.0),
+                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(_lockedText,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline6!
-                                                  .copyWith(fontSize: 14.0)),
-                                          Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "$_locked XDN",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headline6!
-                                                      .copyWith(
-                                                        fontSize: 12.0,
-                                                      ),
-                                                )
-                                              ])
+                                          Text(_lockedText, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
+                                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                            Text(
+                                              "$_locked XDN",
+                                              style: Theme.of(context).textTheme.headline6!.copyWith(
+                                                    fontSize: 12.0,
+                                                  ),
+                                            )
+                                          ])
                                         ],
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 0, left: 17.0, right: 25.0),
+                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(
-                                              AppLocalizations.of(context)!
-                                                  .st_reward,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline6!
-                                                  .copyWith(fontSize: 14.0)),
-                                          Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "$_reward XDN",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headline6!
-                                                      .copyWith(
-                                                        fontSize: 12.0,
-                                                      ),
-                                                ),
-                                              ]),
+                                          Text(AppLocalizations.of(context)!.st_reward, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
+                                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                            Text(
+                                              "$_reward XDN",
+                                              style: Theme.of(context).textTheme.headline6!.copyWith(
+                                                    fontSize: 12.0,
+                                                  ),
+                                            ),
+                                          ]),
                                         ],
                                       ),
                                     ),
@@ -966,8 +835,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       height: 10,
                                     ),
                                     const Padding(
-                                      padding: EdgeInsets.only(
-                                          left: 15.0, right: 15.0),
+                                      padding: EdgeInsets.only(left: 15.0, right: 15.0),
                                       child: Divider(
                                         height: 1,
                                         color: Colors.white54,
@@ -979,44 +847,21 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     Opacity(
                                       opacity: 0.7,
                                       child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 0, left: 17.0, right: 25.0),
+                                        padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
                                         child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                                AppLocalizations.of(context)!
-                                                    .st_total_coins,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headline5!
-                                                    .copyWith(fontSize: 12.0)),
-                                            Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    _totalCoins.toString(),
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .headline5!
-                                                        .copyWith(
-                                                            fontSize: 12.0),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  Container(
-                                                      width: 12,
-                                                      height: 12,
-                                                      decoration: const BoxDecoration(
-                                                          image: DecorationImage(
-                                                              image: AssetImage(
-                                                                  'images/konjicon.png'),
-                                                              fit: BoxFit
-                                                                  .fitWidth))),
-                                                ])
+                                            Text(AppLocalizations.of(context)!.st_total_coins, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                              Text(
+                                                _totalCoins.toString(),
+                                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                              ),
+                                              const SizedBox(
+                                                width: 10,
+                                              ),
+                                              Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/konjicon.png'), fit: BoxFit.fitWidth))),
+                                            ])
                                           ],
                                         ),
                                       ),
@@ -1027,44 +872,21 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     Opacity(
                                       opacity: 0.7,
                                       child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 0, left: 17.0, right: 25.0),
+                                        padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
                                         child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                                AppLocalizations.of(context)!
-                                                    .st_contribution,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headline5!
-                                                    .copyWith(fontSize: 12.0)),
-                                            Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    _contribution.toString(),
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .headline5!
-                                                        .copyWith(
-                                                            fontSize: 12.0),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  Container(
-                                                      width: 12,
-                                                      height: 12,
-                                                      decoration: const BoxDecoration(
-                                                          image: DecorationImage(
-                                                              image: AssetImage(
-                                                                  'images/perc.png'),
-                                                              fit: BoxFit
-                                                                  .fitWidth))),
-                                                ])
+                                            Text(AppLocalizations.of(context)!.st_contribution, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                              Text(
+                                                _contribution.toString(),
+                                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                              ),
+                                              const SizedBox(
+                                                width: 10,
+                                              ),
+                                              Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/perc.png'), fit: BoxFit.fitWidth))),
+                                            ])
                                           ],
                                         ),
                                       ),
@@ -1075,44 +897,21 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     Opacity(
                                       opacity: 0.7,
                                       child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 0, left: 17.0, right: 25.0),
+                                        padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
                                         child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                                AppLocalizations.of(context)!
-                                                    .st_estimated,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headline5!
-                                                    .copyWith(fontSize: 12.0)),
-                                            Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    _estimated.toString(),
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .headline5!
-                                                        .copyWith(
-                                                            fontSize: 12.0),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  Container(
-                                                      width: 12,
-                                                      height: 12,
-                                                      decoration: const BoxDecoration(
-                                                          image: DecorationImage(
-                                                              image: AssetImage(
-                                                                  'images/konjicon.png'),
-                                                              fit: BoxFit
-                                                                  .fitWidth))),
-                                                ])
+                                            Text(AppLocalizations.of(context)!.st_estimated, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                              Text(
+                                                _estimated.toString(),
+                                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                              ),
+                                              const SizedBox(
+                                                width: 10,
+                                              ),
+                                              Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/konjicon.png'), fit: BoxFit.fitWidth))),
+                                            ])
                                           ],
                                         ),
                                       ),
@@ -1128,24 +927,16 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 15.0, right: 8.0),
+                                    padding: const EdgeInsets.only(left: 15.0, right: 8.0),
                                     child: SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.9,
+                                      width: MediaQuery.of(context).size.width * 0.9,
                                       child: AutoSizeText(
-                                        AppLocalizations.of(context)!
-                                            .st_24h_lock,
+                                        AppLocalizations.of(context)!.st_24h_lock,
                                         textAlign: TextAlign.start,
                                         maxLines: 1,
                                         minFontSize: 8,
                                         overflow: TextOverflow.fade,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline5!
-                                            .copyWith(
-                                                fontSize: 12.0,
-                                                color: Colors.white54),
+                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white54),
                                       ),
                                     ),
                                   ),
@@ -1154,116 +945,55 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                               const SizedBox(
                                 height: 15,
                               ),
-                              Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Flexible(
-                                        child: FractionallySizedBox(
-                                      widthFactor: 0.99,
-                                      child: Container(
-                                        padding: const EdgeInsets.only(
-                                            left: 10.0, right: 10.0),
-                                        height: 45,
-                                        child: TextField(
-                                          controller: _controller,
-                                          onChanged: (String text) async {
-                                            // _searchUsers(text);
-                                          },
-                                          keyboardType: Platform.isIOS
-                                              ? const TextInputType
-                                                      .numberWithOptions(
-                                                  signed: true)
-                                              : TextInputType.number,
-                                          inputFormatters: <TextInputFormatter>[
-                                            FilteringTextInputFormatter.allow(
-                                                RegExp(r'^\d*\.?\d{0,3}')),
-                                          ],
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline5!
-                                              .copyWith(
-                                                  fontStyle: FontStyle.normal,
-                                                  color: Colors.white),
-                                          decoration: InputDecoration(
-                                            focusedBorder: OutlineInputBorder(
-                                                borderSide: const BorderSide(
-                                                    color: Colors.white60,
-                                                    width: 1.0),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        15.0)),
-                                            enabledBorder: OutlineInputBorder(
-                                                borderSide: const BorderSide(
-                                                    color: Colors.white30,
-                                                    width: 1.0),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        15.0)),
-                                            floatingLabelBehavior:
-                                                FloatingLabelBehavior.always,
-                                            filled: true,
-                                            contentPadding:
-                                                const EdgeInsets.fromLTRB(
-                                                    10.0, 0.0, 20.0, 64.0),
-                                            hoverColor: Colors.white60,
-                                            focusColor: Colors.white60,
-                                            labelStyle: Theme.of(context)
-                                                .textTheme
-                                                .headline5!
-                                                .copyWith(color: Colors.white),
-                                            hintText:
-                                                AppLocalizations.of(context)!
-                                                    .st_enter_amount,
-                                            hintStyle: Theme.of(context)
-                                                .textTheme
-                                                .headline5!
-                                                .copyWith(
-                                                    fontSize: 10.0,
-                                                    color: Colors.white),
-                                          ),
-                                        ),
+                              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                                Flexible(
+                                    child: FractionallySizedBox(
+                                  widthFactor: 0.99,
+                                  child: Container(
+                                    padding: const EdgeInsets.only(left: 10.0, right: 10.0),
+                                    height: 45,
+                                    child: TextField(
+                                      controller: _controller,
+                                      onChanged: (String text) async {
+                                        // _searchUsers(text);
+                                      },
+                                      keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
+                                      inputFormatters: <TextInputFormatter>[
+                                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                                      ],
+                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, color: Colors.white),
+                                      decoration: InputDecoration(
+                                        focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white60, width: 1.0), borderRadius: BorderRadius.circular(15.0)),
+                                        enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1.0), borderRadius: BorderRadius.circular(15.0)),
+                                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                                        filled: true,
+                                        contentPadding: const EdgeInsets.fromLTRB(10.0, 0.0, 20.0, 64.0),
+                                        hoverColor: Colors.white60,
+                                        focusColor: Colors.white60,
+                                        labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
+                                        hintText: AppLocalizations.of(context)!.st_enter_amount,
+                                        hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 10.0, color: Colors.white),
                                       ),
-                                    )),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 15.0, top: 0.0),
-                                      child: SizedBox(
-                                        height: 47,
-                                        width: 100,
-                                        child: TextButton(
-                                          style: ButtonStyle(
-                                              backgroundColor:
-                                                  MaterialStateProperty.resolveWith(
-                                                      (states) =>
-                                                          qrColors(states)),
-                                              shape: MaterialStateProperty.all<
-                                                      RoundedRectangleBorder>(
-                                                  RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              15.0),
-                                                      side: const BorderSide(
-                                                          color: Colors
-                                                              .transparent)))),
-                                          onPressed: () =>
-                                              _sendStakeCoins(_controller.text),
-                                          child: Text(
-                                              AppLocalizations.of(context)!
-                                                  .send
-                                                  .toUpperCase(),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline6!
-                                                  .copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 14.0)),
-                                        ),
-                                      ),
-                                    )
-                                  ]),
+                                    ),
+                                  ),
+                                )),
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 15.0, top: 0.0),
+                                  child: SizedBox(
+                                    height: 47,
+                                    width: 100,
+                                    child: TextButton(
+                                      style: ButtonStyle(
+                                          backgroundColor: MaterialStateProperty.resolveWith((states) => qrColors(states)),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
+                                      onPressed: () => _sendStakeCoins(_controller.text),
+                                      child:
+                                          Text(AppLocalizations.of(context)!.send.toUpperCase(), style: Theme.of(context).textTheme.headline6!.copyWith(fontWeight: FontWeight.w600, fontSize: 14.0)),
+                                    ),
+                                  ),
+                                )
+                              ]),
                               const SizedBox(
                                 height: 12.0,
                               ),
@@ -1272,15 +1002,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                 child: SizedBox(
                                   width: MediaQuery.of(context).size.width,
                                   child: Center(
-                                    child: Text(
-                                        AppLocalizations.of(context)!
-                                            .st_time_until_unlock,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline5!
-                                            .copyWith(
-                                                fontSize: 13.0,
-                                                color: Colors.white70)),
+                                    child: Text(AppLocalizations.of(context)!.st_time_until_unlock, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 13.0, color: Colors.white70)),
                                   ),
                                 ),
                               ),
@@ -1290,32 +1012,22 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: CountdownTimer(
                                     onEnd: () async {
-                                      Future.delayed(
-                                          const Duration(milliseconds: 100),
-                                          () {
+                                      Future.delayed(const Duration(milliseconds: 100), () {
                                         setState(() {
                                           endTime = 0;
                                         });
                                       });
                                     },
                                     endTime: endTime,
-                                    widgetBuilder:
-                                        (_, CurrentRemainingTime? time) {
+                                    widgetBuilder: (_, CurrentRemainingTime? time) {
                                       if (time == null) {
                                         return const Text('');
                                       }
                                       return SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width,
+                                        width: MediaQuery.of(context).size.width,
                                         child: Center(
-                                          child: Text(
-                                              '${_formatCountdownTime(time.hours!)}:${_formatCountdownTime(time.min!)}:${_formatCountdownTime(time.sec!)}',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline5!
-                                                  .copyWith(
-                                                      fontSize: 13.0,
-                                                      color: Colors.white70)),
+                                          child: Text('${_formatCountdownTime(time.hours!)}:${_formatCountdownTime(time.min!)}:${_formatCountdownTime(time.sec!)}',
+                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 13.0, color: Colors.white70)),
                                         ),
                                       );
                                     },
@@ -1329,27 +1041,15 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 8.0,
-                                          right: 8.0,
-                                          top: 0.0,
-                                          bottom: 5.0),
+                                      padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 0.0, bottom: 5.0),
                                       child: SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.75,
+                                        width: MediaQuery.of(context).size.width * 0.75,
                                         child: AutoSizeText(
-                                          AppLocalizations.of(context)!
-                                              .st_contains,
+                                          AppLocalizations.of(context)!.st_contains,
                                           textAlign: TextAlign.center,
                                           maxLines: 1,
                                           minFontSize: 8,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline5!
-                                              .copyWith(
-                                                  fontSize: 11.0,
-                                                  color: Colors.white54),
+                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 11.0, color: Colors.white54),
                                         ),
                                       ),
                                     ),
@@ -1382,22 +1082,12 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                             // Dialogs.openUserQR(context);
                           },
                           style: ButtonStyle(
-                              backgroundColor:
-                                  MaterialStateProperty.resolveWith(
-                                      (states) => getColor(states)),
-                              shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      side: BorderSide(
-                                          color: Theme.of(context)
-                                              .konjHeaderColor)))),
+                              backgroundColor: MaterialStateProperty.resolveWith((states) => getColor(states)),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0), side: BorderSide(color: Theme.of(context).konjHeaderColor)))),
                           child: Text(
                             AppLocalizations.of(context)!.st_withdraw_reward,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(fontSize: 18.0),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                           ),
                         ),
                       ),
@@ -1419,22 +1109,12 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                 // Dialogs.openUserQR(context);
                               },
                               style: ButtonStyle(
-                                  backgroundColor:
-                                      MaterialStateProperty.resolveWith(
-                                          (states) => getColorAll(states)),
-                                  shape: MaterialStateProperty.all<
-                                          RoundedRectangleBorder>(
-                                      RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                          side: const BorderSide(
-                                              color: Colors.transparent)))),
+                                  backgroundColor: MaterialStateProperty.resolveWith((states) => getColorAll(states)),
+                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0), side: const BorderSide(color: Colors.transparent)))),
                               child: Text(
                                 AppLocalizations.of(context)!.st_withdraw_all,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline5!
-                                    .copyWith(fontSize: 18.0),
+                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                               ),
                             ),
                           ),
@@ -1471,8 +1151,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
 
   String _getToolTip(int time) {
     if (_dropdownValue == 0) {
-      return '${_getMeTime("0000-00-00 " +
-              Duration(minutes: time).toHoursMinutes().toString())}\n';
+      return '${_getMeTime("0000-00-00 ${Duration(minutes: time).toHoursMinutes()}")}\n';
       // return '${Duration(minutes: time).toHoursMinutes().toString()} \n';
     } else if (_dropdownValue == 1) {
       // print(_date);
@@ -1504,32 +1183,28 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     const Color(0xFFFFFFFF).withOpacity(0.0),
   ];
 
-  SideTitles _leftTitles() {
-    return SideTitles(
+  AxisTitles _leftTitles() {
+    return AxisTitles(
+        sideTitles: SideTitles(
       showTitles: true,
-      getTextStyles: (value, margin) => Theme.of(context)
-          .textTheme
-          .headline5!
-          .copyWith(color: Colors.white70, fontSize: 10.0),
-      getTitles: (value) {
-        return _formatTitles(value.toInt());
+      getTitlesWidget: (value, meta) {
+        return Text(
+          _formatTitles(value.toInt()),
+          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 10.0),
+        );
       },
-      // NumberFormat.compactCurrency(symbol: '\$').format(value),
       reservedSize: _dropdownValue == 0 ? 19 : 27,
-      margin: 7,
+      // margin: 7,
       interval: _leftTitlesInterval,
-    );
+    ));
   }
 
-  SideTitles _bottomTitles() {
-    return SideTitles(
-      rotateAngle: 0.0,
-      showTitles: true,
-      getTextStyles: (value, margin) => Theme.of(context)
-          .textTheme
-          .headline5!
-          .copyWith(color: Colors.white54, fontSize: 10.0),
-      getTitles: (value) {
+  AxisTitles _bottomTitles() {
+    return AxisTitles(
+        sideTitles: SideTitles(
+      reservedSize: 8.0,
+      getTitlesWidget: (value, meta) {
+        var text = "";
         if (_dropdownValue == 0) {
           String d = Duration(minutes: value.toInt()).toHoursMinutes();
           String dd = _getMeTime("0000-00-00 $d");
@@ -1540,18 +1215,21 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
           } else {
             finalDate = dateParts[0] + dateParts[1];
           }
-          return finalDate;
+          text = finalDate;
         } else if (_dropdownValue == 1) {
           Duration d = Duration(days: value.toInt());
-          return d.inDays.toString();
+          text = d.inDays.toString();
         } else {
           Duration d = Duration(days: value.toInt());
-          return d.inDays.toString();
+          text = d.inDays.toString();
         }
+        return Text(
+          text,
+          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white54, fontSize: 10.0),
+        );
       },
-      margin: 8,
       interval: (_maxX - _minX) / (4 + _dropdownValue * 4),
-    );
+    ));
   }
 
   FlGridData _gridData() {
