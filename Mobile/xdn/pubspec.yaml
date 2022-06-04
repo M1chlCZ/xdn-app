@@ -3,7 +3,7 @@ description: Konjungate App Wallet
 
 publish_to: 'none'
 
-version: 1.0.4+4
+version: 1.0.7+7
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -21,7 +21,6 @@ dependencies:
   package_info: any
   google_fonts: any
   intl: ^0.17.0
-
   qr_code_scanner:
     git:
       url: https://github.com/xeinebiu/qr_code_scanner.git
@@ -31,7 +30,7 @@ dependencies:
       url: https://github.com/M1chlCZ/requests.git
       ref: master
   qr_flutter: ^4.0.0
-  sqflite: ^2.0.2+1
+  sqflite: ^2.0.3-dev.1
   material_design_icons_flutter: any
   pinput: ^1.2.2
   tuple: ^2.0.0
@@ -60,7 +59,7 @@ dependencies:
   flutter_native_timezone: ^2.0.0
   flutter_countdown_timer: ^4.1.0
   flutter_svg: ^1.1.0
-  badges: ^2.0.2
+  badges: ^2.0.3
   crypto: any
   fl_chart: ^0.41.0
   jiffy: ^5.0.0

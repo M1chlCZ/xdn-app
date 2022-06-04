@@ -16,7 +16,7 @@ import 'MessageGroup.dart';
 import 'NetInterface.dart';
 import 'TranSaction.dart';
 
-const DB_VERSION = 9;
+const DB_VERSION = 1;
 
 class AppDatabase {
   static Database? _db;
@@ -68,7 +68,6 @@ class AppDatabase {
     tablesSql.add(tableMessages);
     tablesSql.add(tableTransactions);
     tablesSql.add(tableAvatars);
-
     if (_db != null) {
       return _db!;
     }
@@ -78,7 +77,7 @@ class AppDatabase {
 
   initDb() async {
     io.Directory documentDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentDirectory.path, 'maindb.db');
+    String path = join(documentDirectory.path, 'db_digin.db');
     var db = await openDatabase(path, version: DB_VERSION, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return db;
   }
@@ -239,11 +238,7 @@ class AppDatabase {
 
   Future<List<MessageGroup>> getMessageGroup() async {
     final dbClient = await db;
-    var res = await dbClient.rawQuery("SELECT COALESCE(t2.name, t1.sentAddr) as sentAddr, t1.sentAddressOrignal, t1.unread, t1.lastReceivedMessage, t1.text FROM " +
-        globals.TABLE_MGROUP +
-        " t1 LEFT JOIN " +
-        globals.TABLE_ADDR +
-        " t2 ON t1.sentAddr = t2.addr ORDER BY t1.lastReceivedMessage DESC");
+    var res = await dbClient.rawQuery("SELECT COALESCE(t2.name, t1.sentAddr) as sentAddr, t1.sentAddressOrignal, t1.unread, t1.lastReceivedMessage, t1.text FROM ${globals.TABLE_MGROUP} t1 LEFT JOIN ${globals.TABLE_ADDR} t2 ON t1.sentAddr = t2.addr ORDER BY t1.lastReceivedMessage DESC");
     return List.generate(res.length, (i) {
       return MessageGroup(
           sentAddr: res[i]['sentAddr'].toString(),
@@ -432,22 +427,16 @@ class AppDatabase {
     });
   }
 
-  Future<void> addTransactions(List<TranSaction> list) async {
+  Future<int> addTransactions(List<TranSaction> list) async {
     final dbClient = await db;
     try {
-      for (var _i = 0; _i < list.length; _i++) {
-        var res = await dbClient.query(globals.TABLE_TRANSACTION, where: "id = ?", whereArgs: [list[_i].id]);
-        if (res.isNotEmpty) {
-          Map<String, dynamic> row = {
-            globals.TRAN_CONFIRMATION: list[_i].confirmation,
-          };
-          await dbClient.update(globals.TABLE_TRANSACTION, row, where: "id = ? ", whereArgs: [list[_i].id]);
-        } else {
-          await dbClient.insert(globals.TABLE_TRANSACTION, list[_i].toMap());
+      for (var l in list) {
+          await dbClient.insert(globals.TABLE_TRANSACTION, l.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
         }
-      }
+      return 1;
     } catch (e) {
       print(e);
+      return 0;
     }
   }
 
@@ -516,55 +505,13 @@ class AppDatabase {
     switch (oldVersion) {
       case 1:
         try {
-          await db.execute(tableMessageGroup);
-          await db.execute(tableMessages);
-          await db.execute(tableTransactions);
-          await db.execute(tableAvatars);
+          // await db.execute(tableMessageGroup);
+          // await db.execute(tableMessages);
+          // await db.execute(tableTransactions);
+          // await db.execute(tableAvatars);
         } catch (e) {
           print(e);
         }
-        break;
-
-      case 2:
-        try {
-          await db.execute(tableTransactions);
-          await db.execute(tableAvatars);
-          await db.execute('DROP TABLE IF EXISTS messages');
-          await db.execute(tableMessages);
-        } catch (e) {
-          print(e);
-        }
-        break;
-
-      case 3:
-        await db.execute(tableAvatars);
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 4:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 5:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 6:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 7:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 8:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
         break;
     }
   }

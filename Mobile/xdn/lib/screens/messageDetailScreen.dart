@@ -205,7 +205,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       int _i = await NetInterface.sendContactCoins(amount, name, addr);
       var _nick = await SecureStorage.read(key: globals.NICKNAME);
       if (_i == 1) {
-        var _text = "${_nick!} ${AppLocalizations.of(context)!.message_tipped} ${widget.mgroup.sentAddr!} $amount KONJ!";
+        var _text = "${_nick!} ${AppLocalizations.of(context)!.message_tipped} ${widget.mgroup.sentAddr!} $amount XDN!";
         await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, _text, _replyid);
         setState(() {
           _switchWidget = _sendWait();
@@ -316,7 +316,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                     );
                                   case Status.LOADING:
                                     return const Padding(
-                                      padding: EdgeInsets.only(bottom: 200.0),
+                                      padding: EdgeInsets.only(bottom: 280),
                                       child: SizedBox(
                                           height: 50.0,
                                           width: 50.0,
@@ -533,7 +533,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
           ],
         ),
       ),
-      CardHeader(
+      const CardHeader(
         title: '',
         backArrow: true,
       ),

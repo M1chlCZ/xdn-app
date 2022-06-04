@@ -22,10 +22,10 @@ class MessageComposeScreen extends StatefulWidget {
   const MessageComposeScreen({Key? key, this.func, this.cont}) : super(key: key);
 
   @override
-  _MessageComposeScreenState createState() => _MessageComposeScreenState();
+  MessageComposeScreenState createState() => MessageComposeScreenState();
 }
 
-class _MessageComposeScreenState extends State<MessageComposeScreen> {
+class MessageComposeScreenState extends State<MessageComposeScreen> {
   final TextEditingController _controllerAddress = TextEditingController();
   final TextEditingController _controllerMessage = TextEditingController();
   Contact? _recipient;

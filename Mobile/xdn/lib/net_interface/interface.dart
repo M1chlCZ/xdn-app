@@ -117,7 +117,6 @@ class ComInterface {
         };
         throw UnauthorisedException(error);
 
-        break;
       case 403:
       case 422:
         Map<String, dynamic> error = {

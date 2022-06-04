@@ -531,7 +531,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                             fontSize: 12),
                         children: [
                           TextSpan(
-                            text: "${flSpot.y.toStringAsFixed(3)} KONJ",
+                            text: "${flSpot.y.toStringAsFixed(3)} XDN",
                             style: Theme.of(context)
                                 .textTheme
                                 .headline5!
@@ -775,7 +775,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       });
                                       return Expanded(
                                         child: AutoSizeText(
-                                          "$_balance KONJ",
+                                          "$_balance XDN",
                                           minFontSize: 8.0,
                                           maxLines: 1,
                                           overflow: TextOverflow.fade,
@@ -833,7 +833,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                               fontSize: 14.0,
                                               color: Colors.white38)),
                                   Expanded(
-                                    child: AutoSizeText("$_imature KONJ",
+                                    child: AutoSizeText("$_imature XDN",
                                         minFontSize: 8.0,
                                         maxLines: 1,
                                         overflow: TextOverflow.fade,
@@ -859,7 +859,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   style: Theme.of(context).textTheme.headline5),
                               Expanded(
                                 child: AutoSizeText(
-                                  "$_stakeAmount KONJ",
+                                  "$_stakeAmount XDN",
                                   minFontSize: 8.0,
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
@@ -919,7 +919,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  "$_locked KONJ",
+                                                  "$_locked XDN",
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .headline6!
@@ -950,7 +950,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  "$_reward KONJ",
+                                                  "$_reward XDN",
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .headline6!

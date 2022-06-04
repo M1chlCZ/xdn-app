@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,7 +11,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:digitalnote/support/AppDatabase.dart';
@@ -33,6 +34,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 
 class MainMenuScreen extends StatefulWidget {
   final String? locale;
+
   const MainMenuScreen({Key? key, this.locale}) : super(key: key);
 
   @override
@@ -51,38 +53,32 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
   bool _pinEnabled = false;
   bool _paused = false;
   int _messageCount = 0;
+  bool run = false;
 
+  ComInterface cm = ComInterface();
 
   void _callback(String name) {
-      if(name == AppLocalizations.of(context)!.menu_wallet) {
-        Navigator.of(context).push(CupertinoPageRoute(
-            builder: (context) => DetailScreenWidget(
-                  key: _walletScreenKey,
-                )));
-      }
-      else if(name == AppLocalizations.of(context)!.st_headline) {
-        Navigator.of(context).push(CupertinoPageRoute(
-            builder: (context) =>
-                StakingScreen(
-                  key: _stakingScreenKey,
-                )));
-      }
-      else if(name == AppLocalizations.of(context)!.contacts) {
-        Navigator.of(context).push(
-            CupertinoPageRoute(builder: (context) => const AddressScreen()));
-      }
-      else if(name == AppLocalizations.of(context)!.messages) {
-        Navigator.of(context).push(CupertinoPageRoute(
-            builder: (context) => MessageScreen(
-                  key: _messageScreenKey,
-                )));
-      }
-      else {
-        Navigator.of(context).push(
-            CupertinoPageRoute(builder: (context) => const SettingsScreen())).then((
-            value) => _getUserInfo(reload: value));
-      }
+    if (name == AppLocalizations.of(context)!.menu_wallet) {
+      Navigator.of(context).push(CupertinoPageRoute(
+          builder: (context) => DetailScreenWidget(
+                key: _walletScreenKey,
+              )));
+    } else if (name == AppLocalizations.of(context)!.st_headline) {
+      Navigator.of(context).push(CupertinoPageRoute(
+          builder: (context) => StakingScreen(
+                key: _stakingScreenKey,
+              )));
+    } else if (name == AppLocalizations.of(context)!.contacts) {
+      Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const AddressScreen()));
+    } else if (name == AppLocalizations.of(context)!.messages) {
+      Navigator.of(context).push(CupertinoPageRoute(
+          builder: (context) => MessageScreen(
+                key: _messageScreenKey,
+              )));
+    } else {
+      Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const SettingsScreen())).then((value) => _getUserInfo(reload: value));
     }
+  }
 
   @override
   void initState() {
@@ -97,10 +93,10 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
     _getLocale();
 
     // if (Foundation.kReleaseMode) {
-      // Future.delayed(const Duration(milliseconds: 100), () {
-      //   if(widget.locale != null)
-      //   Dialogs.openAlertBox(context, "Info", widget.locale!);
-      // });
+    // Future.delayed(const Duration(milliseconds: 100), () {
+    //   if(widget.locale != null)
+    //   Dialogs.openAlertBox(context, "Info", widget.locale!);
+    // });
     // }
   }
 
@@ -114,6 +110,56 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  _get2FACode() async {
+      try {
+        var id = await SecureStorage.read(key: globals.ID);
+        Map<String, dynamic> m = {
+          "request": "twofactor",
+          "id": id
+        };
+        var req = await cm.get("/data", request: m);
+        _set2FA(req['secret']);
+      } catch (e) {
+        Dialogs.openAlertBox(context, "Error", "2FA already turned on");
+        print(e);
+      }
+  }
+
+  _set2FA(String code) async {
+    Dialogs.open2FASetBox(context, code, _confirm2FA);
+  }
+
+  _confirm2FA(String? s) async {
+    if(!run) {
+      run = true;
+      try {
+        var id = await SecureStorage.read(key: globals.ID);
+        Map<String, dynamic> m = {
+          "request": "twofactorValidate",
+          "id": id,
+          "param1": s!
+        };
+        var req = await cm.get("/data", request: m, debug: true);
+        if (req['status'] == 'ok') {
+          if(mounted)Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "2FA activated");
+        }
+      } catch (e) {
+        print(e);
+      }
+    }
+    run = false;
+  }
+
+  Future<DaemonStatus> _getDaemonStatus() async {
+    Map<String, dynamic> m = {
+      "request": "getDaemonStatus",
+    };
+    var req = await cm.get("/data", request: m);
+    DaemonStatus dm = DaemonStatus.fromJson(req);
+    return dm;
   }
 
   @override
@@ -160,18 +206,87 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
                         ),
                       ),
                       Align(
+                        alignment: Alignment.bottomCenter,
+                        child: FutureBuilder<DaemonStatus>(
+                            initialData: DaemonStatus(block: false, blockStake: false, stakingActive: false),
+                            future: _getDaemonStatus(),
+                            builder: (ctx, snapshot) {
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10.0),
+                                        color: Colors.white10
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 4.0, right: 4.0, top: 2.0, bottom: 2.0),
+                                      child: Row(
+                                        children: [
+                                          Text("Daemon status", style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0),),
+                                          const SizedBox(width: 5.0,),
+                                          Icon(
+                                            Icons.circle,
+                                            size: 10.0,
+                                            color: snapshot.data!.block! ? Colors.green : Colors.red,
+                                          ),
+
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10.0,),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10.0),
+                                        color: Colors.white10
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 4.0, right: 4.0, top: 2.0, bottom: 2.0),
+                                      child: Row(
+                                        children: [
+                                          Text("Staking daemon status", style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0),),
+                                          const SizedBox(width: 5.0,),
+                                          Icon(
+                                            Icons.circle,
+                                            size: 10.0,
+                                            color: snapshot.data!.blockStake! ? Colors.green : Colors.red,
+                                          ),
+
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10.0,),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10.0),
+                                        color: Colors.white10
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 4.0, right: 4.0, top: 2.0, bottom: 2.0),
+                                      child: Row(
+                                        children: [
+                                          Text("Staking active", style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0),),
+                                          const SizedBox(width: 5.0,),
+                                          Icon(
+                                            Icons.circle,
+                                            size: 10.0,
+                                            color: snapshot.data!.stakingActive! ? Colors.green : Colors.red,
+                                          ),
+
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
+                      ),
+                      Align(
                         alignment: Alignment.bottomLeft,
                         child: GestureDetector(
                           onTap: () {
-                            // Locale _myLocale = Localizations.localeOf(context);
-                            // var message =_myLocale.languageCode;
-                            // if(_myLocale.countryCode != null) {
-                            //   message += '_' +_myLocale.countryCode!;
-                            // }
-                            // if(_myLocale.scriptCode != null) {
-                            //   message += '_' +_myLocale.scriptCode!;
-                            // }
-                            // Dialogs.openAlertBox(context, 'Info', message);
                             _launchURL("https://digitalnote.net");
                           },
                           child: Padding(
@@ -223,7 +338,7 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
                         alignment: Alignment.bottomRight,
                         child: GestureDetector(
                           onTap: () {
-                            _launchURL("https://wendy.network");
+                            _get2FACode();
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
@@ -283,7 +398,6 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
     await SecureStorage.write(key: globals.LEVEL, value: map['level'].toString());
     var udid = await FlutterUdid.consistentUdid;
     SecureStorage.write(key: globals.UDID, value: udid);
-
   }
 
   void _initializeLocalNotifications() async {
@@ -433,7 +547,6 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
       print(e);
     }
   }
-
 
   @override
   void onDetached() {}

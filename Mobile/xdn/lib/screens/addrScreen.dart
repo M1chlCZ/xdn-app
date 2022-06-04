@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:digitalnote/bloc/contacts_bloc.dart';
+import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -33,18 +35,26 @@ class AddressScreen extends StatefulWidget {
 class AddressScreenState extends State<AddressScreen> {
   final TextEditingController _controller = TextEditingController();
   Contact? _tempContact;
-  Future<List<Contact>>? _getUserFuture;
   String user = "";
+  ContactBloc cb = ContactBloc();
 
   @override
   void initState() {
     super.initState();
-    _getUserFuture = _getUsers();
+    cb.fetchContacts();
+    _getAddrBook();
+    // _getUserFuture = _getUsers();
   }
 
   void _openSelectBox(String name, String addr, Contact c) {
     _tempContact = c;
     Dialogs.openSelectContactDialog(context, addr, name, _openMessageSend, _openSendBox, _openContactShare);
+  }
+
+  void _getAddrBook() async {
+    int i = await NetInterface.getAddrBook();
+    await AppDatabase().getContacts();
+    if (i != 0) cb.fetchContacts();
   }
 
   void _openMessageSend({Contact? contact}) async {
@@ -105,9 +115,7 @@ class AddressScreenState extends State<AddressScreen> {
   }
 
   void _editBoxCallback() {
-    setState(() {
-      _getUserFuture = _getUsers();
-    });
+    cb.fetchContacts();
   }
 
   void _sendBoxConfirmation(String amount, String name, String addr) async {
@@ -119,10 +127,9 @@ class AddressScreenState extends State<AddressScreen> {
     Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
     double _balance = (double.parse(ss?["balance"]));
     Navigator.of(context).pop();
-    if(double.parse(amount) > _balance) {
+    if (double.parse(amount) > _balance) {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
       return;
-
     }
     Dialogs.openWaitBox(context);
     try {
@@ -139,7 +146,7 @@ class AddressScreenState extends State<AddressScreen> {
         String? user = await SecureStorage.read(key: globals.USERNAME);
 
         if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
-          if(mounted) Dialogs.displayDialog(context, "Error", "Invalid KONJ address");
+          if (mounted) Dialogs.displayDialog(context, "Error", "Invalid XDN address");
           return;
         }
 
@@ -215,9 +222,7 @@ class AddressScreenState extends State<AddressScreen> {
 
       if (response.statusCode == 200) {
         AppDatabase().deleteContact(contactID);
-        setState(() {
-          _getUserFuture = _getUsers();
-        });
+        cb.fetchContacts();
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Contact deleted"),
           backgroundColor: Color(0xFF63C9F3),
@@ -233,28 +238,11 @@ class AddressScreenState extends State<AddressScreen> {
   }
 
   _refreshContacts() async {
-    setState(() {
-      _getUserFuture = null;
-      _getUserFuture = _getUsers();
-    });
+    cb.fetchContacts();
   }
 
   _searchUsers(String text) async {
-    var d = AppDatabase().searchContact(text);
-    setState(() {
-      _getUserFuture = d;
-    });
-  }
-
-  Future<List<Contact>> _getUsers() async {
-    var res = await AppDatabase().getContacts();
-    return List.generate(res.length, (i) {
-      return Contact(
-        id: res[i]['id'] as int,
-        name: res[i]['name'] as String,
-        addr: res[i]['addr'] as String,
-      );
-    });
+    cb.searchContacts(text);
   }
 
   @override
@@ -297,7 +285,7 @@ class AddressScreenState extends State<AddressScreen> {
                             style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
                             decoration: InputDecoration(
                               floatingLabelBehavior: FloatingLabelBehavior.always,
-                              contentPadding: const EdgeInsets.all(8.0),
+                              contentPadding: const EdgeInsets.only(bottom: 5.0),
                               filled: true,
                               hoverColor: Colors.white24,
                               focusColor: Colors.white24,
@@ -306,9 +294,12 @@ class AddressScreenState extends State<AddressScreen> {
                               labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
                               hintText: AppLocalizations.of(context)!.search_contact,
                               hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 18.0),
-                              prefixIcon: const Icon(
-                                Icons.person,
-                                color: Colors.white70,
+                              prefixIcon: const Padding(
+                                padding: EdgeInsets.only(top: 4.0),
+                                child: Icon(
+                                  Icons.person,
+                                  color: Colors.white70,
+                                ),
                               ),
                               focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white30, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
                               enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white10, width: 1.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
@@ -342,42 +333,49 @@ class AddressScreenState extends State<AddressScreen> {
                   ]),
                 ),
                 Expanded(
-                  child: FutureBuilder(
-                      future: _getUserFuture,
+                  child: StreamBuilder<ApiResponse<List<Contact>?>>(
+                      stream: cb.coinsListStream,
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
-                          var _data = snapshot.data as List<Contact>?;
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 5.0, right: 5.0),
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0)),
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 0.0, right: 0.0),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: _data!.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    return ContactTile(
-                                      key: Key(_data[index].addr!),
-                                      contact: _data[index],
-                                      func: _deleteContactPrompt,
-                                      func2: _openSelectBox,
-                                      func3: _openEditBox,
-                                    );
-                                  },
+                          var data = snapshot.data!.data;
+                          switch (snapshot.data!.status) {
+                            case Status.LOADING:
+                              return Container(
+                                height: MediaQuery.of(context).size.height,
+                                width: MediaQuery.of(context).size.width,
+                                margin: const EdgeInsets.all(10.0),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
+                                  SizedBox(height: 50.0, width: 50.0, child: CircularProgressIndicator()),
+                                ]),
+                              );
+                            case Status.COMPLETED:
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0)),
+                                  child: Container(
+                                    padding: const EdgeInsets.only(left: 0.0, right: 0.0),
+                                    child: ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: data!.length,
+                                      itemBuilder: (BuildContext context, int index) {
+                                        return ContactTile(
+                                          key: Key(data[index].addr!),
+                                          contact: data[index],
+                                          func: _deleteContactPrompt,
+                                          func2: _openSelectBox,
+                                          func3: _openEditBox,
+                                        );
+                                      },
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
+                              );
+                            case Status.ERROR:
+                              return Container();
+                          }
                         } else {
-                          return Container(
-                            height: MediaQuery.of(context).size.height,
-                            width: MediaQuery.of(context).size.width,
-                            margin: const EdgeInsets.all(10.0),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
-                              SizedBox(child: CircularProgressIndicator(), height: 50.0, width: 50.0),
-                            ]),
-                          );
+                          return Container();
                         }
                       }),
                 ),

@@ -65,7 +65,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
 
   bool _checkForTip(String d) {
     if (d.contains(AppLocalizations.of(context)!.message_reply_to)) {
-      if (d.contains("KONJ")) {
+      if (d.contains("XDN")) {
         return true;
       }
     }

@@ -52,6 +52,7 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
         _messageGroup = AppDatabase().searchMessages(_controller.text);
       });
     });
+    // AppDatabase().deleteTableAddr();
   }
 
   @override
@@ -68,7 +69,6 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
     if (_busy) return;
     setState(() {
       _busy = true;
-      _messageGroup = null;
     });
     try {
       await NetInterface.saveMessageGroup().then((value) => _showMessages());

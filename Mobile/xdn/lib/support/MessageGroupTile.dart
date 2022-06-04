@@ -15,9 +15,9 @@ class MessageGroupTile extends StatefulWidget {
   final MessageGroup mgroup;
   final void Function(String addr)? func;
   final void Function(MessageGroup mesgroup)? callbackMgroup;
-  final VoidCallback? func3;
+  final VoidCallback func3;
 
-  const MessageGroupTile({Key? key, required this.mgroup, this.func, this.callbackMgroup, this.func3}) : super(key: key);
+  const MessageGroupTile({Key? key, required this.mgroup, this.func, this.callbackMgroup, required this.func3}) : super(key: key);
 
   @override
   MessageGroupTileState createState() => MessageGroupTileState();
@@ -45,7 +45,7 @@ class MessageGroupTileState extends State<MessageGroupTile> {
           widget.callbackMgroup!(widget.mgroup);
         },
         onLongPress: () async {
-          Dialogs.openMessageContactAddBox(context, widget.mgroup.sentAddressOrignal!).then((value) => widget.func3!());
+          Dialogs.openMessageContactAddBox(context, widget.mgroup.sentAddressOrignal!).then((value) => widget.func3());
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 5.0),

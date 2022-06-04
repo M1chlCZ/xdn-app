@@ -11,17 +11,17 @@ class BackgroundWidget extends StatefulWidget {
   const BackgroundWidget({Key? key, this.mainMenu = false, this.hasImage = true, this.image, this.arc = false}) : super(key: key);
 
   @override
-  _BackgroundWidgetState createState() => _BackgroundWidgetState();
+  BackgroundWidgetState createState() => BackgroundWidgetState();
 }
 
-class _BackgroundWidgetState extends State<BackgroundWidget> {
+class BackgroundWidgetState extends State<BackgroundWidget> {
 
   @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
     return widget.mainMenu
-        ? Container(
+        ? SizedBox(
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
             child: Image.asset(
@@ -31,7 +31,7 @@ class _BackgroundWidgetState extends State<BackgroundWidget> {
           )
         : Stack(
             children: [
-              Container(
+              SizedBox(
                 height: MediaQuery.of(context).size.height,
                 width: MediaQuery.of(context).size.width,
                 child: Image.asset(
@@ -51,7 +51,7 @@ class _BackgroundWidgetState extends State<BackgroundWidget> {
                       child: SizedBox(
                         width: 70,
                         child: Image.asset(
-                          'images/' + widget.image!,
+                          'images/${widget.image!}',
                           color: Colors.white.withAlpha(50),
                           alignment: Alignment.bottomCenter,
                           fit: BoxFit.cover,

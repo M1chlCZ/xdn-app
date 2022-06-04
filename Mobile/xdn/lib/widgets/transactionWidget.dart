@@ -54,15 +54,17 @@ class TransactionWidgetState extends State<TransactionWidget> {
   }
 
   Future<void> refreshTransaction() async {
-    if (_circleVisible == true) return;
-    setState(() {
-      _circleVisible = true;
-    });
     await NetInterface.getTranData();
-    _transactions = AppDatabase().getTransactions();
-    setState(() {
-      _circleVisible = false;
-    });
+    tb.fetchTransactions();
+    // if (_circleVisible == true) return;
+    // setState(() {
+    //   _circleVisible = true;
+    // });
+    //
+    // _transactions = AppDatabase().getTransactions();
+    // setState(() {
+    //   _circleVisible = false;
+    // });
   }
 
   @override

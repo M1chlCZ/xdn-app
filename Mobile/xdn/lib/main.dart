@@ -195,6 +195,7 @@ class MyAppState extends State<MyApp> {
       theme: ThemeData(
         fontFamily: 'Montserrat',
         useMaterial3: true,
+        canvasColor: const Color(0xFF423D70),
         primaryColor: generateMaterialColor(Colors.white),
         primarySwatch: generateMaterialColor(const Color.fromRGBO(44, 44, 53, 1.0)),
         textTheme: TextTheme(
@@ -206,31 +207,31 @@ class MyAppState extends State<MyApp> {
               color: Colors.white70,
               fontWeight: FontWeight.w300,
             ),
-            subtitle1: const TextStyle(
+            subtitle1: GoogleFonts.montserrat(
               color: Colors.white70,
               fontWeight: FontWeight.normal,
             ),
-            subtitle2: const TextStyle(
-              color: Color(0xFFC6C6C6),
+            subtitle2: GoogleFonts.montserrat(
+              color: const Color(0xFFC6C6C6),
               fontSize: 14.0,
               fontWeight: FontWeight.normal,
             ),
-            headline1: const TextStyle(
+            headline1: GoogleFonts.montserrat(
               color: Colors.white,
               fontWeight: FontWeight.w500,
               fontSize: 40.0,
             ),
-            bodyText1: const TextStyle(
+            bodyText1: GoogleFonts.montserrat(
               color: Colors.white,
               fontWeight: FontWeight.w500,
               fontSize: 24.0,
             ),
-            bodyText2: const TextStyle(
+            bodyText2: GoogleFonts.montserrat(
               color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: 18.0,
             ),
-            button: const TextStyle(
+            button: GoogleFonts.montserrat(
               color: Colors.white,
               fontWeight: FontWeight.w200,
               fontSize: 18.0,

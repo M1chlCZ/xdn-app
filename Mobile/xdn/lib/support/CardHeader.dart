@@ -30,7 +30,7 @@ class CardHeader extends StatelessWidget {
                           size: 30,
                           color: Colors.white,
                         ),
-                        splashColor: Colors.deepPurpleAccent,
+                        splashColor: Colors.white10,
                         color: Colors.transparent,
                         onTap: () {
                           Navigator.of(context).pop();

@@ -4,10 +4,10 @@ import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/globals.dart' as globals;
 
 class MessagesEndpoint {
-  Future<List<dynamic>> getMessages(String addrOG) async {
+  Future<List<dynamic>?> getMessages(String addrOG) async {
     var addr = await SecureStorage.read(key: globals.ADR);
     var s = await AppDatabase().getMessages(addr!, addrOG);
-    return s!;
+    return s;
   }
 
   Future<int> refreshMessages(String addrOG) async {

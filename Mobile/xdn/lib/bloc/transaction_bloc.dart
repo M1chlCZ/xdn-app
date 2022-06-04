@@ -26,9 +26,15 @@ class TransactionBloc {
 
   fetchTransactions() async {
     try {
-      _coins = await _balanceList.fetchDBTransactions();
       coinsListSink.add(ApiResponse.loading('Fetching All Coins'));
+      _coins = await _balanceList.fetchDBTransactions();
       coinsListSink.add(ApiResponse.completed(_coins));
+      var i = await _balanceList.fetchNetTransactions();
+      if(i > 0) {
+        coinsListSink.add(ApiResponse.loading('Fetching All Coins'));
+        _coins = await _balanceList.fetchDBTransactions();
+        coinsListSink.add(ApiResponse.completed(_coins));
+      }
     } catch (e) {
       if (kDebugMode) {
         print(e);

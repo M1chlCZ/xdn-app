@@ -40,6 +40,14 @@ class AvatarPickerState extends State<AvatarPicker> {
     _checkLocalUser();
   }
 
+
+  @override
+  void setState(VoidCallback fn) {
+    if(mounted) {
+      super.setState(fn);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ctx = context;

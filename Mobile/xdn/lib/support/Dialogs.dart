@@ -6,7 +6,7 @@ import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path/path.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -415,6 +415,290 @@ class Dialogs {
         });
   }
 
+  static Future<void> open2FABox(context, Function(String? s) func) async {
+    final TextEditingController txt = TextEditingController();
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          var copyIconVisible = true;
+          return StatefulBuilder(builder: (BuildContext context, StateSetter sState) {
+            txt.addListener(() {
+              if (txt.text.isEmpty) {
+                copyIconVisible = true;
+                sState(() {});
+              } else {
+                copyIconVisible = false;
+                sState(() {});
+              }
+
+              if (txt.text.length == 6) {
+                func(txt.text);
+                return;
+              }
+            });
+            return DialogBody(
+              header: "Google 2FA",
+              buttonLabel: 'OK',
+              oneButton: false,
+              noButtons: true,
+              onTap: () {
+                func(txt.text);
+                // Navigator.of(context).pop(true);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 15, bottom: 15, left: 15.0, right: 15.0),
+                child: Stack(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+                        child: Container(
+                          color: Colors.black38,
+                          padding: const EdgeInsets.all(15.0),
+                          child: TextField(
+                            keyboardType: TextInputType.number,
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            autofocus: true,
+                            controller: txt,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            decoration: InputDecoration(
+                              isDense: false,
+                              contentPadding: const EdgeInsets.only(bottom: 0.0),
+                              hintStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.white54, fontSize: 18.0),
+                              hintText: "Google 2FA",
+                              enabledBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.transparent),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.transparent),
+                              ),
+                            ),
+                            style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 24.0, color: Colors.white70),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: copyIconVisible,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 25.0, right: 8),
+                          child: GestureDetector(
+                            onTap: () async {
+                              ClipboardData? data = await Clipboard.getData(Clipboard.kTextPlain);
+                              // print(data!.text!);
+                              sState(() {
+                                if (data!.text != null) {
+                                  txt.text = data.text!;
+                                }
+                                txt.selection = TextSelection.collapsed(offset: txt.text.length);
+                              });
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.all(Radius.circular(5.0))),
+                              child: const Padding(
+                                padding: EdgeInsets.all(3.0),
+                                child: Icon(
+                                  Icons.paste,
+                                  color: Color(0xFFFFD301),
+                                  size: 25,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            );
+          });
+        });
+  }
+
+  static Future<void> open2FASetBox(context, String code, Function(String? s) func) async {
+    final TextEditingController textController = TextEditingController();
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          var copyIconVisible = true;
+          return StatefulBuilder(builder: (BuildContext context, StateSetter sState) {
+            textController.addListener(() {
+              if (textController.text.isEmpty) {
+                copyIconVisible = true;
+              } else {
+                copyIconVisible = false;
+              }
+              sState(() {});
+              if (textController.text.length == 6) {
+                func(textController.text);
+                return;
+              }
+            });
+            return DialogBody(
+              header: "Google 2FA",
+              buttonLabel: 'OK',
+              oneButton: false,
+              noButtons: true,
+              onTap: () {
+                // func(textController.text);
+                // Navigator.of(context).pop(true);
+              },
+              child: Column(
+                children: [
+                  Padding(
+                      padding: const EdgeInsets.only(top: 15, bottom: 15, left: 15.0, right: 15.0),
+                      child: SizedBox(
+                          width: double.infinity,
+                          child: ClipRRect(
+                              borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+                              child: Container(
+                                color: Colors.black38,
+                                padding: const EdgeInsets.all(15.0),
+                                child: Text(
+                                  "Copy the code provided to the Google Authetificator and paste 2FA code from it",
+                                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 18.0, color: Colors.white70),
+                                ),
+                              )))),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  Padding(
+                      padding: const EdgeInsets.only(top: 15, bottom: 15, left: 15.0, right: 15.0),
+                      child: SizedBox(
+                          width: double.infinity,
+                          child: ClipRRect(
+                              borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+                              child: Container(
+                                color: Colors.black38,
+                                padding: const EdgeInsets.all(15.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 12.0),
+                                      child: AutoSizeText(
+                                        code,
+                                        maxLines: 1,
+                                        minFontSize: 8.0,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5.0),
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 5.0, right: 2),
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            Clipboard.setData(ClipboardData(text: code));
+                                          },
+                                          child: const Padding(
+                                            padding: EdgeInsets.all(3.0),
+                                            child: Icon(
+                                              Icons.copy,
+                                              color: Color(0xFFFFD301),
+                                              size: 25,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )))),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15, bottom: 15, left: 15.0, right: 15.0),
+                    child: Stack(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+                            child: Container(
+                              color: Colors.black38,
+                              padding: const EdgeInsets.all(15.0),
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                inputFormatters: <TextInputFormatter>[
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                autofocus: true,
+                                controller: textController,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                decoration: InputDecoration(
+                                  isDense: false,
+                                  contentPadding: const EdgeInsets.only(bottom: 0.0),
+                                  hintStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.white54, fontSize: 18.0),
+                                  hintText: "Google 2FA",
+                                  enabledBorder: const UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.transparent),
+                                  ),
+                                  focusedBorder: const UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.transparent),
+                                  ),
+                                ),
+                                style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 24.0, color: Colors.white70),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Visibility(
+                          visible: copyIconVisible,
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 25.0, right: 8),
+                              child: GestureDetector(
+                                onTap: () async {
+                                  ClipboardData? data = await Clipboard.getData(Clipboard.kTextPlain);
+                                  // print(data!.text!);
+                                  sState(() {
+                                    if (data!.text != null) {
+                                      textController.text = data.text!;
+                                    }
+                                    textController.selection = TextSelection.collapsed(offset: textController.text.length);
+                                  });
+                                },
+                                child: Container(
+                                  decoration: const BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.all(Radius.circular(5.0))),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(3.0),
+                                    child: Icon(
+                                      Icons.paste,
+                                      color: Color(0xFFFFD301),
+                                      size: 25,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          });
+        });
+  }
+
   static void openBetaWarningBox(context) async {
     return showDialog(
         context: context,
@@ -431,7 +715,7 @@ class Dialogs {
               child: SizedBox(
                 width: 380,
                 child: AutoSizeText(
-                  "This is the KONJ mobile wallet beta version. There will be no guarantees or claims if your funds are lost. Use of the app is at your own risk and responsibility and send only small amounts of funds.",
+                  "This is the XDN mobile wallet beta version. There will be no guarantees or claims if your funds are lost. Use of the app is at your own risk and responsibility and send only small amounts of funds.",
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
@@ -731,9 +1015,12 @@ class Dialogs {
             header: AppLocalizations.of(context)!.dl_save_contact,
             buttonLabel: AppLocalizations.of(context)!.save,
             onTap: () async {
-              await NetInterface.saveContact(_textControllerName.text, addr, context);
-              // await AppDatabase().addContact(_textControllerName.text, addr);
-              Navigator.of(context).pop();
+              try {
+                NetInterface.saveContact(_textControllerName.text.toString(), addr, context);
+              } catch (e) {
+                debugPrint(e.toString());
+              }
+               Navigator.of(context).pop();
             },
             child: Padding(
               padding: const EdgeInsets.only(top: 5.0, left: 10.0, right: 10.0, bottom: 5.0),
@@ -819,7 +1106,7 @@ class Dialogs {
         barrierDismissible: true,
         context: context,
         builder: (BuildContext context) {
-          var link = "https://chainz.cryptoid.info/konj/tx.dws?${tx.txid!}";
+          var link = "https://xdn-explorer.com/tx/${tx.txid!}";
           return DialogBody(
             header: AppLocalizations.of(context)!.dl_tx_detail,
             buttonLabel: AppLocalizations.of(context)!.dl_explorer,
@@ -907,7 +1194,7 @@ class Dialogs {
                           width: 350,
                           height: 20,
                           child: AutoSizeText(
-                            "${tx.amount!} KONJ",
+                            "${tx.amount!} XDN",
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,

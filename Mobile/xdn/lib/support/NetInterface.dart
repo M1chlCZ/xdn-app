@@ -226,8 +226,8 @@ class NetInterface {
       ComInterface ci = ComInterface();
       List<dynamic> rt = await ci.get("/data", request: m, type: ComInterface.typePlain);
       var l = await compute(getTransactionCompute, rt);
-      await AppDatabase().addTransactions(l);
-      return 1;
+      var i = await AppDatabase().addTransactions(l);
+      return i;
     } on TimeoutException catch (_) {
       print('Service unreachable');
       return 0;
@@ -259,7 +259,7 @@ class NetInterface {
     return rt;
   }
 
-  static Future<void> getAddrBook() async {
+  static Future<int> getAddrBook() async {
     try {
       String? id = await SecureStorage.read(key: globals.ID);
       Map<String, dynamic> m = {
@@ -271,19 +271,24 @@ class NetInterface {
       if (rt.isNotEmpty) {
         List<Contact> l = rt.map((l) => Contact.fromJson(l)).toList();
         AppDatabase().addAddrBook(l);
+        return 1;
       }
+      return 0;
     } on TimeoutException catch (_) {
       print('Service unreachable');
+      return 0;
     } on SocketException catch (_) {
       print('No internet');
+      return 0;
     } catch (e) {
       print(e.toString());
+      return 0;
     }
   }
 
   static Future<int> saveContact(String name, String addr, BuildContext context) async {
     if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
-      Dialogs.openAlertBox(context, "Error", "Invalid KONJ address");
+      Dialogs.openAlertBox(context, "Error", "Invalid XDN address");
       return 0;
     }
 
@@ -293,8 +298,7 @@ class NetInterface {
     }
 
     try {
-      Navigator.of(context).pop();
-      Dialogs.openWaitBox(context);
+
       String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
@@ -304,34 +308,39 @@ class NetInterface {
         "param2": addr,
       };
 
-      ComInterface ci = ComInterface();
-      List responseList = await ci.get("/data", request: m, debug: true);
-      responseList.forEach((element) {print(element);});
-      List<Contact> l = responseList.map((data) => Contact.fromJson(data)).toList();
-      var db = await AppDatabase().addAddrBook(l);
-      if (db == 1) {
-        return 1;
-      }
-      return 0;
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
 
-      // if (response.statusCode == 200) {
-      //   List responseList = json.decode(response.body);
-      //
-      // } else {
-      //   print("problemo");
-      //   return 0;
+      // ComInterface ci = ComInterface();
+      // List responseList = await ci.get("/data", request: m, debug: true);
+      // responseList.forEach((element) {print(element);});
+      // List<Contact> l = responseList.map((data) => Contact.fromJson(data)).toList();
+      // var db = await AppDatabase().addAddrBook(l);
+      // if (db == 1) {
+      //   return 1;
       // }
+      // return 0;
+      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      var jwt = await SecureStorage.read(key: globals.TOKEN);
+      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+        "Authorization": jwt!,
+        "Content-Type": "application/json",
+        "payload": s,
+      }).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        List responseList = json.decode(response.body);
+        List<Contact> l = responseList.map((data) => Contact.fromJson(data)).toList();
+        var db = await AppDatabase().addAddrBook(l);
+        if (db == 1) {
+          return 1;
+        }
+        return 0;
+      } else {
+        return 0;
+      }
     } on TimeoutException catch (_) {
       print("Timeout");
       return 0;
     } catch (e) {
-
       print(e);
       return 0;
     }

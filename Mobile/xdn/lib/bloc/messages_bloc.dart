@@ -25,8 +25,12 @@ class MessagesBloc {
 
   fetchMessages(String addr) async {
     try {
-      _messages = await _balanceList.getMessages(addr);
       coinsListSink.add(ApiResponse.loading('Fetching All Messages'));
+      _messages = await _balanceList.getMessages(addr);
+      if(_messages == null || _messages!.isEmpty) {
+        await _balanceList.refreshMessages(addr);
+        _messages = await _balanceList.getMessages(addr);
+      }
       coinsListSink.add(ApiResponse.completed(_messages));
     } catch (e) {
       if (kDebugMode) {
@@ -40,17 +44,17 @@ class MessagesBloc {
   }
 
   refreshMessages(String addr) async {
-    // try {
-    //   int i = await _balanceList.refreshMessages(addr);
-    //   if (i > 0) {
-    //     refreshMessages(addr);
-    //   }
-    // } catch (e) {
-    //   if (kDebugMode) {
-    //     print(e);
-    //   }
-    //   // print(e);
-    // }
+    try {
+      int i = await _balanceList.refreshMessages(addr);
+      if (i > 0) {
+        fetchMessages(addr);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      // print(e);
+    }
   }
 
   dispose() {

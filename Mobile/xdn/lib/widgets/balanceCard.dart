@@ -15,6 +15,7 @@ class BalanceCard extends StatefulWidget {
 
   const BalanceCard({Key? key, this.getBalanceFuture, this.onPressSend}) : super(key: key);
 
+  @override
   BalanceCardState createState() => BalanceCardState();
 }
 
@@ -31,19 +32,19 @@ class BalanceCardState extends State<BalanceCard> {
     return Stack(
       children: [
         Container(
-          margin: EdgeInsets.only(top: 40.0, left: 10.0, right: 10.0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(top: 40.0, left: 10.0, right: 10.0),
+          decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(15.0)),
           ),
           child: PhysicalModel(
             color: Theme.of(context).konjHeaderColor,
             shadowColor: Colors.black45,
             elevation: 5,
-            borderRadius: BorderRadius.all(Radius.circular(15.0)),
+            borderRadius: const BorderRadius.all(Radius.circular(15.0)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Column(
                 children: <Widget>[
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   FutureBuilder<Map<String, dynamic>>(
                       future: widget.getBalanceFuture,
                       builder: (context, snapshot) {
@@ -51,7 +52,7 @@ class BalanceCardState extends State<BalanceCard> {
                           Map<String, dynamic> m = snapshot.data!;
                           var balance = m['balance'].toString();
                           var immature = m['immature'].toString();
-                          var textImature = immature == '0.000' ? '' : AppLocalizations.of(context)!.immature + ": " + immature + " KONJ";
+                          var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
                           return Column(
                             children: [
                               Padding(
@@ -73,18 +74,18 @@ class BalanceCardState extends State<BalanceCard> {
                                         ),
                                       ),
                                     ),
-                                      SizedBox(width: 10.0,),
+                                      const SizedBox(width: 10.0,),
                                       Container(
                                           height: 45,
-                                          margin: EdgeInsets.only(right: 10.0),
-                                          padding: EdgeInsets.all(10.0),
-                                          child: Center(child: Text("KONJ", style: TextStyle(color: Colors.white54, fontSize: 18.0),))
+                                          margin: const EdgeInsets.only(right: 10.0),
+                                          padding: const EdgeInsets.all(10.0),
+                                          child: const Center(child: Text("XDN", style: TextStyle(color: Colors.white54, fontSize: 18.0),))
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 5,
                               ),
                               textImature != ''
@@ -99,18 +100,16 @@ class BalanceCardState extends State<BalanceCard> {
                         } else if (snapshot.hasError) {
                           return Center(child: Text(snapshot.error.toString(), style: Theme.of(context).textTheme.headline1));
                         } else {
-                          return Container(
-                            child: Center(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
-                                SizedBox(
-                                    child: CircularProgressIndicator(
-                                      backgroundColor: Colors.white,
-                                      strokeWidth: 2.0,
-                                    ),
-                                    height: 55.0,
-                                    width: 55.0),
-                              ]),
-                            ),
+                          return Center(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
+                              SizedBox(
+                                  height: 55.0,
+                                  width: 55.0,
+                                  child: CircularProgressIndicator(
+                                    backgroundColor: Colors.white,
+                                    strokeWidth: 2.0,
+                                  )),
+                            ]),
                           );
                         }
                       }),
@@ -118,7 +117,7 @@ class BalanceCardState extends State<BalanceCard> {
                     height: MediaQuery.of(context).size.height * 0.005,
                   ),
                   Container(
-                    margin: EdgeInsets.all(5.0),
+                    margin: const EdgeInsets.all(5.0),
                     child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       SizedBox(
                         width: 130.0,
@@ -128,21 +127,21 @@ class BalanceCardState extends State<BalanceCard> {
                           onPressed: () {
                             Dialogs.openUserQR(context);
                           },
+                          style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(20, 20),
+                              alignment: Alignment.center,
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(color: Colors.white12),
+                                borderRadius: BorderRadius.circular(15.0),
+                              )),
                           child: Text(
                             AppLocalizations.of(context)!.receive,
                             style: Theme.of(context).textTheme.headline6,
                           ),
-                          style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size(20, 20),
-                              alignment: Alignment.center,
-                              shape: RoundedRectangleBorder(
-                                side: BorderSide(color: Colors.white12),
-                                borderRadius: BorderRadius.circular(15.0),
-                              )),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 40,
                       ),
                       SizedBox(
@@ -151,23 +150,23 @@ class BalanceCardState extends State<BalanceCard> {
                         child: TextButton(
                           clipBehavior: Clip.antiAlias,
                           onPressed: widget.onPressSend,
+                          style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(20, 20),
+                              alignment: Alignment.center,
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(color: Colors.white12),
+                                borderRadius: BorderRadius.circular(15.0),
+                              )),
                           child: Text(
                             AppLocalizations.of(context)!.send,
                             style: Theme.of(context).textTheme.headline6,
                           ),
-                          style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size(20, 20),
-                              alignment: Alignment.center,
-                              shape: RoundedRectangleBorder(
-                                side: BorderSide(color: Colors.white12),
-                                borderRadius: BorderRadius.circular(15.0),
-                              )),
                         ),
                       ),
                     ]),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                 ],
               ),
             ]),
