@@ -20,49 +20,20 @@ class BackgroundWidgetState extends State<BackgroundWidget> {
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    return widget.mainMenu
-        ? SizedBox(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: Image.asset(
-              widget.arc ? 'images/settingsbg.png' : 'images/mainmenubg.png',
-              fit: BoxFit.fitWidth,
-            ),
-          )
-        : Stack(
-            children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: Image.asset(
-                  'images/sectionbackground.png',
-                  fit: BoxFit.fitWidth,
-                ),
-              ),
-              widget.arc ? BackgroundArc(width: height, height: width) : Container(),
-             SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: Column(
-                  children: [
-                    Expanded(child: Container()),
-                    widget.hasImage ? Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SizedBox(
-                        width: 70,
-                        child: Image.asset(
-                          'images/${widget.image!}',
-                          color: Colors.white.withAlpha(50),
-                          alignment: Alignment.bottomCenter,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ) : Container(),
-                  ],
-                ),
-              ),
-
-            ],
-          );
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF323A57),
+            Color(0xFF222B46)],
+              begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+        )
+      ),
+      // color: const Color(0xFF323D62),
+    );
   }
 }
+// FF323D62
+// 0xFF222B46

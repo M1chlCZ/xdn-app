@@ -32,16 +32,13 @@ class BalanceCardState extends State<BalanceCard> {
     return Stack(
       children: [
         Container(
-          margin: const EdgeInsets.only(top: 40.0, left: 10.0, right: 10.0),
+          margin: const EdgeInsets.only(left: 10.0, right: 10.0),
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(15.0)),
+            image: DecorationImage(image: AssetImage("images/balance_card.png"),
+            fit: BoxFit.fitWidth),
           ),
-          child: PhysicalModel(
-            color: Theme.of(context).konjHeaderColor,
-            shadowColor: Colors.black45,
-            elevation: 5,
-            borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          child:  Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Column(
                 children: <Widget>[
                   const SizedBox(height: 10),
@@ -120,7 +117,7 @@ class BalanceCardState extends State<BalanceCard> {
                     margin: const EdgeInsets.all(5.0),
                     child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       SizedBox(
-                        width: 130.0,
+                        width: 100.0,
                         height: 47.0,
                         child: TextButton(
                           clipBehavior: Clip.antiAlias,
@@ -171,7 +168,6 @@ class BalanceCardState extends State<BalanceCard> {
               ),
             ]),
           ),
-        ),
       ],
     );
   }

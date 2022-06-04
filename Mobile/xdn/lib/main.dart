@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -203,9 +204,10 @@ class MyAppState extends State<MyApp> {
               color: Colors.white70,
               fontWeight: FontWeight.w200,
             ),
-            headline5: GoogleFonts.montserrat(
+            headline5: GoogleFonts.lato(
               color: Colors.white70,
               fontWeight: FontWeight.w300,
+                letterSpacing:3.0
             ),
             subtitle1: GoogleFonts.montserrat(
               color: Colors.white70,
@@ -221,9 +223,9 @@ class MyAppState extends State<MyApp> {
               fontWeight: FontWeight.w500,
               fontSize: 40.0,
             ),
-            bodyText1: GoogleFonts.montserrat(
+            bodyText1: GoogleFonts.lato(
               color: Colors.white,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w300,
               fontSize: 24.0,
             ),
             bodyText2: GoogleFonts.montserrat(
@@ -258,7 +260,7 @@ class MyAppState extends State<MyApp> {
                   if (pinUsed) {
                     return const PinScreen();
                   } else {
-                    return MainMenuScreen(locale: ms);
+                    return MainMenuNew(locale: ms);
                   }
                   // return PinPutTest();
                 } else {

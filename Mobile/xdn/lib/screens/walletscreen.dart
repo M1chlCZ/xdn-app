@@ -130,7 +130,9 @@ class DetailScreenState extends State<DetailScreenWidget>
         backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Container(
+            margin: const EdgeInsets.only(left: 20.0, right: 20.0, top: 15.0),
             decoration: const BoxDecoration(
+              color: Colors.white10,
               borderRadius: BorderRadius.all(Radius.circular(15.0)),
             ),
             child: Stack(

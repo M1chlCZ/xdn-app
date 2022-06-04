@@ -53,25 +53,29 @@ class AvatarPickerState extends State<AvatarPicker> {
     ctx = context;
     return Stack(
       children: [
-        ClipOval(
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            color: widget.color,
-            child: GestureDetector(
-              onTap: () {
-                if (localUser) {
-                  _pickImage();
-                }
-              },
-              child: Center(
-                child: ClipOval(
-                  child: Container(
-                    color: Colors.grey.shade300,
-                    height: widget.size - widget.padding,
-                    width: widget.size - widget.padding,
-                    child: _image64 != null ? Image.memory(base64Decode(_image64)) : _placeholderAvatar(),
+        Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+              color: widget.color,
+            borderRadius: BorderRadius.all(Radius.circular(20.0))
+          ),
+          child: GestureDetector(
+            onTap: () {
+              if (localUser) {
+                _pickImage();
+              }
+            },
+            child: Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: widget.color,
                   ),
+                  height: widget.size - widget.padding,
+                  width: widget.size - widget.padding,
+                  child: _image64 != null ? Image.memory(base64Decode(_image64)) : _placeholderAvatar(),
                 ),
               ),
             ),
