@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -8,7 +7,6 @@ import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -302,7 +300,10 @@ class SendWidgetState extends State<SendWidget> {
           margin: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(color: const Color(0xFF79ad66), border: Border.all(color: Colors.green), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(
+              color: const Color(0xFF79ad66),
+              border: Border.all(color: Colors.green),
+              borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -350,7 +351,10 @@ class SendWidgetState extends State<SendWidget> {
           margin: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(color: const Color(0xFFF77066), border: Border.all(color: Colors.red), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(
+              color: const Color(0xFFF77066),
+              border: Border.all(color: Colors.red),
+              borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -381,7 +385,13 @@ class SendWidgetState extends State<SendWidget> {
                 height: useTablet ? heightVal : 220.0,
                 padding: const EdgeInsets.all(10.0),
                 width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(color: Theme.of(context).konjCardColor, borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+                decoration:const BoxDecoration(
+                    gradient:  LinearGradient(
+                      colors: [Color(0xFF423D70), Color(0xFF5D57A6)],
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                    ),
+         borderRadius: BorderRadius.all(Radius.circular(15.0))),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Column(
@@ -405,7 +415,7 @@ class SendWidgetState extends State<SendWidget> {
                                   maxLines: 1,
                                   controller: _controllerAddress,
                                   autofocus: false,
-                                  style: Theme.of(context).textTheme.headline5,
+                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(letterSpacing: 1.0),
                                   decoration: InputDecoration(
                                     counterText: "",
                                     focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white60, width: 1.0), borderRadius: BorderRadius.circular(15.0)),
@@ -415,9 +425,9 @@ class SendWidgetState extends State<SendWidget> {
                                     filled: true,
                                     hoverColor: Colors.white60,
                                     focusColor: Colors.white60,
-                                    labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
+                                    labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white),
                                     hintText: '${AppLocalizations.of(context)!.address} / ${AppLocalizations.of(context)!.contact}',
-                                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white),
+                                    hintStyle: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16.0, color: Colors.white),
                                   ),
                                 ),
                                 suggestionsCallback: (pattern) async {

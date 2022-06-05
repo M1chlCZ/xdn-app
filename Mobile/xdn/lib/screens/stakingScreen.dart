@@ -14,7 +14,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/current_remaining_time.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
@@ -31,6 +30,7 @@ import '../support/StakeData.dart';
 import '../widgets/backgroundWidget.dart';
 
 class StakingScreen extends StatefulWidget {
+  static const String route = "/menu/staking";
   const StakingScreen({Key? key}) : super(key: key);
 
   @override
@@ -1202,7 +1202,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   AxisTitles _bottomTitles() {
     return AxisTitles(
         sideTitles: SideTitles(
-      reservedSize: 8.0,
+          showTitles: true,
+      reservedSize: 20.0,
       getTitlesWidget: (value, meta) {
         var text = "";
         if (_dropdownValue == 0) {

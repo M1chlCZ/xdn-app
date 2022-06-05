@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:digitalnote/support/BackgroundArc.dart';
 
 class BackgroundWidget extends StatefulWidget {
   final bool mainMenu;
@@ -15,24 +14,26 @@ class BackgroundWidget extends StatefulWidget {
 }
 
 class BackgroundWidgetState extends State<BackgroundWidget> {
-
   @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
     return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF323A57),
-            Color(0xFF222B46)],
-              begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-        )
+    width: width,
+    height: height,
+    decoration:  BoxDecoration(
+      gradient:  RadialGradient(
+        // stops: [0.1, 0.9],
+        center: const Alignment(0.9, 0.0),
+        colors: [
+          const  Color(0xFF6175B2).withOpacity(0.5),
+          const Color(0xFF323A57)
+        ],
+        radius: 1.0,
       ),
-      // color: const Color(0xFF323D62),
-    );
+    ),
+    // color: const Color(0xFF323D62),
+      );
   }
 }
 // FF323D62

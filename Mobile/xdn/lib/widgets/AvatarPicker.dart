@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,11 +14,11 @@ import '../globals.dart' as globals;
 import '../support/NetInterface.dart';
 
 class AvatarPicker extends StatefulWidget {
-  final userID;
-  final borderRadius;
-  final color;
-  final size;
-  final padding;
+  final dynamic userID;
+  final double? borderRadius;
+  final Color? color;
+  final double? size;
+  final double? padding;
 
   const AvatarPicker({Key? key, this.userID, this.borderRadius = 8.0, this.color = Colors.white24, this.size = 125.0, this.padding = 5.0}) : super(key: key);
 
@@ -28,11 +27,11 @@ class AvatarPicker extends StatefulWidget {
 }
 
 class AvatarPickerState extends State<AvatarPicker> {
-
-  var _image64;
+  String? _image64;
   File? _imageFile;
   late BuildContext ctx;
   bool localUser = false;
+  bool shit = false;
 
   @override
   void initState() {
@@ -40,10 +39,9 @@ class AvatarPickerState extends State<AvatarPicker> {
     _checkLocalUser();
   }
 
-
   @override
   void setState(VoidCallback fn) {
-    if(mounted) {
+    if (mounted) {
       super.setState(fn);
     }
   }
@@ -56,10 +54,7 @@ class AvatarPickerState extends State<AvatarPicker> {
         Container(
           width: widget.size,
           height: widget.size,
-          decoration: BoxDecoration(
-              color: widget.color,
-            borderRadius: const BorderRadius.all(Radius.circular(20.0))
-          ),
+          decoration: BoxDecoration(color: widget.color, borderRadius: const BorderRadius.all(Radius.circular(20.0))),
           child: GestureDetector(
             onTap: () {
               if (localUser) {
@@ -71,11 +66,11 @@ class AvatarPickerState extends State<AvatarPicker> {
                 borderRadius: const BorderRadius.all(Radius.circular(15.0)),
                 child: Container(
                   decoration: BoxDecoration(
-                      color: widget.color,
+                    color: widget.color,
                   ),
-                  height: widget.size - widget.padding,
-                  width: widget.size - widget.padding,
-                  child: _image64 != null ? Image.memory(base64Decode(_image64)) : _placeholderAvatar(),
+                  height: widget.size! - widget.padding!,
+                  width: widget.size! - widget.padding!,
+                  child: _image64 != null ? Image.memory(base64Decode(_image64!)) : _placeholderAvatar(),
                 ),
               ),
             ),
@@ -100,13 +95,13 @@ class AvatarPickerState extends State<AvatarPicker> {
     }
   }
 
-  void _saveToCache(String addr) async {
-    String fileName = widget.userID;
+  _saveToCache(String addr) async {
+    String fileName = widget.userID.toString();
     String dir = (await getApplicationDocumentsDirectory()).path;
     String savePath = '$dir/$fileName';
     int i = await NetInterface.getAvatarVersion(addr);
     if (i == 1) {
-      String? base64 = await NetInterface.dowloadPictureByAddr(context, addr);
+      String? base64 = await NetInterface.dowloadPictureByAddr(addr);
       if (base64 != null && base64 != "ok") {
         await File(savePath).writeAsBytes(base64Decode(base64));
         setState(() {
@@ -119,7 +114,7 @@ class AvatarPickerState extends State<AvatarPicker> {
           _imageFile = File.fromUri(Uri.parse(savePath));
         });
       } else {
-        String? base64 = await NetInterface.dowloadPictureByAddr(context, addr);
+        String? base64 = await NetInterface.dowloadPictureByAddr(addr);
         if (base64 != null && base64 != "ok") {
           await File(savePath).writeAsBytes(base64Decode(base64));
           setState(() {
@@ -132,7 +127,7 @@ class AvatarPickerState extends State<AvatarPicker> {
 
   void _checkLocalUser() async {
     if (widget.userID is String) {
-      _saveToCache(widget.userID);
+      await _saveToCache(widget.userID.toString());
     } else {
       String? localUser = await SecureStorage.read(key: globals.ID);
       if (widget.userID == null || int.parse(localUser!) == widget.userID) {
@@ -141,27 +136,27 @@ class AvatarPickerState extends State<AvatarPicker> {
         var addr = await SecureStorage.read(key: globals.ADR);
         int i = await NetInterface.getAvatarVersion(addr);
         if (!file || i == 1) {
-          _downloadPictureLocal(widget.userID);
+          await _downloadPictureLocal(widget.userID);
         }
       } else {
         this.localUser = false;
-        _downloadPicture(widget.userID);
+        await _downloadPicture(widget.userID);
       }
     }
   }
 
   Future<void> _pickImage() async {
-    final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final ImagePicker _picker = ImagePicker();
+    final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+    // final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
     _imageFile = pickedImage != null ? File(pickedImage.path) : _imageFile;
-    if (pickedImage != null) {
-      setState(() {
-        _cropImage();
-      });
+    if (_imageFile != null) {
+      _cropImage();
     }
   }
 
-  Future<Null> _cropImage() async {
-    File? croppedFile = await ImageCropper().cropImage(
+  Future<void> _cropImage() async {
+    CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: _imageFile!.path,
         aspectRatioPresets: Platform.isAndroid
             ? [
@@ -170,21 +165,23 @@ class AvatarPickerState extends State<AvatarPicker> {
             : [
                 CropAspectRatioPreset.square,
               ],
-        androidUiSettings:
-            const AndroidUiSettings(toolbarTitle: '', toolbarColor: Colors.deepPurpleAccent, toolbarWidgetColor: Colors.white, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: true),
-        iosUiSettings: const IOSUiSettings(
-          rectHeight: 512.0,
-          rectWidth: 512.0,
-          rectX: 0,
-          rectY: 0,
-          resetAspectRatioEnabled: false,
-          resetButtonHidden: true,
-          aspectRatioLockEnabled: true,
-          hidesNavigationBar: true,
-          aspectRatioPickerButtonHidden: true,
-          aspectRatioLockDimensionSwapEnabled: true,
-          title: '',
-        ));
+        uiSettings: [
+          AndroidUiSettings(toolbarTitle: '', toolbarColor: Colors.deepPurpleAccent, toolbarWidgetColor: Colors.white, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: true),
+          IOSUiSettings(
+            rectHeight: 512.0,
+            rectWidth: 512.0,
+            rectX: 0,
+            rectY: 0,
+            resetAspectRatioEnabled: false,
+            resetButtonHidden: true,
+            aspectRatioLockEnabled: true,
+            hidesNavigationBar: true,
+            aspectRatioPickerButtonHidden: true,
+            aspectRatioLockDimensionSwapEnabled: true,
+            title: '',
+          ),
+        ]);
+
     if (croppedFile == null) return;
 
     imageCache.clear();
@@ -195,21 +192,19 @@ class AvatarPickerState extends State<AvatarPicker> {
     Directory appDocDir = await getApplicationDocumentsDirectory();
     String appDocPath = appDocDir.path;
 
-    final File? localImage = await compressedFile.copy('$appDocPath/avatar');
+    final File localImage = await compressedFile.copy('$appDocPath/avatar');
+    _saveFileToCloud(localImage);
+    setState(() {});
+    _imageFile = compressedFile;
 
-    if (localImage != null) {
-      _saveFileToCloud(localImage);
-      setState(() {
-        _imageFile = localImage;
-      });
-    }
+    setState(() {});
   }
 
   Widget _placeholderAvatar() {
-    if (_imageFile != null) {
+    if (_imageFile != null && !shit) {
       return Image.file(_imageFile!);
     } else {
-      if (_image64 != null) return Image.memory(base64Decode(_image64));
+      if (_image64 != null) return Image.memory(base64Decode(_image64!));
       return const Icon(
         FontAwesomeIcons.userAstronaut,
         size: 55.0,
@@ -217,13 +212,13 @@ class AvatarPickerState extends State<AvatarPicker> {
     }
   }
 
-  void _saveFileToCloud(File img) async {
+  _saveFileToCloud(File img) async {
     final bytes = File(img.path).readAsBytesSync();
     String img64 = base64Encode(bytes);
     NetInterface.uploadPicture(ctx, img64);
   }
 
-  void _downloadPicture(int id) async {
+  _downloadPicture(int id) async {
     String? base64 = await NetInterface.dowloadPicture(context, id);
     setState(() {
       if (base64 != "ok") {
@@ -232,7 +227,7 @@ class AvatarPickerState extends State<AvatarPicker> {
     });
   }
 
-  void _downloadPictureLocal(int? id) async {
+  _downloadPictureLocal(int? id) async {
     String fileName = "avatar";
     String dir = (await getApplicationDocumentsDirectory()).path;
     String savePath = '$dir/$fileName';

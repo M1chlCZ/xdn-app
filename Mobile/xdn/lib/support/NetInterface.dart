@@ -143,7 +143,7 @@ class NetInterface {
     }
   }
 
-  static Future<String?> dowloadPictureByAddr(BuildContext context, String addr) async {
+  static Future<String?> dowloadPictureByAddr(String addr) async {
     try {
       String? jwt = await SecureStorage.read(key: globals.TOKEN);
       String? id = await SecureStorage.read(key: globals.ID);
@@ -170,17 +170,10 @@ class NetInterface {
       if (response.statusCode == 200) {
         return response.body;
       } else {
+        print("sucks");
         // Dialogs.openAlertBox(context, 'Warning', response.toString());
         return null;
       }
-    } on TimeoutException catch (_) {
-      // Dialogs.openAlertBox(context, 'Warning',
-      //     "Request timed out, can't save the picture to cloud");
-      return null;
-    } on SocketException catch (_) {
-      // Dialogs.openAlertBox(context, 'Warning',
-      //     "Service is not available, can't save the picture to cloud");
-      return null;
     } catch (e) {
       print(e.toString());
       // Dialogs.openAlertBox(context, 'Warning', e.toString());

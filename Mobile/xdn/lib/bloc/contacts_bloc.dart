@@ -29,10 +29,13 @@ class ContactBloc {
   }
 
   fetchContacts() async {
+
     try {
-      coinsListSink.add(ApiResponse.loading('Fetching All Coins'));
-      _contacts = await _contactList.fetchDBContacts();
-      coinsListSink.add(ApiResponse.completed(_contacts));
+      if (!_coinListController!.isClosed) {
+        coinsListSink.add(ApiResponse.loading('Fetching All Coins'));
+        _contacts = await _contactList.fetchDBContacts();
+        coinsListSink.add(ApiResponse.completed(_contacts));
+      }
     } catch (e) {
       if (kDebugMode) {
         print(e);

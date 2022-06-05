@@ -26,6 +26,7 @@ import '../widgets/backgroundWidget.dart';
 import 'messageDetailScreen.dart';
 
 class AddressScreen extends StatefulWidget {
+  static const String route = "/menu/contacts";
   const AddressScreen({Key? key}) : super(key: key);
 
   @override
@@ -41,8 +42,8 @@ class AddressScreenState extends State<AddressScreen> {
   @override
   void initState() {
     super.initState();
-    cb.fetchContacts();
     _getAddrBook();
+    cb.fetchContacts();
     // _getUserFuture = _getUsers();
   }
 
@@ -54,7 +55,13 @@ class AddressScreenState extends State<AddressScreen> {
   void _getAddrBook() async {
     int i = await NetInterface.getAddrBook();
     await AppDatabase().getContacts();
-    if (i != 0) cb.fetchContacts();
+    // if (i != 0) cb.fetchContacts();
+    if(i != 0) {
+      Future.delayed(Duration(milliseconds: 100), () {
+        cb.fetchContacts();
+      });
+    }
+
   }
 
   void _openMessageSend({Contact? contact}) async {

@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
-import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
 import '../support/TranSaction.dart';
 
@@ -26,19 +25,20 @@ class TransactionView extends StatelessWidget {
 
   Widget _checkContactName(BuildContext context) {
     return Container(
-        padding: const EdgeInsets.only(bottom: 2.0, left: 0.0),
-        child: Center(
-          child: SizedBox(
-            width: 150,
-            child: AutoSizeText(
-              _getText(transaction!.contactName, context),
-              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.white70),
-              minFontSize: 14,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+      padding: const EdgeInsets.only(bottom: 2.0, left: 0.0),
+      child: Center(
+        child: SizedBox(
+          width: 150,
+          child: AutoSizeText(
+            _getText(transaction!.contactName, context),
+            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.white70),
+            minFontSize: 14,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),);
+        ),
+      ),
+    );
   }
 
   String _getText(String? s, BuildContext context) {
@@ -78,7 +78,7 @@ class TransactionView extends StatelessWidget {
       opacity: transaction!.confirmation! < 2 ? 0.5 : 1.0,
       child: Card(
           elevation: 0,
-          color: Theme.of(context).konjHeaderColor,
+          color: Colors.transparent,
           margin: const EdgeInsets.only(bottom: 2.0),
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
@@ -94,6 +94,13 @@ class TransactionView extends StatelessWidget {
               alignment: Alignment.centerLeft,
               width: 280.0,
               height: 64.0,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF423D70), Color(0xFF5D57A6)],
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                ),
+              ),
               padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
               child: Flex(
                 direction: Axis.horizontal,
@@ -102,7 +109,6 @@ class TransactionView extends StatelessWidget {
                       flex: 2,
                       child: Container(
                         margin: const EdgeInsets.fromLTRB(5.0, 5.0, 6.0, 5.0),
-
                         decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10.0)), color: Colors.white10),
                         child: Center(child: _getTxIcon(context)),
                       )),
@@ -112,7 +118,6 @@ class TransactionView extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
                         _checkContactName(context),
-
                         Padding(
                           padding: const EdgeInsets.only(bottom: 0.0, top: 5.0),
                           child: SizedBox(

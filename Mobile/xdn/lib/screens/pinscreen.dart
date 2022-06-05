@@ -14,6 +14,7 @@ import '../globals.dart' as globals;
 import '../support/ColorScheme.dart';
 
 class PinScreen extends StatefulWidget {
+  static const String route = "/pin";
   const PinScreen({Key? key}) : super(key: key);
 
   @override

@@ -2,11 +2,11 @@ import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:badges/badges.dart';
+import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:vector_math/vector_math.dart' show radians;
 
 import '../support/MenuButton.dart';
@@ -179,7 +179,7 @@ class _RadialAnimationState extends State<RadialAnimation> {
                     showBadge: unread == 0 ? false : true,
                     badgeContent: Text(
                       unread.toString(),
-                      style: Theme.of(context).textTheme.headline6!.copyWith(color:Colors.white, fontWeight: FontWeight.w300, fontSize: 14.0),
+                      style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white, fontWeight: FontWeight.w300, fontSize: 14.0),
                     ),
                     child: RawMaterialButton(
                       fillColor: Colors.transparent,

@@ -59,10 +59,10 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
 
   void _callback(String name) {
     if (name == AppLocalizations.of(context)!.menu_wallet) {
-      Navigator.of(context).push(CupertinoPageRoute(
-          builder: (context) => DetailScreenWidget(
-                key: _walletScreenKey,
-              )));
+      // Navigator.of(context).push(CupertinoPageRoute(
+      //     builder: (context) => WalletScreen(
+      //           key: _walletScreenKey,
+      //         )));
     } else if (name == AppLocalizations.of(context)!.st_headline) {
       Navigator.of(context).push(CupertinoPageRoute(
           builder: (context) => StakingScreen(

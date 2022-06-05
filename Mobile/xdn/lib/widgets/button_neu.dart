@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class NeuButton extends StatelessWidget {
   final double radius;
   final Color? color;
-  final VoidCallback?  onTap;
+  final VoidCallback? onTap;
   final Icon? icon;
   final AnimatedIcon? animIcon;
   final Color? splashColor;
@@ -16,17 +16,19 @@ class NeuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _getContainer(height, width,
+    return _getContainer(
+      height,
+      width,
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(4.0)),
         boxShadow: [
           BoxShadow(
-            offset: Offset(-1,-1),
+            offset: Offset(-1, -1),
             blurRadius: 4.0,
             color: Color.fromRGBO(134, 134, 134, 0.15),
           ),
           BoxShadow(
-            offset: Offset(1,1),
+            offset: Offset(1, 1),
             blurRadius: 4.0,
             color: Color.fromRGBO(2, 2, 2, 0.85),
           ),
@@ -56,11 +58,19 @@ class NeuButton extends StatelessWidget {
   }
 
   Container _getContainer(double? height, double? width, {required BoxDecoration decoration, required Widget child}) {
-    if(height != null) {
-      assert (width !=null);
-      return Container(height: height, width: width, decoration: decoration, child: child,);
-    }else{
-      return Container(decoration: decoration, child: child,);
+    if (height != null) {
+      assert(width != null);
+      return Container(
+        height: height,
+        width: width,
+        decoration: decoration,
+        child: child,
+      );
+    } else {
+      return Container(
+        decoration: decoration,
+        child: child,
+      );
     }
   }
 }

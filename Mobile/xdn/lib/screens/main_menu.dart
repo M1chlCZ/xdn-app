@@ -1,6 +1,11 @@
 import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/screens/addrScreen.dart';
+import 'package:digitalnote/screens/messagescreen.dart';
+import 'package:digitalnote/screens/stakingScreen.dart';
+import 'package:digitalnote/screens/walletscreen.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
@@ -8,8 +13,10 @@ import 'package:digitalnote/widgets/balance_card.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:flutter/material.dart';
+import '../globals.dart' as globals;
 
 class MainMenuNew extends StatefulWidget {
+  static const String route = "/menu";
   final String? locale;
 
   const MainMenuNew({Key? key, this.locale}) : super(key: key);
@@ -19,14 +26,50 @@ class MainMenuNew extends StatefulWidget {
 }
 
 class _MainMenuNewState extends State<MainMenuNew> {
-  ComInterface cm = ComInterface();
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
+  final GlobalKey<DetailScreenState> _walletKey = GlobalKey();
+  ComInterface cm = ComInterface();
+
   Future<Map<String, dynamic>>? _getBalance;
+
+  String? name;
+
+  @override
+  void initState() {
+    super.initState();
+    refreshBalance();
+    getInfo();
+  }
+
+  getInfo() async {
+    name = await SecureStorage.read(key: globals.NICKNAME);
+    setState(() {});
+  }
 
   void refreshBalance() {
     setState(() {
       _getBalance = NetInterface.getBalance(details: true);
     });
+  }
+
+  void gotoBalanceScreen() async {
+    // Navigator.of(context).push(CupertinoPageRoute(
+    //     builder: (context) => DetailScreenWidget(
+    //       key: _walletKey,
+    //     )));
+    Navigator.of(context).pushNamed(WalletScreen.route, arguments: "shit");
+  }
+
+  void gotoContactScreen() async {
+    Navigator.of(context).pushNamed(AddressScreen.route);
+  }
+
+  void gotoStakingScreen() async {
+    Navigator.of(context).pushNamed(StakingScreen.route, arguments: "shit");
+  }
+
+  void gotoMessagesScreen() async {
+    Navigator.of(context).pushNamed(MessageScreen.route, arguments: "shit");
   }
 
   Future<DaemonStatus> _getDaemonStatus() async {
@@ -39,16 +82,11 @@ class _MainMenuNewState extends State<MainMenuNew> {
     return dm;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    refreshBalance();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: Stack(
+    return Scaffold(
+      body: Stack(
         children: [
           const BackgroundWidget(
             mainMenu: true,
@@ -61,10 +99,19 @@ class _MainMenuNewState extends State<MainMenuNew> {
                   height: 50,
                 ),
                 SizedBox(
-                  width: 200.0,
-                    child: Image.asset("images/logo.png", color: Colors.white70,)),
+                  width: double.infinity,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 0.0),
+                      child: SizedBox(
+                          width: 200.0,
+                          child: Image.asset("images/logo.png", color: Colors.white70,)),
+                    ),
+                  ),
+                ),
                 const SizedBox(
-                  height: 10,
+                  height: 20,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20.0),
@@ -77,18 +124,23 @@ class _MainMenuNewState extends State<MainMenuNew> {
                         children: [
                           Text(
                             'Good Morning',
-                            style: Theme.of(context)
+                            style: Theme
+                                .of(context)
                                 .textTheme
                                 .headline5!
                                 .copyWith(fontSize: 14.0),
                           ),
-                          Text('Jakub Novak',
-                              style: Theme.of(context).textTheme.headline5),
+                          Text(name ?? '',
+                              style: Theme
+                                  .of(context)
+                                  .textTheme
+                                  .headline5),
                         ],
                       ),
                       const AvatarPicker(
                         userID: null,
                         size: 100.0,
+                        color: Colors.transparent,
                       )
                     ],
                   ),
@@ -97,11 +149,11 @@ class _MainMenuNewState extends State<MainMenuNew> {
                   height: 40,
                 ),
                 BalanceCardMainMenu(
-                    key: _keyBal, getBalanceFuture: _getBalance),
+                  key: _keyBal, getBalanceFuture: _getBalance, goto: gotoBalanceScreen,),
                 const SizedBox(
                   height: 10,
                 ),
-                const StakingMenuWidget(),
+                StakingMenuWidget(goto: gotoStakingScreen,),
                 const SizedBox(
                   height: 10,
                 ),
@@ -109,13 +161,10 @@ class _MainMenuNewState extends State<MainMenuNew> {
                   padding: const EdgeInsets.only(left: 10.0, right: 10.0),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
-                    children: const [
-                      Expanded(
-                          child: SmallMenuTile(
-                        name: "Messages",
-                      )),
-                      Expanded(child: SmallMenuTile(name: "Contacts")),
-                      Expanded(child: SmallMenuTile(name: "Settings")),
+                    children: [
+                      Expanded(child: SmallMenuTile(name: "Messages", goto: gotoMessagesScreen)),
+                      Expanded(child: SmallMenuTile(name: "Contacts", goto: gotoContactScreen,)),
+                      Expanded(child: SmallMenuTile(name: "Settings", goto: gotoContactScreen)),
                     ],
                   ),
                 ),
@@ -148,10 +197,11 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                       children: [
                                         Text(
                                           "Wallet daemon status",
-                                          style: Theme.of(context)
+                                          style: Theme
+                                              .of(context)
                                               .textTheme
-                                              .bodyText1!
-                                              .copyWith(fontSize: 8.0),
+                                              .headline5!
+                                              .copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                         ),
                                         const SizedBox(
                                           width: 5.0,
@@ -184,10 +234,11 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                       children: [
                                         Text(
                                           "Staking daemon status",
-                                          style: Theme.of(context)
+                                          style: Theme
+                                              .of(context)
                                               .textTheme
-                                              .bodyText1!
-                                              .copyWith(fontSize: 8.0),
+                                              .headline5!
+                                              .copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                         ),
                                         const SizedBox(
                                           width: 5.0,
@@ -220,10 +271,11 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                       children: [
                                         Text(
                                           "Staking active",
-                                          style: Theme.of(context)
+                                          style: Theme
+                                              .of(context)
                                               .textTheme
-                                              .bodyText1!
-                                              .copyWith(fontSize: 8.0),
+                                              .headline5!
+                                              .copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                         ),
                                         const SizedBox(
                                           width: 5.0,

@@ -13,21 +13,24 @@ class RadialMenu extends StatefulWidget {
   createState() => _RadialMenuState();
 }
 
-class _RadialMenuState extends State<RadialMenu>
-    with SingleTickerProviderStateMixin {
+class _RadialMenuState extends State<RadialMenu> with SingleTickerProviderStateMixin {
   late AnimationController controller;
 
   @override
   void initState() {
     super.initState();
-    controller =
-        AnimationController(duration: const Duration(milliseconds: 900), vsync: this);
+    controller = AnimationController(duration: const Duration(milliseconds: 900), vsync: this);
     // ..addListener(() => setState(() {}));
   }
 
   @override
   Widget build(BuildContext context) {
-    return RadialAnimation(controller: controller,callback: widget.callback, admPriv: widget.admPriv, ambPriv: widget.ambPriv,);
+    return RadialAnimation(
+      controller: controller,
+      callback: widget.callback,
+      admPriv: widget.admPriv,
+      ambPriv: widget.ambPriv,
+    );
   }
 
   @override

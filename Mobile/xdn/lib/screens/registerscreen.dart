@@ -19,6 +19,7 @@ import '../support/ColorScheme.dart';
 const SERVER_IP = globals.SERVER_URL;
 
 class RegisterScreen extends StatefulWidget {
+  static const String route = "/register";
   const RegisterScreen({Key? key}) : super(key: key);
 
   @override

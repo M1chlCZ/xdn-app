@@ -10,17 +10,20 @@ import '../widgets/balanceCard.dart';
 import '../widgets/sendWidget.dart';
 import '../widgets/transactionWidget.dart';
 
-class DetailScreenWidget extends StatefulWidget {
+class WalletScreen extends StatefulWidget {
+  static const String route = "/menu/wallet";
+
   @override
   DetailScreenState createState() => DetailScreenState();
   final VoidCallback? refreshData;
+  final Object arguments;
 
-  const DetailScreenWidget({Key? key, this.refreshData}) : super(key: key);
+  const WalletScreen({Key? key, this.refreshData, required this.arguments}) : super(key: key);
 }
 
 final Map<String, dynamic> payload = {};
 
-class DetailScreenState extends State<DetailScreenWidget>
+class DetailScreenState extends State<WalletScreen>
     with TickerProviderStateMixin {
   final GlobalKey<SendWidgetState> _key = GlobalKey();
   final GlobalKey<TransactionWidgetState> _keyTran = GlobalKey();
@@ -60,7 +63,7 @@ class DetailScreenState extends State<DetailScreenWidget>
     animationSendController =
         AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
-    sendTween = Tween<Offset>(begin: const Offset(0, 0), end: const Offset(0, 0.28)).animate(
+    sendTween = Tween<Offset>(begin: const Offset(0, 0), end: const Offset(0, 0.2)).animate(
         CurvedAnimation(parent: animationSendController!, curve: Curves.easeOut));
 
     opacityTween = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -129,59 +132,52 @@ class DetailScreenState extends State<DetailScreenWidget>
       Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: Container(
-            margin: const EdgeInsets.only(left: 20.0, right: 20.0, top: 15.0),
-            decoration: const BoxDecoration(
-              color: Colors.white10,
-              borderRadius: BorderRadius.all(Radius.circular(15.0)),
-            ),
-            child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 0.0),
+          child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 80.0),
+                  child: FadeTransition(
+                    opacity: opacityTween!,
+                    child: SlideTransition(
+                      position: sendTween!,
+                      child: SendWidget(
+                        key: _key,
+                        func: shrinkSendView,
+                        balance: _getBalance,
+                      ),
+                    ),
+                  ),
+                ),
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 80.0),
+                  child: BalanceCard(
+                    key: _keyBal,
+                    getBalanceFuture: _getBalance,
+                    onPressSend: showTransactions,
+                  ),
+                ),
+                Expanded(
+                  child: IgnorePointer(
+                    ignoring: _forward ? true : false,
                     child: FadeTransition(
-                      opacity: opacityTween!,
-                      child: SlideTransition(
-                        position: sendTween!,
-                        child: SendWidget(
-                          key: _key,
-                          func: shrinkSendView,
-                          balance: _getBalance,
+                      opacity: tween!,
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 10.0),
+                        child: TransactionWidget(
+                          key: _keyTran,
+                          func: refreshDataScroll,
                         ),
                       ),
                     ),
                   ),
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
-                    child: BalanceCard(
-                      key: _keyBal,
-                      getBalanceFuture: _getBalance,
-                      onPressSend: showTransactions,
-                    ),
-                  ),
-                  Expanded(
-                    child: IgnorePointer(
-                      ignoring: _forward ? true : false,
-                      child: FadeTransition(
-                        opacity: tween!,
-                        child: Container(
-                          margin: const EdgeInsets.only(top: 10.0),
-                          child: TransactionWidget(
-                            key: _keyTran,
-                            func: refreshDataScroll,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
+            ),
 
-              CardHeader(title: AppLocalizations.of(context)!.wl_balance, backArrow: true,),
-            ]),
-          ),
+            CardHeader(title: AppLocalizations.of(context)!.wl_balance, backArrow: true,),
+          ]),
         ),
       ),
     ]);

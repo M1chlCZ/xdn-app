@@ -23,6 +23,7 @@ import '../support/Dialogs.dart';
 const SERVER_IP = globals.SERVER_URL;
 
 class LoginPage extends StatefulWidget {
+  static const String route = "/login";
   const LoginPage({Key? key}) : super(key: key);
 
   @override
