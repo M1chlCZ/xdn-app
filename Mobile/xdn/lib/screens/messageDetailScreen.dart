@@ -4,12 +4,13 @@ import 'dart:convert';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/bloc/messages_bloc.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
+import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:digitalnote/support/Message.dart';
+import 'package:get_it/get_it.dart';
 
 import '../globals.dart' as globals;
 import '../support/AppDatabase.dart';
@@ -35,9 +36,9 @@ class MessageDetailScreen extends StatefulWidget {
 }
 
 class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen> {
+  Future<List<dynamic>>? _messages;
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
-  final MessagesBloc mBlock = MessagesBloc();
   String? _addr;
   String? _lastDate;
   var _running = true;
@@ -55,12 +56,11 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   @override
   void initState() {
     super.initState();
-    // _messages = _getMessages();
-    _getMessages();
-    _getBalance();
+    _messages = _getMessages();
+    _checkForMessages();
     timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
-      if (_running == true) {
-        mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+      if(_running == true)  {
+        _checkForMessages();
       }
     });
     _switchWidget = _tipIcon();
@@ -79,33 +79,33 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   @override
   void setState(fn) {
-    if (mounted) {
+    if(mounted) {
       super.setState(fn);
     }
   }
 
   @override
   void dispose() {
-    mBlock.dispose();
     timer?.cancel();
     super.dispose();
   }
 
-  _getMessages() async {
-    _addr = await SecureStorage.read(key: globals.ADR);
-    mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
-  }
-
-  _getBalance() async {
+  Future<List<dynamic>> _getMessages() async {
     Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
-    _balance = (double.parse(ss?["balance"]));
+    // var sjson = json.decode(ss!);
+    _balance = (double.parse(ss!["balance"]));
+    _addr = await SecureStorage.read(key: globals.ADR);
+    var s = await AppDatabase().getMessages(_addr!, widget.mgroup.sentAddressOrignal!);
+
+    return s!;
   }
 
   void notReceived() {
     _withoutNot = false;
     if (_running) {
+
       Future.delayed(const Duration(milliseconds: 10), () {
-        mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+        _checkForMessages();
       });
     }
   }
@@ -124,26 +124,26 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
     });
   }
 
-  // void _checkForMessages() async {
-  //   _addr = await SecureStorage.read(key: globals.ADR);
-  //   if (_busy) return;
-  //   setState(() {
-  //     _busy = true;
-  //     _messages = null;
-  //   });
-  //   try {
-  //     int idMax = await AppDatabase().getMessageGroupMaxID(_addr, widget.mgroup.sentAddressOrignal);
-  //     await NetInterface.saveMessages(widget.mgroup.sentAddressOrignal!, idMax);
-  //     setState(() {
-  //       _messages = AppDatabase().getMessages(_addr!, widget.mgroup.sentAddressOrignal!);
-  //       _circleVisible = false;
-  //       _iconReset();
-  //       _busy = false;
-  //     });
-  //   } catch (e) {
-  //     print(e);
-  //   }
-  // }
+  void _checkForMessages() async {
+    _addr = await SecureStorage.read(key: globals.ADR);
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _messages = null;
+    });
+    try {
+      int idMax = await AppDatabase().getMessageGroupMaxID(_addr, widget.mgroup.sentAddressOrignal);
+      await NetInterface.saveMessages(widget.mgroup.sentAddressOrignal!, idMax);
+      setState(() {
+        _messages = AppDatabase().getMessages(_addr!, widget.mgroup.sentAddressOrignal!);
+        _circleVisible = false;
+        _iconReset();
+        _busy = false;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
 
   Future<void> _sendMessage() async {
     if (_textController.text.isEmpty) {
@@ -166,7 +166,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         if (_withoutNot) {
           setState(() {
             _withoutNot = false;
-            mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+            _checkForMessages();
           });
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(AppLocalizations.of(context)!.message_not_warning),
@@ -191,10 +191,11 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         elevation: 5.0,
       ));
       return;
-    } else if (double.parse(amount) > _balance) {
+    } else if(double.parse(amount) > _balance) {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");
       return;
-    } else if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+
+    } else if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
       Dialogs.displayDialog(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
       return;
     } else {
@@ -205,7 +206,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       int _i = await NetInterface.sendContactCoins(amount, name, addr);
       var _nick = await SecureStorage.read(key: globals.NICKNAME);
       if (_i == 1) {
-        var _text = "${_nick!} ${AppLocalizations.of(context)!.message_tipped} ${widget.mgroup.sentAddr!} $amount XDN!";
+        var _text = _nick! + " " + AppLocalizations.of(context)!.message_tipped +" " + widget.mgroup.sentAddr! + " " + amount.toString() + " KONJ!";
         await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, _text, _replyid);
         setState(() {
           _switchWidget = _sendWait();
@@ -217,7 +218,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
           if (_withoutNot) {
             setState(() {
               _withoutNot = false;
-              mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+              _checkForMessages();
             });
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(AppLocalizations.of(context)!.message_not_warning),
@@ -265,71 +266,58 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        StreamBuilder<ApiResponse<List<dynamic>>>(
-                            stream: mBlock.coinsListStream,
+                        FutureBuilder(
+                            future: _messages,
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
-                                switch (snapshot.data!.status) {
-                                  case Status.COMPLETED:
-                                    var mData = snapshot.data!.data as List<dynamic>;
-                                    return Flexible(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(left: 5.0, right: 5.0),
-                                        child: ClipRRect(
-                                          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                                          child: ListView.builder(
-                                              reverse: true,
-                                              controller: _scrollController,
-                                              shrinkWrap: true,
-                                              itemCount: mData.length,
-                                              itemBuilder: (BuildContext context, int index) {
-                                                dynamic mNode = mData[index];
-                                                if (mNode is DateSeparator) {
-                                                  return Row(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    children: [
-                                                      Container(
-                                                        margin: const EdgeInsets.only(top: 30.0, bottom: 10.0),
-                                                        decoration: const BoxDecoration(color: Color.fromRGBO(44, 44, 53, 1.0), borderRadius: BorderRadius.all(Radius.circular(32.0))),
-                                                        child: Padding(
-                                                          padding: const EdgeInsets.all(15.0),
-                                                          child: Text(
-                                                            mNode.lastMessage!,
-                                                            style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white70, fontSize: 14.0),
-                                                          ),
-                                                        ),
+                                var data = snapshot.data as List<dynamic>?;
+                                return Flexible(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                                      child: ListView.builder(
+                                          reverse: true,
+                                          controller: _scrollController,
+                                          shrinkWrap: true,
+                                          itemCount: data!.length,
+                                          itemBuilder: (BuildContext context, int index) {
+                                            dynamic node = data[index];
+                                            if (node is DateSeparator) {
+                                              return Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Container(
+                                                    margin: const EdgeInsets.only(top: 30.0, bottom: 10.0),
+                                                    decoration: const BoxDecoration(color: Color.fromRGBO(44, 44, 53, 1.0), borderRadius: BorderRadius.all(Radius.circular(32.0))),
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.all(15.0),
+                                                      child: Text(
+                                                        node.lastMessage!,
+                                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70, fontSize: 14.0),
                                                       ),
-                                                    ],
-                                                  );
-                                                } else {
-                                                  return MessageBubble(
-                                                    key: Key((mNode as Message).id.toString()),
-                                                    messages: mData[index],
-                                                    userMessage: mData[index].sentAddr == _addr ? true : false,
-                                                    replyCallback: _reply,
-                                                    // func3: _refreshUsers,
-                                                  );
-                                                }
-                                              }),
-                                        ),
-                                      ),
-                                    );
-                                  case Status.LOADING:
-                                    return const Padding(
-                                      padding: EdgeInsets.only(bottom: 280),
-                                      child: SizedBox(
-                                          height: 50.0,
-                                          width: 50.0,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2.0,
-                                          )),
-                                    );
-                                  case Status.ERROR:
-                                    return Container();
-                                }
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            } else {
+                                              return MessageBubble(
+                                                key: Key((node as Message).id.toString()),
+                                                messages: data[index],
+                                                userMessage: data[index].sentAddr == _addr ? true : false,
+                                                replyCallback: _reply,
+                                                // func3: _refreshUsers,
+                                              );
+                                            }
+                                          }),
+                                    ),
+                                  ),
+                                );
                               } else {
-                                return Container();
+                                return const Padding(
+                                  padding: EdgeInsets.only(bottom: 200.0),
+                                  child: SizedBox(child: CircularProgressIndicator( color: Colors.white, strokeWidth: 2.0,), height: 50.0, width: 50.0),
+                                );
                               }
                             }),
                         const SizedBox(
@@ -338,9 +326,9 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                         const SizedBox(height: 10.0),
                         Wrap(children: [
                           Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).konjHeaderColor,
-                              borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF29303F),
+                              borderRadius: BorderRadius.all(Radius.circular(15.0)),
                             ),
                             child: Column(
                               children: [
@@ -349,9 +337,9 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                   curve: Curves.decelerate,
                                   width: MediaQuery.of(context).size.width,
                                   height: _replyHeight,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).konjTextFieldHeaderColor,
-                                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
+                                  decoration: const BoxDecoration(
+                                    color:  Color(0xFF1F222F),
+                                    borderRadius: BorderRadius.only(topLeft: Radius.circular(5.0), topRight: Radius.circular(5.0)),
                                   ),
                                   child: Center(
                                     child: SingleChildScrollView(
@@ -364,17 +352,18 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                               width: 15.0,
                                             ),
                                             Text(
-                                              AppLocalizations.of(context)!.message_reply_to + ': ',
-                                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14.0),
+                                              AppLocalizations.of(context)!.message_reply_to +': ',
+                                              style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                                             ),
                                             const SizedBox(
                                               width: 5.0,
                                             ),
                                             SizedBox(
                                               width: MediaQuery.of(context).size.width * 0.6,
+                                              height: 16.0,
                                               child: AutoSizeText(
                                                 _replyMessage == null ? '' : _replyMessage!,
-                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, letterSpacing: 0.2),
                                                 maxLines: 1,
                                                 minFontSize: 12.0,
                                                 overflow: TextOverflow.ellipsis,
@@ -385,26 +374,26 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             ),
                                             Expanded(
                                                 child: Material(
-                                              color: const Color(0xFFc74d4d),
-                                              borderRadius: const BorderRadius.only(topRight: Radius.circular(15.0)),
-                                              child: InkWell(
-                                                borderRadius: const BorderRadius.only(topRight: Radius.circular(15.0)),
-                                                splashColor: const Color(0xFFc74d4d).withOpacity(0.5), // splash color
-                                                onTap: () {
-                                                  setState(() {
-                                                    _replyid = 0;
-                                                    _replyMessage = null;
-                                                    _replyHeight = 0;
-                                                  });
-                                                }, // button pressed
-                                                child: SizedBox(
-                                                  height: _replyHeight,
-                                                  child: Center(
-                                                    child: Text('x', style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 20.0)),
+                                                  color: const Color(0xff542323),
+                                                  borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
+                                                  child: InkWell(
+                                                    borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
+                                                    splashColor: const Color(0xFFc74d4d).withOpacity(0.5), // splash color
+                                                    onTap: () {
+                                                      setState(() {
+                                                        _replyid = 0;
+                                                        _replyMessage = null;
+                                                        _replyHeight = 0;
+                                                      });
+                                                    }, // button pressed
+                                                    child: SizedBox(
+                                                      height: _replyHeight,
+                                                      child: Center(
+                                                        child: Text('x', style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 20.0)),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                                            ))
+                                                ))
                                           ],
                                         ),
                                       ),
@@ -455,7 +444,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                               child: AnimatedSwitcher(
                                                 duration: const Duration(milliseconds: 200),
                                                 transitionBuilder: (Widget child, Animation<double> animation) {
-                                                  return ScaleTransition(scale: animation, child: child);
+                                                  return ScaleTransition(child: child, scale: animation);
                                                 },
                                                 child: _switchWidget,
                                               ),
@@ -506,8 +495,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                 minFontSize: 14.0,
                                 textAlign: TextAlign.left,
                                 style: Theme.of(context).textTheme.bodyText2!.copyWith(
-                                      fontSize: 20.0,
-                                    )),
+                                  fontSize: 20.0,
+                                )),
                           ),
                         ],
                       ),
@@ -553,7 +542,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   @override
   void onResumed() {
-    mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+    _checkForMessages();
     Future.delayed(const Duration(milliseconds: 500), () {
       _running = true;
     });
@@ -561,27 +550,36 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   Widget _sendIcon() {
     return const Icon(
-      Icons.expand_less,
-      size: 45,
-      color: Colors.white,
+      Icons.send,
+      size: 30,
+      color: Colors.white70,
       key: ValueKey<int>(0),
     );
   }
 
   Widget _tipIcon() {
     return SizedBox(
-      width: 40,
-      child: Image.asset(
-        "images/konjicon.png",
-        key: const ValueKey<int>(1),
+      width: 50,
+      height: 50,
+      child: Container(
+        padding: const EdgeInsets.all(5.0),
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+              color: Colors.white10
+        ),
+        child: Image.asset(
+          "images/logo_send.png",
+          color: Colors.white70,
+          key: const ValueKey<int>(1),
+        ),
       ),
     );
   }
 
   Widget _sendWait() {
     return const SizedBox(
-      width: 25,
-      height: 25,
+      width: 50,
+      height: 50,
       child: CircularProgressIndicator(
         strokeWidth: 3.0,
         key: ValueKey<int>(2),

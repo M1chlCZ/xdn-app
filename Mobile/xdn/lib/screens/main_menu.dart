@@ -1,10 +1,13 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/messagescreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
+import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
@@ -13,6 +16,8 @@ import 'package:digitalnote/widgets/balance_card.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:get_it/get_it.dart';
 import '../globals.dart' as globals;
 
 class MainMenuNew extends StatefulWidget {
@@ -28,6 +33,7 @@ class MainMenuNew extends StatefulWidget {
 class _MainMenuNewState extends State<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
   final GlobalKey<DetailScreenState> _walletKey = GlobalKey();
+  FCM fmc = GetIt.I.get<FCM>();
   ComInterface cm = ComInterface();
 
   Future<Map<String, dynamic>>? _getBalance;
@@ -36,14 +42,26 @@ class _MainMenuNewState extends State<MainMenuNew> {
 
   @override
   void initState() {
+    _getLocale();
     super.initState();
     refreshBalance();
     getInfo();
+    fmc.setNotifications();
+    // fmc.bodyCtlr.stream.listen((event) {print(event + "adfadfadf");});
   }
 
   getInfo() async {
     name = await SecureStorage.read(key: globals.NICKNAME);
     setState(() {});
+  }
+
+  void _getLocale() async {
+    var timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+    await SecureStorage.write(key: globals.LOCALE, value: timeZoneName);
+
+    // context.findAncestorWidgetOfExactType<MaterialApp>()?.supportedLocales.forEach((element) {
+    //   print(element.toString());
+    // });
   }
 
   void refreshBalance() {
@@ -70,6 +88,10 @@ class _MainMenuNewState extends State<MainMenuNew> {
 
   void gotoMessagesScreen() async {
     Navigator.of(context).pushNamed(MessageScreen.route, arguments: "shit");
+  }
+
+  void gotoSettingsScreen() async {
+    Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
   }
 
   Future<DaemonStatus> _getDaemonStatus() async {
@@ -164,7 +186,7 @@ class _MainMenuNewState extends State<MainMenuNew> {
                     children: [
                       Expanded(child: SmallMenuTile(name: "Messages", goto: gotoMessagesScreen)),
                       Expanded(child: SmallMenuTile(name: "Contacts", goto: gotoContactScreen,)),
-                      Expanded(child: SmallMenuTile(name: "Settings", goto: gotoContactScreen)),
+                      Expanded(child: SmallMenuTile(name: "Settings", goto: gotoSettingsScreen)),
                     ],
                   ),
                 ),
@@ -181,7 +203,7 @@ class _MainMenuNewState extends State<MainMenuNew> {
                           future: _getDaemonStatus(),
                           builder: (ctx, snapshot) {
                             return Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 Container(
                                   decoration: BoxDecoration(
@@ -189,19 +211,20 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                       color: Colors.white10),
                                   child: Padding(
                                     padding: const EdgeInsets.only(
-                                        left: 10.0,
-                                        right: 10.0,
+                                        left: 5.0,
+                                        right: 5.0,
                                         top: 2.0,
                                         bottom: 2.0),
                                     child: Row(
                                       children: [
-                                        Text(
+                                        AutoSizeText(
                                           "Wallet daemon status",
                                           style: Theme
                                               .of(context)
                                               .textTheme
                                               .headline5!
                                               .copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                          minFontSize: 2.0,
                                         ),
                                         const SizedBox(
                                           width: 5.0,
@@ -217,29 +240,29 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(
-                                  width: 10.0,
-                                ),
+
                                 Container(
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10.0),
                                       color: Colors.white10),
                                   child: Padding(
                                     padding: const EdgeInsets.only(
-                                        left: 10.0,
-                                        right: 10.0,
+                                        left: 5.0,
+                                        right: 5.0,
                                         top: 2.0,
                                         bottom: 2.0),
                                     child: Row(
                                       children: [
-                                        Text(
+                                        AutoSizeText(
                                           "Staking daemon status",
                                           style: Theme
                                               .of(context)
                                               .textTheme
                                               .headline5!
                                               .copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                          minFontSize: 2.0,
                                         ),
+
                                         const SizedBox(
                                           width: 5.0,
                                         ),
@@ -254,28 +277,27 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(
-                                  width: 10.0,
-                                ),
+
                                 Container(
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10.0),
                                       color: Colors.white10),
                                   child: Padding(
                                     padding: const EdgeInsets.only(
-                                        left: 15.0,
-                                        right: 15.0,
+                                        left: 5.0,
+                                        right: 5.0,
                                         top: 2.0,
                                         bottom: 2.0),
                                     child: Row(
                                       children: [
-                                        Text(
+                                        AutoSizeText(
                                           "Staking active",
                                           style: Theme
                                               .of(context)
                                               .textTheme
                                               .headline5!
                                               .copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                          minFontSize: 2.0,
                                         ),
                                         const SizedBox(
                                           width: 5.0,

@@ -13,7 +13,7 @@ class DialogBody extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onCancel;
   final String? header;
-  final String buttonLabel;
+  final String? buttonLabel;
   final String buttonCancelLabel;
   final Widget child;
   final bool oneButton;
@@ -27,7 +27,7 @@ class DialogBody extends StatefulWidget {
     this.radius,
     this.header,
     required this.child,
-    required this.buttonLabel,
+    this.buttonLabel,
     this.oneButton = false,
     this.buttonCancelLabel = 'Cancel', this.noButtons = false,
   }) : super(key: key);
@@ -46,10 +46,10 @@ class DialogBodyState extends State<DialogBody> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-        backgroundColor: Theme.of(context).canvasColor,
+        backgroundColor: const Color(0xFF363D4E),
         shape: RoundedRectangleBorder(
-            side: BorderSide(color: Theme.of(context).canvasColor),
-            borderRadius:  BorderRadius.all(Radius.circular(widget.radius ?? 5.0))),
+            side: const BorderSide(color: Color(0xFF363D4E)),
+            borderRadius:  BorderRadius.all(Radius.circular(widget.radius ?? 15.0))),
         contentPadding: const EdgeInsets.only(top: 0.01),
         content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
@@ -80,8 +80,8 @@ class DialogBodyState extends State<DialogBody> {
                                 minFontSize: 8.0,
                                 style: Theme.of(context)
                                     .textTheme
-                                    .headline6!
-                                    .copyWith(fontSize: 22.0, color: Colors.white70),
+                                    .bodyText1!
+                                    .copyWith(fontSize: 22.0, color: Colors.white70, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -97,75 +97,100 @@ class DialogBodyState extends State<DialogBody> {
                   !widget.noButtons ?
                   widget.oneButton
                       ? Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(15.0),
                     child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          NeuButton(
+                          SizedBox(
                             width: 100,
                             height: 40,
-                            onTap: () {
+                        child: TextButton(
+                          clipBehavior: Clip.antiAlias,
+                            onPressed: () {
                               Navigator.of(context).pop();
                             },
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                'OK',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline4!
-                                    .copyWith(color: Colors.white),
-                                textAlign: TextAlign.start,
-                              ),
+                          style: TextButton.styleFrom(
+                              padding: EdgeInsets.all(3.0),
+                              minimumSize: const Size(20, 20),
+                              alignment: Alignment.center,
+                              backgroundColor: Colors.black.withOpacity(0.05),
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(color: Colors.white30),
+                                borderRadius: BorderRadius.circular(15.0),
+                              )),
+                            child: Text(
+                              'OK',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyText1!
+                                  .copyWith(color: Colors.white, fontWeight: FontWeight.normal),
+                              textAlign: TextAlign.start,
                             ),
-                          ),
+                          ),),
                         ]),
                   )
                       : Padding(
                     padding:
-                    const EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+                    const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                     child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          NeuButton(
-                            width: 100,
+                          SizedBox(
+                            width: 120.0,
                             height: 40,
-                            onTap: () {
+                            child: TextButton(
+                              clipBehavior: Clip.antiAlias,
+                            onPressed: () {
                               widget.onTap == null ? Navigator.of(context).pop() : widget.onTap!();
                             },
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                AppLocalizations.of(context)!.yes,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline4!
-                                    .copyWith(color: Colors.white),
-                                textAlign: TextAlign.start,
-                              ),
+                              style: TextButton.styleFrom(
+                                  padding: EdgeInsets.all(3.0),
+                                  minimumSize: const Size(20, 20),
+                                  alignment: Alignment.center,
+                                  backgroundColor: Colors.black.withOpacity(0.05),
+                                  shape: RoundedRectangleBorder(
+                                    side: const BorderSide(color: Colors.white30),
+                                    borderRadius: BorderRadius.circular(15.0),
+                                  )),
+                            child: Text(
+                             widget.buttonLabel ?? AppLocalizations.of(context)!.yes,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyText1!
+                                  .copyWith(color: Colors.white70, fontWeight: FontWeight.normal),
+                              textAlign: TextAlign.start,
                             ),
-                          ),
-                          NeuButton(
-                            width: 100,
+                          ),),
+                          SizedBox(
                             height: 40,
-                            onTap: () {
+                            width: 120.0,
+                            child: TextButton(
+                              clipBehavior: Clip.antiAlias,
+                              onPressed: () {
                               widget.onCancel == null ? Navigator.of(context).pop() : widget.onCancel!();
                             },
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                AppLocalizations.of(context)!.cancel,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline4!
-                                    .copyWith(color: Colors.white),
-                                textAlign: TextAlign.start,
-                              ),
+                              style: TextButton.styleFrom(
+                                  padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                                  minimumSize: const Size(20, 20),
+                                  alignment: Alignment.center,
+                                  backgroundColor: Colors.black.withOpacity(0.05),
+                                  shape: RoundedRectangleBorder(
+                                    side: const BorderSide(color: Colors.white30),
+                                    borderRadius: BorderRadius.circular(15.0),
+                                  )),
+                            child: Text(
+                              AppLocalizations.of(context)!.cancel,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyText1!
+                                  .copyWith(color: Colors.white70, fontWeight: FontWeight.normal),
+                              textAlign: TextAlign.start,
                             ),
                           ),
-                        ]),
+                          )]),
                   ) : Container(),
-                ])));
+                ]
+            )));
   }
 }
 

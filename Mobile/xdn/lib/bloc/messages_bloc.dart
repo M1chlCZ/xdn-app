@@ -46,6 +46,7 @@ class MessagesBloc {
   refreshMessages(String addr) async {
     try {
       int i = await _balanceList.refreshMessages(addr);
+      fetchMessages(addr);
       if (i > 0) {
         fetchMessages(addr);
       }

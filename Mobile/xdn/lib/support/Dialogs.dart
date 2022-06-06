@@ -2,12 +2,11 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:path/path.dart';
-import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share/share.dart';
@@ -33,29 +32,36 @@ class Dialogs {
         context: context,
         builder: (BuildContext context) {
           return DialogBody(
-            buttonLabel: AppLocalizations.of(context)!.send,
-            onTap: () {
-              func(textController.text, name, addr);
-            },
-            header: "${AppLocalizations.of(context)!.send} $name",
-            child: Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
-              child: TextField(
-                autofocus: true,
-                controller: textController,
-                keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
-                ],
-                style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
-                decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
-                  hintText: AppLocalizations.of(context)!.amount,
-                  border: InputBorder.none,
+              buttonLabel: AppLocalizations.of(context)!.send,
+              onTap: () {
+                func(textController.text, name, addr);
+              },
+              header: "${AppLocalizations.of(context)!.send} $name",
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 500,
+                  child: TextField(
+                    autofocus: true,
+                    controller: textController,
+                    keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                    ],
+                    style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                    decoration: InputDecoration(
+                      hintStyle: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintText: AppLocalizations.of(context)!.amount,
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          );
+              ));
         });
   }
 
@@ -67,57 +73,34 @@ class Dialogs {
         builder: (BuildContext context) {
           return DialogBody(
             buttonLabel: AppLocalizations.of(context)!.send,
+            oneButton: false,
             onTap: () {
               func(textController.text, name, addr);
             },
             header: "${AppLocalizations.of(context)!.tip} $name",
             child: Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
-              child: TextField(
-                autofocus: true,
-                controller: textController,
-                keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
-                ],
-                style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
-                decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
-                  hintText: AppLocalizations.of(context)!.amount,
-                  border: InputBorder.none,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
                 ),
-              ),
-            ),
-          );
-        });
-  }
-
-  static void openAmbassadorSendBox(context, String name, String addr, Function(String amount, String name, String addr) func) async {
-    TextEditingController textController = TextEditingController();
-    return showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (BuildContext context) {
-          return DialogBody(
-            buttonLabel: AppLocalizations.of(context)!.send,
-            onTap: () {
-              func(textController.text, name, addr);
-            },
-            header: '${AppLocalizations.of(context)!.send_to} $name',
-            child: Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
-              child: TextField(
-                autofocus: true,
-                controller: textController,
-                keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
-                ],
-                style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
-                decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
-                  hintText: AppLocalizations.of(context)!.amount,
-                  border: InputBorder.none,
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
+                child: TextField(
+                  autofocus: true,
+                  controller: textController,
+                  keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                  ],
+                  style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.all(5.0),
+                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                    hintText: AppLocalizations.of(context)!.amount,
+                    border: InputBorder.none,
+                  ),
                 ),
               ),
             ),
@@ -139,7 +122,14 @@ class Dialogs {
               func(textController.text);
             },
             child: Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
               child: TextField(
                 autofocus: true,
                 controller: textController,
@@ -155,7 +145,7 @@ class Dialogs {
                 ),
               ),
             ),
-          );
+          ));
         });
   }
 
@@ -172,7 +162,14 @@ class Dialogs {
               func(textController.text);
             },
             child: Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
               child: TextField(
                 obscureText: true,
                 autofocus: true,
@@ -191,37 +188,7 @@ class Dialogs {
                 ),
               ),
             ),
-          );
-        });
-  }
-
-  static void openAmbassadorCodeBox(context, String code) async {
-    showDialog(
-        context: context,
-        builder: (context) {
-          return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
-            child: Wrap(children: [
-              Container(
-                width: 310.0,
-                padding: const EdgeInsets.all(15.0),
-                child: QrImage(
-                  dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
-                  eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
-                  errorCorrectionLevel: QrErrorCorrectLevel.H,
-                  data: code,
-                  foregroundColor: Colors.black87,
-                  embeddedImage: const AssetImage("assets/qrlogo.png"),
-                  version: QrVersions.auto,
-                  // size: 250,
-                  gapless: false,
-                  embeddedImageStyle: QrEmbeddedImageStyle(
-                    size: const Size(55, 55),
-                  ),
-                ),
-              )
-            ]),
-          );
+          ));
         });
   }
 
@@ -237,9 +204,14 @@ class Dialogs {
               func(amount, name, addr);
             },
             child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                width: 380,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
                 child: AutoSizeText(
                   AppLocalizations.of(context)!.dl_send_confirm,
                   textAlign: TextAlign.center,
@@ -296,9 +268,14 @@ class Dialogs {
               func();
             },
             child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: SizedBox(
-                width: 380,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
                 child: AutoSizeText(
                   AppLocalizations.of(context)!.dl_send_confirm,
                   textAlign: TextAlign.center,
@@ -325,9 +302,14 @@ class Dialogs {
               func(val);
             },
             child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                width: 380,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
                 child: AutoSizeText(
                   val == true ? "Do you really want to change status to Ambassador?" : "Do you really want to cancel Ambassador status?",
                   textAlign: TextAlign.center,
@@ -354,9 +336,14 @@ class Dialogs {
               func();
             },
             child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                width: 380,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
                 child: AutoSizeText(
                   "Do you really want to ban this user?",
                   textAlign: TextAlign.center,
@@ -398,9 +385,14 @@ class Dialogs {
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
             },
             child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                width: 380,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
                 child: AutoSizeText(
                   AppLocalizations.of(context)!.dl_log_out,
                   textAlign: TextAlign.center,
@@ -711,9 +703,14 @@ class Dialogs {
               Navigator.of(context).pop();
             },
             child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                width: 380,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
                 child: AutoSizeText(
                   "This is the XDN mobile wallet beta version. There will be no guarantees or claims if your funds are lost. Use of the app is at your own risk and responsibility and send only small amounts of funds.",
                   textAlign: TextAlign.center,
@@ -736,21 +733,28 @@ class Dialogs {
           return DialogBody(
             header: AppLocalizations.of(context)!.alert,
             buttonLabel: 'OK',
-            oneButton: true,
+            oneButton: false,
             onTap: () {
               Navigator.of(context).pop(true);
             },
             child: Padding(
-              padding: const EdgeInsets.only(top: 25, bottom: 25, left: 15.0, right: 15.0),
-              child: SizedBox(
-                width: 390,
-                child: AutoSizeText(
-                  message,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 8,
-                  minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 16.0, color: Colors.white70),
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                width: 500,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: AutoSizeText(
+                    message,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 8,
+                    minFontSize: 8.0,
+                    style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.white70, letterSpacing: 1.0),
+                  ),
                 ),
               ),
             ),
@@ -771,9 +775,14 @@ class Dialogs {
               Navigator.of(context).pop();
             },
             child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                width: 380,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
                 child: AutoSizeText(
                   "${AppLocalizations.of(context)!.dl_not_enough_coins}!",
                   textAlign: TextAlign.center,
@@ -891,7 +900,14 @@ class Dialogs {
               Navigator.of(context).pop();
             },
             child: Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
               child: TextField(
                 autofocus: true,
                 controller: textController,
@@ -906,7 +922,7 @@ class Dialogs {
                 ),
               ),
             ),
-          );
+          ));
         });
   }
 
@@ -1020,7 +1036,7 @@ class Dialogs {
               } catch (e) {
                 debugPrint(e.toString());
               }
-               Navigator.of(context).pop();
+              Navigator.of(context).pop();
             },
             child: Padding(
               padding: const EdgeInsets.only(top: 5.0, left: 10.0, right: 10.0, bottom: 5.0),
@@ -1082,7 +1098,14 @@ class Dialogs {
               func(textController.text);
             },
             child: Padding(
-              padding: const EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0, bottom: 20.0),
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
               child: TextField(
                 obscureText: true,
                 autofocus: true,
@@ -1097,7 +1120,7 @@ class Dialogs {
                 ),
               ),
             ),
-          );
+          ));
         });
   }
 
@@ -1781,9 +1804,14 @@ class Dialogs {
               Navigator.of(context).pop(1);
             },
             child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                width: 380,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
                 child: AutoSizeText(
                   message,
                   textAlign: TextAlign.center,

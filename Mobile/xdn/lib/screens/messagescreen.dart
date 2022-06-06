@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:digitalnote/support/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../screens/messageComposeScreen.dart';
@@ -30,6 +32,7 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
   final _childKey = GlobalKey<MessageDetailScreenState>();
   var _running = true;
   var _busy = false;
+  FCM fmc = GetIt.I.get<FCM>();
   final TextEditingController _controller = TextEditingController();
   Future<List<MessageGroup>>? _messageGroup;
 
@@ -53,6 +56,7 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
         _messageGroup = AppDatabase().searchMessages(_controller.text);
       });
     });
+    // fmc.bodyCtlr.stream.listen((event) {print(event + " Messages");});  //TODO Notifications stream
     // AppDatabase().deleteTableAddr();
   }
 

@@ -6,6 +6,8 @@ import 'package:digitalnote/screens/messagescreen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/support/locator.dart';
+import 'package:digitalnote/support/notification_service.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -42,6 +44,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+ // await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await SystemChrome.setPreferredOrientations(
     [
@@ -49,6 +52,8 @@ void main() async {
       DeviceOrientation.portraitDown,
     ],
   );
+  await NotificationService().init();
+  setupLocator();
   runApp(
     Phoenix(
       child: const MyApp(),
@@ -240,40 +245,40 @@ class MyAppState extends State<MyApp> {
               primaryColor: generateMaterialColor(Colors.white),
               primarySwatch: generateMaterialColor(const Color.fromRGBO(44, 44, 53, 1.0)),
               textTheme: TextTheme(
-                  headline6: GoogleFonts.lato(
+                  headline6: GoogleFonts.montserrat(
                     color: Colors.white70,
                     fontWeight: FontWeight.w200,
                   ),
-                  headline5: GoogleFonts.lato(
+                  headline5: GoogleFonts.montserrat(
                       color: Colors.white70,
                       fontWeight: FontWeight.w300,
                       letterSpacing: 3.0
                   ),
-                  subtitle1: GoogleFonts.lato(
+                  subtitle1: GoogleFonts.montserrat(
                     color: Colors.white70,
                     fontWeight: FontWeight.normal,
                   ),
-                  subtitle2: GoogleFonts.lato(
+                  subtitle2: GoogleFonts.montserrat(
                     color: const Color(0xFFC6C6C6),
                     fontSize: 14.0,
                     fontWeight: FontWeight.normal,
                   ),
-                  headline1: GoogleFonts.lato(
+                  headline1: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
                     fontSize: 40.0,
                   ),
-                  bodyText1: GoogleFonts.lato(
+                  bodyText1: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontWeight: FontWeight.w300,
                     fontSize: 24.0,
                   ),
-                  bodyText2: GoogleFonts.lato(
+                  bodyText2: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontWeight: FontWeight.w300,
                     fontSize: 18.0,
                   ),
-                  button: GoogleFonts.lato(
+                  button: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontWeight: FontWeight.w200,
                     fontSize: 18.0,

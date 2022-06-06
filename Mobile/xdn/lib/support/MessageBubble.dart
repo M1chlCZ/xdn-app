@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:bubble/bubble.dart';
+import 'package:digitalnote/support/Swipeable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
-import 'package:digitalnote/support/Swipeable.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../support/ColorScheme.dart';
@@ -35,20 +35,18 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
   double _textSize = 16.0;
 
   String _getMeDate(String d) {
-    DateFormat format;
+    final format = DateFormat.jm(Platform.localeName);
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    var date = DateTime.parse(d).toLocal();
-    final checkdate = DateTime(date.year, date.month, date.day);
-    if (checkdate == today) {
-      format = DateFormat.jm(Platform.localeName);
-      return format.format(date);
+    var dateTime = DateTime.now();
+    var dateObject = DateTime.parse(d);
+    var offset = dateTime.timeZoneOffset;
+    DateTime? date;
+    if (!offset.isNegative) {
+      date = dateObject.add(Duration(hours: offset.inHours));
     } else {
-      format = DateFormat.MMMEd(Platform.localeName);
-      return format.format(date) + " " + DateFormat.jm(Platform.localeName).format(date);
+      date = dateObject.subtract(Duration(hours: offset.inHours));
     }
+    return format.format(date);
   }
 
   bool _checkForLink(String message) {
@@ -150,7 +148,8 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
           radius: const Radius.circular(15.0),
           alignment: Alignment.topLeft,
           nip: BubbleNip.no,
-          color: _checkForTip(widget.messages.text!) == true ? Colors.green : const Color.fromRGBO(224, 224, 224, 1.0),
+          color: _checkForTip(widget.messages.text!) == true ? Colors.green
+              : const Color.fromRGBO(217, 216, 216, 1.0),
           child: Padding(
             padding: const EdgeInsets.all(2.0),
             child: IntrinsicWidth(
@@ -173,8 +172,8 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                                   Container(
                                       padding: const EdgeInsets.all(3.0),
                                       child: Text(
-                                        AppLocalizations.of(context)!.message_reply_to+':',
-                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.black26),
+                                        AppLocalizations.of(context)!.message_reply_to + ':',
+                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.black26),
                                         textAlign: TextAlign.start,
                                       )),
                                   const SizedBox(
@@ -182,7 +181,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                                   ),
                                   Flexible(
                                     child: SimpleRichText(_replyText!,
-                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.black87, fontStyle: FontStyle.italic),
+                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.black87, fontStyle: FontStyle.italic),
                                         textOverflow: TextOverflow.ellipsis),
                                   ),
                                 ],
@@ -214,19 +213,20 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                         ? SimpleRichText(
                             widget.messages.text!,
                             textAlign: TextAlign.left,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: _textSize, color: const Color.fromRGBO(31, 30, 30, 1.0)),
+                            fontWeight: FontWeight.w600,
+                            style: Theme.of(context).textTheme.bodyText1!.copyWith(fontWeight: FontWeight.w600, letterSpacing: .6, fontSize: _textSize, color: Colors.black.withOpacity(0.55)),
                           )
                         : SelectableLinkify(
                             onOpen: (link) async {
-                              if (await canLaunch(link.url)) {
-                                await launch(link.url);
+                              if (await canLaunchUrl(Uri.parse(link.url))) {
+                                await launchUrl(Uri.parse(link.url));
                               } else {
                                 print('Could not launch $link');
                               }
                             },
                             text: widget.messages.text!,
                             textAlign: TextAlign.left,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: const Color.fromRGBO(31, 30, 30, 1.0))),
+                            style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0, color: const Color.fromRGBO(31, 30, 30, 1.0))),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
@@ -302,7 +302,8 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
           alignment: widget.userMessage == true ? Alignment.topRight : Alignment.topLeft,
           radius: const Radius.circular(15.0),
           nip: BubbleNip.no,
-          color: _checkForTip(widget.messages.text!) == true ? Colors.green : Theme.of(context).konjHeaderColor,
+          color: _checkForTip(widget.messages.text!) == true ? Colors.green
+              : const Color(0xFF28303F),
           child: Padding(
             padding: const EdgeInsets.all(3.0),
             child: IntrinsicWidth(
@@ -325,14 +326,14 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                                       padding: const EdgeInsets.all(3.0),
                                       child: Text(
                                         AppLocalizations.of(context)!.message_reply_to + ':',
-                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white30),
+                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.white54),
                                       )),
                                   const SizedBox(
                                     height: 1.0,
                                   ),
                                   Flexible(
                                     child: SimpleRichText(_replyText!,
-                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white54, fontStyle: FontStyle.italic),
+                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, fontWeight: FontWeight.w600, color: Colors.white54, fontStyle: FontStyle.italic),
                                         textOverflow: TextOverflow.ellipsis),
                                   ),
                                 ],
@@ -361,23 +362,19 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                   _checkForLink(widget.messages.text!) == false
                       ? SimpleRichText(widget.messages.text!,
                           textAlign: TextAlign.left,
-                          style: Theme.of(context).textTheme.headline5!.copyWith(
-                                fontSize: _textSize,
-                                color: Colors.white.withOpacity(0.9),
-                              ))
+                          fontWeight: FontWeight.w500,
+                          style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: _textSize, letterSpacing: 0.5, fontWeight: FontWeight.w500, color: Colors.white.withOpacity(0.55)))
                       : SelectableLinkify(
                           onOpen: (link) async {
-                            if (await canLaunch(link.url)) {
-                              await launch(link.url);
+                            if (await canLaunchUrl(Uri.parse(link.url))) {
+                              await launchUrl(Uri.parse(link.url));
                             } else {
                               print('Could not launch $link');
                             }
                           },
                           text: widget.messages.text!,
                           textAlign: TextAlign.left,
-                          style: Theme.of(context).textTheme.headline5!.copyWith(
-                                fontSize: 16.0,
-                              )),
+                          style: Theme.of(context).textTheme.bodyText1!.copyWith(fontWeight: FontWeight.w500, letterSpacing: 1.0, fontSize: _textSize, color: Colors.white.withOpacity(0.55))),
                   Padding(
                     padding: const EdgeInsets.only(top: 5.0),
                     child: Row(

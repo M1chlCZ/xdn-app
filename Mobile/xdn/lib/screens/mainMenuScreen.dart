@@ -437,10 +437,9 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
   void _registerNotification() async {
     _messaging = FirebaseMessaging.instance;
 
-    _messaging = FirebaseMessaging.instance;
     _messaging!.getToken().then((value) {
       NetInterface.registerFirebaseToken(value!);
-      // print(value + " / " + value.length.toString());
+      print(value);
     });
 
     NotificationSettings settings = await _messaging!.requestPermission(
@@ -456,8 +455,8 @@ class MainMenuScreenState extends LifecycleWatcherState<MainMenuScreen> {
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        // print(message.data.toString());
-        // print(message.notification.title.toString());
+        print(message.data.toString());
+        print(message.notification!.title.toString());
         // _setBadge();
         if (message.data.containsKey("transaction")) {
           Vibration.vibrate(duration: 50);

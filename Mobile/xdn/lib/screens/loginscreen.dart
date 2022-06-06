@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,6 @@ import 'package:flutter_udid/flutter_udid.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:digitalnote/globals.dart' as globals;
-import 'package:digitalnote/screens/mainMenuScreen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
 import 'package:digitalnote/support/Encrypt.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
@@ -120,7 +120,8 @@ class _LoginState extends State<LoginPage> {
         SecureStorage.write(key: globals.UDID, value: udid);
         if (mounted) {
           Navigator.of(context).pop();
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainMenuScreen()));
+          Navigator.of(context).pushReplacementNamed(MainMenuNew.route);
+          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainMenuScreen()));
         } else {
           if (mounted) {
             Navigator.of(context).pop();

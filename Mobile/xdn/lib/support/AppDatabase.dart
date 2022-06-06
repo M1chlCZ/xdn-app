@@ -276,7 +276,7 @@ class AppDatabase {
 
   Future<int>? getLikes(int id) async {
     final dbClient = await db;
-    var res = await dbClient.rawQuery("SELECT likes FROM messages WHERE id = " + id.toString());
+    var res = await dbClient.rawQuery("SELECT likes FROM messages WHERE id = $id");
     if (res.first['likes'] == null) return 0;
     return res.first['likes'] as int;
   }
@@ -286,25 +286,19 @@ class AppDatabase {
     // await dbClient.delete(globals.TABLE_MESSAGES);
     // await dbClient.execute(tableMessages);
     int _count = 0;
-    for (var _i = 0; _i < input.length; _i++) {
-      if (input[_i].text!.contains("<!DOCTYPE")) {
-        var s = parse(input[_i].text);
-        var innerBody = s.body!.innerHtml;
-        final startIndex = innerBody.indexOf(">");
-        final endIndex = innerBody.indexOf("<", startIndex + ">".length);
-        input[_i].setText(innerBody.substring(startIndex + ">".length, endIndex)); // print(s.body.innerHtml.);
-      }
+    for (var i = 0; i < input.length; i++) {
       var check = await dbClient.query(
         globals.TABLE_MESSAGES,
-        where: globals.MESSAGES_ID + " = ? ",
-        whereArgs: [input[_i].id],
+        where: "${globals.MESSAGES_ID} = ? ",
+        whereArgs: [input[i].id],
       );
       if (check.isEmpty) {
         _count += 1;
-        await dbClient.insert(globals.TABLE_MESSAGES, input[_i].toMap());
+        await dbClient.insert(globals.TABLE_MESSAGES, input[i].toMap());
       } else {
-        await updateMessageLikes(input[_i].id as int, input[_i].likes as int);
-        await updateMessageLastChange(input[_i].id as int, input[_i].lastChange as int);
+        // print("MESSAGE UPDATE");
+        await updateMessageLikes(input[i].id as int, input[i].likes as int);
+        await updateMessageLastChange(input[i].id as int, input[i].lastChange as int);
       }
     }
     return _count;
@@ -315,9 +309,8 @@ class AppDatabase {
     var len = 0;
     final dbClient = await db;
     var res = await dbClient.query(globals.TABLE_MESSAGES,
-        where: "(" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?) OR (" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?)",
-        whereArgs: [receiveAddr, sentAddr, sentAddr, receiveAddr],
-        orderBy: globals.MESSAGES_LAST_MESSAGE + " DESC");
+        where: "(${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$receiveAddr%' OR ${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$sentAddr%') AND (${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$sentAddr%' OR ${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$receiveAddr%')",
+        orderBy: "${globals.MESSAGES_LAST_MESSAGE} DESC");
     var l = List.generate(res.length, (i) {
       return Message(
         id: res[i]['id'] as int,
@@ -359,8 +352,7 @@ class AppDatabase {
     var res = await dbClient.query(
       globals.TABLE_MESSAGES,
       columns: ["MAX(lastChange) as lastChange"],
-      where: "(" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?) OR (" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?)",
-      whereArgs: [receiveAddr, sentAddr, sentAddr, receiveAddr],
+      where: "(${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$receiveAddr%' OR ${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$sentAddr%') AND (${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$sentAddr%' OR ${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$receiveAddr%')",
     );
 
     if (res.first['lastChange'] == null) return 0;
