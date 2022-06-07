@@ -6,7 +6,6 @@ import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:digitalnote/screens/addrAddScreen.dart';
 import 'package:digitalnote/support/MessageGroup.dart';

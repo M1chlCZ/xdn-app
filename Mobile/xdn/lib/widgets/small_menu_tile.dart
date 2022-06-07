@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 
 class SmallMenuTile extends StatelessWidget {
@@ -23,9 +24,11 @@ class SmallMenuTile extends StatelessWidget {
             image: DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitHeight),
           ),
           child: Center(
-              child: Text(
+              child: AutoSizeText(
             name,
             style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                minFontSize: 8.0,
+                maxLines: 1,
           ))),
     );
   }

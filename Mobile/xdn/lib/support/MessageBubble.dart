@@ -9,7 +9,6 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../support/ColorScheme.dart';
 import '../support/SimpleRichText.dart';
 import 'AppDatabase.dart';
 import 'Message.dart';

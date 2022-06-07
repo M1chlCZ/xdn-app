@@ -1,12 +1,15 @@
 import 'dart:convert';
 
 import 'package:digitalnote/screens/addrScreen.dart';
+import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/screens/messagescreen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
+import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
 import 'package:digitalnote/support/locator.dart';
+import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/support/notification_service.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -24,7 +27,6 @@ import 'firebase_options.dart';
 import 'globals.dart' as globals;
 import 'screens/loginscreen.dart';
 import 'screens/mainMenuScreen.dart';
-import 'screens/pinscreen.dart';
 import 'support/MaterialColorGenerator.dart';
 import 'widgets/BackgroundWidget.dart';
 
@@ -53,6 +55,7 @@ void main() async {
     ],
   );
   await NotificationService().init();
+  FCM().setNotifications();
   setupLocator();
   runApp(
     Phoenix(
@@ -88,7 +91,7 @@ class MyAppState extends State<MyApp> {
         var payload = json.decode(ascii.decode(base64.decode(base64.normalize(jwt[1]))));
         if (DateTime.fromMillisecondsSinceEpoch(payload["exp"] * 1000).isAfter(DateTime.now())) {
           if (pinUsed) {
-            return PinScreen.route;
+            return AuthScreen.route;
           } else {
             return MainMenuNew.route;
           }
@@ -184,7 +187,7 @@ class MyAppState extends State<MyApp> {
               LoginPage.route: (context) => const LoginPage(),
               RegisterScreen.route: (context) => const RegisterScreen(),
               MainMenuNew.route: (context) => MainMenuNew(locale: ms),
-              PinScreen.route: (context) => const PinScreen(),
+              AuthScreen.route: (context) => const AuthScreen(),
               // WalletScreen.route : (context) =>  WalletScreen(arguments: ModalRoute.of(context)!.settings.arguments!,),
             },
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -241,7 +244,7 @@ class MyAppState extends State<MyApp> {
             theme: ThemeData(
               fontFamily: 'lato',
               useMaterial3: true,
-              canvasColor: const Color(0xFF423D70),
+              canvasColor: const Color(0xFF28303F),
               primaryColor: generateMaterialColor(Colors.white),
               primarySwatch: generateMaterialColor(const Color.fromRGBO(44, 44, 53, 1.0)),
               textTheme: TextTheme(
@@ -313,6 +316,8 @@ class MyAppState extends State<MyApp> {
       case MessageScreen.route:
         return MaterialPageRoute(
             builder: (_) => const MessageScreen());
+      case SettingsScreen.route:
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
       default:
         return MaterialPageRoute(builder: (_) => const LoginPage());
     }

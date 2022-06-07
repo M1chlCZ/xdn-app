@@ -15,6 +15,7 @@ const String ADMINPRIV = "admin";
 const String FIRETOKEN = "firetoken";
 const String COUNTDOWN = "countdownTime";
 const String LOCALE_APP = 'locale_app';
+const String AUTH_TYPE = 'auth_type';
 
 const String DB_NAME = "databazia";
 

@@ -2,8 +2,10 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/messagescreen.dart';
+import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
@@ -33,7 +35,7 @@ class MainMenuNew extends StatefulWidget {
 class _MainMenuNewState extends State<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
   final GlobalKey<DetailScreenState> _walletKey = GlobalKey();
-  FCM fmc = GetIt.I.get<FCM>();
+  // FCM fmc = GetIt.I.get<FCM>();
   ComInterface cm = ComInterface();
 
   Future<Map<String, dynamic>>? _getBalance;
@@ -46,12 +48,14 @@ class _MainMenuNewState extends State<MainMenuNew> {
     super.initState();
     refreshBalance();
     getInfo();
-    fmc.setNotifications();
+    // fmc.setNotifications();
     // fmc.bodyCtlr.stream.listen((event) {print(event + "adfadfadf");});
   }
 
   getInfo() async {
     name = await SecureStorage.read(key: globals.NICKNAME);
+    await NetInterface.getAddrBook();
+
     setState(() {});
   }
 
@@ -71,10 +75,6 @@ class _MainMenuNewState extends State<MainMenuNew> {
   }
 
   void gotoBalanceScreen() async {
-    // Navigator.of(context).push(CupertinoPageRoute(
-    //     builder: (context) => DetailScreenWidget(
-    //       key: _walletKey,
-    //     )));
     Navigator.of(context).pushNamed(WalletScreen.route, arguments: "shit");
   }
 
@@ -91,7 +91,8 @@ class _MainMenuNewState extends State<MainMenuNew> {
   }
 
   void gotoSettingsScreen() async {
-    Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
+    Navigator.of(context).pushNamed(SettingsScreen.route, arguments: "shit");
+    // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
   }
 
   Future<DaemonStatus> _getDaemonStatus() async {

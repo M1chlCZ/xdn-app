@@ -1838,8 +1838,17 @@ class Dialogs {
             onTap: () {
               Navigator.of(context).pop();
             },
-            child: RadioAlertWidget(func: func),
-          );
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+          child: Container(
+          decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+          color: Colors.black12,
+          ),
+          padding: const EdgeInsets.all(5.0),
+          width: 500,
+          child:RadioAlertWidget(func: func),
+          )));
         });
   }
 
@@ -1859,7 +1868,43 @@ class Dialogs {
     }
     return Colors.transparent;
   }
+
+  static Future<void> openGenericAlertBox(context, {String? header, required String message, Function()? onTap, Function()? onCancel, bool? oneButton}) async {
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return DialogBody(
+            header: header ?? AppLocalizations.of(context)!.alert,
+            buttonLabel: 'OK',
+            oneButton: oneButton ?? true,
+            onTap: onTap,
+            onCancel: onCancel,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
+                child: AutoSizeText(
+                  message,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 8,
+                  minFontSize: 8.0,
+                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 16.0, color: Colors.white70),
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
 }
+
 
 extension StringExtension on String {
   String capitalize() {

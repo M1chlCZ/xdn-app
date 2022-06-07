@@ -36,7 +36,8 @@ class MessageDetailScreen extends StatefulWidget {
 }
 
 class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen> {
-  Future<List<dynamic>>? _messages;
+  Future<List<dynamic>?>? _messages;
+  FCM fmc = GetIt.I.get<FCM>();
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   String? _addr;
@@ -75,6 +76,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         });
       }
     });
+    fmc.setNotifications();
+    fmc.bodyCtlr.stream.listen((event) {
+      notReceived(asdf: event);
+    });
   }
 
   @override
@@ -96,14 +101,15 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
     _balance = (double.parse(ss!["balance"]));
     _addr = await SecureStorage.read(key: globals.ADR);
     var s = await AppDatabase().getMessages(_addr!, widget.mgroup.sentAddressOrignal!);
-
     return s!;
   }
 
-  void notReceived() {
+  Future<void> notReceived({String? asdf}) async {
+    print("NOT RECEIVED");
+    print(asdf);
     _withoutNot = false;
+    // _checkForMessages();
     if (_running) {
-
       Future.delayed(const Duration(milliseconds: 10), () {
         _checkForMessages();
       });
@@ -168,12 +174,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
             _withoutNot = false;
             _checkForMessages();
           });
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context)!.message_not_warning),
-            backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.fixed,
-            elevation: 5.0,
-          ));
         }
       });
     }
@@ -195,8 +195,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");
       return;
 
-    } else if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
-      Dialogs.displayDialog(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
+    } else if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
       return;
     } else {
       setState(() {

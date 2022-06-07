@@ -99,6 +99,11 @@ class AvatarPickerState extends State<AvatarPicker> {
     String fileName = widget.userID.toString();
     String dir = (await getApplicationDocumentsDirectory()).path;
     String savePath = '$dir/$fileName';
+    if (await File(savePath).exists()) {
+      setState(() {
+        _imageFile = File.fromUri(Uri.parse(savePath));
+      });
+    }
     int i = await NetInterface.getAvatarVersion(addr);
     if (i == 1) {
       String? base64 = await NetInterface.dowloadPictureByAddr(addr);
@@ -146,8 +151,8 @@ class AvatarPickerState extends State<AvatarPicker> {
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+    final ImagePicker  picker = ImagePicker();
+    final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
     // final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
     _imageFile = pickedImage != null ? File(pickedImage.path) : _imageFile;
     if (_imageFile != null) {
@@ -193,7 +198,7 @@ class AvatarPickerState extends State<AvatarPicker> {
     String appDocPath = appDocDir.path;
 
     final File localImage = await compressedFile.copy('$appDocPath/avatar');
-    _saveFileToCloud(localImage);
+    await _saveFileToCloud(localImage);
     setState(() {});
     _imageFile = compressedFile;
 
@@ -213,6 +218,7 @@ class AvatarPickerState extends State<AvatarPicker> {
   }
 
   _saveFileToCloud(File img) async {
+
     final bytes = File(img.path).readAsBytesSync();
     String img64 = base64Encode(bytes);
     NetInterface.uploadPicture(ctx, img64);

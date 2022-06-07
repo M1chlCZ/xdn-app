@@ -22,16 +22,16 @@ import 'TranSaction.dart';
 
 class NetInterface {
   static void uploadPicture(BuildContext context, String base64) async {
-    const storage = FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
         "id": id,
         "param1": base64,
         "param2": "upload",
       };
+      print(m);
 
       var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
 
@@ -51,6 +51,7 @@ class NetInterface {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
+
       } else {
         // Dialogs.openAlertBox(context, 'Warning', response.toString());
       }
@@ -65,10 +66,9 @@ class NetInterface {
   }
 
   static Future<Uint8List?> downloadCSV(BuildContext context) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: globals.TOKEN);
-      String? id = await storage.read(key: globals.USERNAME);
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      String? id = await SecureStorage.read(key: globals.USERNAME);
 
       Map<String, dynamic> m = {"User": id, "request": "getcsv"};
 
@@ -561,7 +561,6 @@ class NetInterface {
   }
 
   static Future<int> sendContactCoins(String amount, String name, String addr) async {
-    // var storage = const FlutterSecureStorage();
     try {
       String? id = await SecureStorage.read(key: globals.ID);
       String? user = await SecureStorage.read(key: globals.USERNAME);

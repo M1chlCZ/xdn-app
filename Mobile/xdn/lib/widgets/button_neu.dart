@@ -22,16 +22,16 @@ class NeuButton extends StatelessWidget {
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(4.0)),
         boxShadow: [
-          BoxShadow(
-            offset: Offset(-1, -1),
-            blurRadius: 4.0,
-            color: Color.fromRGBO(134, 134, 134, 0.15),
-          ),
-          BoxShadow(
-            offset: Offset(1, 1),
-            blurRadius: 4.0,
-            color: Color.fromRGBO(2, 2, 2, 0.85),
-          ),
+          // BoxShadow(
+          //   offset: Offset(-1, -1),
+          //   blurRadius: 4.0,
+          //   color: Color.fromRGBO(134, 134, 134, 0.15),
+          // ),
+          // BoxShadow(
+          //   offset: Offset(1, 1),
+          //   blurRadius: 4.0,
+          //   color: Color.fromRGBO(2, 2, 2, 0.85),
+          // ),
         ],
       ),
       child: ClipRRect(

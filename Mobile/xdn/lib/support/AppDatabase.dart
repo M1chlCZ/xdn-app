@@ -77,7 +77,7 @@ class AppDatabase {
 
   initDb() async {
     io.Directory documentDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentDirectory.path, 'db_digin.db');
+    String path = join(documentDirectory.path, 'db_diginot.db');
     var db = await openDatabase(path, version: DB_VERSION, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return db;
   }
@@ -308,10 +308,13 @@ class AppDatabase {
     var lastDate;
     var len = 0;
     final dbClient = await db;
-    var res = await dbClient.query(globals.TABLE_MESSAGES,
-        where: "(${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$receiveAddr%' OR ${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$sentAddr%') AND (${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$sentAddr%' OR ${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$receiveAddr%')",
-        orderBy: "${globals.MESSAGES_LAST_MESSAGE} DESC");
+    var res = await dbClient.rawQuery("SELECT * FROM messages WHERE (receiveAddr LIKE '%$receiveAddr%' AND sentAddr LIKE '%$sentAddr%') UNION ALL SELECT * FROM messages WHERE (receiveAddr LIKE '%$sentAddr%' AND sentAddr LIKE '%$receiveAddr%') ORDER BY lastMessage DESC" );
+    // var res = await dbClient.query(globals.TABLE_MESSAGES,
+    //     where: "(" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?) OR (" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?)",
+    //     whereArgs: [receiveAddr, sentAddr, sentAddr, receiveAddr],
+    //     orderBy: globals.MESSAGES_LAST_MESSAGE + " DESC");
     var l = List.generate(res.length, (i) {
+
       return Message(
         id: res[i]['id'] as int,
         receiveAddr: res[i]['sentAddr'].toString(),
@@ -352,7 +355,7 @@ class AppDatabase {
     var res = await dbClient.query(
       globals.TABLE_MESSAGES,
       columns: ["MAX(lastChange) as lastChange"],
-      where: "(${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$receiveAddr%' OR ${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$sentAddr%') AND (${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$sentAddr%' OR ${globals.MESSAGES_RECEIVE_ADDR} LIKE '%$receiveAddr%')",
+      where: "(receiveAddr LIKE '%$receiveAddr%' AND sentAddr LIKE '%$sentAddr%') UNION ALL SELECT MAX(lastChange) as lastChange FROM messages WHERE (receiveAddr LIKE '%$sentAddr%' AND sentAddr LIKE '%$receiveAddr%')",
     );
 
     if (res.first['lastChange'] == null) return 0;
