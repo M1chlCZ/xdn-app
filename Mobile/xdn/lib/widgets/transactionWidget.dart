@@ -9,7 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../support/NetInterface.dart';
 import '../support/TranSaction.dart';
-import '../support/TransactionView.dart';
+import 'TransactionView.dart';
 
 class TransactionWidget extends StatefulWidget {
   final VoidCallback? func;

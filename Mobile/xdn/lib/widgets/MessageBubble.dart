@@ -10,9 +10,9 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../support/SimpleRichText.dart';
-import 'AppDatabase.dart';
-import 'Message.dart';
-import 'NetInterface.dart';
+import '../support/AppDatabase.dart';
+import '../support/Message.dart';
+import '../support/NetInterface.dart';
 
 class MessageBubble extends StatefulWidget {
   final Message messages;

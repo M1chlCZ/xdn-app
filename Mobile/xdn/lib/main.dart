@@ -255,7 +255,7 @@ class MyAppState extends State<MyApp> {
                   headline5: GoogleFonts.montserrat(
                       color: Colors.white70,
                       fontWeight: FontWeight.w300,
-                      letterSpacing: 3.0
+                      letterSpacing: 1.0
                   ),
                   subtitle1: GoogleFonts.montserrat(
                     color: Colors.white70,

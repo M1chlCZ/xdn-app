@@ -14,14 +14,23 @@ class SmallMenuTile extends StatelessWidget {
       child: Container(
           height: 90,
           margin: const EdgeInsets.only(left: 2.0, right: 2.0),
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(15.0)),
-            gradient: LinearGradient(
-              colors: [Color(0xFF828BDA), Color(0xFF8AB1F6)],
-              begin: Alignment(-1.0, 4.0),
-              end: Alignment(1.0, -4.0),
+          decoration:  BoxDecoration(
+            borderRadius: const BorderRadius.all( Radius.circular(15.0)),
+            gradient: const LinearGradient(
+              colors: [ Color(0xFF3D3E4B),  Color(0xFF262C44),
+                ],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
             ),
-            image: DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitHeight),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                spreadRadius: 3,
+                blurRadius: 4,
+                offset: const Offset(5, 3), // changes position of shadow
+              ),
+            ],
+            image: const DecorationImage(image: const AssetImage("images/card.png"), fit: BoxFit.fitHeight),
           ),
           child: Center(
               child: AutoSizeText(

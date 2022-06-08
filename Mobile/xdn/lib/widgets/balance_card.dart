@@ -22,14 +22,23 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
           widget.goto();
         },
         child: Container(
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(15.0)),
-            gradient: LinearGradient(
-              colors: [Color(0xFF8AB1F6), Color(0xFFB2B6FC)],
+          decoration:  BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF3D3E4B),
+                Color(0xFF262C44)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
-            image: DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitWidth),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                spreadRadius: 2,
+                blurRadius: 3,
+                offset: const Offset(0, 5), // changes position of shadow
+              ),
+            ],
+            image: DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitWidth, opacity: 1),
           ),
           height: 100,
           child: Center(

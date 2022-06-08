@@ -5,11 +5,8 @@ import 'package:digitalnote/screens/messagescreen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
-import 'package:digitalnote/support/AppDatabase.dart';
-import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
-import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
@@ -160,10 +157,17 @@ class _MainMenuNewState extends State<MainMenuNew> {
                                   .headline5),
                         ],
                       ),
-                      const AvatarPicker(
-                        userID: null,
-                        size: 100.0,
-                        color: Colors.transparent,
+                      Container(
+                        padding: const EdgeInsets.all(1.0),
+                        decoration:  BoxDecoration(
+                          borderRadius: const BorderRadius.all(const Radius.circular(20.0)),
+                          color: Colors.black.withOpacity(0.2)
+                        ),
+                        child: const AvatarPicker(
+                          userID: null,
+                          size: 100.0,
+                          color: Colors.transparent,
+                        ),
                       )
                     ],
                   ),

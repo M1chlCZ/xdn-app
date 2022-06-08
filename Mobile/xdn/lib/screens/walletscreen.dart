@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -150,8 +152,9 @@ class DetailScreenState extends State<WalletScreen>
                 ),
             Column(
               children: [
+                Header(header: AppLocalizations.of(context)!.wl_balance),
                 Padding(
-                  padding: const EdgeInsets.only(top: 80.0),
+                  padding: const EdgeInsets.only(top: 0.0),
                   child: BalanceCard(
                     key: _keyBal,
                     getBalanceFuture: _getBalance,
@@ -176,7 +179,7 @@ class DetailScreenState extends State<WalletScreen>
               ],
             ),
 
-            CardHeader(title: AppLocalizations.of(context)!.wl_balance, backArrow: true,),
+            // CardHeader(title: AppLocalizations.of(context)!.wl_balance, backArrow: true,),
           ]),
         ),
       ),

@@ -17,10 +17,11 @@ class AvatarPicker extends StatefulWidget {
   final dynamic userID;
   final double? borderRadius;
   final Color? color;
+  final Color? avatarColor;
   final double? size;
   final double? padding;
 
-  const AvatarPicker({Key? key, this.userID, this.borderRadius = 8.0, this.color = Colors.white24, this.size = 125.0, this.padding = 5.0}) : super(key: key);
+  const AvatarPicker({Key? key, this.userID, this.borderRadius = 8.0, this.color = Colors.white24, this.size = 125.0, this.padding = 5.0, this.avatarColor}) : super(key: key);
 
   @override
   AvatarPickerState createState() => AvatarPickerState();
@@ -54,7 +55,7 @@ class AvatarPickerState extends State<AvatarPicker> {
         Container(
           width: widget.size,
           height: widget.size,
-          decoration: BoxDecoration(color: widget.color, borderRadius: const BorderRadius.all(Radius.circular(20.0))),
+          decoration: BoxDecoration(color: widget.color, borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: GestureDetector(
             onTap: () {
               if (localUser) {
@@ -210,9 +211,10 @@ class AvatarPickerState extends State<AvatarPicker> {
       return Image.file(_imageFile!);
     } else {
       if (_image64 != null) return Image.memory(base64Decode(_image64!));
-      return const Icon(
-        FontAwesomeIcons.userAstronaut,
-        size: 55.0,
+      return Icon(
+        FontAwesomeIcons.userNinja,
+        size: 35.0,
+        color: widget.avatarColor ?? Colors.black.withOpacity(0.7),
       );
     }
   }

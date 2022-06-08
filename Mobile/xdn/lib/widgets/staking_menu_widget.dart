@@ -16,13 +16,23 @@ class _StakingMenuWidgetState extends State<StakingMenuWidget> {
       child: Container(
         height: 100,
         margin: const EdgeInsets.only(left: 10.0, right: 10.0),
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(15.0)),
-          gradient: LinearGradient(
-            colors: [Color(0xFFB2B6FC), Color(0xFF86A0EA)],
+        decoration:  BoxDecoration(
+          borderRadius: BorderRadius.all(const Radius.circular(15.0)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF3D3E4B),
+              Color(0xFF262C44)
+              ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 3,
+              blurRadius: 4,
+              offset: const Offset(0, 5), // changes position of shadow
+            ),
+          ],
           image: DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitWidth),
         ),
         child: Center(

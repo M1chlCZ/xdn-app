@@ -19,7 +19,7 @@ import '../support/ColorScheme.dart';
 import '../support/DateSeparator.dart';
 import '../support/Dialogs.dart';
 import '../support/LifecycleWatcherState.dart';
-import '../support/MessageBubble.dart';
+import '../widgets/MessageBubble.dart';
 import '../support/MessageGroup.dart';
 import '../support/NetInterface.dart';
 import '../widgets/AvatarPicker.dart';
@@ -60,7 +60,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
     _messages = _getMessages();
     _checkForMessages();
     timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
-      if(_running == true)  {
+      if (_running == true) {
         _checkForMessages();
       }
     });
@@ -84,7 +84,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   @override
   void setState(fn) {
-    if(mounted) {
+    if (mounted) {
       super.setState(fn);
     }
   }
@@ -191,10 +191,9 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         elevation: 5.0,
       ));
       return;
-    } else if(double.parse(amount) > _balance) {
+    } else if (double.parse(amount) > _balance) {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");
       return;
-
     } else if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
       return;
@@ -206,7 +205,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       int _i = await NetInterface.sendContactCoins(amount, name, addr);
       var _nick = await SecureStorage.read(key: globals.NICKNAME);
       if (_i == 1) {
-        var _text = _nick! + " " + AppLocalizations.of(context)!.message_tipped +" " + widget.mgroup.sentAddr! + " " + amount.toString() + " KONJ!";
+        var _text = _nick! + " " + AppLocalizations.of(context)!.message_tipped + " " + widget.mgroup.sentAddr! + " " + amount.toString() + " KONJ!";
         await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, _text, _replyid);
         setState(() {
           _switchWidget = _sendWait();
@@ -255,7 +254,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
           children: [
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(top: 65.0, bottom: 0.0, left: 5.0, right: 5.0),
+                padding: const EdgeInsets.only(top: 78.0, bottom: 0.0, left: 5.0, right: 5.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.transparent,
@@ -273,7 +272,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                 var data = snapshot.data as List<dynamic>?;
                                 return Flexible(
                                   child: Padding(
-                                    padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                                    padding: const EdgeInsets.only(left: 5.0, right: 0.0),
                                     child: ClipRRect(
                                       borderRadius: const BorderRadius.all(Radius.circular(15.0)),
                                       child: ListView.builder(
@@ -289,7 +288,9 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                                 children: [
                                                   Container(
                                                     margin: const EdgeInsets.only(top: 30.0, bottom: 10.0),
-                                                    decoration: const BoxDecoration(color: Color.fromRGBO(44, 44, 53, 1.0), borderRadius: BorderRadius.all(Radius.circular(32.0))),
+                                                    decoration: const BoxDecoration(
+                                                        color: Color.fromRGBO(44, 44, 53, 1.0),
+                                                        borderRadius: BorderRadius.all(Radius.circular(32.0))),
                                                     child: Padding(
                                                       padding: const EdgeInsets.all(15.0),
                                                       child: Text(
@@ -316,13 +317,17 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                               } else {
                                 return const Padding(
                                   padding: EdgeInsets.only(bottom: 200.0),
-                                  child: SizedBox(child: CircularProgressIndicator( color: Colors.white, strokeWidth: 2.0,), height: 50.0, width: 50.0),
+                                  child: SizedBox(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2.0,
+                                      ),
+                                      height: 50.0,
+                                      width: 50.0),
                                 );
                               }
                             }),
-                        const SizedBox(
-                          height: 30.0,
-                        ),
+
                         const SizedBox(height: 10.0),
                         Wrap(children: [
                           Container(
@@ -338,7 +343,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                   width: MediaQuery.of(context).size.width,
                                   height: _replyHeight,
                                   decoration: const BoxDecoration(
-                                    color:  Color(0xFF1F222F),
+                                    color: Color(0xFF1F222F),
                                     borderRadius: BorderRadius.only(topLeft: Radius.circular(5.0), topRight: Radius.circular(5.0)),
                                   ),
                                   child: Center(
@@ -352,7 +357,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                               width: 15.0,
                                             ),
                                             Text(
-                                              AppLocalizations.of(context)!.message_reply_to +': ',
+                                              AppLocalizations.of(context)!.message_reply_to + ': ',
                                               style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                                             ),
                                             const SizedBox(
@@ -374,26 +379,26 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             ),
                                             Expanded(
                                                 child: Material(
-                                                  color: const Color(0xff542323),
-                                                  borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
-                                                  child: InkWell(
-                                                    borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
-                                                    splashColor: const Color(0xFFc74d4d).withOpacity(0.5), // splash color
-                                                    onTap: () {
-                                                      setState(() {
-                                                        _replyid = 0;
-                                                        _replyMessage = null;
-                                                        _replyHeight = 0;
-                                                      });
-                                                    }, // button pressed
-                                                    child: SizedBox(
-                                                      height: _replyHeight,
-                                                      child: Center(
-                                                        child: Text('x', style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 20.0)),
-                                                      ),
-                                                    ),
+                                              color: const Color(0xff542323),
+                                              borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
+                                              child: InkWell(
+                                                borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
+                                                splashColor: const Color(0xFFc74d4d).withOpacity(0.5), // splash color
+                                                onTap: () {
+                                                  setState(() {
+                                                    _replyid = 0;
+                                                    _replyMessage = null;
+                                                    _replyHeight = 0;
+                                                  });
+                                                }, // button pressed
+                                                child: SizedBox(
+                                                  height: _replyHeight,
+                                                  child: Center(
+                                                    child: Text('x', style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 20.0)),
                                                   ),
-                                                ))
+                                                ),
+                                              ),
+                                            ))
                                           ],
                                         ),
                                       ),
@@ -414,7 +419,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             LengthLimitingTextInputFormatter(720),
                                           ],
                                           textAlign: TextAlign.left,
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, fontWeight: FontWeight.w600, color: Colors.white),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headline5!
+                                              .copyWith(fontSize: 16.0, fontWeight: FontWeight.w600, color: Colors.white),
                                           decoration: const InputDecoration(
                                             contentPadding: EdgeInsets.all(15.0),
                                             enabledBorder: UnderlineInputBorder(
@@ -468,37 +476,53 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
             SafeArea(
               child: Column(children: [
                 Container(
-                  margin: const EdgeInsets.only(top: 8.0, left: 75),
+                  margin: const EdgeInsets.only(top: 8.0, left: 5.0),
                   width: MediaQuery.of(context).size.width,
                   child: Stack(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: <Widget>[
-                          AvatarPicker(
-                            userID: widget.mgroup.sentAddressOrignal,
-                            size: 60.0,
-                            color: Colors.white,
-                            padding: 2.0,
-                          ),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          SizedBox(
-                            width: 200,
-                            height: 20,
-                            child: AutoSizeText(widget.mgroup.sentAddr!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                minFontSize: 14.0,
-                                textAlign: TextAlign.left,
-                                style: Theme.of(context).textTheme.bodyText2!.copyWith(
-                                  fontSize: 20.0,
-                                )),
-                          ),
-                        ],
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 20.0),
+                        decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.15),
+                            borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                        )
+                        ,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.max,
+                          children: <Widget>[
+                            Container(
+                              color: Colors.transparent,
+                              child: const CardHeader(
+                                title: '',
+                                backArrow: true,
+                                noPadding: true,
+                              ),
+                            ),
+                            Expanded(
+                              child: AutoSizeText(widget.mgroup.sentAddr!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  minFontSize: 16.0,
+                                  textAlign: TextAlign.start,
+                                  style: Theme.of(context).textTheme.headline1!.copyWith(
+                                    fontSize: 24.0,
+                                    color: Colors.white.withOpacity(0.85),
+                                  )),
+                            ),
+                            AvatarPicker(
+                              userID: widget.mgroup.sentAddressOrignal,
+                              size: 50.0,
+                              color: Color(0xFF22304D),
+                              padding: 2.0,
+                              avatarColor: Colors.white54,
+                            ),
+                            const SizedBox(
+                              width: 6,
+                            ),
+                          ],
+                        ),
                       ),
                       const Visibility(
                         visible: false,
@@ -521,10 +545,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
             ),
           ],
         ),
-      ),
-      const CardHeader(
-        title: '',
-        backArrow: true,
       ),
     ]);
   }
@@ -563,10 +583,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       height: 50,
       child: Container(
         padding: const EdgeInsets.all(5.0),
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-              color: Colors.white10
-        ),
+        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(5.0)), color: Colors.white10),
         child: Image.asset(
           "images/logo_send.png",
           color: Colors.white70,

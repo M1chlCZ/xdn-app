@@ -7,6 +7,7 @@ import 'dart:ui';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:digitalnote/support/secure_storage.dart';
+import 'package:digitalnote/widgets/card_header.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,7 @@ import '../globals.dart' as globals;
 import '../support/CardHeader.dart';
 import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
-import '../support/DropdownMenu.dart';
+import '../widgets/DropdownMenu.dart';
 import '../support/Extensions.dart';
 import '../support/LifecycleWatcherState.dart';
 import '../support/NetInterface.dart';
@@ -399,7 +400,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     try {
       setState(() {});
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
   }
 
@@ -530,13 +533,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
         body: SingleChildScrollView(
           child: SafeArea(
             child: Column(children: [
-              CardHeader(
-                title: AppLocalizations.of(context)!.st_headline.toUpperCase(),
-                backArrow: true,
-              ),
-              const SizedBox(
-                height: 10,
-              ),
+              // CardHeader(
+              //   title: AppLocalizations.of(context)!.st_headline.toUpperCase(),
+              //   backArrow: true,
+              // ),
+              Header(header: AppLocalizations.of(context)!.st_headline.toUpperCase(),),
               Padding(
                 padding: const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
                 child: ClipRect(

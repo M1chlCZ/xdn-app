@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:digitalnote/bloc/contacts_bloc.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/support/secure_storage.dart';
+import 'package:digitalnote/widgets/ContactTile.dart';
+import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
@@ -17,7 +19,6 @@ import '../support/AppDatabase.dart';
 import '../support/CardHeader.dart';
 import '../support/ColorScheme.dart';
 import '../support/Contact.dart';
-import '../support/ContactTile.dart';
 import '../support/Dialogs.dart';
 import '../support/Encrypt.dart';
 import '../support/RoundButton.dart';
@@ -266,10 +267,11 @@ class AddressScreenState extends State<AddressScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CardHeader(
-                  title: AppLocalizations.of(context)!.contacts,
-                  backArrow: true,
-                ),
+                // CardHeader(
+                //   title: AppLocalizations.of(context)!.contacts,
+                //   backArrow: true,
+                // ),
+                Header(header: AppLocalizations.of(context)!.contacts),
                 Container(
                   margin: const EdgeInsets.only(left: 5.0, right: 5.0),
                   padding: const EdgeInsets.only(top: 10.0, left: 10.0, bottom: 10.0),
