@@ -188,7 +188,7 @@ class AuthScreenState extends State<AuthScreen> {
                     child: IgnorePointer(
                       ignoring: !_firstPIN,
                       child: LockScreen(
-                          title: AppLocalizations.of(context)!.pin_enter,
+                          title: AppLocalizations.of(context)!.set_pin,
                           passLength: 4,
                           numColor: Colors.white70,
                           bgImage: "images/pending_rocket_pin.png",
@@ -219,7 +219,7 @@ class AuthScreenState extends State<AuthScreen> {
                     child: IgnorePointer(
                       ignoring: _firstPIN,
                       child: LockScreen(
-                          title: AppLocalizations.of(context)!.pin_enter,
+                          title: AppLocalizations.of(context)!.set_pin_confirm,
                           passLength: 4,
                           numColor: Colors.white70,
                           bgImage: "images/pending_rocket_pin.png",

@@ -524,7 +524,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
 
     return Stack(children: [
       const BackgroundWidget(
-        image: "stakingicon.png",
         mainMenu: false,
       ),
       Scaffold(
@@ -855,13 +854,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                             Text(AppLocalizations.of(context)!.st_total_coins, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
                                             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                               Text(
-                                                _totalCoins.toString(),
+                                                "${_totalCoins.toString()} XDN",
                                                 style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
                                               ),
-                                              const SizedBox(
-                                                width: 10,
-                                              ),
-                                              Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/konjicon.png'), fit: BoxFit.fitWidth))),
+                                              // SizedBox(width: 35, height: 14, child: Text('XDN', textAlign: TextAlign.end, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),))
+                                              // Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/logo_send.png'), fit: BoxFit.fitWidth))),
                                             ])
                                           ],
                                         ),
@@ -905,13 +902,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                             Text(AppLocalizations.of(context)!.st_estimated, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
                                             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                               Text(
-                                                _estimated.toString(),
+                                                "${_estimated.toString()} XDN",
                                                 style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
                                               ),
-                                              const SizedBox(
-                                                width: 10,
-                                              ),
-                                              Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/konjicon.png'), fit: BoxFit.fitWidth))),
+                                              // const SizedBox(
+                                              //   width: 10,
+                                              // ),
+                                              // Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/konjicon.png'), fit: BoxFit.fitWidth))),
                                             ])
                                           ],
                                         ),

@@ -4,18 +4,18 @@ import 'dart:typed_data';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
+import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/support/secure_storage.dart';
+import 'package:digitalnote/widgets/card_header.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info/package_info.dart';
@@ -23,8 +23,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../globals.dart' as globals;
-import '../support/CardHeader.dart';
-import '../support/ColorScheme.dart';
 
 class SettingsScreen extends StatefulWidget {
   static const String route = "/menu/settings";
@@ -50,16 +48,7 @@ class _SettingsState extends State<SettingsScreen> {
     _initPackageInfo();
   }
 
-  void _removePinHandler(String pin) async {
-    Navigator.of(context).pop();
-    String? s = await SecureStorage.read(key: globals.PIN);
-    if (pin == s) {
-      await SecureStorage.deleteStorage(key: globals.PIN);
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.succ,AppLocalizations.of(context)!.set_pin_removed );
-    } else {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,AppLocalizations.of(context)!.set_pin_not_match );
-    }
-  }
+
 
   void _saveFile() async {
     var status = await Permission.storage.status;
@@ -83,12 +72,12 @@ class _SettingsState extends State<SettingsScreen> {
     try {
       String filePath;
       Uint8List? data = await NetInterface.downloadCSV(context);
-      String name = "transactionsXDN" + _getNow(DateTime.now()) + ".csv";
+      String name = "transactionsXDN${_getNow(DateTime.now())}.csv";
 
       if (Platform.isIOS) {
         Directory tempDir = await getApplicationDocumentsDirectory();
         String tempPath = tempDir.path;
-        filePath = tempPath + '/$name';
+        filePath = '$tempPath/$name';
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context)!.set_download),
@@ -113,6 +102,40 @@ class _SettingsState extends State<SettingsScreen> {
       Navigator.of(context).pop();
       print(e);
     }
+  }
+
+  void _handlePIN() async {
+    var bl = false;
+    String? p =
+    await  SecureStorage.read(key: globals.PIN);
+    if (p == null) {
+      bl = true;
+    }
+    if (mounted) {
+      Navigator.of(context).pushNamed(AuthScreen.route, arguments: {"bl": bl, "type": 1}).then((value) {
+        if (value != null) {
+          bool v = value as bool;
+          _authCallback(v);
+        }
+      });
+    }
+  }
+
+  void _authCallback(bool? b) {
+    if(b == null || b == false) return;
+    Navigator.of(context).pushNamed(SecurityScreen.route);
+    // Navigator.of(context)
+    //     .push(PageRouteBuilder(pageBuilder:
+    //     (BuildContext context, _, __) {
+    //   return const SecurityScreen();
+    // }, transitionsBuilder: (_,
+    //     Animation<double> animation,
+    //     __,
+    //     Widget child) {
+    //   return FadeTransition(
+    //       opacity: animation,
+    //       child: child);
+    // }));
   }
 
   void _initPackageInfo() async {
@@ -146,437 +169,457 @@ class _SettingsState extends State<SettingsScreen> {
             body: Builder(
                 builder: (context) => SafeArea(
                   child: SingleChildScrollView(
-                    reverse: true,
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        CardHeader(
-                          title: AppLocalizations.of(context)!.set_headline.toUpperCase(),
-                          backArrow: true,
-                        ),
+                      Header(header: AppLocalizations.of(context)!.settings_screen),
                         Column(
                           children: [
-                            const SizedBox(height: 40,),
                             SizedBox(
                               height: 60,
-                              child: Material(
-                                color: Colors.transparent,
-                                // button color
-                                child: InkWell(
-                                  splashColor: Colors.white,
-                                  // splash color
-                                  onTap: () async {
-                                    String? s = await SecureStorage.read(key: globals.PIN);
-                                    if (s != null && s.isNotEmpty) {
-                                      Dialogs.openPinRemoveBox(context, _removePinHandler);
-                                      return;
-                                    }
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-                                      return const AuthScreen(setupPIN: true, type: 2,);
-                                    })).then((value) => value ? Dialogs.openAlertBox(context, "Alert", "PIN setup successful"): Dialogs.openAlertBox(context, "Alert", "PIN setup unsuccessful"));
-                                    // _showLockScreen(
-                                    //   context,
-                                    //   text: AppLocalizations.of(context)!.pin_enter,
-                                    //   opaque: false,
-                                    //   cancelButton: Text(
-                                    //     AppLocalizations.of(context)!.cancel,
-                                    //     style: const TextStyle(fontSize: 16, color: Colors.white),
-                                    //     semanticsLabel: AppLocalizations.of(context)!.cancel,
-                                    //   ),
-                                    // );
-                                  },
-                                  // button pressed
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 28.0),
-                                        child: Icon(
-                                          Icons.lock,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 15.0,
-                                      ),
-                                      FutureBuilder(
-                                          future: SecureStorage.read(key: globals.PIN),
-                                          builder: (context, snapshot) {
-                                            if (!snapshot.hasData) {
-                                              return SizedBox(
-                                                width: MediaQuery.of(context).size.width - 200.0,
-                                                child: AutoSizeText(
-                                                  AppLocalizations.of(context)!.set_pin,
-                                                  style: const TextStyle(fontSize: 20, color: Colors.white70),
-                                                  minFontSize: 8,
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              );
-                                            } else {
-                                              return SizedBox(
-                                                width: MediaQuery.of(context).size.width - 200.0,
-                                                child: AutoSizeText(
-                                                  AppLocalizations.of(context)!.set_remove_pin,
-                                                  style: const TextStyle(fontSize: 20, color: Colors.white70),
-                                                  minFontSize: 8,
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              );
-                                            }
-                                          }),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Divider(
-                              height: 20.0,
-                              color: Colors.transparent,
-                            ),
-                            Container(
-                              height: 60,
                               width: MediaQuery.of(context).size.width - 20.0,
-                              child: Material(
-                                color: Colors.transparent,
-                                // button color
-                                child: InkWell(
-                                  splashColor: Colors.white,
-                                  // splash color
-                                  onTap: () async {
-                                    var name = await SecureStorage.read(key: globals.NICKNAME);
-                                    Dialogs.openRenameBox(context, name!, _renameboxCallback);
-                                  },
-                                  // button pressed
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 15.0),
-                                        child: Icon(
-                                          FontAwesomeIcons.userEdit,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 15.0,
-                                      ),
-                                      SizedBox(
-                                        width: MediaQuery.of(context).size.width - 200.0,
-                                        child: AutoSizeText(
-                                          AppLocalizations.of(context)!.set_nickname,
-                                          style: const TextStyle(fontSize: 20, color: Colors.white70),
-                                          minFontSize: 8,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Divider(
-                              height: 20.0,
-                              color: Colors.transparent,
-                            ),
-                            Container(
-                              height: 60,
-                              width: MediaQuery.of(context).size.width - 20.0,
-                              child: Material(
-                                color: Colors.transparent,
-                                // button color
-                                child: InkWell(
-                                  splashColor: Colors.white,
-                                  // splash color
-                                  onTap: () async {
-                                    Dialogs.openPasswordChangeBox(context, _passCheck);
-                                  },
-                                  // button pressed
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 15.0),
-                                        child: Icon(
-                                          FontAwesomeIcons.key,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 15.0,
-                                      ),
-                                      SizedBox(
-                                        width: MediaQuery.of(context).size.width - 200.0,
-                                        child: AutoSizeText(
-                                          AppLocalizations.of(context)!.set_password,
-                                          style: const TextStyle(fontSize: 20, color: Colors.white70),
-                                          minFontSize: 8,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Divider(
-                              height: 20.0,
-                              color: Colors.transparent,
-                            ),
-                            Container(
-                              height: 60,
-                              width: MediaQuery.of(context).size.width - 20.0,
-                              child: Material(
-                                color: Colors.transparent,
-                                // button color
-                                child: InkWell(
-                                  splashColor: Colors.white,
-                                  // splash color
-                                  onTap: () async {
-                                    Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
-                                  },
-                                  // button pressed
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 15.0),
-                                        child: Icon(
-                                          FontAwesomeIcons.signature,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 15.0,
-                                      ),
-                                      SizedBox(
-                                        width: MediaQuery.of(context).size.width - 200.0,
-                                        child: AutoSizeText(
-                                          AppLocalizations.of(context)!.set_priv_key,
-                                          style: const TextStyle(fontSize: 20, color: Colors.white70),
-                                          minFontSize: 8,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Divider(
-                              height: 20.0,
-                              color: Colors.transparent,
-                            ),
-                            Container(
-                              height: 60,
-                              width: MediaQuery.of(context).size.width - 20.0,
-                              child: Material(
-                                color: Colors.transparent,
-                                // button color
-                                child: InkWell(
-                                  splashColor: Colors.white,
-                                  // splash color
-                                  onTap: () {
-                                    _saveFile();
-                                    // Dialogs.openLogoutConfirmationBox(context, storage);
-                                  },
-                                  // button pressed
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 15.0),
-                                        child: Icon(
-                                          Icons.download,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 15.0,
-                                      ),
-                                      SizedBox(
-                                        width: MediaQuery.of(context).size.width - 200.0,
-                                        child: AutoSizeText(
-                                          AppLocalizations.of(context)!.set_csv,
-                                          style: const TextStyle(fontSize: 20, color: Colors.white70),
-                                          minFontSize: 8,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Divider(
-                              height: 20.0,
-                              color: Colors.transparent,
-                            ),
-                            Container(
-                              height: 60,
-                              width: MediaQuery.of(context).size.width - 20.0,
-                              child: Material(
-                                color: Colors.transparent,
-                                // button color
-                                child: InkWell(
-                                  splashColor: Colors.white,
-                                  // splash color
-                                  onTap: () {
-                                    Dialogs.openLanguageDialog(context, (value) => null, (save) => null, 0);
-                                    // Dialogs.openLogoutConfirmationBox(context, storage);
-                                  },
-                                  // button pressed
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 15.0),
-                                        child: Icon(
-                                          Icons.language,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 15.0,
-                                      ),
-                                      SizedBox(
-                                        width: MediaQuery.of(context).size.width - 200.0,
-                                        child: AutoSizeText(
-                                          AppLocalizations.of(context)!.change_language,
-                                          style: const TextStyle(fontSize: 20, color: Colors.white70),
-                                          minFontSize: 8,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Divider(
-                              height: 20.0,
-                              color: Colors.transparent,
-                            ),
-                            Container(
-                              height: 60,
-                              width: MediaQuery.of(context).size.width - 20.0,
-                              child: Material(
-                                color: Colors.transparent,
-                                // button color
-                                child: InkWell(
-                                  splashColor: Colors.white,
-                                  // splash color
-
-                                  onTap: () {
-                                    showAboutDialog(
-                                        context: context,
-                                        applicationName: 'DigitalNote',
-                                        applicationIcon: Image.asset(
-                                          "images/logo_send.png",
-                                          width: 45.0,
-                                          height: 45.0,
-                                          color: Colors.black87,
-                                        ),
-                                        applicationVersion: packageInfo!.version,
+                              child: Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Material(
+                                    child: InkWell(
+                                      splashColor: Colors.white54,
+                                      // splash color
+                                      onTap: () async {
+                                        _handlePIN();
+                                      },
+                                      // button pressed
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text(
-                                            'Developed by:',
-                                            style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),
-                                          ),
-                                          Text(
-                                            'M1chlCZ, Nessie',
-                                            style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
-                                          ),
-                                          const SizedBox(
-                                            height: 10,
-                                          ),
-                                          Text(
-                                            'App version:',
-                                            style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),
-                                          ),
-                                          Text(
-                                            packageInfo!.version,
-                                            style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 15.0),
+                                            child: Icon(
+                                              FontAwesomeIcons.lock,
+                                              color: Colors.white70,
+                                            ),
                                           ),
                                           const SizedBox(
-                                            height: 10,
+                                            width: 15.0,
                                           ),
-                                          Text(
-                                            '©DigitalNote Team 2022',
-                                            style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width - 100.0,
+                                            child: AutoSizeText(
+                                              "Security", //TODO Security trans
+                                              style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                              minFontSize: 8,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
-                                        ]);
-                                  },
-                                  // button pressed
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 15.0),
-                                        child: Icon(
-                                          Icons.info,
-                                          color: Colors.white,
-                                        ),
+                                        ],
                                       ),
-                                      const SizedBox(
-                                        width: 15.0,
-                                      ),
-                                      Text(
-                                        AppLocalizations.of(context)!.set_about,
-                                        style: const TextStyle(color: Colors.white70, fontSize: 20.0),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                             const Divider(
-                              height: 20.0,
+                              height: 5.0,
                               color: Colors.transparent,
                             ),
-                            Container(
+                            SizedBox(
                               height: 60,
                               width: MediaQuery.of(context).size.width - 20.0,
-                              child: Material(
-                                color: Colors.transparent,
-                                // button color
-                                child: InkWell(
-                                  splashColor: Colors.white,
-                                  // splash color
-                                  onTap: () {
-                                    Dialogs.openLogoutConfirmationBox(context);
-                                  },
-                                  // button pressed
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 15.0),
-                                        child: Icon(
-                                          Icons.logout,
-                                          color: Colors.white,
-                                        ),
+                              child: Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Material(
+                                    child: InkWell(
+                                      splashColor: Colors.white54,
+                                      // splash color
+                                      onTap: () async {
+                                        var name = await SecureStorage.read(key: globals.NICKNAME);
+                                       if(mounted) Dialogs.openRenameBox(context, name!, _renameboxCallback);
+                                      },
+                                      // button pressed
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 15.0),
+                                            child: Icon(
+                                              FontAwesomeIcons.userEdit,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 15.0,
+                                          ),
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width - 100.0,
+                                            child: AutoSizeText(
+                                              AppLocalizations.of(context)!.set_nickname,
+                                              style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                              minFontSize: 8,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(
-                                        width: 15.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Divider(
+                              height: 5.0,
+                              color: Colors.transparent,
+                            ),
+                            SizedBox(
+                              height: 60,
+                              width: MediaQuery.of(context).size.width - 20.0,
+                              child: Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Material(
+                                    child: InkWell(
+                                      splashColor: Colors.white54,
+                                      // splash color
+                                      onTap: () {
+                                        Dialogs.openPasswordChangeBox(context, _passCheck);
+                                      },
+                                      // button pressed
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 15.0),
+                                            child: Icon(
+                                              FontAwesomeIcons.key,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 15.0,
+                                          ),
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width - 100.0,
+                                            child: AutoSizeText(
+                                              AppLocalizations.of(context)!.set_password,
+                                              style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                              minFontSize: 8,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      Text(
-                                        AppLocalizations.of(context)!.set_log_out,
-                                        style: const TextStyle(color: Colors.white70, fontSize: 20.0),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Divider(
+                              height: 5.0,
+                              color: Colors.transparent,
+                            ),
+                            SizedBox(
+                              height: 60,
+                              width: MediaQuery.of(context).size.width - 20.0,
+                              child: Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Material(
+                                    child: InkWell(
+                                      splashColor: Colors.white54,
+                                      // splash color
+                                      onTap: () async {
+                                        Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
+                                      },
+                                      // button pressed
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 15.0),
+                                            child: Icon(
+                                              FontAwesomeIcons.signature,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 15.0,
+                                          ),
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width - 100.0,
+                                            child: AutoSizeText(
+                                              AppLocalizations.of(context)!.set_priv_key,
+                                              style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                              minFontSize: 8,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Divider(
+                              height: 5.0,
+                              color: Colors.transparent,
+                            ),
+                            SizedBox(
+                              height: 60,
+                              width: MediaQuery.of(context).size.width - 20.0,
+                              child: Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Material(
+                                    child: InkWell(
+                                      splashColor: Colors.white54,
+                                      // splash color
+                                      onTap: () async {
+                                        _saveFile();
+                                      },
+                                      // button pressed
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 15.0),
+                                            child: Icon(
+                                              FontAwesomeIcons.download,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 15.0,
+                                          ),
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width - 100.0,
+                                            child: AutoSizeText(
+                                              AppLocalizations.of(context)!.set_csv,
+                                              style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                              minFontSize: 8,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Divider(
+                              height: 5.0,
+                              color: Colors.transparent,
+                            ),
+                            SizedBox(
+                              height: 60,
+                              width: MediaQuery.of(context).size.width - 20.0,
+                              child: Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Material(
+                                    child: InkWell(
+                                      splashColor: Colors.white54,
+                                      // splash color
+                                      onTap: ()  {
+                                        Dialogs.openLanguageDialog(context, (value) => null, (save) => null, 0);
+                                      },
+                                      // button pressed
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 15.0),
+                                            child: Icon(
+                                              FontAwesomeIcons.globe,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 15.0,
+                                          ),
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width - 100.0,
+                                            child: AutoSizeText(
+                                              AppLocalizations.of(context)!.change_language,
+                                              style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                              minFontSize: 8,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Divider(
+                              height: 5.0,
+                              color: Colors.transparent,
+                            ),
+                            SizedBox(
+                              height: 60,
+                              width: MediaQuery.of(context).size.width - 20.0,
+                              child: Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Material(
+                                    child: InkWell(
+                                      splashColor: Colors.white54,
+                                      // splash color
+                                      onTap: ()  {
+                                        showAboutDialog(
+                                            context: context,
+                                            applicationName: 'DigitalNote',
+                                            applicationIcon: Image.asset(
+                                              "images/logo_send.png",
+                                              width: 45.0,
+                                              height: 45.0,
+                                              color: Colors.black87,
+                                            ),
+                                            applicationVersion: packageInfo!.version,
+                                            children: [
+                                              Text(
+                                                'Developed by:',
+                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),
+                                              ),
+                                              Text(
+                                                'M1chlCZ, Nessie',
+                                                style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                              ),
+                                              const SizedBox(
+                                                height: 10,
+                                              ),
+                                              Text(
+                                                'App version:',
+                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),
+                                              ),
+                                              Text(
+                                                packageInfo!.version,
+                                                style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                              ),
+                                              const SizedBox(
+                                                height: 10,
+                                              ),
+                                              Text(
+                                                '©DigitalNote Team 2022',
+                                                style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                              ),
+                                            ]);
+                                      },
+                                      // button pressed
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 15.0),
+                                            child: Icon(
+                                              FontAwesomeIcons.circleInfo,
+                                              color: Colors.white70,
+
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 15.0,
+                                          ),
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width - 100.0,
+                                            child: AutoSizeText(
+                                              AppLocalizations.of(context)!.set_about,
+                                              style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                              minFontSize: 8,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Divider(
+                              height: 5.0,
+                              color: Colors.transparent,
+                            ),
+                            SizedBox(
+                              height: 60,
+                              width: MediaQuery.of(context).size.width - 20.0,
+                              child: Card(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  child: Material(
+                                    child: InkWell(
+                                      splashColor: Colors.white54,
+                                      // splash color
+                                      onTap: ()  {
+                                        Dialogs.openLogoutConfirmationBox(context);
+                                        },
+                                      // button pressed
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 15.0),
+                                            child: Icon(
+                                              FontAwesomeIcons.signOut,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 15.0,
+                                          ),
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width - 100.0,
+                                            child: AutoSizeText(
+                                              AppLocalizations.of(context)!.set_log_out,
+                                              style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                              minFontSize: 8,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),

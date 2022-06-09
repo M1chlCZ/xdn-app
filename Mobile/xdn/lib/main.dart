@@ -5,6 +5,7 @@ import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/screens/messagescreen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
+import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
@@ -187,7 +188,7 @@ class MyAppState extends State<MyApp> {
               LoginPage.route: (context) => const LoginPage(),
               RegisterScreen.route: (context) => const RegisterScreen(),
               MainMenuNew.route: (context) => MainMenuNew(locale: ms),
-              AuthScreen.route: (context) => const AuthScreen(),
+              // AuthScreen.route: (context) => const AuthScreen(),
               // WalletScreen.route : (context) =>  WalletScreen(arguments: ModalRoute.of(context)!.settings.arguments!,),
             },
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -318,6 +319,16 @@ class MyAppState extends State<MyApp> {
             builder: (_) => const MessageScreen());
       case SettingsScreen.route:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case SecurityScreen.route:
+        return MaterialPageRoute(builder: (_) => const SecurityScreen());
+      case AuthScreen.route:
+        Object? args = settings.arguments;
+        if (args != null) {
+          Map<String, dynamic> m = args as Map<String, dynamic>;
+          return MaterialPageRoute(builder: (_) => AuthScreen(setupPIN: m['bl'], type: m['type'],));
+        }else{
+          return MaterialPageRoute(builder: (_) => const AuthScreen(type: 0));
+        }
       default:
         return MaterialPageRoute(builder: (_) => const LoginPage());
     }

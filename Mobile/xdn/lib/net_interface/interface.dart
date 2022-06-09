@@ -14,7 +14,6 @@ class ComInterface {
   static const int typeBarong = 1;
   static const int typePlain = 2;
   static const int typeJson = 3;
-  final String _baseUrl = "https://www.exbitron.com/api/v2/peatio/";
 
   Future<dynamic> get(String url,
       {required Map<String, dynamic> request, bool wholeURL = false, Map<String, dynamic>? query, dynamic body, int type = 0, int typeContent = typeJson, bool debug = false}) async {
@@ -58,7 +57,7 @@ class ComInterface {
     dynamic responseJson;
     Response response;
 
-    var mUrl = _baseUrl + url;
+    var mUrl = url;
     Map<String, String> mHeaders = {
       "Authorization": jwt ?? "",
       "Content-Type": "application/json",
