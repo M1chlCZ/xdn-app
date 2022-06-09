@@ -16,28 +16,29 @@ class ContactTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 0.0, top: 4.0),
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      elevation: 0,
-      color: Colors.transparent,
-      child: Material(
-        borderRadius: BorderRadius.circular(15.0),
-          color: Theme.of(context).konjHeaderColor,
+    return ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(10.0)),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 0.0, top: 4.0),
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        elevation: 0,
+        color: const Color(0xFF181C2A).withOpacity(0.3),
         child: InkWell(
           splashColor: Theme.of(context).konjCardColor,
-          highlightColor: Theme.of(context).konjCardColor,
           onTap: () {
             func2!(contact!.name!, contact!.addr!, contact!);
           },
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 5.0),
-                child: AvatarPicker(userID: contact!.addr!, size: 55.0, padding: 2.0,),
+                padding: const EdgeInsets.only(top: 5.0, left: 3.0),
+                child: AvatarPicker(userID: contact!.addr!,
+                  avatarColor: Colors.white54,
+                  color: const Color(0xFF22304D),
+                  size: 60.0, padding: 2.0,),
               ),
               Column(children: [
                 Padding(
@@ -63,14 +64,14 @@ class ContactTile extends StatelessWidget {
                                   width: 40,
                                   height: 40,
                                   decoration: const BoxDecoration(
-                                    color: Colors.white54,
+                                    color: Colors.white12,
                                     // border: Border.all(color: Colors.amber),
                                     borderRadius: BorderRadius.only(
                                         bottomLeft: Radius.circular(10.0),
                                     ),
                                   ),
                                   child: Icon(Icons.edit,
-                                      color: Colors.black87.withOpacity(0.8)),
+                                      color: Colors.white70.withOpacity(0.8)),
                                 )),
                             GestureDetector(
                                 onTap: () {
@@ -80,7 +81,7 @@ class ContactTile extends StatelessWidget {
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.5),
+                                    color: Colors.black.withOpacity(0.2),
                                     // border: Border.all(color: Colors.amber),
                                     borderRadius: const BorderRadius.only(
                                         topRight: Radius.circular(10.0)
@@ -97,7 +98,7 @@ class ContactTile extends StatelessWidget {
                   height: 4,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left:55.0, right: 20.0),
+                  padding: const EdgeInsets.only(left:65.0, right: 20.0),
                   child: SizedBox(
                     width: 260,
                     child: AutoSizeText(

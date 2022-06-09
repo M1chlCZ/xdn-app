@@ -20,7 +20,7 @@ import 'package:styled_text/styled_text.dart';
 import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
 
-const SERVER_IP = globals.SERVER_URL;
+const serverIP = globals.SERVER_URL;
 
 class LoginPage extends StatefulWidget {
   static const String route = "/login";
@@ -46,7 +46,7 @@ class _LoginState extends State<LoginPage> {
   }
 
   Future<String?> _attemptResetPass(String nickname) async {
-    var res = await http.post(Uri.parse("$SERVER_IP/forgotPass"), headers: {
+    var res = await http.post(Uri.parse("$serverIP/forgotPass"), headers: {
       "username": nickname,
     }).timeout(const Duration(seconds: 10));
 
@@ -87,14 +87,16 @@ class _LoginState extends State<LoginPage> {
       }
       var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
 
-      var res = await http.post(Uri.parse("$SERVER_IP/login"), headers: {
+      var res = await http.post(Uri.parse("$serverIP/login"), headers: {
         "Content-Type": "application/json",
         "payload": s,
       }).timeout(const Duration(seconds: 10));
 
       if (res.contentLength == 0) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, "No response from server");
+        if(mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, "No response from server");
+        }
         return;
       }
 
@@ -120,7 +122,7 @@ class _LoginState extends State<LoginPage> {
         SecureStorage.write(key: globals.UDID, value: udid);
         if (mounted) {
           Navigator.of(context).pop();
-          Navigator.of(context).pushReplacementNamed(MainMenuNew.route);
+          Navigator.of(context).pushNamedAndRemoveUntil(MainMenuNew.route, (Route<dynamic> route) => false);
           // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainMenuScreen()));
         } else {
           if (mounted) {
@@ -129,20 +131,19 @@ class _LoginState extends State<LoginPage> {
           }
         }
       } else if (res.statusCode == 409) {
-        print("YEP");
-        Dialogs.open2FABox(context, _auth2FA);
+       if(mounted) Dialogs.open2FABox(context, _auth2FA);
       } else {
-        var data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        var error = '';
-        if (data.toString() == 'User does not exists') {
-          error = AppLocalizations.of(context)!.user_not_exists;
-        } else {
-          error = data.toString();
+        if(mounted) {
+          var data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+          var error = '';
+          if (data.toString() == 'User does not exists') {
+            error = AppLocalizations.of(context)!.user_not_exists;
+          } else {
+            error = data.toString();
+          }
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, error);
         }
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, error);
-        return;
-
         return;
       }
     } on TimeoutException catch (_) {

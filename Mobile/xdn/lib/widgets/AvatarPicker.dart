@@ -55,7 +55,7 @@ class AvatarPickerState extends State<AvatarPicker> {
         Container(
           width: widget.size,
           height: widget.size,
-          decoration: BoxDecoration(color: widget.color, borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(color: widget.color, borderRadius: BorderRadius.all(Radius.circular(widget.borderRadius ?? 15.0))),
           child: GestureDetector(
             onTap: () {
               if (localUser) {
@@ -64,7 +64,7 @@ class AvatarPickerState extends State<AvatarPicker> {
             },
             child: Center(
               child: ClipRRect(
-                borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                borderRadius:  BorderRadius.all(Radius.circular(widget.borderRadius ?? 15.0)),
                 child: Container(
                   decoration: BoxDecoration(
                     color: widget.color,

@@ -2,12 +2,15 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/QCodeScanner.dart';
+import 'package:digitalnote/support/RoundButton.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1901,6 +1904,250 @@ class Dialogs {
             ),
           );
         });
+  }
+
+  static Future<void> openUserAddBox(BuildContext context) async {
+    return showDialog(
+      barrierDismissible: true,
+        context: context, builder:  (BuildContext context) {
+      TextEditingController controller = TextEditingController();
+      TextEditingController controllerAddr = TextEditingController();
+      return StatefulBuilder(
+      builder: (context, setState) {
+        void _openQRScanner() async {
+          FocusScope.of(context).unfocus();
+
+          Future.delayed(const Duration(milliseconds: 500), () async {
+            var status = await Permission.camera.status;
+            if (await Permission.camera.isPermanentlyDenied) {
+              await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
+              openAppSettings();
+            } else if (status.isDenied) {
+              var r = await Permission.camera.request();
+              if (r.isGranted) {
+                Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+                  return QScanWidget(
+                    scanResult: (String s) {
+                      controllerAddr.text = s;
+                    },
+                  );
+                }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+                  return FadeTransition(opacity: animation, child: child);
+                }));
+              }
+            } else {
+              Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+                return QScanWidget(
+                  scanResult: (String s) {
+                    controllerAddr.text = s;
+                  },
+                );
+              }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+                return FadeTransition(opacity: animation, child: child);
+              }));
+            }
+          });
+        }
+
+        void _saveUsers(String name, String addr) async {
+          Dialogs.openWaitBox(context);
+          await NetInterface.saveContact(name, addr, context);
+          await NetInterface.getAddrBook();
+          await AppDatabase().getContacts();
+          Navigator.of(context).pop();
+          Future.delayed(const Duration(milliseconds: 100),() {
+            Navigator.of(context).pop();
+          });
+
+          setState(() {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(AppLocalizations.of(context)!.contact_added),
+              backgroundColor: const Color(0xFF63C9F3),
+              behavior: SnackBarBehavior.fixed,
+              elevation: 5.0,
+            ));
+          });
+        }
+        return DialogBody(
+          dialogWidth: MediaQuery
+              .of(context)
+              .size
+              .width * 0.95,
+          noButtons: true,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              padding: const EdgeInsets.only(top: 10.0, left: 15.0, right: 15.0, bottom: 10.0),
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                color: Color(0xFF22283A),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  TextField(
+                    controller: controller,
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .bodyText1!
+                        .copyWith(color: Colors.white70),
+                    decoration: InputDecoration(
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      contentPadding: const EdgeInsets.all(8.0),
+                      filled: true,
+                      hoverColor: Colors.white24,
+                      focusColor: Colors.white24,
+                      fillColor: const Color(0xFF303850),
+                      labelText: "",
+                      labelStyle: Theme
+                          .of(context)
+                          .textTheme
+                          .bodyText2!
+                          .copyWith(color: Colors.white54, fontSize: 18.0),
+                      hintText: AppLocalizations.of(context)!.name,
+                      hintStyle: Theme
+                          .of(context)
+                          .textTheme
+                          .bodyText1!
+                          .copyWith(color: Colors.white54, fontSize: 22.0),
+                      prefixIcon: const Icon(
+                        Icons.person,
+                        color: Colors.white70,
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                      enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                    Flexible(
+                      child: FractionallySizedBox(
+                        widthFactor: 0.95,
+                        child: SizedBox(
+                          height: 45,
+                          child: TextField(
+                            controller: controllerAddr,
+                            style: Theme
+                                .of(context)
+                                .textTheme
+                                .bodyText1!
+                                .copyWith(color: Colors.white70),
+                            decoration: InputDecoration(
+                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                              contentPadding: const EdgeInsets.only(left: 8.0),
+                              filled: true,
+                              hoverColor: Colors.white24,
+                              focusColor: Colors.white24,
+                              fillColor: const Color(0xFF303850),
+                              labelText: "",
+                              labelStyle: Theme
+                                  .of(context)
+                                  .textTheme
+                                  .bodyText2!
+                                  .copyWith(color: Colors.white54, fontSize: 10.0),
+                              hintText: AppLocalizations.of(context)!.address,
+                              hintStyle: Theme
+                                  .of(context)
+                                  .textTheme
+                                  .bodyText1!
+                                  .copyWith(color: Colors.white54, fontSize: 22.0),
+                              prefixIcon: const Icon(
+                                Icons.person,
+                                color: Colors.white70,
+                              ),
+                              focusedBorder: const OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                              enabledBorder: const OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 0.0, top: 1.0),
+                      child: RoundButton(
+                          height: 40,
+                          width: 40,
+                          color: const Color(0xFF22283A),
+                          onTap: () {
+                            _openQRScanner();
+                          },
+                          splashColor: Colors.black45,
+                          icon: const Icon(
+                            Icons.qr_code,
+                            size: 35,
+                            color: Colors.white70,
+                          )),
+                    ),
+                  ]),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15.0),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          Expanded(
+                            child: Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: TextButton.icon(
+                                icon: const Icon(
+                                  Icons.person_add,
+                                  color: Colors.white70,
+                                ),
+                                label: Text(
+                                  AppLocalizations.of(context)!.contact_add,
+                                  style: Theme
+                                      .of(context)
+                                      .textTheme
+                                      .bodyText1!
+                                      .copyWith(color: Colors.white70),
+                                ),
+                                style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
+                                onPressed: () {
+                                  _saveUsers(controller.text, controllerAddr.text);
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                ],
+              ),
+            ),
+          ]),);
+      });
+    });
+  }
+
+  static Color sendColors(Set<MaterialState> states) {
+    const Set<MaterialState> interactiveStates = <MaterialState>{
+      MaterialState.pressed,
+      MaterialState.hovered,
+      MaterialState.focused,
+    };
+    if (states.any(interactiveStates.contains)) {
+      return Colors.blue;
+    }
+    return Colors.green.withOpacity(0.8);
   }
 
 }

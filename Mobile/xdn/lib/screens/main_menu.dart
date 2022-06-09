@@ -158,9 +158,9 @@ class _MainMenuNewState extends State<MainMenuNew> {
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.all(1.0),
+                        padding: const EdgeInsets.all(0.0),
                         decoration:  BoxDecoration(
-                          borderRadius: const BorderRadius.all(const Radius.circular(20.0)),
+                          borderRadius: const BorderRadius.all(Radius.circular(8.0)),
                           color: Colors.black.withOpacity(0.2)
                         ),
                         child: const AvatarPicker(

@@ -27,6 +27,7 @@ import 'messageDetailScreen.dart';
 
 class AddressScreen extends StatefulWidget {
   static const String route = "menu/contacts";
+
   const AddressScreen({Key? key}) : super(key: key);
 
   @override
@@ -56,12 +57,11 @@ class AddressScreenState extends State<AddressScreen> {
     int i = await NetInterface.getAddrBook();
     await AppDatabase().getContacts();
     // if (i != 0) cb.fetchContacts();
-    if(i != 0) {
+    if (i != 0) {
       Future.delayed(Duration(milliseconds: 100), () {
         cb.fetchContacts();
       });
     }
-
   }
 
   void _openMessageSend({Contact? contact}) async {
@@ -274,10 +274,10 @@ class AddressScreenState extends State<AddressScreen> {
                 Header(header: AppLocalizations.of(context)!.contacts),
                 Container(
                   margin: const EdgeInsets.only(left: 5.0, right: 5.0),
-                  padding: const EdgeInsets.only(top: 10.0, left: 10.0, bottom: 10.0),
+                  padding: const EdgeInsets.only(top: 5.0, left: 5.0, bottom: 5.0),
                   decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.1),
                     borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                    color: Theme.of(context).konjHeaderColor,
                   ),
                   child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
                     Flexible(
@@ -292,100 +292,115 @@ class AddressScreenState extends State<AddressScreen> {
                             },
                             style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
                             decoration: InputDecoration(
-                              floatingLabelBehavior: FloatingLabelBehavior.always,
-                              contentPadding: const EdgeInsets.only(bottom: 5.0),
-                              filled: true,
-                              hoverColor: Colors.white24,
-                              focusColor: Colors.white24,
-                              fillColor: Theme.of(context).konjTextFieldHeaderColor,
-                              labelText: "",
-                              labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
-                              hintText: AppLocalizations.of(context)!.search_contact,
-                              hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 18.0),
-                              prefixIcon: const Padding(
-                                padding: EdgeInsets.only(top: 4.0),
-                                child: Icon(
-                                  Icons.person,
-                                  color: Colors.white70,
+                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                contentPadding: const EdgeInsets.only(bottom: 5.0),
+                                filled: true,
+                                hoverColor: Theme.of(context).cardColor,
+                                focusColor: Theme.of(context).cardColor,
+                                fillColor: const Color(0xFF22283A).withOpacity(0.5),
+                                labelText: "",
+                                labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
+                                hintText: AppLocalizations.of(context)!.search_contact,
+                                hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 18.0),
+                                prefixIcon: const Padding(
+                                  padding: EdgeInsets.only(top: 4.0),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Colors.white70,
+                                  ),
                                 ),
-                              ),
-                              focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white30, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                              enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white10, width: 1.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                            ),
+                                focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Color(0xFF22283A).withOpacity(0.1), width: 2.0),
+                                    borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                                enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Color(0xFF22263A).withOpacity(0.1), width: 2.0),
+                                    borderRadius: BorderRadius.all(Radius.circular(10.0)))),
                           ),
                         ),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(right: 15.0, top: 1.0),
+                      padding: const EdgeInsets.only(right: 8.0, top: 1.0),
                       child: RoundButton(
-                          height: 40,
-                          width: 40,
-                          color: Theme.of(context).konjHeaderColor,
-                          onTap: () {
-                            Navigator.of(context)
-                                .push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-                                  return const AddressAddScreen();
-                                }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-                                  return FadeTransition(opacity: animation, child: child);
-                                }))
-                                .then((value) => _refreshContacts());
-                          },
-                          splashColor: Colors.black45,
-                          icon: const Icon(
-                            Icons.add,
-                            size: 35,
-                            color: Colors.white70,
-                          )),
+                        height: 40,
+                        width: 50,
+                        color: const Color(0xFF4B9B4C).withOpacity(0.8),
+                        onTap: () {
+                          Dialogs.openUserAddBox(context);
+                          // Navigator.of(context)
+                          //     .push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+                          //       return const AddressAddScreen();
+                          //     }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+                          //       return FadeTransition(opacity: animation, child: child);
+                          //     }))
+                          //     .then((value) => _refreshContacts());
+                        },
+                        splashColor: Colors.black45,
+                        icon: const Icon(
+                          Icons.person_add,
+                          color: Colors.white70,
+                          size: 30,
+                        ),
+                      ),
                     ),
                   ]),
                 ),
                 Expanded(
-                  child: StreamBuilder<ApiResponse<List<Contact>?>>(
-                      stream: cb.coinsListStream,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          var data = snapshot.data!.data;
-                          switch (snapshot.data!.status) {
-                            case Status.LOADING:
-                              return Container(
-                                height: MediaQuery.of(context).size.height,
-                                width: MediaQuery.of(context).size.width,
-                                margin: const EdgeInsets.all(10.0),
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
-                                  SizedBox(height: 50.0, width: 50.0, child: CircularProgressIndicator()),
-                                ]),
-                              );
-                            case Status.COMPLETED:
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 5.0, right: 5.0),
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0)),
-                                  child: Container(
-                                    padding: const EdgeInsets.only(left: 0.0, right: 0.0),
-                                    child: ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount: data!.length,
-                                      itemBuilder: (BuildContext context, int index) {
-                                        return ContactTile(
-                                          key: Key(data[index].addr!),
-                                          contact: data[index],
-                                          func: _deleteContactPrompt,
-                                          func2: _openSelectBox,
-                                          func3: _openEditBox,
-                                        );
-                                      },
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 5.0, right: 5.0, top: 5.0),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                    ),
+                    child: StreamBuilder<ApiResponse<List<Contact>?>>(
+                        stream: cb.coinsListStream,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data!.data;
+                            switch (snapshot.data!.status) {
+                              case Status.LOADING:
+                                return Container(
+                                  height: MediaQuery.of(context).size.height,
+                                  width: MediaQuery.of(context).size.width,
+                                  margin: const EdgeInsets.all(10.0),
+                                  child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const <Widget>[
+                                        SizedBox(height: 50.0, width: 50.0, child: CircularProgressIndicator()),
+                                      ]),
+                                );
+                              case Status.COMPLETED:
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0)),
+                                    child: Container(
+                                      padding: const EdgeInsets.only(left: 0.0, right: 0.0),
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: data!.length,
+                                        itemBuilder: (BuildContext context, int index) {
+                                          return ContactTile(
+                                            key: Key(data[index].addr!),
+                                            contact: data[index],
+                                            func: _deleteContactPrompt,
+                                            func2: _openSelectBox,
+                                            func3: _openEditBox,
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            case Status.ERROR:
-                              return Container();
+                                );
+                              case Status.ERROR:
+                                return Container();
+                            }
+                          } else {
+                            return Container();
                           }
-                        } else {
-                          return Container();
-                        }
-                      }),
+                        }),
+                  ),
                 ),
               ],
             ),
