@@ -36,6 +36,8 @@ class ComInterface {
       "Content-Type": "application/json",
       "payload": encryptAESCryptoJS(json.encode(request), "rp9ww*jK8KX_!537e%Crmf"),
     };
+    print(mHeaders);
+    print(mBody);
 
     response = await Requests.get(mUrl, headers: mHeaders, queryParameters: query, json: mBody, timeoutSeconds: 20);
     if (debug) {
