@@ -28,7 +28,7 @@ import 'package:requests/requests.dart';
 import '../globals.dart' as globals;
 
 class SettingsScreen extends StatefulWidget {
-  static const String route = "/menu/settings";
+  static const String route = "menu/settings";
   const SettingsScreen({Key? key}) : super(key: key);
 
   @override
@@ -761,6 +761,7 @@ class _SettingsState extends State<SettingsScreen> {
         Navigator.of(context).pop();
         Dialogs.openPrivKeyQR(context, priv);
       }else{
+        Navigator.of(context).pop();
         Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_priv_error);
       }
     } else {

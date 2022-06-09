@@ -13,7 +13,7 @@ import '../widgets/sendWidget.dart';
 import '../widgets/transactionWidget.dart';
 
 class WalletScreen extends StatefulWidget {
-  static const String route = "/menu/wallet";
+  static const String route = "menu/wallet";
 
   @override
   DetailScreenState createState() => DetailScreenState();

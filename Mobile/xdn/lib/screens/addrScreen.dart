@@ -26,7 +26,7 @@ import '../widgets/backgroundWidget.dart';
 import 'messageDetailScreen.dart';
 
 class AddressScreen extends StatefulWidget {
-  static const String route = "/menu/contacts";
+  static const String route = "menu/contacts";
   const AddressScreen({Key? key}) : super(key: key);
 
   @override

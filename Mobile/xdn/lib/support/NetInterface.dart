@@ -50,7 +50,6 @@ class NetInterface {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-
       } else {
         // Dialogs.openAlertBox(context, 'Warning', response.toString());
       }
@@ -59,7 +58,7 @@ class NetInterface {
     } on SocketException catch (_) {
       Dialogs.openAlertBox(context, 'Warning', "Service is not available, can't save the picture to cloud");
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Warning', e.toString());
     }
   }
@@ -91,7 +90,7 @@ class NetInterface {
       Dialogs.openAlertBox(context, 'Error', "Service is not available, can't save the picture to cloud");
       return null;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Error', e.toString());
       return null;
     }
@@ -136,11 +135,10 @@ class NetInterface {
       //     "Service is not available, can't save the picture to cloud");
       return null;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       // Dialogs.openAlertBox(context, 'Warning', e.toString());
       return null;
     }
-
   }
 
   static Future<String?> dowloadPictureByAddr(String addr) async {
@@ -170,19 +168,19 @@ class NetInterface {
       if (response.statusCode == 200) {
         return response.body;
       } else {
-        if(kDebugMode)print("sucks");
+        if (kDebugMode) print("sucks");
         // Dialogs.openAlertBox(context, 'Warning', response.toString());
         return null;
       }
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       // Dialogs.openAlertBox(context, 'Warning', e.toString());
       return null;
     }
   }
 
   static Future<void> registerFirebaseToken(String token) async {
-    if(kDebugMode)print("FRRRRRRR");
+    if (kDebugMode) print("FRRRRRRR");
     String? id = await SecureStorage.read(key: globals.ID);
     Map<String, dynamic> m = {"id": id, "param1": token, "param2": Platform.isAndroid ? "A" : "I", "request": "registerFirebaseToken"};
 
@@ -199,11 +197,11 @@ class NetInterface {
       //   // if(kDebugMode)print("shit saved");
       // }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
@@ -223,13 +221,13 @@ class NetInterface {
       var i = await AppDatabase().addTransactions(l);
       return i;
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -269,13 +267,13 @@ class NetInterface {
       }
       return 0;
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -292,7 +290,6 @@ class NetInterface {
     }
 
     try {
-
       String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
@@ -301,7 +298,6 @@ class NetInterface {
         "param1": name,
         "param2": addr,
       };
-
 
       // ComInterface ci = ComInterface();
       // List responseList = await ci.get("/data", request: m, debug: true);
@@ -332,10 +328,10 @@ class NetInterface {
         return 0;
       }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print("Timeout");
+      if (kDebugMode) print("Timeout");
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e);
+      if (kDebugMode) print(e);
       return 0;
     }
   }
@@ -367,11 +363,11 @@ class NetInterface {
       //   await AppDatabase().addMessageGroup(l!);
       // }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
@@ -406,13 +402,13 @@ class NetInterface {
       int i = await AppDatabase().addMessages(l);
       return i;
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -424,7 +420,7 @@ class NetInterface {
       List<Message> l = responseList.map((data) => Message.fromJson(data)).toList();
       return l;
     } catch (e) {
-      if(kDebugMode)print(e);
+      if (kDebugMode) print(e);
       return null;
     }
   }
@@ -452,11 +448,11 @@ class NetInterface {
         await AppDatabase().updateMessageGroupRead(addr!, address);
       }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
@@ -486,13 +482,13 @@ class NetInterface {
       await AppDatabase().updateMessageLikes(id, i);
       return i;
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -520,11 +516,11 @@ class NetInterface {
       //   // AppDatabase().updateMessageGroupRead(addr, address);
       // }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
@@ -554,11 +550,11 @@ class NetInterface {
       //
       // }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
@@ -591,13 +587,13 @@ class NetInterface {
         return 2;
       }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -633,13 +629,13 @@ class NetInterface {
         return 3;
       }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -669,13 +665,13 @@ class NetInterface {
         return 2;
       }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -696,14 +692,14 @@ class NetInterface {
         "password": password,
       };
 
-      ComInterface ci = ComInterface();
-      Response res = await ci.get("/data", request: m, type: ComInterface.typePlain);
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // var res = await http.post(Uri.parse("${globals.SERVER_URL}/login"), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
+      // ComInterface ci = ComInterface();
+      // Response res = await ci.post("/login", request: m, type: ComInterface.typePlain, debug: true);
+      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+
+      var res = await http.post(Uri.parse("${globals.SERVER_URL}/login"), headers: {
+        "Content-Type": "application/json",
+        "payload": s,
+      }).timeout(const Duration(seconds: 10));
 
       if (res.statusCode == 200) {
         return true;
@@ -711,13 +707,13 @@ class NetInterface {
         return false;
       }
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return false;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return false;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return false;
     }
   }
@@ -727,22 +723,18 @@ class NetInterface {
     try {
       Map<String, dynamic> m = {"param1": addr, "request": "getPrivKey"};
       ComInterface ci = ComInterface();
-      Response res = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      var res = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
 
-      if (res.statusCode == 200) {
-        String? data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        return data;
-      } else {
-        return null;
-      }
+      String? data = decryptAESCryptoJS(res.body, "rp9ww*jK8KX_!537e%Crmf");
+      return data;
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return null;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return null;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return null;
     }
   }
@@ -768,7 +760,7 @@ class NetInterface {
           "request": "renameUser",
         };
         ComInterface ci = ComInterface();
-        Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
+        var response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
 
         // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
         // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
@@ -818,14 +810,14 @@ class NetInterface {
         "param1": pass,
         "request": "changePassword",
       };
-      ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      // ComInterface ci = ComInterface();
+      // Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
 
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
+      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+        "Content-Type": "application/json",
+        "payload": s,
+      }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         if (context.owner != null) {
@@ -877,13 +869,13 @@ class NetInterface {
       // }
       // return 0;
     } on TimeoutException catch (_) {
-      if(kDebugMode)print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      if(kDebugMode)print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -927,7 +919,7 @@ class NetInterface {
       Dialogs.openAlertBox(context, 'Warning', "Service is not available");
       return null;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Warning', e.toString());
       return null;
     }
@@ -968,7 +960,7 @@ class NetInterface {
       Dialogs.openAlertBox(context, 'Warning', "Service is not available");
       return null;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Warning', e.toString());
       return null;
     }
@@ -1005,7 +997,7 @@ class NetInterface {
       //     "Service is not available, can't save the picture to cloud");
       return null;
     } catch (e) {
-      if(kDebugMode)print(e.toString());
+      if (kDebugMode) print(e.toString());
       // Dialogs.openAlertBox(context, 'Error', e.toString());
       return null;
     }

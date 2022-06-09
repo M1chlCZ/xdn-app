@@ -16,7 +16,7 @@ import 'package:requests/requests.dart';
 import '../widgets/button_neu.dart';
 
 class SecurityScreen extends StatefulWidget {
-  static const String route = "/menu/settings/security";
+  static const String route = "menu/settings/security";
 
   const SecurityScreen({Key? key}) : super(key: key);
 

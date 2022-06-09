@@ -118,13 +118,15 @@ class DialogBodyState extends State<DialogBody> {
                                 side: const BorderSide(color: Colors.white30),
                                 borderRadius: BorderRadius.circular(15.0),
                               )),
-                            child: Text(
+                            child: AutoSizeText(
                               'OK',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyText1!
                                   .copyWith(color: Colors.white, fontWeight: FontWeight.normal),
                               textAlign: TextAlign.start,
+                              maxLines: 1,
+                              minFontSize: 8.0,
                             ),
                           ),),
                         ]),
@@ -152,13 +154,15 @@ class DialogBodyState extends State<DialogBody> {
                                     side: const BorderSide(color: Colors.white30),
                                     borderRadius: BorderRadius.circular(15.0),
                                   )),
-                            child: Text(
+                            child: AutoSizeText(
                              widget.buttonLabel ?? AppLocalizations.of(context)!.yes,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyText1!
                                   .copyWith(color: Colors.white70, fontWeight: FontWeight.normal),
                               textAlign: TextAlign.start,
+                              maxLines: 1,
+                              minFontSize: 8.0,
                             ),
                           ),),
                           SizedBox(
@@ -178,13 +182,15 @@ class DialogBodyState extends State<DialogBody> {
                                     side: const BorderSide(color: Colors.white30),
                                     borderRadius: BorderRadius.circular(15.0),
                                   )),
-                            child: Text(
+                            child: AutoSizeText(
                               AppLocalizations.of(context)!.cancel,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyText1!
                                   .copyWith(color: Colors.white70, fontWeight: FontWeight.normal),
                               textAlign: TextAlign.start,
+                              maxLines: 1,
+                              minFontSize: 8.0,
                             ),
                           ),
                           )]),

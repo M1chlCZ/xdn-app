@@ -19,7 +19,7 @@ import '../widgets/backgroundWidget.dart';
 import 'messageDetailScreen.dart';
 
 class MessageScreen extends StatefulWidget {
-  static const String route = "/menu/messages";
+  static const String route = "menu/messages";
 
   const MessageScreen({
     Key? key,

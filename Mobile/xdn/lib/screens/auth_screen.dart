@@ -148,7 +148,7 @@ class AuthScreenState extends State<AuthScreen> {
                     },
                     onSuccess: () {
                       if (widget.type == 0) {
-                        Navigator.of(context).pushReplacementNamed("/menu");
+                        Navigator.of(context).pushNamedAndRemoveUntil("menu", (Route<dynamic> route) => false);
                         // Navigator.of(context).pushReplacement(PageRouteBuilder(pageBuilder:
                         //     (BuildContext context, _, __) {
                         //   return const MainMenuScreen();
@@ -161,7 +161,7 @@ class AuthScreenState extends State<AuthScreen> {
                         widget.callback == null ? Navigator.of(context).pop(true) : widget.callback!(true);
                       } else {
                         Navigator.of(context).pop();
-                        Navigator.of(context).pushNamed("/menu/settings/security");
+                        Navigator.of(context).pushNamed("menu/settings/security");
                       //   Navigator.of(context).push(PageRouteBuilder(pageBuilder:
                       //       (BuildContext context, _, __) {
                       //     return const SecurityScreen();
@@ -303,7 +303,7 @@ class AuthScreenState extends State<AuthScreen> {
       });
     }
     if(widget.type == 2) {
-      Navigator.of(context).pushReplacementNamed("/menu");
+      Navigator.of(context).pushReplacementNamed("menu");
     }else {
       Navigator.of(context).pop(succ);
     }

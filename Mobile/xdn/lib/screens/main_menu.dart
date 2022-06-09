@@ -20,7 +20,7 @@ import 'package:get_it/get_it.dart';
 import '../globals.dart' as globals;
 
 class MainMenuNew extends StatefulWidget {
-  static const String route = "/menu";
+  static const String route = "menu";
   final String? locale;
 
   const MainMenuNew({Key? key, this.locale}) : super(key: key);

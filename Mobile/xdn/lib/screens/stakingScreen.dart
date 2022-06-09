@@ -31,7 +31,7 @@ import '../support/StakeData.dart';
 import '../widgets/backgroundWidget.dart';
 
 class StakingScreen extends StatefulWidget {
-  static const String route = "/menu/staking";
+  static const String route = "menu/staking";
   const StakingScreen({Key? key}) : super(key: key);
 
   @override

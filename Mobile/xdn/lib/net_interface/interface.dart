@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:requests/requests.dart';
+import 'package:http/http.dart' as http;
 import '../globals.dart' as globals;
 
 import '../support/Encrypt.dart';
@@ -20,7 +20,7 @@ class ComInterface {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
     dynamic responseJson;
     dynamic mBody;
-    Response response;
+    http.Response response;
     if (body != null) {
       mBody = json.encode(body);
     }
@@ -36,14 +36,12 @@ class ComInterface {
       "Content-Type": "application/json",
       "payload": encryptAESCryptoJS(json.encode(request), "rp9ww*jK8KX_!537e%Crmf"),
     };
-    print(mHeaders);
-    print(mBody);
 
-    response = await Requests.get(mUrl, headers: mHeaders, queryParameters: query, json: mBody, timeoutSeconds: 20);
+    response = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
     if (debug) {
       debugPrint(mUrl);
       var rr = response;
-      var data = decryptAESCryptoJS(rr.content().toString(), "rp9ww*jK8KX_!537e%Crmf");
+      var data = decryptAESCryptoJS(rr.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
       debugPrint(data);
     }
     if (typeContent == typePlain) {
@@ -57,19 +55,20 @@ class ComInterface {
   Future<dynamic> post(String url, {required Map<String, dynamic> request, int type = 0, dynamic body, int typeContent = typeJson, bool debug = false, bool bandwidth = false}) async {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
     dynamic responseJson;
-    Response response;
+    http.Response response;
 
-    var mUrl = url;
+    var mUrl = globals.SERVER_URL + url;
     Map<String, String> mHeaders = {
       "Authorization": jwt ?? "",
       "Content-Type": "application/json",
       "payload": encryptAESCryptoJS(json.encode(request), "rp9ww*jK8KX_!537e%Crmf"),
     };
-    response = await Requests.post(mUrl, verify: false, headers: mHeaders, timeoutSeconds: 20);
+    response = await http.post(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
     if (debug) {
       debugPrint(mUrl);
       var rr = response;
-      debugPrint(rr.content());
+      debugPrint(rr.statusCode.toString());
+      debugPrint(rr.body);
     }
     if (typeContent == typePlain) {
       return response;
@@ -101,20 +100,20 @@ class ComInterface {
   //   return responseJson;
   // }
 
-  dynamic _returnResponse(Response response) {
+  dynamic _returnResponse(http.Response response) {
     switch (response.statusCode) {
       case 200:
       case 201:
-        var data = decryptAESCryptoJS(response.content().toString(), "rp9ww*jK8KX_!537e%Crmf");
+        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
         var responseJson = json.decode(data);
         return responseJson;
       case 400:
-        throw BadRequestException(response.content().toString());
+        throw BadRequestException(response.body.toString());
       case 401:
         Map<String, dynamic> error = {
           "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
           "statusCode": response.statusCode,
-          "messageBody": response.content().toString(),
+          "messageBody": response.body.toString(),
         };
         throw UnauthorisedException(error);
 
@@ -123,17 +122,22 @@ class ComInterface {
         Map<String, dynamic> error = {
           "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
           "statusCode": response.statusCode,
-          "messageBody": response.content().toString(),
+          "messageBody": response.body.toString(),
         };
         throw UnauthorisedException(error);
       case 404:
-        throw HTTPException("Unauthorized", response);
+        Map<String, dynamic> error = {
+          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
+          "statusCode": response.statusCode,
+          "messageBody": response.body.toString(),
+        };
+        throw UnauthorisedException(error);
       case 500:
       default:
         Map<String, dynamic> error = {
           "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
           "statusCode": response.statusCode,
-          "messageBody": response.content().toString(),
+          "messageBody": response.body.toString(),
         };
         throw FetchDataException(error);
     }

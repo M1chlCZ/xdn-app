@@ -304,10 +304,10 @@ class MyAppState extends State<MyApp> {
         Object? shit = settings.arguments;
         return MaterialPageRoute(
             builder: (_) => WalletScreen(arguments: shit!,));
-      case MainMenuNew.route:
-        return MaterialPageRoute(
-            builder: (_) => const MainMenuNew(
-            ));
+      // case MainMenuNew.route:
+      //   return MaterialPageRoute(
+      //       builder: (_) => const MainMenuNew(
+      //       ));
       case AddressScreen.route:
           return MaterialPageRoute(
               builder: (_) => const AddressScreen());

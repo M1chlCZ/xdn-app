@@ -42,7 +42,7 @@ class TransactionView extends StatelessWidget {
   }
 
   String _getText(String? s, BuildContext context) {
-    if (s == null) {
+    if (s == null || s == "null") {
       return transaction!.category == 'send' ? AppLocalizations.of(context)!.sent : AppLocalizations.of(context)!.deposit;
     } else {
       return s == 'Staking' ? AppLocalizations.of(context)!.st_headline : s;
@@ -143,7 +143,7 @@ class TransactionView extends StatelessWidget {
                       child: SizedBox(
                         width: 125,
                         child: AutoSizeText(
-                          transaction!.category == "receive" ? "+ " + transaction!.amount! + " XDN" : "- " + transaction!.amount!.replaceFirst('-', '') + " XDN",
+                          transaction!.category == "receive" ? "+ ${transaction!.amount!} XDN" : "- ${transaction!.amount!.replaceFirst('-', '')} XDN",
                           style: GoogleFonts.montserrat(fontWeight: FontWeight.w300, fontSize: 16, color: transaction!.category! == "receive" ? Colors.white70 : Colors.white30),
                           minFontSize: 8,
                           maxLines: 1,

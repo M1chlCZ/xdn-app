@@ -733,7 +733,7 @@ class Dialogs {
           return DialogBody(
             header: AppLocalizations.of(context)!.alert,
             buttonLabel: 'OK',
-            oneButton: false,
+            oneButton: true,
             onTap: () {
               Navigator.of(context).pop(true);
             },
