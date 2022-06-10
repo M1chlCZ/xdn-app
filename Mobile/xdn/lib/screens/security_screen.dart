@@ -1,8 +1,5 @@
 import 'dart:io';
 
-import 'package:digitalnote/net_interface/interface.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/secure_storage.dart';
@@ -11,7 +8,6 @@ import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:digitalnote/globals.dart' as globals;
 import 'package:flutter_biometrics/flutter_biometrics.dart';
-import 'package:requests/requests.dart';
 
 import '../widgets/button_neu.dart';
 

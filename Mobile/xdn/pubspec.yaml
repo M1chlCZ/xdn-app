@@ -3,7 +3,7 @@ description: Konjungate App Wallet
 
 publish_to: 'none'
 
-version: 1.0.15+15
+version: 1.0.16+16
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -22,10 +22,6 @@ dependencies:
   google_fonts: any
   intl: ^0.17.0
   qr_code_scanner: ^1.0.0
-  requests:
-    git:
-      url: https://github.com/M1chlCZ/requests.git
-      ref: master
   qr_flutter: ^4.0.0
   sqflite: ^2.0.1
   material_design_icons_flutter: any
@@ -68,6 +64,7 @@ dependencies:
   avatar_glow: any
   styled_text: any
   flutter_displaymode: ^0.4.0
+  slide_to_act: any
   flutter_biometrics:
     git:
       url: https://github.com/M1chlCZ/flutter_biometrics.git

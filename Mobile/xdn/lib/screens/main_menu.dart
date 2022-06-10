@@ -5,6 +5,7 @@ import 'package:digitalnote/screens/messagescreen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
@@ -71,23 +72,23 @@ class _MainMenuNewState extends State<MainMenuNew> {
     });
   }
 
-  void gotoBalanceScreen() async {
+  void gotoBalanceScreen()  {
     Navigator.of(context).pushNamed(WalletScreen.route, arguments: "shit");
   }
 
-  void gotoContactScreen() async {
+  void gotoContactScreen()  {
     Navigator.of(context).pushNamed(AddressScreen.route);
   }
 
-  void gotoStakingScreen() async {
+  void gotoStakingScreen()  {
     Navigator.of(context).pushNamed(StakingScreen.route, arguments: "shit");
   }
 
-  void gotoMessagesScreen() async {
+  void gotoMessagesScreen()  {
     Navigator.of(context).pushNamed(MessageScreen.route, arguments: "shit");
   }
 
-  void gotoSettingsScreen() async {
+  void gotoSettingsScreen()  {
     Navigator.of(context).pushNamed(SettingsScreen.route, arguments: "shit");
     // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
   }

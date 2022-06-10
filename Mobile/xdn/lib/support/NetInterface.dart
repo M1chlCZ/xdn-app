@@ -938,7 +938,7 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      Response response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       //
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {

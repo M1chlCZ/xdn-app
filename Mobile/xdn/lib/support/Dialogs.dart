@@ -802,56 +802,39 @@ class Dialogs {
 
   static void openWaitBox(context) async {
     return showDialog(
-        barrierDismissible: false,
+        barrierDismissible: true,
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: Theme.of(context).konjHeaderColor,
-            shape: RoundedRectangleBorder(side: BorderSide(color: Theme.of(context).konjHeaderColor), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
-            contentPadding: const EdgeInsets.only(top: 0.01),
-            content: SizedBox(
-              width: 400.0,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
+          return DialogBody(
+            header: AppLocalizations.of(context)!.dl_wait,
+            noButtons: true,
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 5.0, left: 8.0, right: 8.0),
+              child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 300,
+                  child: const Padding(
+                    padding: EdgeInsets.all(40.0),
+                    child: Center(
                       child: SizedBox(
-                        width: 380,
-                        child: AutoSizeText(
-                          AppLocalizations.of(context)!.dl_wait,
-                          overflow: TextOverflow.ellipsis,
-                          minFontSize: 8.0,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 22.0, color: Colors.white70),
+                        width: 60,
+                        height: 60,
+                        child: CircularProgressIndicator(
+                          color: Colors.white70,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(
-                    height: 5.0,
-                  ),
-                  const Divider(
-                    color: Colors.grey,
-                    height: 4.0,
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.all(40.0),
-                    child: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: CircularProgressIndicator(
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          );
+            );
         });
   }
 
