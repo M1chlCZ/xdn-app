@@ -11,7 +11,6 @@ import '../support/ColorScheme.dart';
 import '../support/Contact.dart';
 import '../support/Dialogs.dart';
 import '../support/NetInterface.dart';
-import '../support/QCodeScanner.dart';
 import '../support/RoundButton.dart';
 import '../widgets/backgroundWidget.dart';
 
@@ -76,40 +75,40 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
     }).then((value) => Navigator.of(context).pop(_address));
   }
 
-  void _openQRScanner() async {
-    FocusScope.of(context).unfocus();
-
-    Future.delayed(const Duration(milliseconds: 200), () async {
-      var status = await Permission.camera.status;
-      if (await Permission.camera.isPermanentlyDenied) {
-        await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
-        openAppSettings();
-      } else if (status.isDenied) {
-        var r = await Permission.camera.request();
-        if (r.isGranted) {
-          Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-            return QScanWidget(
-              scanResult: (String s) {
-                _controllerAddress.text = s;
-              },
-            );
-          }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-            return FadeTransition(opacity: animation, child: child);
-          }));
-        }
-      } else {
-        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-          return QScanWidget(
-            scanResult: (String s) {
-              _controllerAddress.text = s;
-            },
-          );
-        }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-          return FadeTransition(opacity: animation, child: child);
-        }));
-      }
-    });
-  }
+  // void _openQRScanner() async {
+  //   FocusScope.of(context).unfocus();
+  //
+  //   Future.delayed(const Duration(milliseconds: 200), () async {
+  //     var status = await Permission.camera.status;
+  //     if (await Permission.camera.isPermanentlyDenied) {
+  //       await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
+  //       openAppSettings();
+  //     } else if (status.isDenied) {
+  //       var r = await Permission.camera.request();
+  //       if (r.isGranted) {
+  //         Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+  //           return QScanWidget(
+  //             scanResult: (String s) {
+  //               _controllerAddress.text = s;
+  //             },
+  //           );
+  //         }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+  //           return FadeTransition(opacity: animation, child: child);
+  //         }));
+  //       }
+  //     } else {
+  //       Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+  //         return QScanWidget(
+  //           scanResult: (String s) {
+  //             _controllerAddress.text = s;
+  //           },
+  //         );
+  //       }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+  //         return FadeTransition(opacity: animation, child: child);
+  //       }));
+  //     }
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +225,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                       width: 50,
                       color: Theme.of(context).konjHeaderColor,
                       onTap: () {
-                        _openQRScanner();
+                        // _openQRScanner(); //TODO
                       },
                       splashColor: Colors.white70,
                       icon: const Icon(

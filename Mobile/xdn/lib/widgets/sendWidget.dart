@@ -3,12 +3,13 @@ import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/support/auto_size_text_field.dart';
+import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../globals.dart' as globals;
 import '../support/AppDatabase.dart';
@@ -16,7 +17,6 @@ import '../support/ColorScheme.dart';
 import '../support/Contact.dart';
 import '../support/Dialogs.dart';
 import '../support/NetInterface.dart';
-import '../support/QCodeScanner.dart';
 import '../support/Utils.dart';
 
 class SendWidget extends StatefulWidget {
@@ -39,8 +39,6 @@ class SendWidgetState extends State<SendWidget> {
   final GlobalKey _textFieldKey = GlobalKey();
   final GlobalKey _textFieldAmountKey = GlobalKey();
 
-  double? _fontSize = textFieldTextStyle.fontSize;
-  double? _fontAmountSize = textFieldTextStyle.fontSize;
   double? _balance = 0.0;
 
   bool succ = false;
@@ -49,73 +47,6 @@ class SendWidgetState extends State<SendWidget> {
   bool sendView = true;
   Contact? _recipient;
 
-  void _onTextAddressChanged() {
-    try {
-      final inputWidth = _textFieldKey.currentContext!.size!.width - textFieldPadding.horizontal;
-
-      final textPainter = TextPainter(
-        textDirection: TextDirection.ltr,
-        text: TextSpan(
-          text: _controllerAddress.text,
-          style: textFieldTextStyle,
-        ),
-      );
-      textPainter.layout();
-
-      var textWidth = textPainter.width;
-      var fontSize = textFieldTextStyle.fontSize;
-
-      while (textWidth > inputWidth && fontSize! > 1.0) {
-        fontSize -= 0.5;
-        textPainter.text = TextSpan(
-          text: _controllerAddress.text,
-          style: textFieldTextStyle.copyWith(fontSize: fontSize),
-        );
-        textPainter.layout();
-        textWidth = textPainter.width;
-      }
-
-      setState(() {
-        _fontSize = fontSize;
-      });
-    } catch (e) {
-      // print(e);
-    }
-  }
-
-  void _onTextAmountChanged() {
-    try {
-      final inputWidth = _textFieldKey.currentContext!.size!.width - textFieldPadding.horizontal;
-
-      final textPainter = TextPainter(
-        textDirection: TextDirection.ltr,
-        text: TextSpan(
-          text: _controllerAmount.text,
-          style: textFieldTextStyle,
-        ),
-      );
-      textPainter.layout();
-
-      var textWidth = textPainter.width;
-      var fontSize = textFieldTextStyle.fontSize;
-
-      while (textWidth > inputWidth && fontSize! > 1.0) {
-        fontSize -= 0.5;
-        textPainter.text = TextSpan(
-          text: _controllerAmount.text,
-          style: textFieldTextStyle.copyWith(fontSize: fontSize),
-        );
-        textPainter.layout();
-        textWidth = textPainter.width;
-      }
-
-      setState(() {
-        _fontAmountSize = fontSize;
-      });
-    } catch (e) {
-      // print(e);
-    }
-  }
 
   void _sendConfirmation() async {
     Dialogs.openSendConfirmBox(context, _sendCoins);
@@ -229,8 +160,6 @@ class SendWidgetState extends State<SendWidget> {
   @override
   void initState() {
     super.initState();
-    _controllerAddress.addListener(_onTextAddressChanged);
-    _controllerAmount.addListener(_onTextAmountChanged);
     _getCurrentBalance();
     // fail = false;
     // succ = false;
@@ -250,41 +179,15 @@ class SendWidgetState extends State<SendWidget> {
 
   void _openQRScanner() async {
     FocusScope.of(context).unfocus();
-
-    Future.delayed(const Duration(milliseconds: 200), () async {
-      var status = await Permission.camera.status;
-      if (await Permission.camera.isPermanentlyDenied) {
-        if (mounted) await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
-        openAppSettings();
-      } else if (status.isDenied) {
-        var r = await Permission.camera.request();
-        if (r.isGranted) {
-          if (mounted) {
-            Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-              return QScanWidget(
-                scanResult: (String s) {
-                  _controllerAddress.text = s;
-                },
-              );
-            }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-              return FadeTransition(opacity: animation, child: child);
-            }));
-          }
-        }
-      } else {
-        if (mounted) {
-          Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-            return QScanWidget(
-              scanResult: (String s) {
-                _controllerAddress.text = s;
-              },
-            );
-          }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-            return FadeTransition(opacity: animation, child: child);
-          }));
-        }
-      }
-    });
+    Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+      return BarcodeScanner(
+        scanResult: (String s) {
+          _controllerAddress.text = s;
+        },
+      );
+    }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+      return FadeTransition(opacity: animation, child: child);
+    }));
   }
 
   @override
@@ -510,9 +413,11 @@ class SendWidgetState extends State<SendWidget> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: <Widget>[
                             Expanded(
-                              child: TextField(
+                              child: AutoSizeTextField(
                                 key: _textFieldAmountKey,
                                 controller: _controllerAmount,
+                                maxLines: 1,
+                                minFontSize: 8.0,
                                 keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
                                 maxLength: 40,
                                 inputFormatters: <TextInputFormatter>[

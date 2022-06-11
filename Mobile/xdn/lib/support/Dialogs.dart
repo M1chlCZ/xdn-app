@@ -2,9 +2,9 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:digitalnote/support/QCodeScanner.dart';
 import 'package:digitalnote/support/RoundButton.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
+import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1899,45 +1899,25 @@ class Dialogs {
       builder: (context, setState) {
         void _openQRScanner() async {
           FocusScope.of(context).unfocus();
-
-          Future.delayed(const Duration(milliseconds: 500), () async {
-            var status = await Permission.camera.status;
-            if (await Permission.camera.isPermanentlyDenied) {
-              await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
-              openAppSettings();
-            } else if (status.isDenied) {
-              var r = await Permission.camera.request();
-              if (r.isGranted) {
-                Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-                  return QScanWidget(
-                    scanResult: (String s) {
-                      controllerAddr.text = s;
-                    },
-                  );
-                }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-                  return FadeTransition(opacity: animation, child: child);
-                }));
-              }
-            } else {
-              Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-                return QScanWidget(
-                  scanResult: (String s) {
-                    controllerAddr.text = s;
-                  },
-                );
-              }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-                return FadeTransition(opacity: animation, child: child);
-              }));
-            }
-          });
-        }
+          Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+                    return BarcodeScanner(
+                      scanResult: (String s) {
+                        controllerAddr.text = s;
+                      },
+                    );
+                  }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+                    return FadeTransition(opacity: animation, child: child);
+                  }));
+                }
 
         void _saveUsers(String name, String addr) async {
           Dialogs.openWaitBox(context);
           await NetInterface.saveContact(name, addr, context);
           await NetInterface.getAddrBook();
           await AppDatabase().getContacts();
-          Navigator.of(context).pop();
+          Future.delayed(const Duration(milliseconds: 100),() {
+            Navigator.of(context).pop();
+          });
           Future.delayed(const Duration(milliseconds: 100),() {
             Navigator.of(context).pop();
           });
@@ -2138,6 +2118,6 @@ class Dialogs {
 
 extension StringExtension on String {
   String capitalize() {
-    return "${this[0].toUpperCase()}${this.substring(1)}";
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

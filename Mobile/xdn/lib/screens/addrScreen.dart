@@ -9,15 +9,12 @@ import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
-import 'package:digitalnote/screens/addrAddScreen.dart';
 import 'package:digitalnote/support/MessageGroup.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 
 import '../globals.dart' as globals;
 import '../screens/messageComposeScreen.dart';
 import '../support/AppDatabase.dart';
-import '../support/CardHeader.dart';
-import '../support/ColorScheme.dart';
 import '../support/Contact.dart';
 import '../support/Dialogs.dart';
 import '../support/Encrypt.dart';
@@ -326,7 +323,7 @@ class AddressScreenState extends State<AddressScreen> {
                         width: 50,
                         color: const Color(0xFF4B9B4C).withOpacity(0.8),
                         onTap: () {
-                          Dialogs.openUserAddBox(context);
+                          Dialogs.openUserAddBox(context).then((value) => cb.fetchContacts());
                           // Navigator.of(context)
                           //     .push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
                           //       return const AddressAddScreen();

@@ -94,13 +94,20 @@ class _MainMenuNewState extends State<MainMenuNew> {
   }
 
   Future<DaemonStatus> _getDaemonStatus() async {
-    Map<String, dynamic> m = {
-      "request": "getDaemonStatus",
-    };
+    try {
+      Map<String, dynamic> m = {
+            "request": "getDaemonStatus",
+          };
 
-    var req = await cm.get("/data", request: m);
-    DaemonStatus dm = DaemonStatus.fromJson(req);
-    return dm;
+      var req = await cm.get("/data", request: m);
+      DaemonStatus dm = DaemonStatus.fromJson(req);
+      return dm;
+    } catch (e) {
+      return DaemonStatus(
+          block: false,
+          blockStake: false,
+          stakingActive: false);
+    }
   }
 
 
