@@ -6,6 +6,7 @@ import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/percent_switch_widget.dart';
@@ -90,6 +91,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       } else {
         t.cancel();
       }
+    });
+    _controller.addListener(() {
+      _percentageKey.currentState!.deActivate();
     });
   }
 
@@ -973,18 +977,21 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     child: FractionallySizedBox(
                                 widthFactor: 0.98,
                                 child: Container(
-                                    padding: const EdgeInsets.only(left: 0.0, right: 0.0),
+                                    padding: const EdgeInsets.only(left: 9.0, right: 9.0),
                                     height: 50,
-                                    child: TextField(
+                                    child: AutoSizeTextField(
                                       controller: _controller,
                                       onChanged: (String text) async {
                                         // _searchUsers(text);
                                       },
+                                      maxLines: 1,
+                                      minFontSize: 5.0,
                                       keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
                                       inputFormatters: <TextInputFormatter>[
                                         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                                       ],
                                       textAlign: TextAlign.center,
+                                      textAlignVertical: TextAlignVertical.center,
                                       cursorColor: Colors.white54,
                                       style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, color: Colors.white),
                                       decoration: InputDecoration(
@@ -993,14 +1000,16 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                         enabledBorder: OutlineInputBorder(
                                             borderSide: const BorderSide(color: Colors.transparent, width: 1.0),
                                             borderRadius: BorderRadius.circular(5.0)),
-                                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                                        floatingLabelBehavior: FloatingLabelBehavior.auto,
                                         filled: true,
                                         fillColor: const Color(0xFF1A1E2F),
                                         hoverColor: Colors.white60,
                                         focusColor: Colors.white60,
+                                          isCollapsed: true,
+                                        contentPadding: EdgeInsets.only(bottom: 18.0, top: 10.0),
                                         labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
                                         hintText: AppLocalizations.of(context)!.st_enter_amount,
-                                        hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 19.0, color: Colors.white30),
+                                        hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white30),
                                       ),
                                     ),
                                 ),
@@ -1014,7 +1023,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                             ClipRRect(
                               borderRadius: const BorderRadius.all(Radius.circular(5.0)),
                               child: Container(
-                                color: Colors.black12,
+                                color: Colors.transparent,
                                 child: PercentSwitchWidget(
                                   key: _percentageKey,
                                   changePercent: _changePercentage,
@@ -1119,32 +1128,10 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                 ),
                               ),
                             ),
-                            Visibility(
-                              visible: _staking,
-                              child: Visibility(
-                                visible: endTime == 0 ? true : false,
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 0.0, bottom: 5.0),
-                                    child: SizedBox(
-                                      width: MediaQuery.of(context).size.width * 0.75,
-                                      child: AutoSizeText(
-                                        AppLocalizations.of(context)!.st_contains,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        minFontSize: 8,
-                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 11.0, color: Colors.white54),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 5.0,
-                            )
                           ],
+                        ),
+                        const SizedBox(
+                          height: 10.0,
                         ),
                       ],
                     ),
@@ -1182,24 +1169,21 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                     Visibility(
                       visible: endTime == 0 ? true : false,
                       child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                          child: SizedBox(
-                            height: 40,
-                            width: MediaQuery.of(context).size.width * 0.95,
-                            child: TextButton(
-                              onPressed: () {
-                                _unstakeCoins(0);
-                                // Dialogs.openUserQR(context);
-                              },
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.resolveWith((states) => getColorAll(states)),
-                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10.0), side: const BorderSide(color: Colors.transparent)))),
-                              child: Text(
-                                AppLocalizations.of(context)!.st_withdraw_all,
-                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
-                              ),
+                        child: SizedBox(
+                          height: 40,
+                          width: MediaQuery.of(context).size.width * 0.95,
+                          child: TextButton(
+                            onPressed: () {
+                              _unstakeCoins(0);
+                              // Dialogs.openUserQR(context);
+                            },
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.resolveWith((states) => getColorAll(states)),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0), side: const BorderSide(color: Colors.transparent)))),
+                            child: Text(
+                              AppLocalizations.of(context)!.st_withdraw_all,
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                             ),
                           ),
                         ),

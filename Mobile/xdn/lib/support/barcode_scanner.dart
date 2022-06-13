@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:digitalnote/support/barcode_overlay.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -32,12 +33,6 @@ class BarcodeScannerState extends State<BarcodeScanner> {
   @override
   void reassemble() {
     super.reassemble();
-    // if (kDebugMode) {
-    //   if (Platform.isAndroid) {
-    //         controller!.pauseCamera();
-    //       }
-    //   controller!.resumeCamera();
-    // }
   }
 
   @override

@@ -24,6 +24,7 @@ const serverIP = globals.SERVER_URL;
 
 class LoginPage extends StatefulWidget {
   static const String route = "/login";
+
   const LoginPage({Key? key}) : super(key: key);
 
   @override
@@ -67,7 +68,7 @@ class _LoginState extends State<LoginPage> {
     } else {
       if (mounted) {
         Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, "Failure!", "There are no matching credentials in KONJUNGATE database");
+        Dialogs.openAlertBox(context, "Failure!", "There are no matching credentials in DigitalNote database");
       }
       return null;
     }
@@ -93,7 +94,7 @@ class _LoginState extends State<LoginPage> {
       }).timeout(const Duration(seconds: 10));
 
       if (res.contentLength == 0) {
-        if(mounted) {
+        if (mounted) {
           Navigator.of(context).pop();
           Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, "No response from server");
         }
@@ -131,9 +132,9 @@ class _LoginState extends State<LoginPage> {
           }
         }
       } else if (res.statusCode == 409) {
-       if(mounted) Dialogs.open2FABox(context, _auth2FA);
+        if (mounted) Dialogs.open2FABox(context, _auth2FA);
       } else {
-        if(mounted) {
+        if (mounted) {
           var data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
           var error = '';
           if (data.toString() == 'User does not exists') {
@@ -180,7 +181,7 @@ class _LoginState extends State<LoginPage> {
   }
 
   _auth2FA(String? s) async {
-    if(!rr) {
+    if (!rr) {
       rr = true;
       attemptLogIn(context, login!, pass!, pin: s!);
     }
@@ -200,26 +201,26 @@ class _LoginState extends State<LoginPage> {
           children: [
             Column(
               children: [
-                Material(
-                  type: MaterialType.transparency,
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: Text(
-                      AppLocalizations.of(context)!.login,
-                      style: Theme.of(context).textTheme.headline1,
-                    ),
-                  ),
-                ),
                 const SizedBox(
                   height: 20,
                 ),
-                const Align(
+                Align(
                   alignment: Alignment.topCenter,
-                  child: Image(
-                    image: AssetImage('images/konjlogo.png'),
-                    fit: BoxFit.fitWidth,
-                    width: 130,
-                    alignment: Alignment.topCenter,
+                  child: Container(
+                    width: 320,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15.0),
+                      color: Colors.black12,
+                    ),
+                    child: const Center(
+                      child: Image(
+                        image: AssetImage('images/logo.png'),
+                        color: Colors.white70,
+                        fit: BoxFit.fitWidth,
+                        alignment: Alignment.topCenter,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -246,11 +247,11 @@ class _LoginState extends State<LoginPage> {
             padding: const EdgeInsets.all(25.0),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
               Padding(
-                padding: const EdgeInsets.only(top: 60.0),
+                padding: const EdgeInsets.only(top: 30.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15.0),
                   child: Container(
-                    color: Theme.of(context).konjHeaderColor,
+                    color: const Color(0xFF22283A).withOpacity(0.5),
                     child: AutofillGroup(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -270,9 +271,12 @@ class _LoginState extends State<LoginPage> {
                                 hintText: "${AppLocalizations.of(context)!.username} | ${AppLocalizations.of(context)!.email}",
                                 hintStyle: Theme.of(context).textTheme.subtitle1,
                                 contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                border: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                               ),
                               style: Theme.of(context).textTheme.bodyText2,
                               onEditingComplete: () {},
@@ -291,42 +295,15 @@ class _LoginState extends State<LoginPage> {
                                 hintText: AppLocalizations.of(context)!.password,
                                 hintStyle: Theme.of(context).textTheme.subtitle1,
                                 contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                border: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                               ),
                               style: Theme.of(context).textTheme.bodyText2,
                             ),
-                          ),
-                          const SizedBox(
-                            height: 5.0,
-                          ),
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.all(5.0),
-                            child: myLocale.languageCode == "fi"
-                                ? StyledText(
-                                    style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
-                                    textAlign: TextAlign.center,
-                                    text: AppLocalizations.of(context)!.login_can_use,
-                                    tags: {
-                                      'bold': StyledTextTag(style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white)),
-                                    },
-                                  )
-                                : RichText(
-                                    textAlign: TextAlign.center,
-                                    text: TextSpan(
-                                      text: AppLocalizations.of(context)!.login_can_use,
-                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
-                                      children: <TextSpan>[
-                                        TextSpan(text: ' wendy.network', style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, fontWeight: FontWeight.bold)),
-                                        TextSpan(
-                                          text: ' ${AppLocalizations.of(context)!.login.toString().toLowerCase()}',
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
-                                        )
-                                      ],
-                                    ),
-                                  ),
                           ),
                           const SizedBox(
                             height: 15.0,
@@ -339,7 +316,8 @@ class _LoginState extends State<LoginPage> {
                               child: ClipRRect(
                                 borderRadius: const BorderRadius.all(Radius.circular(15.0)),
                                 child: Material(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
                                   color: Colors.white,
                                   child: InkWell(
                                       splashColor: Theme.of(context).konjCardColor,
@@ -347,14 +325,17 @@ class _LoginState extends State<LoginPage> {
                                         var username = _usernameController.text;
                                         var password = _passwordController.text;
                                         if (username.isEmpty || password.isEmpty) {
-                                          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.fields_cant_empty);
+                                          Dialogs.openAlertBox(
+                                              context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.fields_cant_empty);
                                           return;
                                         }
                                         attemptLogIn(context, username, password);
                                       },
                                       child: Padding(
-                                          padding: const EdgeInsets.only(top: 5.0),
-                                          child: Text(AppLocalizations.of(context)!.log_in, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black)))),
+                                          padding: const EdgeInsets.only(top: 0.0),
+                                          child: Text(AppLocalizations.of(context)!.log_in,
+                                              textAlign: TextAlign.center,
+                                              style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black)))),
                                 ),
                               ),
                             ),
@@ -369,7 +350,8 @@ class _LoginState extends State<LoginPage> {
                                 child: ClipRRect(
                                     borderRadius: const BorderRadius.all(Radius.circular(15.0)),
                                     child: Material(
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
                                         color: Colors.black26,
                                         child: InkWell(
                                             splashColor: Theme.of(context).konjCardColor,
@@ -379,7 +361,9 @@ class _LoginState extends State<LoginPage> {
                                             child: Padding(
                                                 padding: const EdgeInsets.all(10.0),
                                                 child: Text(AppLocalizations.of(context)!.sign_up,
-                                                    textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70, fontSize: 14.0)))))),
+                                                    textAlign: TextAlign.center,
+                                                    style:
+                                                        Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70, fontSize: 14.0)))))),
                               )),
                         ],
                       ),

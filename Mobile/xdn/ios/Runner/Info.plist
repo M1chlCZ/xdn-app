@@ -13,7 +13,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>Konjungate</string>
+		<string>DigitalNote</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -31,6 +31,8 @@
 		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>NSFaceIDUsageDescription</key>
+		<string>User is allowed to authenticate with Face/Touch ID</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Camera is used for scanning QR code</string>
 		<key>NSDownloadsFolderUsageDescription</key>

@@ -19,11 +19,11 @@ class _StakingMenuWidgetState extends State<StakingMenuWidget> {
         decoration:  BoxDecoration(
           borderRadius: BorderRadius.all(const Radius.circular(15.0)),
           gradient: const LinearGradient(
-            colors: [Color(0xFF3D3E4B),
-              Color(0xFF262C44)
+            colors: [Color(0xFF313C5D),
+              Color(0xFF4A5EB0)
               ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
           ),
           boxShadow: [
             BoxShadow(
@@ -35,30 +35,40 @@ class _StakingMenuWidgetState extends State<StakingMenuWidget> {
           ],
           image: DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitWidth),
         ),
-        child: Center(
-            child: Container(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Staking',
-                style: Theme.of(context).textTheme.headline5,
+        child: Stack(
+          children: [
+            Center(
+                child: Container(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Staking',
+                    style: Theme.of(context).textTheme.headline5,
+                  ),
+                  const SizedBox(
+                    width: 70.0,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 30.0),
+                    child: SizedBox(
+                        width: 100.0,
+                        height: 100.0,
+                        child: Image.asset(
+                          "images/graph.png",
+                        )),
+                  ),
+                ],
               ),
-              const SizedBox(
-                width: 70.0,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 30.0),
-                child: SizedBox(
-                    width: 100.0,
-                    height: 100.0,
-                    child: Image.asset(
-                      "images/graph.png",
-                    )),
-              ),
-            ],
-          ),
-        )),
+            )),
+            Padding(
+              padding: const EdgeInsets.only(left:8.0, top: 8.0),
+              child: SizedBox(
+                  width: 85,
+                  child: Image.asset("images/staking_big.png")),
+            )
+          ],
+        ),
       ),
     );
   }

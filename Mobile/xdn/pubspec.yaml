@@ -1,9 +1,9 @@
 name: digitalnote
-description: Konjungate App Wallet
+description: DigitalNode App Wallet
 
 publish_to: 'none'
 
-version: 1.0.19+19
+version: 1.0.21+21
 
 environment:
   sdk: ">=2.14.0 <3.0.0"

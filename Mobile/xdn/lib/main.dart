@@ -21,13 +21,11 @@ import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
 import 'globals.dart' as globals;
 import 'screens/loginscreen.dart';
-import 'screens/mainMenuScreen.dart';
 import 'support/MaterialColorGenerator.dart';
 import 'widgets/BackgroundWidget.dart';
 
@@ -179,7 +177,7 @@ class MyAppState extends State<MyApp> {
         if (snapshot.hasData) {
           return MaterialApp(
             locale: _locale,
-            title: 'Konjungate APP',
+            title: 'DigitalNote APP',
             onGenerateTitle: (BuildContext context) =>
             AppLocalizations.of(context)!.appTitle,
             onGenerateRoute:  generateRoute,

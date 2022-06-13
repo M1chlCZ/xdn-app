@@ -1,8 +1,8 @@
 {
   "@@locale": "ru",
-  "appName": "Konjungate",
-  "appTitle": "Konjungate",
-  "description": "Konjungate app",
+  "appName": "DigitalNote",
+  "appTitle": "DigitalNote",
+  "description": "DigitalNote app",
   "yes": "да",
   "no": "нет",
   "save": "Сохранить",

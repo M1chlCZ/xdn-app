@@ -77,7 +77,7 @@ class TransactionView extends StatelessWidget {
     return Opacity(
       opacity: transaction!.confirmation! < 2 ? 0.5 : 1.0,
       child: Card(
-          elevation: 0,
+          elevation: 3,
           color: Colors.transparent,
           margin: const EdgeInsets.only(bottom: 2.0),
           clipBehavior: Clip.antiAlias,
@@ -96,7 +96,8 @@ class TransactionView extends StatelessWidget {
               height: 64.0,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF423D70), Color(0xFF5D57A6)],
+                  colors: [Color(0xFF313C5D),
+                    Color(0xFF4E5E9F)],
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),

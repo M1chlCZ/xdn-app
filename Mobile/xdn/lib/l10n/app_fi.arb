@@ -1,8 +1,8 @@
 {
   "@@locale": "fi",
-  "appName": "Konjungate",
-  "appTitle": "Konjungate",
-  "description": "KONJUNGATE sovellusta",
+  "appName": "DigitalNote",
+  "appTitle": "DigitalNote",
+  "description": "DigitalNote sovellusta",
 
   "yes": "Kyllä",
   "no": "Ei",

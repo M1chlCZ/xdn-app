@@ -90,13 +90,24 @@ class _RegisterState extends State<RegisterScreen> {
             child: Stack(children: [
           Column(
             children: [
-              const Align(
+              const SizedBox(height: 30.0,),
+              Align(
                 alignment: Alignment.topCenter,
-                child: Image(
-                  image: AssetImage('images/konjlogo.png'),
-                  fit: BoxFit.fitWidth,
-                  width: 140,
-                  alignment: Alignment.topCenter,
+                child: Container(
+                  width: 320,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15.0),
+                    color: Colors.black12,
+                  ),
+                  child: const Center(
+                    child: Image(
+                      image: AssetImage('images/logo.png'),
+                      color: Colors.white70,
+                      fit: BoxFit.fitWidth,
+                      alignment: Alignment.topCenter,
+                    ),
+                  ),
                 ),
               ),
               Padding(
@@ -105,7 +116,7 @@ class _RegisterState extends State<RegisterScreen> {
                   type: MaterialType.transparency,
                   child: Text(
                     AppLocalizations.of(context)!.registration,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 32.0),
+                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 24.0),
                   ),
                 ),
               ),
@@ -124,9 +135,9 @@ class _RegisterState extends State<RegisterScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(top: 250.0, left: 15, right: 15),
                         child: Container(
-                          margin: const EdgeInsets.only(top: 0.0),
+                          margin: const EdgeInsets.only(top: 40.0),
                           padding: const EdgeInsets.only(top: 10.0),
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Theme.of(context).konjHeaderColor),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: const Color(0xFF22283A).withOpacity(0.5)),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -239,44 +250,7 @@ class _RegisterState extends State<RegisterScreen> {
                                   style: Theme.of(context).textTheme.bodyText2,
                                 ),
                               ),
-                              Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.all(10.0),
-                                child: myLocale.countryCode == "FI"
-                                    ? StyledText(
-                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
-                                        textAlign: TextAlign.center,
-                                        text: '${AppLocalizations.of(context)!.wendy_first} ${AppLocalizations.of(context)!.description} \n \n ${AppLocalizations.of(context)!.wendy_second} ${AppLocalizations.of(context)!.wendy_third} ${AppLocalizations.of(context)!.wendy_fourth}. \n \n ${AppLocalizations.of(context)!.wendy_fifth}.',
-                                        tags: {
-                                          'bold': StyledTextTag(
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline5!
-                                                  .copyWith(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white)),
-                                        },
-                                      )
-                                    : RichText(
-                                        textAlign: TextAlign.center,
-                                        text: TextSpan(
-                                          text:
-                                              '${AppLocalizations.of(context)!.wendy_first} ${AppLocalizations.of(context)!.description} \n \n ',
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
-                                          children: <TextSpan>[
-                                            TextSpan(
-                                              text: AppLocalizations.of(context)!.wendy_second,
-                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
-                                            ),
-                                            TextSpan(
-                                                text: ' wendy.network \n',
-                                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, fontWeight: FontWeight.bold)),
-                                            TextSpan(
-                                              text: ' ${AppLocalizations.of(context)!.wendy_third} \n ${AppLocalizations.of(context)!.wendy_fourth}. \n \n ${AppLocalizations.of(context)!.wendy_fifth}.',
-                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                              ),
+                              const SizedBox(height: 20.0,),
                               Padding(
                                   padding: const EdgeInsets.only(top: 5.0, bottom: 10.0),
                                   child: SizedBox(
@@ -338,7 +312,7 @@ class _RegisterState extends State<RegisterScreen> {
                                         )),
                                   )),
                               const SizedBox(
-                                height: 5.0,
+                                height: 15.0,
                               )
                             ],
                           ),
@@ -354,7 +328,7 @@ class _RegisterState extends State<RegisterScreen> {
 
             child: ClipOval(
               child: Material(
-                color: Colors.white, // button color
+                color: const Color(0xFF22283A).withOpacity(0.5), // button color
                 child: InkWell(
                   splashColor: Colors.white.withOpacity(0.8), // splash color
                   onTap: () {
@@ -363,7 +337,7 @@ class _RegisterState extends State<RegisterScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const <Widget>[
-                      Icon(Icons.arrow_back), // icon
+                      Icon(Icons.arrow_back, color: Colors.white70,), // icon
                     ],
                   ),
                 ),

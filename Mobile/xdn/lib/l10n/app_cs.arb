@@ -1,9 +1,9 @@
 {
   "@@locale": "cs",
 
-  "appName": "Konjungate",
-  "appTitle": "Konjungate",
-  "description": "Konjungate APP",
+  "appName": "DigitalNote",
+  "appTitle": "DigitalNote",
+  "description": "DigitalNote APP",
   "yes" : "Ano",
   "no" : "Ne",
   "save" : "Uložit",

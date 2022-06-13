@@ -34,7 +34,8 @@ class BalanceCardState extends State<BalanceCard> {
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(15.0)),
             gradient: LinearGradient(
-              colors: [Color(0xFF423D70), Color(0xFF5D57A6)],
+              colors: [Color(0xFF313C5D),
+                Color(0xFF5469BE)],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),

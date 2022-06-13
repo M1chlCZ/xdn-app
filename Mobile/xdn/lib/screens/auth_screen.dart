@@ -117,8 +117,8 @@ class AuthScreenState extends State<AuthScreen> {
                     fingerPrintImage: ShaderMask(
                       shaderCallback: (bounds) {
                         return const LinearGradient(colors: [
-                          Color(0xFFFFD301),
-                          Color(0xFF4C4B31),
+                          Color(0xFF313C5D),
+                          Color(0xFF4A5EB0),
                         ]).createShader(bounds);
                       },
                       blendMode: BlendMode.srcATop,

@@ -17,7 +17,8 @@ class SmallMenuTile extends StatelessWidget {
           decoration:  BoxDecoration(
             borderRadius: const BorderRadius.all( Radius.circular(15.0)),
             gradient: const LinearGradient(
-              colors: [ Color(0xFF3D3E4B),  Color(0xFF262C44),
+              colors: [Color(0xFF313C5D),
+                Color(0xFF4255A6)
                 ],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
@@ -30,15 +31,24 @@ class SmallMenuTile extends StatelessWidget {
                 offset: const Offset(5, 3), // changes position of shadow
               ),
             ],
-            image: const DecorationImage(image: const AssetImage("images/card.png"), fit: BoxFit.fitHeight),
+            image: const DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitHeight),
           ),
-          child: Center(
-              child: AutoSizeText(
-            name,
-            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
-                minFontSize: 8.0,
-                maxLines: 1,
-          ))),
+          child: Stack(
+            children: [
+              Center(
+                  child: AutoSizeText(
+                name,
+                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                    minFontSize: 8.0,
+                    maxLines: 1,
+              )),
+              Center(
+                child: SizedBox(
+                    width: 90,
+                    child: Image.asset("images/${name.toLowerCase()}_big.png")),
+              )
+            ],
+          )),
     );
   }
 }

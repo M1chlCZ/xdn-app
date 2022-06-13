@@ -5,7 +5,7 @@ import 'package:digitalnote/screens/messagescreen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
-import 'package:digitalnote/support/Dialogs.dart';
+import 'package:digitalnote/support/LifecycleWatcherState.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
@@ -17,7 +17,6 @@ import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
-import 'package:get_it/get_it.dart';
 import '../globals.dart' as globals;
 
 class MainMenuNew extends StatefulWidget {
@@ -30,9 +29,9 @@ class MainMenuNew extends StatefulWidget {
   State<MainMenuNew> createState() => _MainMenuNewState();
 }
 
-class _MainMenuNewState extends State<MainMenuNew> {
+class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
-  final GlobalKey<DetailScreenState> _walletKey = GlobalKey();
+  // final GlobalKey<DetailScreenState> _walletKey = GlobalKey();
   // FCM fmc = GetIt.I.get<FCM>();
   ComInterface cm = ComInterface();
 
@@ -60,10 +59,6 @@ class _MainMenuNewState extends State<MainMenuNew> {
   void _getLocale() async {
     var timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
     await SecureStorage.write(key: globals.LOCALE, value: timeZoneName);
-
-    // context.findAncestorWidgetOfExactType<MaterialApp>()?.supportedLocales.forEach((element) {
-    //   print(element.toString());
-    // });
   }
 
   void refreshBalance() {
@@ -73,7 +68,7 @@ class _MainMenuNewState extends State<MainMenuNew> {
   }
 
   void gotoBalanceScreen()  {
-    Navigator.of(context).pushNamed(WalletScreen.route, arguments: "shit");
+    Navigator.of(context).pushNamed(WalletScreen.route, arguments: "shit").then((value) => refreshBalance());
   }
 
   void gotoContactScreen()  {
@@ -151,7 +146,7 @@ class _MainMenuNewState extends State<MainMenuNew> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            'Good Morning',
+                            _getDatetimeHeadline(),
                             style: Theme
                                 .of(context)
                                 .textTheme
@@ -338,5 +333,36 @@ class _MainMenuNewState extends State<MainMenuNew> {
         ],
       ),
     );
+  }
+
+  @override
+  void onDetached() {
+  }
+
+  @override
+  void onInactive() {
+  }
+
+  @override
+  void onPaused() {
+  }
+
+  @override
+  void onResumed() {
+    refreshBalance();
+  }
+
+  String _getDatetimeHeadline() {
+    DateTime d = DateTime.now();
+    var hour = d.hour;
+    if (hour > 0 && hour < 6) {
+      return 'Good Night';
+    }else if (hour > 6 && hour < 12) {
+      return 'Good Morning';
+    }else if (hour > 12 && hour < 18) {
+      return 'Good Afternoon';
+    }else {
+      return 'Good Evening';
+    }
   }
 }
