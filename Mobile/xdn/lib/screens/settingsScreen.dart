@@ -5,7 +5,9 @@ import 'dart:typed_data';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
+import 'package:digitalnote/screens/blockchain_info.dart';
 import 'package:digitalnote/screens/security_screen.dart';
+import 'package:digitalnote/support/get_info.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:external_path/external_path.dart';
@@ -47,12 +49,14 @@ class _SettingsState extends State<SettingsScreen> {
   var twoFactor = false;
   var settingUP = false;
   var run = false;
+  GetInfo? getInfo;
 
   @override
   void initState() {
     super.initState();
     _initPackageInfo();
     _getTwoFactor();
+    _getInfoGet();
   }
 
   _getTwoFactor() async {
@@ -70,6 +74,10 @@ class _SettingsState extends State<SettingsScreen> {
         print(e);
       }
     }
+  }
+  _getInfoGet() async {
+    getInfo = await NetInterface.getInfo();
+    setState((){});
   }
 
   void _saveFile() async {
@@ -421,7 +429,7 @@ class _SettingsState extends State<SettingsScreen> {
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
-                                        onTap: () async {
+                                        onTap: () {
                                           Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
                                         },
                                         // button pressed
@@ -444,6 +452,59 @@ class _SettingsState extends State<SettingsScreen> {
                                               child: AutoSizeText(
                                                 AppLocalizations.of(context)!.set_priv_key,
                                                 style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                                minFontSize: 8,
+                                                maxLines: 1,
+                                                textAlign: TextAlign.start,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Divider(
+                                height: 5.0,
+                                color: Colors.transparent,
+                              ),
+                              SizedBox(
+                                height: 60,
+                                width: MediaQuery.of(context).size.width - 20.0,
+                                child: Card(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    child: Material(
+                                      child: InkWell(
+                                        splashColor: Colors.white54,
+                                        // splash color
+                                        onTap: ()  {
+                                          Navigator.of(context).pushNamed(BlockInfoScreen.route);
+                                          // Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
+                                        },
+                                        // button pressed
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.only(left: 15.0),
+                                              child: Icon(
+                                                FontAwesomeIcons.info,
+                                                color: Colors.white70,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 15.0,
+                                            ),
+                                            SizedBox(
+                                              width: MediaQuery.of(context).size.width - 100.0,
+                                              child: const AutoSizeText(
+                                                "Blockchain info", //TODO blockchain info translation
+                                                style: TextStyle(fontSize: 20, color: Colors.white70),
                                                 minFontSize: 8,
                                                 maxLines: 1,
                                                 textAlign: TextAlign.start,
@@ -589,6 +650,17 @@ class _SettingsState extends State<SettingsScreen> {
                                               ),
                                               applicationVersion: packageInfo!.version,
                                               children: [
+                                                Text(
+                                                  'Daemon version:',
+                                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                ),
+                                                Text(
+                                                  getInfo!.version ?? 'unknown',
+                                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                ),
+                                                const SizedBox(
+                                                  height: 10,
+                                                ),
                                                 Text(
                                                   'Developed by:',
                                                   style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),

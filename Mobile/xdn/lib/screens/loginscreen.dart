@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/screens/main_menu.dart';
+import 'package:digitalnote/support/NetInterface.dart';
+import 'package:digitalnote/support/get_info.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -39,11 +42,23 @@ class _LoginState extends State<LoginPage> {
   String? login;
   String? pass;
   var rr = false;
+  GetInfo? getInfo;
 
   void _checkSendEmail(String nickname) {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
     _attemptResetPass(nickname);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getInfoGet();
+  }
+
+  _getInfoGet() async {
+    getInfo = await NetInterface.getInfo();
+    setState((){});
   }
 
   Future<String?> _attemptResetPass(String nickname) async {
@@ -365,6 +380,31 @@ class _LoginState extends State<LoginPage> {
                                                     style:
                                                         Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70, fontSize: 14.0)))))),
                               )),
+                          Container(
+                            width: 85,
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white10),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 2.0, bottom: 2.0),
+                              child: Row(
+                                children: [
+                                  AutoSizeText(
+                                    "Server status",
+                                    style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                    minFontSize: 2.0,
+                                  ),
+                                  const SizedBox(
+                                    width: 5.0,
+                                  ),
+                                  Icon(
+                                    Icons.circle,
+                                    size: 10.0,
+                                    color: getInfo != null ? Colors.green : Colors.red,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10.0,)
                         ],
                       ),
                     ),

@@ -66,7 +66,7 @@ class DetailScreenState extends State<WalletScreen>
         AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
     sendTween = Tween<Offset>(begin: const Offset(0, 0), end: const Offset(0, 0.2)).animate(
-        CurvedAnimation(parent: animationSendController!, curve: Curves.easeOut));
+        CurvedAnimation(parent: animationSendController!, curve: Curves.decelerate));
 
     opacityTween = Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(parent: animationSendController!, curve: Curves.easeOut));

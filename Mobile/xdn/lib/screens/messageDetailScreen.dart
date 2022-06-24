@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/bloc/messages_bloc.dart';
@@ -15,7 +14,6 @@ import 'package:get_it/get_it.dart';
 import '../globals.dart' as globals;
 import '../support/AppDatabase.dart';
 import '../support/CardHeader.dart';
-import '../support/ColorScheme.dart';
 import '../support/DateSeparator.dart';
 import '../support/Dialogs.dart';
 import '../support/LifecycleWatcherState.dart';
@@ -36,14 +34,13 @@ class MessageDetailScreen extends StatefulWidget {
 }
 
 class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen> {
-  Future<List<dynamic>?>? _messages;
   FCM fmc = GetIt.I.get<FCM>();
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
+  final MessagesBloc mBlock = MessagesBloc();
   String? _addr;
   String? _lastDate;
   var _running = true;
-  var _busy = false;
   var _circleVisible = false;
   final _tip = true;
   Widget? _switchWidget;
@@ -57,11 +54,12 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   @override
   void initState() {
     super.initState();
-    _messages = _getMessages();
-    _checkForMessages();
+    // _messages = _getMessages();
+    _getMessages();
+    _getBalance();
     timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       if (_running == true) {
-        _checkForMessages();
+        mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
       }
     });
     _switchWidget = _tipIcon();
@@ -76,9 +74,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         });
       }
     });
+
     fmc.setNotifications();
     fmc.bodyCtlr.stream.listen((event) {
-      notReceived(asdf: event);
+      notReceived(ev: event);
     });
   }
 
@@ -91,63 +90,28 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   @override
   void dispose() {
+    mBlock.dispose();
     timer?.cancel();
     super.dispose();
   }
 
-  Future<List<dynamic>> _getMessages() async {
-    Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
-    // var sjson = json.decode(ss!);
-    _balance = (double.parse(ss!["balance"]));
+  _getMessages() async {
     _addr = await SecureStorage.read(key: globals.ADR);
-    var s = await AppDatabase().getMessages(_addr!, widget.mgroup.sentAddressOrignal!);
-    return s!;
+    mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
   }
 
-  Future<void> notReceived({String? asdf}) async {
-    print("NOT RECEIVED");
-    print(asdf);
+  _getBalance() async {
+    Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
+    _balance = (double.parse(ss?["balance"]));
+  }
+
+  Future<void> notReceived({String? ev}) async {
     _withoutNot = false;
-    // _checkForMessages();
+    // mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
     if (_running) {
       Future.delayed(const Duration(milliseconds: 10), () {
-        _checkForMessages();
+        mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
       });
-    }
-  }
-
-  void _iconReset() {
-    setState(() {
-      if (_textController.text.isEmpty) {
-        setState(() {
-          if (!_circleVisible) _switchWidget = _tipIcon();
-        });
-      } else {
-        setState(() {
-          if (!_circleVisible) _switchWidget = _sendIcon();
-        });
-      }
-    });
-  }
-
-  void _checkForMessages() async {
-    _addr = await SecureStorage.read(key: globals.ADR);
-    if (_busy) return;
-    setState(() {
-      _busy = true;
-      _messages = null;
-    });
-    try {
-      int idMax = await AppDatabase().getMessageGroupMaxID(_addr, widget.mgroup.sentAddressOrignal);
-      await NetInterface.saveMessages(widget.mgroup.sentAddressOrignal!, idMax);
-      setState(() {
-        _messages = AppDatabase().getMessages(_addr!, widget.mgroup.sentAddressOrignal!);
-        _circleVisible = false;
-        _iconReset();
-        _busy = false;
-      });
-    } catch (e) {
-      print(e);
     }
   }
 
@@ -172,7 +136,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         if (_withoutNot) {
           setState(() {
             _withoutNot = false;
-            _checkForMessages();
+            mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
           });
         }
       });
@@ -192,7 +156,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       ));
       return;
     } else if (double.parse(amount) > _balance) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
       return;
     } else if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
@@ -205,7 +169,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       int _i = await NetInterface.sendContactCoins(amount, name, addr);
       var _nick = await SecureStorage.read(key: globals.NICKNAME);
       if (_i == 1) {
-        var _text = _nick! + " " + AppLocalizations.of(context)!.message_tipped + " " + widget.mgroup.sentAddr! + " " + amount.toString() + " KONJ!";
+        var _text = "${_nick!} ${AppLocalizations.of(context)!.message_tipped} ${widget.mgroup.sentAddr!} $amount KONJ!";
         await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, _text, _replyid);
         setState(() {
           _switchWidget = _sendWait();
@@ -217,7 +181,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
           if (_withoutNot) {
             setState(() {
               _withoutNot = false;
-              _checkForMessages();
+              mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
             });
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(AppLocalizations.of(context)!.message_not_warning),
@@ -265,69 +229,73 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        FutureBuilder(
-                            future: _messages,
+                        StreamBuilder<ApiResponse<List<dynamic>>>(
+                            stream: mBlock.coinsListStream,
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
-                                var data = snapshot.data as List<dynamic>?;
-                                return Flexible(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 5.0, right: 0.0),
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                                      child: ListView.builder(
-                                          reverse: true,
-                                          controller: _scrollController,
-                                          shrinkWrap: true,
-                                          itemCount: data!.length,
-                                          itemBuilder: (BuildContext context, int index) {
-                                            dynamic node = data[index];
-                                            if (node is DateSeparator) {
-                                              return Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Container(
-                                                    margin: const EdgeInsets.only(top: 30.0, bottom: 10.0),
-                                                    decoration: const BoxDecoration(
-                                                        color: Color.fromRGBO(44, 44, 53, 1.0),
-                                                        borderRadius: BorderRadius.all(Radius.circular(32.0))),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.all(15.0),
-                                                      child: Text(
-                                                        node.lastMessage!,
-                                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70, fontSize: 14.0),
+                                switch (snapshot.data!.status) {
+                                  case Status.COMPLETED:
+                                    var mData = snapshot.data!.data as List<dynamic>;
+                                    return Flexible(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                                        child: ClipRRect(
+                                          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                                          child: ListView.builder(
+                                              reverse: true,
+                                              controller: _scrollController,
+                                              shrinkWrap: true,
+                                              itemCount: mData.length,
+                                              itemBuilder: (BuildContext context, int index) {
+                                                dynamic mNode = mData[index];
+                                                if (mNode is DateSeparator) {
+                                                  return Row(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Container(
+                                                        margin: const EdgeInsets.only(top: 30.0, bottom: 10.0),
+                                                        decoration: const BoxDecoration(color: Color.fromRGBO(44, 44, 53, 1.0), borderRadius: BorderRadius.all(Radius.circular(32.0))),
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.all(15.0),
+                                                          child: Text(
+                                                            mNode.lastMessage!,
+                                                            style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white70, fontSize: 14.0),
+                                                          ),
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            } else {
-                                              return MessageBubble(
-                                                key: Key((node as Message).id.toString()),
-                                                messages: data[index],
-                                                userMessage: data[index].sentAddr == _addr ? true : false,
-                                                replyCallback: _reply,
-                                                // func3: _refreshUsers,
-                                              );
-                                            }
-                                          }),
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                return const Padding(
-                                  padding: EdgeInsets.only(bottom: 200.0),
-                                  child: SizedBox(
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.0,
+                                                    ],
+                                                  );
+                                                } else {
+                                                  return MessageBubble(
+                                                    key: Key((mNode as Message).id.toString()),
+                                                    messages: mData[index],
+                                                    userMessage: mData[index].sentAddr == _addr ? true : false,
+                                                    replyCallback: _reply,
+                                                    // func3: _refreshUsers,
+                                                  );
+                                                }
+                                              }),
+                                        ),
                                       ),
-                                      height: 50.0,
-                                      width: 50.0),
-                                );
+                                    );
+                                  case Status.LOADING:
+                                    return const Padding(
+                                      padding: EdgeInsets.only(bottom: 200.0),
+                                      child: SizedBox(
+                                          height: 50.0,
+                                          width: 50.0,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2.0,
+                                          )),
+                                    );
+                                  case Status.ERROR:
+                                    return Container();
+                                }
+                              } else {
+                                return Container();
                               }
                             }),
-
                         const SizedBox(height: 10.0),
                         Wrap(children: [
                           Container(
@@ -357,7 +325,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                               width: 15.0,
                                             ),
                                             Text(
-                                              AppLocalizations.of(context)!.message_reply_to + ': ',
+                                              '${AppLocalizations.of(context)!.message_reply_to}: ',
                                               style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                                             ),
                                             const SizedBox(
@@ -419,6 +387,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             LengthLimitingTextInputFormatter(720),
                                           ],
                                           textAlign: TextAlign.left,
+                                          cursorColor: Colors.white70,
                                           style: Theme.of(context)
                                               .textTheme
                                               .headline5!
@@ -562,7 +531,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   @override
   void onResumed() {
-    _checkForMessages();
+    mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
     Future.delayed(const Duration(milliseconds: 500), () {
       _running = true;
     });

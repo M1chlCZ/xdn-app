@@ -4,6 +4,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/support/get_info.dart';
+import 'package:digitalnote/support/summary.dart' as sum;
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -348,26 +350,60 @@ class NetInterface {
       ComInterface ci = ComInterface();
       List rt = await ci.get("/data", request: m, debug: true, type: ComInterface.typePlain);
       List<MessageGroup> list = rt.map((data) => MessageGroup.fromJson(data)).toList();
-      // List<MessageGroup>? l = await compute(parseMessagesGroup, rt.body);
       await AppDatabase().addMessageGroup(list);
-      // List<MessageGroup>? l = rt.map((data) => MessageGroup.fromJson(data)).toList();
-      // await AppDatabase().addMessageGroup(l!);
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
-      // if (response.statusCode == 200) {
-      //   List<MessageGroup>? l = await compute(parseMessagesGroup, response.body);
-      //   await AppDatabase().addMessageGroup(l!);
-      // }
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
       if (kDebugMode) print('No internet');
     } catch (e) {
       if (kDebugMode) print(e.toString());
+    }
+  }
+
+  static Future<GetInfo?> getInfo() async {
+    try {
+      // ComInterface ci = ComInterface();
+      // Map<String, dynamic> rt = await ci.get("/getinfo", request: {}, debug: true);
+      final response = await http
+          .get(
+        Uri.parse('${globals.SERVER_URL}/getinfo'),
+        headers: {"Content-Type": "application/json"},
+      )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        print(response.body);
+        var gi = GetInfo.fromJson(jsonDecode(response.body));
+        return gi;
+      }else{
+        return null;
+      }
+    } on TimeoutException catch (_) {
+      if (kDebugMode) print('Service unreachable');
+      return null;
+    } on SocketException catch (_) {
+      if (kDebugMode) print('No internet');
+      return null;
+    } catch (e) {
+      if (kDebugMode) print(e.toString());
+      return null;
+    }
+  }
+
+  static Future<sum.Sumry?> getSummary() async {
+    try {
+      http.Response rt = await http.get(Uri.parse("https://xdn-explorer.com/ext/summary"));
+      var js = jsonDecode(rt.body);
+      var gi = sum.Sumry.fromJson(js);
+      return gi;
+    } on TimeoutException catch (_) {
+      if (kDebugMode) print('Service unreachable');
+      return null;
+    } on SocketException catch (_) {
+      if (kDebugMode) print('No internet');
+      return null;
+    } catch (e) {
+      if (kDebugMode) print(e.toString());
+      return null;
     }
   }
 

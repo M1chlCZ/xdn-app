@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 class MessagesBloc {
   final MessagesEndpoint _balanceList = MessagesEndpoint();
+  bool first = true;
   List<dynamic>? _messages;
 
   StreamController<ApiResponse<List<dynamic>>>? _coinListController;
@@ -25,7 +26,10 @@ class MessagesBloc {
 
   fetchMessages(String addr) async {
     try {
-      coinsListSink.add(ApiResponse.loading('Fetching All Messages'));
+      if(first) {
+        coinsListSink.add(ApiResponse.loading('Fetching All Messages'));
+        first = false;
+      }
       _messages = await _balanceList.getMessages(addr);
       if(_messages == null || _messages!.isEmpty) {
         await _balanceList.refreshMessages(addr);

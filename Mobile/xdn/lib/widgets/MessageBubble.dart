@@ -332,7 +332,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                                   ),
                                   Flexible(
                                     child: SimpleRichText(_replyText!,
-                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, fontWeight: FontWeight.w600, color: Colors.white54, fontStyle: FontStyle.italic),
+                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, fontWeight: FontWeight.bold, color: Colors.white, fontStyle: FontStyle.italic),
                                         textOverflow: TextOverflow.ellipsis),
                                   ),
                                 ],

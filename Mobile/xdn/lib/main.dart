@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
+import 'package:digitalnote/screens/blockchain_info.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/screens/messagescreen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
@@ -37,7 +38,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     FlutterAppBadger.updateBadgeCount(1);
   }
   SecureStorage.write(key: globals.APP_NOT, value: "yes");
-  print("Handling a background message: ${message.messageId}");
+  debugPrint("Handling a background message: ${message.messageId}");
 }
 
 void main() async {
@@ -45,7 +46,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
- // await Firebase.initializeApp();
+  // await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await SystemChrome.setPreferredOrientations(
     [
@@ -78,11 +79,12 @@ class MyAppState extends State<MyApp> {
   var ms = '';
 
   Future<String> get jwtOrEmpty async {
+    await precache();
     await getPin();
-       var mJWT = await SecureStorage.read(key: globals.TOKEN);
+    var mJWT = await SecureStorage.read(key: globals.TOKEN);
     if (mJWT == null) {
       return LoginPage.route;
-    }else{
+    } else {
       var jwt = mJWT.split(".");
       if (jwt.length != 3) {
         return LoginPage.route;
@@ -99,7 +101,6 @@ class MyAppState extends State<MyApp> {
         }
       }
     }
-
   }
 
   Future getPinFuture() async {
@@ -107,19 +108,23 @@ class MyAppState extends State<MyApp> {
     return s;
   }
 
+  precache() async {
+    await precacheImage(const AssetImage('images/logo.png'), context);
+    await precacheImage(const AssetImage('images/logo_send.png'), context);
+    await precacheImage(const AssetImage('images/wallet_big.png'), context);
+    await precacheImage(const AssetImage('images/staking_big.png'), context);
+    await precacheImage(const AssetImage('images/messages_big.png'), context);
+    await precacheImage(const AssetImage('images/contacts_big.png'), context);
+    await precacheImage(const AssetImage('images/settings_big.png'), context);
+    await precacheImage(const AssetImage('images/card.png'), context);
+  }
+
   getPin() async {
     final String? pin = await getPinFuture();
     if (pin != null) pinUsed = true;
   }
 
-
   void _getSetLang() async {
-    if (mounted) await precacheImage(const AssetImage('images/wendyicon.png'), context);
-    if (mounted) await precacheImage(const AssetImage('images/menubutton.png'), context);
-    if (mounted) await precacheImage(const AssetImage('images/konjicon.png'), context);
-    if (mounted) await precacheImage(const AssetImage('images/mainmenubg.png'), context);
-    if (mounted) await precacheImage(const AssetImage('images/QR.png'), context);
-
     String? ll = await SecureStorage.read(key: globals.LOCALE_APP);
     if (ll != null) {
       Locale l;
@@ -172,127 +177,121 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: jwtOrEmpty,
-      builder:(context, snapshot) {
-        if (snapshot.hasData) {
-          return MaterialApp(
-            locale: _locale,
-            title: 'DigitalNote APP',
-            onGenerateTitle: (BuildContext context) =>
-            AppLocalizations.of(context)!.appTitle,
-            onGenerateRoute:  generateRoute,
-            initialRoute: snapshot.data as String,
-            routes: {
-              LoginPage.route: (context) => const LoginPage(),
-              RegisterScreen.route: (context) => const RegisterScreen(),
-              MainMenuNew.route: (context) => MainMenuNew(locale: ms),
-              // AuthScreen.route: (context) => const AuthScreen(),
-              // WalletScreen.route : (context) =>  WalletScreen(arguments: ModalRoute.of(context)!.settings.arguments!,),
-            },
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            localeListResolutionCallback: (locales, supportedLocales) {
-              ms = 'device locales=$locales supported locales=$supportedLocales';
-              for (Locale locale in locales!) {
-                if (supportedLocales.contains(locale)) {
-                  return locale;
+        future: jwtOrEmpty,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return MaterialApp(
+              locale: _locale,
+              title: 'DigitalNote APP',
+              onGenerateTitle: (BuildContext context) => AppLocalizations.of(context)!.appTitle,
+              onGenerateRoute: generateRoute,
+              initialRoute: snapshot.data as String,
+              routes: {
+                LoginPage.route: (context) => const LoginPage(),
+                RegisterScreen.route: (context) => const RegisterScreen(),
+                MainMenuNew.route: (context) => MainMenuNew(locale: ms),
+                // AuthScreen.route: (context) => const AuthScreen(),
+                // WalletScreen.route : (context) =>  WalletScreen(arguments: ModalRoute.of(context)!.settings.arguments!,),
+              },
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localeListResolutionCallback: (locales, supportedLocales) {
+                ms = 'device locales=$locales supported locales=$supportedLocales';
+                for (Locale locale in locales!) {
+                  if (supportedLocales.contains(locale)) {
+                    return locale;
+                  }
                 }
-              }
-              return const Locale('en', '');
-            },
-            supportedLocales: const [
-              Locale('cs', 'CZ'),
-              Locale('en', ''),
-              Locale('fi', 'FI'),
-              Locale.fromSubtags(languageCode: 'sr', scriptCode: 'Cyrl', countryCode: 'RS'),
-              Locale.fromSubtags(languageCode: 'sr', scriptCode: 'Latn', countryCode: 'RS'),
-              Locale('sr', 'RS'),
-              Locale('hr', 'HR'),
-              Locale('bs', 'BA'),
-              Locale('ja', 'JP'),
-              Locale.fromSubtags(languageCode: 'bs', scriptCode: 'Latn', countryCode: 'BA'),
-              Locale('hi', 'IN'),
-              Locale('hi', 'FJ'),
-              Locale('de', 'DE'),
-              Locale('de', 'AT'),
-              Locale('pa', 'IN'),
-              Locale('pa', 'PK'),
-              Locale('ru', 'RU'),
-              Locale('ru', 'UA'),
-              Locale('es', 'AR'),
-              Locale('es', 'BO'),
-              Locale('es', 'CL'),
-              Locale('es', 'CO'),
-              Locale('es', 'CU'),
-              Locale('es', 'DO'),
-              Locale('es', 'EC'),
-              Locale('es', 'ES'),
-              Locale('es', 'GT'),
-              Locale('es', 'HN'),
-              Locale('es', 'MX'),
-              Locale('es', 'NI'),
-              Locale('es', 'PA'),
-              Locale('es', 'PE'),
-              Locale('es', 'PR'),
-              Locale('es', 'PY'),
-              Locale('es', 'SV'),
-              Locale('es', 'US'),
-              Locale('es', 'UY'),
-              Locale('es', 'VE'),
-            ],
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              fontFamily: 'lato',
-              useMaterial3: true,
-              canvasColor: const Color(0xFF28303F),
-              primaryColor: generateMaterialColor(Colors.white),
-              primarySwatch: generateMaterialColor(const Color.fromRGBO(44, 44, 53, 1.0)),
-              textTheme: TextTheme(
-                  headline6: GoogleFonts.montserrat(
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w200,
-                  ),
-                  headline5: GoogleFonts.montserrat(
+                return const Locale('en', '');
+              },
+              supportedLocales: const [
+                Locale('cs', 'CZ'),
+                Locale('en', ''),
+                Locale('fi', 'FI'),
+                Locale.fromSubtags(languageCode: 'sr', scriptCode: 'Cyrl', countryCode: 'RS'),
+                Locale.fromSubtags(languageCode: 'sr', scriptCode: 'Latn', countryCode: 'RS'),
+                Locale('sr', 'RS'),
+                Locale('hr', 'HR'),
+                Locale('bs', 'BA'),
+                Locale('ja', 'JP'),
+                Locale.fromSubtags(languageCode: 'bs', scriptCode: 'Latn', countryCode: 'BA'),
+                Locale('hi', 'IN'),
+                Locale('hi', 'FJ'),
+                Locale('de', 'DE'),
+                Locale('de', 'AT'),
+                Locale('pa', 'IN'),
+                Locale('pa', 'PK'),
+                Locale('ru', 'RU'),
+                Locale('ru', 'UA'),
+                Locale('es', 'AR'),
+                Locale('es', 'BO'),
+                Locale('es', 'CL'),
+                Locale('es', 'CO'),
+                Locale('es', 'CU'),
+                Locale('es', 'DO'),
+                Locale('es', 'EC'),
+                Locale('es', 'ES'),
+                Locale('es', 'GT'),
+                Locale('es', 'HN'),
+                Locale('es', 'MX'),
+                Locale('es', 'NI'),
+                Locale('es', 'PA'),
+                Locale('es', 'PE'),
+                Locale('es', 'PR'),
+                Locale('es', 'PY'),
+                Locale('es', 'SV'),
+                Locale('es', 'US'),
+                Locale('es', 'UY'),
+                Locale('es', 'VE'),
+              ],
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData(
+                fontFamily: 'lato',
+                useMaterial3: true,
+                canvasColor: const Color(0xFF28303F),
+                primaryColor: generateMaterialColor(Colors.white),
+                primarySwatch: generateMaterialColor(const Color.fromRGBO(44, 44, 53, 1.0)),
+                textTheme: TextTheme(
+                    headline6: GoogleFonts.montserrat(
                       color: Colors.white70,
+                      fontWeight: FontWeight.w200,
+                    ),
+                    headline5: GoogleFonts.montserrat(color: Colors.white70, fontWeight: FontWeight.w300, letterSpacing: 1.0),
+                    subtitle1: GoogleFonts.montserrat(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.normal,
+                    ),
+                    subtitle2: GoogleFonts.montserrat(
+                      color: const Color(0xFFC6C6C6),
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.normal,
+                    ),
+                    headline1: GoogleFonts.montserrat(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 40.0,
+                    ),
+                    bodyText1: GoogleFonts.montserrat(
+                      color: Colors.white,
                       fontWeight: FontWeight.w300,
-                      letterSpacing: 1.0
-                  ),
-                  subtitle1: GoogleFonts.montserrat(
-                    color: Colors.white70,
-                    fontWeight: FontWeight.normal,
-                  ),
-                  subtitle2: GoogleFonts.montserrat(
-                    color: const Color(0xFFC6C6C6),
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.normal,
-                  ),
-                  headline1: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 40.0,
-                  ),
-                  bodyText1: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w300,
-                    fontSize: 24.0,
-                  ),
-                  bodyText2: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w300,
-                    fontSize: 18.0,
-                  ),
-                  button: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w200,
-                    fontSize: 18.0,
-                  )),
-            ),
-            home: const BackgroundWidget(mainMenu: true),
-          );
-        }else{
-          return Container();
-      }
-    }
-    );
+                      fontSize: 24.0,
+                    ),
+                    bodyText2: GoogleFonts.montserrat(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w300,
+                      fontSize: 18.0,
+                    ),
+                    button: GoogleFonts.montserrat(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w200,
+                      fontSize: 18.0,
+                    )),
+              ),
+              home: const BackgroundWidget(mainMenu: true),
+            );
+          } else {
+            return Container();
+          }
+        });
   }
 
   Route<dynamic> generateRoute(RouteSettings settings) {
@@ -301,20 +300,19 @@ class MyAppState extends State<MyApp> {
       case WalletScreen.route:
         Object? shit = settings.arguments;
         return MaterialPageRoute(
-            builder: (_) => WalletScreen(arguments: shit!,));
+            builder: (_) => WalletScreen(
+                  arguments: shit!,
+                ));
       // case MainMenuNew.route:
       //   return MaterialPageRoute(
       //       builder: (_) => const MainMenuNew(
       //       ));
       case AddressScreen.route:
-          return MaterialPageRoute(
-              builder: (_) => const AddressScreen());
+        return MaterialPageRoute(builder: (_) => const AddressScreen());
       case StakingScreen.route:
-        return MaterialPageRoute(
-            builder: (_) => const StakingScreen());
+        return MaterialPageRoute(builder: (_) => const StakingScreen());
       case MessageScreen.route:
-        return MaterialPageRoute(
-            builder: (_) => const MessageScreen());
+        return MaterialPageRoute(builder: (_) => const MessageScreen());
       case SettingsScreen.route:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case SecurityScreen.route:
@@ -323,10 +321,16 @@ class MyAppState extends State<MyApp> {
         Object? args = settings.arguments;
         if (args != null) {
           Map<String, dynamic> m = args as Map<String, dynamic>;
-          return MaterialPageRoute(builder: (_) => AuthScreen(setupPIN: m['bl'], type: m['type'],));
-        }else{
+          return MaterialPageRoute(
+              builder: (_) => AuthScreen(
+                    setupPIN: m['bl'],
+                    type: m['type'],
+                  ));
+        } else {
           return MaterialPageRoute(builder: (_) => const AuthScreen(type: 0));
         }
+      case BlockInfoScreen.route:
+        return MaterialPageRoute(builder: (_) => const BlockInfoScreen());
       default:
         return MaterialPageRoute(builder: (_) => const LoginPage());
     }

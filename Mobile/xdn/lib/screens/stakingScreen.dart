@@ -159,56 +159,64 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   }
 
   void _sendStakeCoins(String amount) async {
-    double amnt = double.parse(amount) - 0.01;
-    if (double.parse(_balance) < double.parse(amount)) {
-      _keyStake.currentState!.reset();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_insufficient);
-    } else if (amnt < 0) {
-      _keyStake.currentState!.reset();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_in_fees);
-    } else {
-      Dialogs.openWaitBox(context);
+    try {
+      double amnt = double.parse(amount) - 0.01;
+      if (amnt == 0) {
+        _keyStake.currentState!.reset();
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.amount_empty);
+      } else if (double.parse(_balance) < double.parse(amount)) {
+        _keyStake.currentState!.reset();
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_insufficient);
+      } else if (amnt < 0) {
+        _keyStake.currentState!.reset();
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_in_fees);
+      } else {
+        Dialogs.openWaitBox(context);
 
-      _serverStatus = await NetInterface.sendStakeCoins(amnt.toString());
-      if (_serverStatus == 2) {
-        if (mounted) {
-          _keyStake.currentState!.reset();
-          Navigator.of(context).pop();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_cannot_stake);
+        _serverStatus = await NetInterface.sendStakeCoins(amnt.toString());
+        if (_serverStatus == 2) {
+          if (mounted) {
+            _keyStake.currentState!.reset();
+            Navigator.of(context).pop();
+            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_cannot_stake);
+          }
+          return;
+        } else if (_serverStatus == 4) {
+          if (mounted) {
+            _keyStake.currentState!.reset();
+            Navigator.of(context).pop();
+            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_not_balance);
+          }
+          return;
         }
-        return;
-      } else if (_serverStatus == 4) {
-        if (mounted) {
-          _keyStake.currentState!.reset();
-          Navigator.of(context).pop();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_not_balance);
-        }
-        return;
+        var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
+        SecureStorage.write(key: globals.COUNTDOWN, value: endTime.toString());
+        setState(() {
+          endTime = endTime;
+          FocusScope.of(context).unfocus();
+        });
+        _awaitingNot = true;
+        _controller.clear();
+
+        Future.delayed(const Duration(milliseconds: 10000), () {
+          if (_awaitingNot) {
+            setState(() {
+              _awaitingNot = false;
+              _countNot = 0;
+              _getBalance();
+              // Navigator.of(context).pop();
+            });
+            Navigator.of(context).pop();
+            _keyStake.currentState!.reset();
+            Future.delayed(const Duration(milliseconds: 50), () {
+              FocusScope.of(context).unfocus();
+            });
+          }
+        });
       }
-      var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
-      SecureStorage.write(key: globals.COUNTDOWN, value: endTime.toString());
-      setState(() {
-        endTime = endTime;
-        FocusScope.of(context).unfocus();
-      });
-      _awaitingNot = true;
-      _controller.clear();
-
-      Future.delayed(const Duration(milliseconds: 10000), () {
-        if (_awaitingNot) {
-          setState(() {
-            _awaitingNot = false;
-            _countNot = 0;
-            _getBalance();
-            // Navigator.of(context).pop();
-          });
-          Navigator.of(context).pop();
-          _keyStake.currentState!.reset();
-          Future.delayed(const Duration(milliseconds: 50), () {
-            FocusScope.of(context).unfocus();
-          });
-        }
-      });
+    } catch (e) {
+      _keyStake.currentState!.reset();
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.amount_empty);
     }
   }
 
@@ -974,9 +982,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
                               Flexible(
                                   child: Center(
-                                    child: FractionallySizedBox(
-                                widthFactor: 0.98,
-                                child: Container(
+                                child: FractionallySizedBox(
+                                  widthFactor: 0.98,
+                                  child: Container(
                                     padding: const EdgeInsets.only(left: 9.0, right: 9.0),
                                     height: 50,
                                     child: AutoSizeTextField(
@@ -996,7 +1004,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, color: Colors.white),
                                       decoration: InputDecoration(
                                         focusedBorder: OutlineInputBorder(
-                                            borderSide: const BorderSide(color: Colors.white30, width: 1.0), borderRadius: BorderRadius.circular(5.0)),
+                                            borderSide: const BorderSide(color: Colors.white30, width: 1.0),
+                                            borderRadius: BorderRadius.circular(5.0)),
                                         enabledBorder: OutlineInputBorder(
                                             borderSide: const BorderSide(color: Colors.transparent, width: 1.0),
                                             borderRadius: BorderRadius.circular(5.0)),
@@ -1005,21 +1014,20 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                         fillColor: const Color(0xFF1A1E2F),
                                         hoverColor: Colors.white60,
                                         focusColor: Colors.white60,
-                                          isCollapsed: true,
+                                        isCollapsed: true,
                                         contentPadding: EdgeInsets.only(bottom: 18.0, top: 10.0),
                                         labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
                                         hintText: AppLocalizations.of(context)!.st_enter_amount,
                                         hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white30),
                                       ),
                                     ),
+                                  ),
                                 ),
-                              ),
-                                  )),
+                              )),
                             ]),
                             const SizedBox(
                               height: 5.0,
                             ),
-
                             ClipRRect(
                               borderRadius: const BorderRadius.all(Radius.circular(5.0)),
                               child: Container(
@@ -1059,7 +1067,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(height: 5.0,),
+                            const SizedBox(
+                              height: 5.0,
+                            ),
                             Visibility(
                               visible: endTime == 0 ? true : false,
                               child: Align(
@@ -1088,14 +1098,12 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                               child: SizedBox(
                                 width: MediaQuery.of(context).size.width,
                                 child: Center(
-                                  child: AutoSizeText(
-                                      AppLocalizations.of(context)!.st_time_until_unlock,
+                                  child: AutoSizeText(AppLocalizations.of(context)!.st_time_until_unlock,
                                       style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 13.0, color: Colors.white70),
                                       textAlign: TextAlign.start,
                                       maxLines: 1,
                                       minFontSize: 8,
-                                      overflow: TextOverflow.fade
-                                  ),
+                                      overflow: TextOverflow.fade),
                                 ),
                               ),
                             ),

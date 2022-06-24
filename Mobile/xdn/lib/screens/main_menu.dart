@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
@@ -9,6 +11,7 @@ import 'package:digitalnote/support/LifecycleWatcherState.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
+import 'package:digitalnote/support/summary.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
@@ -31,6 +34,7 @@ class MainMenuNew extends StatefulWidget {
 
 class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
+
   // final GlobalKey<DetailScreenState> _walletKey = GlobalKey();
   // FCM fmc = GetIt.I.get<FCM>();
   ComInterface cm = ComInterface();
@@ -38,6 +42,8 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   Future<Map<String, dynamic>>? _getBalance;
 
   String? name;
+
+  Sumry? sumry;
 
   @override
   void initState() {
@@ -52,7 +58,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   getInfo() async {
     name = await SecureStorage.read(key: globals.NICKNAME);
     await NetInterface.getAddrBook();
-
+    sumry = await NetInterface.getSummary();
     setState(() {});
   }
 
@@ -67,44 +73,40 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     });
   }
 
-  void gotoBalanceScreen()  {
+  void gotoBalanceScreen() {
     Navigator.of(context).pushNamed(WalletScreen.route, arguments: "shit").then((value) => refreshBalance());
   }
 
-  void gotoContactScreen()  {
+  void gotoContactScreen() {
     Navigator.of(context).pushNamed(AddressScreen.route);
   }
 
-  void gotoStakingScreen()  {
+  void gotoStakingScreen() {
     Navigator.of(context).pushNamed(StakingScreen.route, arguments: "shit");
   }
 
-  void gotoMessagesScreen()  {
+  void gotoMessagesScreen() {
     Navigator.of(context).pushNamed(MessageScreen.route, arguments: "shit");
   }
 
-  void gotoSettingsScreen()  {
+  void gotoSettingsScreen() {
     Navigator.of(context).pushNamed(SettingsScreen.route, arguments: "shit");
     // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
   }
 
-  Future<DaemonStatus> _getDaemonStatus() async {
+  Future<DaemonStatus> getDaemonStatus() async {
     try {
       Map<String, dynamic> m = {
-            "request": "getDaemonStatus",
-          };
+        "request": "getDaemonStatus",
+      };
 
       var req = await cm.get("/data", request: m);
       DaemonStatus dm = DaemonStatus.fromJson(req);
       return dm;
     } catch (e) {
-      return DaemonStatus(
-          block: false,
-          blockStake: false,
-          stakingActive: false);
+      return DaemonStatus(block: false, blockStake: false, stakingActive: false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +131,11 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                       padding: const EdgeInsets.only(right: 0.0),
                       child: SizedBox(
                           width: 200.0,
-                          child: Image.asset("images/logo.png", color: Colors.white70,)),
+                          height: 50.0,
+                          child: Image.asset(
+                            "images/logo.png",
+                            color: Colors.white70,
+                          )),
                     ),
                   ),
                 ),
@@ -147,25 +153,14 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                         children: [
                           Text(
                             _getDatetimeHeadline(),
-                            style: Theme
-                                .of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(fontSize: 14.0),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
                           ),
-                          Text(name ?? '',
-                              style: Theme
-                                  .of(context)
-                                  .textTheme
-                                  .headline5),
+                          Text(name ?? '', style: Theme.of(context).textTheme.headline5),
                         ],
                       ),
                       Container(
                         padding: const EdgeInsets.all(0.0),
-                        decoration:  BoxDecoration(
-                          borderRadius: const BorderRadius.all(Radius.circular(8.0)),
-                          color: Colors.black.withOpacity(0.2)
-                        ),
+                        decoration: BoxDecoration(borderRadius: const BorderRadius.all(Radius.circular(8.0)), color: Colors.black.withOpacity(0.2)),
                         child: const AvatarPicker(
                           userID: null,
                           size: 100.0,
@@ -179,11 +174,16 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                   height: 40,
                 ),
                 BalanceCardMainMenu(
-                  key: _keyBal, getBalanceFuture: _getBalance, goto: gotoBalanceScreen,),
+                  key: _keyBal,
+                  getBalanceFuture: _getBalance,
+                  goto: gotoBalanceScreen,
+                ),
                 const SizedBox(
                   height: 10,
                 ),
-                StakingMenuWidget(goto: gotoStakingScreen,),
+                StakingMenuWidget(
+                  goto: gotoStakingScreen,
+                ),
                 const SizedBox(
                   height: 10,
                 ),
@@ -193,7 +193,11 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Expanded(child: SmallMenuTile(name: "Messages", goto: gotoMessagesScreen)),
-                      Expanded(child: SmallMenuTile(name: "Contacts", goto: gotoContactScreen,)),
+                      Expanded(
+                          child: SmallMenuTile(
+                        name: "Contacts",
+                        goto: gotoContactScreen,
+                      )),
                       Expanded(child: SmallMenuTile(name: "Settings", goto: gotoSettingsScreen)),
                     ],
                   ),
@@ -204,125 +208,114 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 10.0),
                       child: FutureBuilder<DaemonStatus>(
-                          initialData: DaemonStatus(
-                              block: false,
-                              blockStake: false,
-                              stakingActive: false),
-                          future: _getDaemonStatus(),
+                          initialData: DaemonStatus(block: false, blockStake: false, stakingActive: false),
+                          future: getDaemonStatus(),
                           builder: (ctx, snapshot) {
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      color: Colors.white10),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 5.0,
-                                        right: 5.0,
-                                        top: 2.0,
-                                        bottom: 2.0),
+                            return Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white10),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 2.0, bottom: 2.0),
+                                      child: Row(
+                                        children: [
+                                          AutoSizeText(
+                                            "Wallet daemon status",
+                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                            minFontSize: 2.0,
+                                          ),
+                                          const SizedBox(
+                                            width: 5.0,
+                                          ),
+                                          Icon(
+                                            Icons.circle,
+                                            size: 10.0,
+                                            color: snapshot.data!.block! ? Colors.green : Colors.red,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white10),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 2.0, bottom: 2.0),
+                                      child: Row(
+                                        children: [
+                                          AutoSizeText(
+                                            "Staking daemon status",
+                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                            minFontSize: 2.0,
+                                          ),
+                                          const SizedBox(
+                                            width: 5.0,
+                                          ),
+                                          Icon(
+                                            Icons.circle,
+                                            size: 10.0,
+                                            color: snapshot.data!.blockStake! ? Colors.green : Colors.red,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white10),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 2.0, bottom: 2.0),
+                                      child: Row(
+                                        children: [
+                                          AutoSizeText(
+                                            "Staking active",
+                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                            minFontSize: 2.0,
+                                          ),
+                                          const SizedBox(
+                                            width: 5.0,
+                                          ),
+                                          Icon(
+                                            Icons.circle,
+                                            size: 10.0,
+                                            color: snapshot.data!.stakingActive! ? Colors.green : Colors.red,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10.0,),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  Container(
+                                    width: MediaQuery.of(context).size.width * 0.97,
+                                    padding: const EdgeInsets.only(left: 0.0, right: 0.0, top: 5.0, bottom: 5.0),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.black12),
                                     child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         AutoSizeText(
-                                          "Wallet daemon status",
-                                          style: Theme
-                                              .of(context)
-                                              .textTheme
-                                              .headline5!
-                                              .copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                          "Blockcount: ${sumry?.data?[0].blockcount ?? ''}",
+                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                           minFontSize: 2.0,
                                         ),
                                         const SizedBox(
                                           width: 5.0,
                                         ),
-                                        Icon(
-                                          Icons.circle,
-                                          size: 10.0,
-                                          color: snapshot.data!.block!
-                                              ? Colors.green
-                                              : Colors.red,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                Container(
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      color: Colors.white10),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 5.0,
-                                        right: 5.0,
-                                        top: 2.0,
-                                        bottom: 2.0),
-                                    child: Row(
-                                      children: [
                                         AutoSizeText(
-                                          "Staking daemon status",
-                                          style: Theme
-                                              .of(context)
-                                              .textTheme
-                                              .headline5!
-                                              .copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                          "| Masternode count: ${sumry?.data?[0].masternodecount ?? ''}",
+                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                           minFontSize: 2.0,
                                         ),
-
-                                        const SizedBox(
-                                          width: 5.0,
-                                        ),
-                                        Icon(
-                                          Icons.circle,
-                                          size: 10.0,
-                                          color: snapshot.data!.blockStake!
-                                              ? Colors.green
-                                              : Colors.red,
-                                        ),
                                       ],
                                     ),
-                                  ),
-                                ),
-
-                                Container(
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      color: Colors.white10),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 5.0,
-                                        right: 5.0,
-                                        top: 2.0,
-                                        bottom: 2.0),
-                                    child: Row(
-                                      children: [
-                                        AutoSizeText(
-                                          "Staking active",
-                                          style: Theme
-                                              .of(context)
-                                              .textTheme
-                                              .headline5!
-                                              .copyWith(fontSize: 8.0, letterSpacing: 0.5),
-                                          minFontSize: 2.0,
-                                        ),
-                                        const SizedBox(
-                                          width: 5.0,
-                                        ),
-                                        Icon(
-                                          Icons.circle,
-                                          size: 10.0,
-                                          color: snapshot.data!.stakingActive!
-                                              ? Colors.green
-                                              : Colors.red,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
+                                  )
+                                ],
+                              ),
+                            ]);
                           }),
                     ),
                   ),
@@ -336,20 +329,18 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   @override
-  void onDetached() {
-  }
+  void onDetached() {}
 
   @override
-  void onInactive() {
-  }
+  void onInactive() {}
 
   @override
-  void onPaused() {
-  }
+  void onPaused() {}
 
   @override
   void onResumed() {
     refreshBalance();
+    getInfo();
   }
 
   String _getDatetimeHeadline() {
@@ -357,11 +348,11 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     var hour = d.hour;
     if (hour > 0 && hour < 6) {
       return 'Good Night';
-    }else if (hour > 6 && hour < 12) {
+    } else if (hour > 6 && hour < 12) {
       return 'Good Morning';
-    }else if (hour > 12 && hour < 18) {
+    } else if (hour > 12 && hour < 18) {
       return 'Good Afternoon';
-    }else {
+    } else {
       return 'Good Evening';
     }
   }

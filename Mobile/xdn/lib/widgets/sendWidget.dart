@@ -47,7 +47,6 @@ class SendWidgetState extends State<SendWidget> {
   bool sendView = true;
   Contact? _recipient;
 
-
   void _sendConfirmation() async {
     Dialogs.openSendConfirmBox(context, _sendCoins);
   }
@@ -204,9 +203,7 @@ class SendWidgetState extends State<SendWidget> {
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
-              color: const Color(0xFF79ad66),
-              border: Border.all(color: Colors.green),
-              borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+              color: const Color(0xFF79ad66), border: Border.all(color: Colors.green), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -230,7 +227,10 @@ class SendWidgetState extends State<SendWidget> {
           margin: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(color: Theme.of(context).konjCardColor, border: Border.all(color: Colors.transparent), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(
+              color: Theme.of(context).konjCardColor,
+              border: Border.all(color: Colors.transparent),
+              borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -255,9 +255,7 @@ class SendWidgetState extends State<SendWidget> {
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
-              color: const Color(0xFFF77066),
-              border: Border.all(color: Colors.red),
-              borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+              color: const Color(0xFFF77066), border: Border.all(color: Colors.red), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -278,7 +276,7 @@ class SendWidgetState extends State<SendWidget> {
         visible: sendView,
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
-            padding: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
+            padding: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 11.0, right: 11.0),
             child: PhysicalModel(
               color: Theme.of(context).konjCardColor,
               shadowColor: Colors.black45,
@@ -288,13 +286,9 @@ class SendWidgetState extends State<SendWidget> {
                 height: useTablet ? heightVal : 220.0,
                 padding: const EdgeInsets.all(10.0),
                 width: MediaQuery.of(context).size.width,
-                decoration:const BoxDecoration(
-                    gradient:  LinearGradient(
-                      colors: [Color(0xFF423D70), Color(0xFF5D57A6)],
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                    ),
-         borderRadius: BorderRadius.all(Radius.circular(15.0))),
+                decoration: const BoxDecoration(
+                    color: Color(0xFF475A9C),
+                    borderRadius: BorderRadius.all(Radius.circular(15.0))),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Column(
@@ -313,12 +307,13 @@ class SendWidgetState extends State<SendWidget> {
                                 noItemsFoundBuilder: (context) {
                                   return const SizedBox(width: 0, height: 0);
                                 },
+
                                 textFieldConfiguration: TextFieldConfiguration(
                                   maxLength: 40,
                                   maxLines: 1,
                                   controller: _controllerAddress,
                                   autofocus: false,
-                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(letterSpacing: 1.0),
+                                  style: Theme.of(context).textTheme.headline5,
                                   decoration: InputDecoration(
                                     counterText: "",
                                     focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white60, width: 1.0), borderRadius: BorderRadius.circular(15.0)),
@@ -328,9 +323,9 @@ class SendWidgetState extends State<SendWidget> {
                                     filled: true,
                                     hoverColor: Colors.white60,
                                     focusColor: Colors.white60,
-                                    labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white),
-                                    hintText: '${AppLocalizations.of(context)!.address} / ${AppLocalizations.of(context)!.contact}',
-                                    hintStyle: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16.0, color: Colors.white),
+                                    labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
+                                    hintText: AppLocalizations.of(context)!.address + ' / ' + AppLocalizations.of(context)!.contact,
+                                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white),
                                   ),
                                 ),
                                 suggestionsCallback: (pattern) async {
@@ -349,8 +344,8 @@ class SendWidgetState extends State<SendWidget> {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                                  color: Colors.white70,
-                                                ),
+                                              color: Colors.white70,
+                                            ),
                                           ),
                                         ),
                                         subtitle: SizedBox(
@@ -360,8 +355,8 @@ class SendWidgetState extends State<SendWidget> {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                                  color: Colors.white.withOpacity(0.5),
-                                                ),
+                                              color: Colors.white.withOpacity(0.5),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -413,11 +408,9 @@ class SendWidgetState extends State<SendWidget> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: <Widget>[
                             Expanded(
-                              child: AutoSizeTextField(
+                              child: TextField(
                                 key: _textFieldAmountKey,
                                 controller: _controllerAmount,
-                                maxLines: 1,
-                                minFontSize: 8.0,
                                 keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
                                 maxLength: 40,
                                 inputFormatters: <TextInputFormatter>[

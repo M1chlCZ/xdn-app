@@ -57,8 +57,6 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
         _messageGroup = AppDatabase().searchMessages(_controller.text);
       });
     });
-    // fmc.bodyCtlr.stream.listen((event) {print(event + " Messages");});  //TODO Notifications stream
-    // AppDatabase().deleteTableAddr();
   }
 
   @override
@@ -128,7 +126,7 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
                     margin: const EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 15.0),
                     decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.15),
-                        borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                        borderRadius: const BorderRadius.all(Radius.circular(15.0)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
