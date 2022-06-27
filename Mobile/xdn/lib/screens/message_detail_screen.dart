@@ -81,6 +81,15 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
     });
   }
 
+  void _getNewMessages() async {
+    var addr = await SecureStorage.read(key: globals.ADR);
+    int idMax = await AppDatabase().getMessageGroupMaxID(addr, widget.mgroup.sentAddressOrignal);
+    var i = await NetInterface.saveMessages(widget.mgroup.sentAddressOrignal!, idMax);
+    if (i > 0) {
+      mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+    }
+  }
+
   @override
   void setState(fn) {
     if (mounted) {
@@ -98,6 +107,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   _getMessages() async {
     _addr = await SecureStorage.read(key: globals.ADR);
     mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
+    _getNewMessages();
   }
 
   _getBalance() async {
@@ -111,6 +121,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
     if (_running) {
       Future.delayed(const Duration(milliseconds: 10), () {
         mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+        setState(() {
+          _switchWidget = _tipIcon();
+          _circleVisible = false;
+        });
       });
     }
   }
@@ -132,10 +146,12 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         _replyMessage = null;
         _replyHeight = 0.0;
       });
-      Future.delayed(const Duration(milliseconds: 7000), () {
+      Future.delayed(const Duration(milliseconds: 2000), () {
         if (_withoutNot) {
           setState(() {
             _withoutNot = false;
+            _switchWidget = _tipIcon();
+            _circleVisible = false;
             mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
           });
         }
@@ -254,12 +270,17 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                                     children: [
                                                       Container(
                                                         margin: const EdgeInsets.only(top: 30.0, bottom: 10.0),
-                                                        decoration: const BoxDecoration(color: Color.fromRGBO(44, 44, 53, 1.0), borderRadius: BorderRadius.all(Radius.circular(32.0))),
+                                                        decoration: const BoxDecoration(
+                                                            color: Color.fromRGBO(44, 44, 53, 1.0),
+                                                            borderRadius: BorderRadius.all(Radius.circular(32.0))),
                                                         child: Padding(
                                                           padding: const EdgeInsets.all(15.0),
                                                           child: Text(
                                                             mNode.lastMessage!,
-                                                            style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white70, fontSize: 14.0),
+                                                            style: Theme.of(context)
+                                                                .textTheme
+                                                                .bodyText2!
+                                                                .copyWith(color: Colors.white70, fontSize: 14.0),
                                                           ),
                                                         ),
                                                       ),
@@ -324,19 +345,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             const SizedBox(
                                               width: 15.0,
                                             ),
-                                            Text(
-                                              '${AppLocalizations.of(context)!.message_reply_to}: ',
-                                              style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
-                                            ),
-                                            const SizedBox(
-                                              width: 5.0,
-                                            ),
-                                            SizedBox(
-                                              width: MediaQuery.of(context).size.width * 0.6,
-                                              height: 16.0,
+                                            Expanded(
                                               child: AutoSizeText(
-                                                _replyMessage == null ? '' : _replyMessage!,
-                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, letterSpacing: 0.2),
+                                                '${AppLocalizations.of(context)!.message_reply_to}: ${_replyMessage == null ? '' : _replyMessage!}',
+                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                                                 maxLines: 1,
                                                 minFontSize: 12.0,
                                                 overflow: TextOverflow.ellipsis,
@@ -345,10 +357,26 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             const SizedBox(
                                               width: 5.0,
                                             ),
-                                            Expanded(
-                                                child: Material(
-                                              color: const Color(0xff542323),
-                                              borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
+                                            // SizedBox(
+                                            //   width: MediaQuery.of(context).size.width * 0.6,
+                                            //   height: 16.0,
+                                            //   child: AutoSizeText(
+                                            //     _replyMessage == null ? '' : _replyMessage!,
+                                            //     style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, letterSpacing: 0.2),
+                                            //     maxLines: 1,
+                                            //     minFontSize: 12.0,
+                                            //     overflow: TextOverflow.ellipsis,
+                                            //   ),
+                                            // ),
+                                            const SizedBox(
+                                              width: 5.0,
+                                            ),
+                                            Container(
+                                              width: 40.0,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xffa43131),
+                                                borderRadius: BorderRadius.only(topRight: Radius.circular(5.0)),
+                                              ),
                                               child: InkWell(
                                                 borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
                                                 splashColor: const Color(0xFFc74d4d).withOpacity(0.5), // splash color
@@ -366,7 +394,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                                   ),
                                                 ),
                                               ),
-                                            ))
+                                            )
                                           ],
                                         ),
                                       ),
@@ -421,7 +449,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                               child: AnimatedSwitcher(
                                                 duration: const Duration(milliseconds: 200),
                                                 transitionBuilder: (Widget child, Animation<double> animation) {
-                                                  return ScaleTransition(child: child, scale: animation);
+                                                  return ScaleTransition(scale: animation, child: child);
                                                 },
                                                 child: _switchWidget,
                                               ),
@@ -452,10 +480,9 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                       Container(
                         margin: const EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 20.0),
                         decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.15),
-                            borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                        )
-                        ,
+                          color: Colors.black.withOpacity(0.15),
+                          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -476,14 +503,14 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                   minFontSize: 16.0,
                                   textAlign: TextAlign.start,
                                   style: Theme.of(context).textTheme.headline1!.copyWith(
-                                    fontSize: 24.0,
-                                    color: Colors.white.withOpacity(0.85),
-                                  )),
+                                        fontSize: 24.0,
+                                        color: Colors.white.withOpacity(0.85),
+                                      )),
                             ),
                             AvatarPicker(
                               userID: widget.mgroup.sentAddressOrignal,
                               size: 50.0,
-                              color: Color(0xFF22304D),
+                              color: const Color(0xFF22304D),
                               padding: 2.0,
                               avatarColor: Colors.white54,
                             ),
@@ -564,10 +591,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   Widget _sendWait() {
     return const SizedBox(
-      width: 50,
-      height: 50,
+      width: 30,
+      height: 30,
       child: CircularProgressIndicator(
-        strokeWidth: 3.0,
+        strokeWidth: 2.0,
         key: ValueKey<int>(2),
         color: Colors.white,
       ),

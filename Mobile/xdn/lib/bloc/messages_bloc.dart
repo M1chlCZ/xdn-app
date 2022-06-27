@@ -5,7 +5,7 @@ import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:flutter/foundation.dart';
 
 class MessagesBloc {
-  final MessagesEndpoint _balanceList = MessagesEndpoint();
+  final MessagesEndpoint _messageList = MessagesEndpoint();
   bool first = true;
   List<dynamic>? _messages;
 
@@ -30,10 +30,10 @@ class MessagesBloc {
         coinsListSink.add(ApiResponse.loading('Fetching All Messages'));
         first = false;
       }
-      _messages = await _balanceList.getMessages(addr);
+      _messages = await _messageList.getMessages(addr);
       if(_messages == null || _messages!.isEmpty) {
-        await _balanceList.refreshMessages(addr);
-        _messages = await _balanceList.getMessages(addr);
+        await _messageList.refreshMessages(addr);
+        _messages = await _messageList.getMessages(addr);
       }
       coinsListSink.add(ApiResponse.completed(_messages));
     } catch (e) {
@@ -49,8 +49,8 @@ class MessagesBloc {
 
   refreshMessages(String addr) async {
     try {
-      int i = await _balanceList.refreshMessages(addr);
-      fetchMessages(addr);
+      int i = await _messageList.refreshMessages(addr);
+      // fetchMessages(addr);
       if (i > 0) {
         fetchMessages(addr);
       }

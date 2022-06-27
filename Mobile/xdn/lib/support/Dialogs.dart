@@ -6,6 +6,7 @@ import 'package:digitalnote/support/RoundButton.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:digitalnote/support/secure_storage.dart';
+import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -56,7 +57,10 @@ class Dialogs {
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                     ],
-                    style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                    style: Theme.of(context)
+                        .textTheme
+                        .headline6!
+                        .copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                     decoration: InputDecoration(
                       hintStyle: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.amount,
@@ -97,7 +101,10 @@ class Dialogs {
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                   ],
-                  style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline6!
+                      .copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.all(5.0),
                     hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
@@ -119,36 +126,36 @@ class Dialogs {
         context: context,
         builder: (BuildContext context) {
           return DialogBody(
-            header: "${AppLocalizations.of(context)!.rename} $name",
-            buttonLabel: 'OK',
-            onTap: () {
-              func(textController.text);
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                  color: Colors.black12,
+              header: "${AppLocalizations.of(context)!.rename} $name",
+              buttonLabel: 'OK',
+              onTap: () {
+                func(textController.text);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 500,
+                  child: TextField(
+                    autofocus: true,
+                    controller: textController,
+                    keyboardType: TextInputType.text,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+')),
+                    ],
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    decoration: InputDecoration(
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintText: AppLocalizations.of(context)!.new_name,
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.all(5.0),
-                width: 500,
-              child: TextField(
-                autofocus: true,
-                controller: textController,
-                keyboardType: TextInputType.text,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+')),
-                ],
-                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
-                decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
-                  hintText: AppLocalizations.of(context)!.new_name,
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ));
+              ));
         });
   }
 
@@ -159,43 +166,44 @@ class Dialogs {
         context: context,
         builder: (BuildContext context) {
           return DialogBody(
-            header: AppLocalizations.of(context)!.dl_remove_pin,
-            buttonLabel: 'OK',
-            onTap: () {
-              func(textController.text);
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                  color: Colors.black12,
+              header: AppLocalizations.of(context)!.dl_remove_pin,
+              buttonLabel: 'OK',
+              onTap: () {
+                func(textController.text);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 500,
+                  child: TextField(
+                    obscureText: true,
+                    autofocus: true,
+                    textAlignVertical: TextAlignVertical.center,
+                    textAlign: TextAlign.center,
+                    controller: textController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+')),
+                    ],
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
+                    decoration: InputDecoration(
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintText: AppLocalizations.of(context)!.dl_enter_pin,
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.all(5.0),
-                width: 500,
-              child: TextField(
-                obscureText: true,
-                autofocus: true,
-                textAlignVertical: TextAlignVertical.center,
-                textAlign: TextAlign.center,
-                controller: textController,
-                keyboardType: TextInputType.number,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+')),
-                ],
-                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
-                decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
-                  hintText: AppLocalizations.of(context)!.dl_enter_pin,
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ));
+              ));
         });
   }
 
-  static void openSendContactConfirmBox(context, String name, String addr, String amount, Function(String amount, String name, String addr) func) async {
+  static void openSendContactConfirmBox(
+      context, String name, String addr, String amount, Function(String amount, String name, String addr) func) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -814,27 +822,27 @@ class Dialogs {
             child: Padding(
               padding: const EdgeInsets.only(top: 8.0, bottom: 5.0, left: 8.0, right: 8.0),
               child: Container(
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                    color: Colors.black12,
-                  ),
-                  padding: const EdgeInsets.all(5.0),
-                  width: 300,
-                  child: const Padding(
-                    padding: EdgeInsets.all(40.0),
-                    child: Center(
-                      child: SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: CircularProgressIndicator(
-                          color: Colors.white70,
-                        ),
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 300,
+                child: const Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: Center(
+                    child: SizedBox(
+                      width: 60,
+                      height: 60,
+                      child: CircularProgressIndicator(
+                        color: Colors.white70,
                       ),
                     ),
                   ),
                 ),
               ),
-            );
+            ),
+          );
         });
   }
 
@@ -878,37 +886,37 @@ class Dialogs {
         context: context,
         builder: (BuildContext context) {
           return DialogBody(
-            header: AppLocalizations.of(context)!.dl_edit_name,
-            buttonLabel: AppLocalizations.of(context)!.save,
-            onTap: () async {
-              await AppDatabase().editContact(textController.text, c.id.toString());
-              func();
-              Navigator.of(context).pop();
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                  color: Colors.black12,
+              header: AppLocalizations.of(context)!.dl_edit_name,
+              buttonLabel: AppLocalizations.of(context)!.save,
+              onTap: () async {
+                await AppDatabase().editContact(textController.text, c.id.toString());
+                func();
+                Navigator.of(context).pop();
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 500,
+                  child: TextField(
+                    autofocus: true,
+                    controller: textController,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9_-\s]+')),
+                    ],
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    decoration: InputDecoration(
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintText: AppLocalizations.of(context)!.name,
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.all(5.0),
-                width: 500,
-              child: TextField(
-                autofocus: true,
-                controller: textController,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9_-\s]+')),
-                ],
-                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
-                decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
-                  hintText: AppLocalizations.of(context)!.name,
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ));
+              ));
         });
   }
 
@@ -1078,35 +1086,35 @@ class Dialogs {
         context: context,
         builder: (BuildContext context) {
           return DialogBody(
-            header: AppLocalizations.of(context)!.dl_enter_current_pass,
-            buttonLabel: "OK",
-            onTap: () {
-              func(textController.text);
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                  color: Colors.black12,
+              header: AppLocalizations.of(context)!.dl_enter_current_pass,
+              buttonLabel: "OK",
+              onTap: () {
+                func(textController.text);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 500,
+                  child: TextField(
+                    obscureText: true,
+                    autofocus: true,
+                    textAlignVertical: TextAlignVertical.center,
+                    textAlign: TextAlign.left,
+                    controller: textController,
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
+                    decoration: InputDecoration(
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintText: AppLocalizations.of(context)!.dl_enter_pass,
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.all(5.0),
-                width: 500,
-              child: TextField(
-                obscureText: true,
-                autofocus: true,
-                textAlignVertical: TextAlignVertical.center,
-                textAlign: TextAlign.left,
-                controller: textController,
-                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
-                decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
-                  hintText: AppLocalizations.of(context)!.dl_enter_pass,
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ));
+              ));
         });
   }
 
@@ -1142,7 +1150,8 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.txid,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style:
+                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1167,7 +1176,8 @@ class Dialogs {
                               tx.txid!,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style:
+                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1192,7 +1202,8 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.amount,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style:
+                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1207,7 +1218,8 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style:
+                                Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1231,7 +1243,8 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.date,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style:
+                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1246,7 +1259,8 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style:
+                                Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1270,7 +1284,8 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.confirmations.capitalize(),
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style:
+                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1285,7 +1300,8 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style:
+                                Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1334,7 +1350,8 @@ class Dialogs {
                       controller: textController,
                       style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 22),
                       decoration: InputDecoration(
-                        hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
+                        hintStyle:
+                            Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
                         hintText: AppLocalizations.of(context)!.dl_new_enter_pass,
                         border: InputBorder.none,
                       ),
@@ -1461,7 +1478,8 @@ class Dialogs {
             filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
             child: Dialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(side: BorderSide(color: Colors.grey.withOpacity(0.5)), borderRadius: const BorderRadius.all(Radius.circular(20.0))),
+              shape: RoundedRectangleBorder(
+                  side: BorderSide(color: Colors.grey.withOpacity(0.5)), borderRadius: const BorderRadius.all(Radius.circular(20.0))),
               child: Wrap(children: [
                 Container(
                   width: 400.0,
@@ -1543,123 +1561,109 @@ class Dialogs {
     showDialog(
         context: context,
         builder: (context) {
-          Locale _myLocale = Localizations.localeOf(context);
-          return AlertDialog(
-              backgroundColor: Theme.of(context).konjHeaderColor,
-              shape: RoundedRectangleBorder(side: BorderSide(color: Theme.of(context).konjHeaderColor), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
-              contentPadding: const EdgeInsets.only(top: 0.01),
-              content: SizedBox(
-                width: 400.0,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
-                        child: SizedBox(
-                          width: 380,
-                          child: AutoSizeText(
-                            AppLocalizations.of(context)!.dl_select_action,
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            minFontSize: 8.0,
-                            style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 22.0, color: Colors.white70),
-                          ),
+          return DialogBody(
+              header: AppLocalizations.of(context)!.dl_select_action,
+              noButtons: true,
+              onTap: () {
+                Navigator.of(context).pop(1);
+              },
+              child: Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 10, left: 8.0, right: 8.0),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      color: Colors.black12,
+                    ),
+                    padding: const EdgeInsets.all(5.0),
+                    width: 500,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const SizedBox(
+                          height: 10.0,
                         ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 5.0,
-                    ),
-                    const Divider(
-                      color: Colors.grey,
-                      height: 4.0,
-                    ),
-                    const SizedBox(
-                      height: 10.0,
-                    ),
-                    SizedBox(
-                      height: 50.0,
-                      width: double.infinity,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          splashColor: Colors.blue,
-                          highlightColor: Colors.transparent,
-                          onTap: () {
-                            func!();
-                          },
-                          child: Center(
-                            child: Text(
-                              AppLocalizations.of(context)!.dl_send_message,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                        SizedBox(
+                          height: 50.0,
+                          width: double.infinity,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              splashColor: Colors.blue,
+                              highlightColor: Colors.transparent,
+                              onTap: () {
+                                func!();
+                              },
+                              child: Center(
+                                child: Text(
+                                  AppLocalizations.of(context)!.dl_send_message,
+                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 20.0),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Divider(
-                        color: Colors.white24,
-                        height: 4.0,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 50.0,
-                      width: double.infinity,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          splashColor: Colors.blue,
-                          highlightColor: Colors.transparent,
-                          onTap: () {
-                            func2!(addr, name);
-                          },
-                          child: Center(
-                            child: Text(
-                              '${AppLocalizations.of(context)!.dl_send_konj} $name',
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Divider(
+                            color: Colors.white24,
+                            height: 4.0,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 50.0,
+                          width: double.infinity,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              splashColor: Colors.blue,
+                              highlightColor: Colors.transparent,
+                              onTap: () {
+                                func2!(addr, name);
+                              },
+                              child: Center(
+                                child: Text(
+                                  '${AppLocalizations.of(context)!.dl_send_konj} $name',
+                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 20.0),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Divider(
-                        color: Colors.white24,
-                        height: 4.0,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 50.0,
-                      width: double.infinity,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          splashColor: Colors.blue,
-                          highlightColor: Colors.transparent,
-                          onTap: () {
-                            func3!();
-                          },
-                          child: Center(
-                            child: Text(
-                              '${AppLocalizations.of(context)!.share} $name ${AppLocalizations.of(context)!.contact.toLowerCase()}',
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Divider(
+                            color: Colors.white24,
+                            height: 4.0,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 50.0,
+                          width: double.infinity,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              splashColor: Colors.blue,
+                              highlightColor: Colors.transparent,
+                              onTap: () {
+                                func3!();
+                              },
+                              child: Center(
+                                child: Text(
+                                  '${AppLocalizations.of(context)!.share} $name ${AppLocalizations.of(context)!.contact.toLowerCase()}',
+                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 20.0),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                        const SizedBox(
+                          height: 15.0,
+                        )
+                      ],
                     ),
-                    const SizedBox(
-                      height: 15.0,
-                    )
-                  ],
-                ),
-              ));
+                  )));
         });
   }
 
@@ -1668,112 +1672,106 @@ class Dialogs {
         context: context,
         builder: (context) {
           Locale _myLocale = Localizations.localeOf(context);
-          return AlertDialog(
-              backgroundColor: Theme.of(context).konjHeaderColor,
-              shape: RoundedRectangleBorder(side: BorderSide(color: Theme.of(context).konjHeaderColor), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
-              contentPadding: const EdgeInsets.only(top: 0.01),
-              content: SizedBox(
-                width: 400.0,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
-                        child: SizedBox(
-                          width: 380,
-                          child: AutoSizeText(
-                            _myLocale.countryCode == "FI"
-                                ? AppLocalizations.of(context)!.to
-                                : '${AppLocalizations.of(context)!.share} ${AppLocalizations.of(context)!.contact.toLowerCase()} ${AppLocalizations.of(context)!.to}',
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            minFontSize: 8.0,
-                            style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 22.0, color: Colors.white70),
+          return DialogBody(
+              header: _myLocale.countryCode == "FI"
+                  ? AppLocalizations.of(context)!.to
+                  : '${AppLocalizations.of(context)!.share} ${AppLocalizations.of(context)!.contact.toLowerCase()} ${AppLocalizations.of(context)!.to}:',
+              buttonLabel: 'OK',
+              noButtons: true,
+              onTap: () {
+                Navigator.of(context).pop(1);
+              },
+              child: Padding(
+                  padding: const EdgeInsets.only(top: 3.0, bottom: 10, left: 8.0, right: 8.0),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      color: Colors.black12,
+                    ),
+                    padding: const EdgeInsets.all(0.0),
+                    width: 500,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const SizedBox(
+                          height: 10.0,
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: MediaQuery.of(context).size.height * 0.5,
+                          child: SingleChildScrollView(
+                            child: FutureBuilder(
+                                future: AppDatabase().getShareContactList(name),
+                                builder: (context, snapshot) {
+                                  var list = snapshot.data as List<Contact>?;
+                                  if (snapshot.hasData) {
+                                    return ListView.builder(
+                                        shrinkWrap: true,
+                                        physics: const NeverScrollableScrollPhysics(),
+                                        itemCount: list!.length,
+                                        itemBuilder: (BuildContext context, int index) {
+                                          var cont = list[index];
+                                          return Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ListTile(
+                                                onTap: () {
+                                                  func!(cont);
+                                                },
+                                                leading: SizedBox(
+                                                  width: 50.0,
+                                                    child: AvatarPicker(
+                                                      userID: cont.getAddr()!,
+                                                      color: Colors.transparent,
+                                                    )),
+                                                tileColor: Colors.transparent,
+                                                title: SizedBox(
+                                                  width: 150,
+                                                  child: AutoSizeText(
+                                                    cont.getName()!,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: Theme.of(context).textTheme.headline5!.copyWith(
+                                                          color: Colors.white70,
+                                                        ),
+                                                  ),
+                                                ),
+                                                subtitle: SizedBox(
+                                                  width: 150,
+                                                  child: AutoSizeText(
+                                                    cont.getAddr()!,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: Theme.of(context).textTheme.headline5!.copyWith(
+                                                          color: Colors.white.withOpacity(0.5),
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                                                child: SizedBox(
+                                                  height: 1,
+                                                  child: Container(color: Colors.white.withOpacity(0.2)),
+                                                ),
+                                              )
+                                            ],
+                                          );
+                                        });
+                                  } else {
+                                    return Container();
+                                  }
+                                }),
                           ),
                         ),
-                      ),
+                        const SizedBox(
+                          height: 15.0,
+                        )
+                      ],
                     ),
-                    const SizedBox(
-                      height: 5.0,
-                    ),
-                    const Divider(
-                      color: Colors.grey,
-                      height: 4.0,
-                    ),
-                    const SizedBox(
-                      height: 10.0,
-                    ),
-                    SizedBox(
-                      width: double.infinity,
-                      height: MediaQuery.of(context).size.height * 0.5,
-                      child: SingleChildScrollView(
-                        child: FutureBuilder(
-                            future: AppDatabase().getShareContactList(name),
-                            builder: (context, snapshot) {
-                              var list = snapshot.data as List<Contact>?;
-                              if (snapshot.hasData) {
-                                return ListView.builder(
-                                    shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    itemCount: list!.length,
-                                    itemBuilder: (BuildContext context, int index) {
-                                      var cont = list[index];
-                                      return Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          ListTile(
-                                            onTap: () {
-                                              func!(cont);
-                                            },
-                                            tileColor: Colors.transparent,
-                                            title: SizedBox(
-                                              width: 150,
-                                              child: AutoSizeText(
-                                                cont.getName()!,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context).textTheme.headline5!.copyWith(
-                                                      color: Colors.white70,
-                                                    ),
-                                              ),
-                                            ),
-                                            subtitle: SizedBox(
-                                              width: 150,
-                                              child: AutoSizeText(
-                                                cont.getAddr()!,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context).textTheme.headline5!.copyWith(
-                                                      color: Colors.white.withOpacity(0.5),
-                                                    ),
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                                            child: SizedBox(
-                                              height: 1,
-                                              child: Container(color: Colors.white.withOpacity(0.2)),
-                                            ),
-                                          )
-                                        ],
-                                      );
-                                    });
-                              } else {
-                                return Container();
-                              }
-                            }),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 15.0,
-                    )
-                  ],
-                ),
-              ));
+                  )));
         });
   }
 
@@ -1818,23 +1816,23 @@ class Dialogs {
         context: context,
         builder: (BuildContext context) {
           return DialogBody(
-            oneButton: true,
-            header: AppLocalizations.of(context)!.change_language,
-            buttonLabel: 'OK',
-            onTap: () {
-              Navigator.of(context).pop();
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
-          child: Container(
-          decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(8.0)),
-          color: Colors.black12,
-          ),
-          padding: const EdgeInsets.all(5.0),
-          width: 500,
-          child:RadioAlertWidget(func: func),
-          )));
+              oneButton: true,
+              header: AppLocalizations.of(context)!.change_language,
+              buttonLabel: 'OK',
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+              child: Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      color: Colors.black12,
+                    ),
+                    padding: const EdgeInsets.all(5.0),
+                    width: 500,
+                    child: RadioAlertWidget(func: func),
+                  )));
         });
   }
 
@@ -1855,7 +1853,8 @@ class Dialogs {
     return Colors.transparent;
   }
 
-  static Future<void> openGenericAlertBox(context, {String? header, required String message, Function()? onTap, Function()? onCancel, bool? oneButton}) async {
+  static Future<void> openGenericAlertBox(context,
+      {String? header, required String message, Function()? onTap, Function()? onCancel, bool? oneButton}) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -1891,214 +1890,186 @@ class Dialogs {
 
   static Future<void> openUserAddBox(BuildContext context) async {
     return showDialog(
-      barrierDismissible: true,
-        context: context, builder:  (BuildContext context) {
-      TextEditingController controller = TextEditingController();
-      TextEditingController controllerAddr = TextEditingController();
-      return StatefulBuilder(
-      builder: (context, setState) {
-        void _openQRScanner() async {
-          FocusScope.of(context).unfocus();
-          Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-                    return BarcodeScanner(
-                      scanResult: (String s) {
-                        controllerAddr.text = s;
-                      },
-                    );
-                  }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-                    return FadeTransition(opacity: animation, child: child);
-                  }));
-                }
+        barrierDismissible: true,
+        context: context,
+        builder: (BuildContext context) {
+          TextEditingController controller = TextEditingController();
+          TextEditingController controllerAddr = TextEditingController();
+          return StatefulBuilder(builder: (context, setState) {
+            void _openQRScanner() async {
+              FocusScope.of(context).unfocus();
+              Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+                return BarcodeScanner(
+                  scanResult: (String s) {
+                    controllerAddr.text = s;
+                  },
+                );
+              }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+                return FadeTransition(opacity: animation, child: child);
+              }));
+            }
 
-        void _saveUsers(String name, String addr) async {
-          Dialogs.openWaitBox(context);
-          await NetInterface.saveContact(name, addr, context);
-          await NetInterface.getAddrBook();
-          await AppDatabase().getContacts();
-          Future.delayed(const Duration(milliseconds: 100),() {
-            Navigator.of(context).pop();
-          });
-          Future.delayed(const Duration(milliseconds: 100),() {
-            Navigator.of(context).pop();
-          });
+            void _saveUsers(String name, String addr) async {
+              Dialogs.openWaitBox(context);
+              await NetInterface.saveContact(name, addr, context);
+              await NetInterface.getAddrBook();
+              await AppDatabase().getContacts();
+              Future.delayed(const Duration(milliseconds: 100), () {
+                Navigator.of(context).pop();
+              });
+              Future.delayed(const Duration(milliseconds: 100), () {
+                Navigator.of(context).pop();
+              });
 
-          setState(() {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(AppLocalizations.of(context)!.contact_added),
-              backgroundColor: const Color(0xFF63C9F3),
-              behavior: SnackBarBehavior.fixed,
-              elevation: 5.0,
-            ));
-          });
-        }
-        return DialogBody(
-          dialogWidth: MediaQuery
-              .of(context)
-              .size
-              .width * 0.95,
-          noButtons: true,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(
-              padding: const EdgeInsets.only(top: 10.0, left: 15.0, right: 15.0, bottom: 10.0),
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                color: Color(0xFF22283A),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: 10.0,
+              setState(() {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(AppLocalizations.of(context)!.contact_added),
+                  backgroundColor: const Color(0xFF63C9F3),
+                  behavior: SnackBarBehavior.fixed,
+                  elevation: 5.0,
+                ));
+              });
+            }
+
+            return DialogBody(
+              dialogWidth: MediaQuery.of(context).size.width * 0.95,
+              noButtons: true,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(
+                  padding: const EdgeInsets.only(top: 10.0, left: 15.0, right: 15.0, bottom: 10.0),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                    color: Color(0xFF22283A),
                   ),
-                  TextField(
-                    controller: controller,
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .bodyText1!
-                        .copyWith(color: Colors.white70),
-                    decoration: InputDecoration(
-                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                      contentPadding: const EdgeInsets.all(8.0),
-                      filled: true,
-                      hoverColor: Colors.white24,
-                      focusColor: Colors.white24,
-                      fillColor: const Color(0xFF303850),
-                      labelText: "",
-                      labelStyle: Theme
-                          .of(context)
-                          .textTheme
-                          .bodyText2!
-                          .copyWith(color: Colors.white54, fontSize: 18.0),
-                      hintText: AppLocalizations.of(context)!.name,
-                      hintStyle: Theme
-                          .of(context)
-                          .textTheme
-                          .bodyText1!
-                          .copyWith(color: Colors.white54, fontSize: 22.0),
-                      prefixIcon: const Icon(
-                        Icons.person,
-                        color: Colors.white70,
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 10.0,
                       ),
-                      focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                      enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20.0,
-                  ),
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
-                    Flexible(
-                      child: FractionallySizedBox(
-                        widthFactor: 0.95,
-                        child: SizedBox(
-                          height: 45,
-                          child: TextField(
-                            controller: controllerAddr,
-                            style: Theme
-                                .of(context)
-                                .textTheme
-                                .bodyText1!
-                                .copyWith(color: Colors.white70),
-                            decoration: InputDecoration(
-                              floatingLabelBehavior: FloatingLabelBehavior.always,
-                              contentPadding: const EdgeInsets.only(left: 8.0),
-                              filled: true,
-                              hoverColor: Colors.white24,
-                              focusColor: Colors.white24,
-                              fillColor: const Color(0xFF303850),
-                              labelText: "",
-                              labelStyle: Theme
-                                  .of(context)
-                                  .textTheme
-                                  .bodyText2!
-                                  .copyWith(color: Colors.white54, fontSize: 10.0),
-                              hintText: AppLocalizations.of(context)!.address,
-                              hintStyle: Theme
-                                  .of(context)
-                                  .textTheme
-                                  .bodyText1!
-                                  .copyWith(color: Colors.white54, fontSize: 22.0),
-                              prefixIcon: const Icon(
-                                Icons.person,
-                                color: Colors.white70,
+                      TextField(
+                        controller: controller,
+                        style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                        decoration: InputDecoration(
+                          floatingLabelBehavior: FloatingLabelBehavior.always,
+                          contentPadding: const EdgeInsets.all(8.0),
+                          filled: true,
+                          hoverColor: Colors.white24,
+                          focusColor: Colors.white24,
+                          fillColor: const Color(0xFF303850),
+                          labelText: "",
+                          labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
+                          hintText: AppLocalizations.of(context)!.name,
+                          hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 22.0),
+                          prefixIcon: const Icon(
+                            Icons.person,
+                            color: Colors.white70,
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                          enabledBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20.0,
+                      ),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                        Flexible(
+                          child: FractionallySizedBox(
+                            widthFactor: 0.95,
+                            child: SizedBox(
+                              height: 45,
+                              child: TextField(
+                                controller: controllerAddr,
+                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                decoration: InputDecoration(
+                                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                                  contentPadding: const EdgeInsets.only(left: 8.0),
+                                  filled: true,
+                                  hoverColor: Colors.white24,
+                                  focusColor: Colors.white24,
+                                  fillColor: const Color(0xFF303850),
+                                  labelText: "",
+                                  labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 10.0),
+                                  hintText: AppLocalizations.of(context)!.address,
+                                  hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 22.0),
+                                  prefixIcon: const Icon(
+                                    Icons.person,
+                                    color: Colors.white70,
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.white10, width: 2.0),
+                                      borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                                  enabledBorder: const OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.black12, width: 2.0),
+                                      borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                                ),
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                              enabledBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
                             ),
                           ),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 0.0, top: 1.0),
+                          child: RoundButton(
+                              height: 40,
+                              width: 40,
+                              color: const Color(0xFF22283A),
+                              onTap: () {
+                                _openQRScanner();
+                              },
+                              splashColor: Colors.black45,
+                              icon: const Icon(
+                                Icons.qr_code,
+                                size: 35,
+                                color: Colors.white70,
+                              )),
+                        ),
+                      ]),
+                      const SizedBox(
+                        height: 10.0,
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 0.0, top: 1.0),
-                      child: RoundButton(
-                          height: 40,
-                          width: 40,
-                          color: const Color(0xFF22283A),
-                          onTap: () {
-                            _openQRScanner();
-                          },
-                          splashColor: Colors.black45,
-                          icon: const Icon(
-                            Icons.qr_code,
-                            size: 35,
-                            color: Colors.white70,
-                          )),
-                    ),
-                  ]),
-                  const SizedBox(
-                    height: 10.0,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15.0),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: <Widget>[
-                          Expanded(
-                            child: Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: TextButton.icon(
-                                icon: const Icon(
-                                  Icons.person_add,
-                                  color: Colors.white70,
-                                ),
-                                label: Text(
-                                  AppLocalizations.of(context)!.contact_add,
-                                  style: Theme
-                                      .of(context)
-                                      .textTheme
-                                      .bodyText1!
-                                      .copyWith(color: Colors.white70),
-                                ),
-                                style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),
-                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15.0),
+                        child: IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              Expanded(
+                                child: Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: TextButton.icon(
+                                    icon: const Icon(
+                                      Icons.person_add,
+                                      color: Colors.white70,
+                                    ),
+                                    label: Text(
+                                      AppLocalizations.of(context)!.contact_add,
+                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                    ),
+                                    style: ButtonStyle(
+                                        backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
-                                onPressed: () {
-                                  _saveUsers(controller.text, controllerAddr.text);
-                                },
+                                    onPressed: () {
+                                      _saveUsers(controller.text, controllerAddr.text);
+                                    },
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(
+                        height: 10.0,
+                      ),
+                    ],
                   ),
-                  const SizedBox(
-                    height: 10.0,
-                  ),
-                ],
-              ),
-            ),
-          ]),);
-      });
-    });
+                ),
+              ]),
+            );
+          });
+        });
   }
 
   static Color sendColors(Set<MaterialState> states) {
@@ -2112,9 +2083,7 @@ class Dialogs {
     }
     return Colors.green.withOpacity(0.8);
   }
-
 }
-
 
 extension StringExtension on String {
   String capitalize() {

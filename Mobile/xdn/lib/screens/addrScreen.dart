@@ -20,7 +20,7 @@ import '../support/Dialogs.dart';
 import '../support/Encrypt.dart';
 import '../support/RoundButton.dart';
 import '../widgets/backgroundWidget.dart';
-import 'messageDetailScreen.dart';
+import 'message_detail_screen.dart';
 
 class AddressScreen extends StatefulWidget {
   static const String route = "menu/contacts";
@@ -287,6 +287,7 @@ class AddressScreenState extends State<AddressScreen> {
                             onChanged: (String text) async {
                               _searchUsers(text);
                             },
+                            cursorColor: Colors.white30,
                             style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
                             decoration: InputDecoration(
                                 floatingLabelBehavior: FloatingLabelBehavior.always,

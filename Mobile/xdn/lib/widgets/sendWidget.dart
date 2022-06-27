@@ -22,8 +22,9 @@ import '../support/Utils.dart';
 class SendWidget extends StatefulWidget {
   final Function? func;
   final Future? balance;
+  final VoidCallback cancel;
 
-  const SendWidget({Key? key, this.func, this.balance}) : super(key: key);
+  const SendWidget({Key? key, this.func, this.balance, required this.cancel}) : super(key: key);
 
   @override
   SendWidgetState createState() => SendWidgetState();
@@ -163,10 +164,14 @@ class SendWidgetState extends State<SendWidget> {
     // fail = false;
     // succ = false;
     // sendView = true;
-    wait = false;
-    succ = false;
-    fail = false;
-    sendView = false;
+    Future.delayed(Duration.zero, () {
+      initView();
+    });
+
+    // wait = false;
+    // succ = false;
+    // fail = false;
+    // sendView = false;
   }
 
   void _getCurrentBalance() async {
@@ -471,6 +476,29 @@ class SendWidgetState extends State<SendWidget> {
                             children: <Widget>[
                               Expanded(
                                 child: Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: TextButton.icon(
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                    ),
+                                    label: Text(
+                                      AppLocalizations.of(context)!.cancel.toUpperCase(),
+                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 22.0),
+                                    ),
+                                    style: ButtonStyle(
+                                        backgroundColor: MaterialStateProperty.resolveWith((states) => cancelColors(states)),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
+                                    onPressed: () {
+                                      widget.cancel();
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20.0,),
+                              Expanded(
+                                child: Directionality(
                                   textDirection: TextDirection.rtl,
                                   child: TextButton.icon(
                                     icon: const Icon(
@@ -541,4 +569,16 @@ Color sendColors(Set<MaterialState> states) {
     return Colors.blue;
   }
   return Colors.white10;
+}
+
+Color cancelColors(Set<MaterialState> states) {
+  const Set<MaterialState> interactiveStates = <MaterialState>{
+    MaterialState.pressed,
+    MaterialState.hovered,
+    MaterialState.focused,
+  };
+  if (states.any(interactiveStates.contains)) {
+    return Colors.blue;
+  }
+  return Colors.redAccent;
 }

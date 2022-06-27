@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:digitalnote/screens/mainMenuScreen.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';

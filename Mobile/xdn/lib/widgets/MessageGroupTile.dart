@@ -34,7 +34,7 @@ class MessageGroupTileState extends State<MessageGroupTile> {
       borderRadius: const BorderRadius.all(Radius.circular(15.0)),
       child: Card(
         elevation: 0,
-        margin: const EdgeInsets.only(top: 0.0),
+        margin: const EdgeInsets.only(top: 4.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
@@ -65,6 +65,7 @@ class MessageGroupTileState extends State<MessageGroupTile> {
                     Center(
                       child: SizedBox(width: 57, height: 57, child:
                       AvatarPicker(
+                        borderRadius: 15.0,
                           avatarColor: Colors.white54,
                           color: const Color(0xFF22304D),
                           userID: widget.mgroup.sentAddressOrignal)),

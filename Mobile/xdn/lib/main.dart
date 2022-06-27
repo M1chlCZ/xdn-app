@@ -4,7 +4,7 @@ import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
 import 'package:digitalnote/screens/main_menu.dart';
-import 'package:digitalnote/screens/messagescreen.dart';
+import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';

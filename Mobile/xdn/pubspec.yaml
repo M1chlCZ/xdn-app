@@ -3,7 +3,7 @@ description: DigitalNode App Wallet
 
 publish_to: 'none'
 
-version: 1.0.26+26
+version: 1.0.27+27
 
 environment:
   sdk: ">=2.14.0 <3.0.0"

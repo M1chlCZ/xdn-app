@@ -16,7 +16,7 @@ import '../support/MessageGroup.dart';
 import '../support/NetInterface.dart';
 import '../support/RoundButton.dart';
 import '../widgets/backgroundWidget.dart';
-import 'messageDetailScreen.dart';
+import 'message_detail_screen.dart';
 
 class MessageScreen extends StatefulWidget {
   static const String route = "menu/messages";
