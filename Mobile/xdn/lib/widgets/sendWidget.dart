@@ -281,7 +281,7 @@ class SendWidgetState extends State<SendWidget> {
         visible: sendView,
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
-            padding: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 11.0, right: 11.0),
+            padding: EdgeInsets.only(top: useTablet ? padding : 0.0, left: 11.0, right: 11.0),
             child: PhysicalModel(
               color: Theme.of(context).konjCardColor,
               shadowColor: Colors.black45,

@@ -160,8 +160,8 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
                 Header(header: AppLocalizations.of(context)!.wl_balance),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
-                  switchInCurve: Curves.bounceInOut,
-                  switchOutCurve: Curves.bounceInOut,
+                  switchInCurve: Curves.easeIn,
+                  switchOutCurve: Curves.decelerate,
                   transitionBuilder: (Widget child, Animation<double> animation) {
                     return ScaleTransition(scale: animation, child: child);
                   },

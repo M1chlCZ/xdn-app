@@ -126,7 +126,9 @@ class TransactionWidgetState extends State<TransactionWidget> {
                                 shrinkWrap: true,
                                 itemCount: data!.length,
                                 itemBuilder: (BuildContext context, int index) {
-                                  return TransactionView(customLocale: Localizations.localeOf(context).languageCode, transaction: data[index]);
+                                  return TransactionView(
+                                    key: ValueKey<String>(data[index].txid!),
+                                      customLocale: Localizations.localeOf(context).languageCode, transaction: data[index]);
                                 },
                               );
                             case Status.ERROR:

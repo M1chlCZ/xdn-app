@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
@@ -9,6 +10,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../globals.dart' as globals;
 import '../support/NetInterface.dart';
@@ -59,7 +61,7 @@ class AvatarPickerState extends State<AvatarPicker> {
           child: GestureDetector(
             onTap: () {
               if (localUser) {
-                _pickImage();
+                _checkPermissions();
               }
             },
             child: Center(
@@ -148,6 +150,21 @@ class AvatarPickerState extends State<AvatarPicker> {
         this.localUser = false;
         await _downloadPicture(widget.userID);
       }
+    }
+  }
+
+  void _checkPermissions() async {
+    var status = await Permission.photos.status;
+    if (await Permission.photos.isPermanentlyDenied) {
+      await Dialogs.openAlertBoxReturn(context, "Warning", "Please grant this app permissions for Photos");
+      openAppSettings();
+    } else if (status.isDenied) {
+      var r = await Permission.photos.request();
+      if (r.isGranted) {
+        _pickImage();
+      }
+    } else {
+      _pickImage();
     }
   }
 

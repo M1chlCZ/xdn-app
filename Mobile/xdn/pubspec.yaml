@@ -3,7 +3,7 @@ description: DigitalNode App Wallet
 
 publish_to: 'none'
 
-version: 1.0.27+27
+version: 1.0.31+31
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -57,7 +57,7 @@ dependencies:
       url: https://github.com/MathiasCochet/open_file.git
       ref: gradle-update
   external_path: ^1.0.1
-  flutter_native_splash: ^2.2.3+1
+  flutter_native_splash: ^2.2.4
   avatar_glow: any
   styled_text: any
   flutter_displaymode: ^0.4.0

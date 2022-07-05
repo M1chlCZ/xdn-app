@@ -59,6 +59,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
     _getBalance();
     timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       if (_running == true) {
+        _getNewMessages();
         mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
       }
     });
@@ -84,10 +85,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   void _getNewMessages() async {
     var addr = await SecureStorage.read(key: globals.ADR);
     int idMax = await AppDatabase().getMessageGroupMaxID(addr, widget.mgroup.sentAddressOrignal);
-    var i = await NetInterface.saveMessages(widget.mgroup.sentAddressOrignal!, idMax);
-    if (i > 0) {
-      mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
-    }
+    await NetInterface.saveMessages(widget.mgroup.sentAddressOrignal!, idMax);
+    mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
   }
 
   @override
@@ -120,7 +119,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
     // mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
     if (_running) {
       Future.delayed(const Duration(milliseconds: 10), () {
-        mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+        _getNewMessages();
+        // mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
         setState(() {
           _switchWidget = _tipIcon();
           _circleVisible = false;
@@ -146,15 +146,22 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         _replyMessage = null;
         _replyHeight = 0.0;
       });
-      Future.delayed(const Duration(milliseconds: 2000), () {
-        if (_withoutNot) {
-          setState(() {
-            _withoutNot = false;
-            _switchWidget = _tipIcon();
-            _circleVisible = false;
-            mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
-          });
-        }
+      Future.delayed(const Duration(milliseconds: 100), () {
+        setState(() {
+          _withoutNot = false;
+          _switchWidget = _tipIcon();
+          _circleVisible = false;
+          mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+        });
+        // _getNewMessages();
+        // if (_withoutNot) {
+        //   setState(() {
+        //     _withoutNot = false;
+        //     _switchWidget = _tipIcon();
+        //     _circleVisible = false;
+        //     mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+        //   });
+        // }
       });
     }
   }

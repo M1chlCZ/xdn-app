@@ -290,7 +290,7 @@ class AppDatabase {
       );
       if (check.isEmpty) {
         count += 1;
-        await dbClient.insert(globals.TABLE_MESSAGES, input[i].toMap());
+        await dbClient.insert(globals.TABLE_MESSAGES, input[i].toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
       } else {
         // print("MESSAGE UPDATE");
         await updateMessageLikes(input[i].id as int, input[i].likes as int);
@@ -351,7 +351,8 @@ class AppDatabase {
     var res = await dbClient.query(
       globals.TABLE_MESSAGES,
       columns: ["MAX(lastChange) as lastChange"],
-      where: "(receiveAddr LIKE '%$receiveAddr%' AND sentAddr LIKE '%$sentAddr%') UNION ALL SELECT MAX(lastChange) as lastChange FROM messages WHERE (receiveAddr LIKE '%$sentAddr%' AND sentAddr LIKE '%$receiveAddr%')",
+      where: "(${globals.MESSAGES_RECEIVE_ADDR} = ? AND ${globals.MESSAGES_SENT_ADDR} = ?) OR (${globals.MESSAGES_RECEIVE_ADDR} = ? AND ${globals.MESSAGES_SENT_ADDR} = ?)",
+      whereArgs: [receiveAddr, sentAddr, sentAddr, receiveAddr],
     );
 
     if (res.first['lastChange'] == null) return 0;
@@ -394,9 +395,10 @@ class AppDatabase {
   Future<void> updateMessageLastChange(int id, int value) async {
     final dbClient = await db;
     Map<String, dynamic> row = {
+      globals.MESSAGES_ID: id,
       globals.MESSAGES_LAST_CHANGE: value,
     };
-    await dbClient.update(globals.TABLE_MESSAGES, row, where: "${globals.MESSAGES_ID}= ?", whereArgs: [id]);
+    await dbClient.update(globals.TABLE_MESSAGES, row, where: "${globals.MESSAGES_ID}=?", whereArgs: [id], conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<MessageGroup>> searchMessages(String searchQuery) async {
