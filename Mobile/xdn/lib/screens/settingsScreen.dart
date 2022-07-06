@@ -50,6 +50,7 @@ class _SettingsState extends State<SettingsScreen> {
   var settingUP = false;
   var run = false;
   GetInfo? getInfo;
+  String? tempPass;
 
   @override
   void initState() {
@@ -802,50 +803,76 @@ class _SettingsState extends State<SettingsScreen> {
     _reload = true;
   }
 
-  _passCheck(String password) async {
+  _passCheck(String password, {String? pin}) async {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
-    var succ = await NetInterface.checkPassword(password);
-    if (succ) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        Dialogs.openPasswordConfirmBox(context, _passChange);
+    dynamic succ = await NetInterface.checkPassword(password, pin: pin);
+    if (succ is bool) {
+      if (succ) {
+            if (mounted) {
+              Navigator.of(context).pop();
+              Dialogs.openPasswordConfirmBox(context, _passChange);
+            }
+          } else {
+            if (mounted) {
+              Navigator.of(context).pop();
+              Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
+            }
+          }
+      if (tempPass != null && pin != null) {
+        tempPass == null;
       }
-    } else {
-      if (mounted) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
-      }
+    }else if (succ is String) {
+      if (mounted) Navigator.of(context).pop();
+      tempPass = password;
+      if (mounted) Dialogs.open2FABox(context, _auth2FAPass);
     }
+  }
+
+  _auth2FAPass(String? s) async {
+    _passCheck(tempPass!, pin: s);
   }
 
   _passChange(String password) {
     NetInterface.changePassword(context, password);
   }
 
-  _passCheckPrivKey(String password) async {
+  _passCheckPrivKey(String password,{String? pin}) async {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
-    var succ = await NetInterface.checkPassword(password);
-    if (succ) {
-      String? priv = await NetInterface.getPrivKey();
-      if (priv != null) {
-        if (mounted) {
-          Navigator.of(context).pop();
-          Dialogs.openPrivKeyQR(context, priv);
+    dynamic succ = await NetInterface.checkPassword(password, pin: pin);
+    if (succ is bool) {
+      if (succ) {
+        String? priv = await NetInterface.getPrivKey();
+        if (priv != null) {
+          if (mounted) {
+            Navigator.of(context).pop();
+            Dialogs.openPrivKeyQR(context, priv);
+          }
+        } else {
+          if (mounted) {
+            Navigator.of(context).pop();
+            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_priv_error);
+          }
         }
       } else {
         if (mounted) {
           Navigator.of(context).pop();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_priv_error);
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
         }
       }
-    } else {
-      if (mounted) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
+      if (tempPass != null && pin != null) {
+        tempPass == null;
       }
+    }else if (succ is String) {
+      if (mounted) Navigator.of(context).pop();
+      tempPass = password;
+      if (mounted) Dialogs.open2FABox(context, _auth2FA);
     }
+  }
+
+  _auth2FA(String? s) async {
+    _passCheckPrivKey(tempPass!, pin: s);
   }
 
   _get2FACode() async {

@@ -496,12 +496,12 @@ class Dialogs {
                             onTap: () async {
                               ClipboardData? data = await Clipboard.getData(Clipboard.kTextPlain);
                               // print(data!.text!);
-                              sState(() {
-                                if (data!.text != null) {
-                                  txt.text = data.text!;
-                                }
-                                txt.selection = TextSelection.collapsed(offset: txt.text.length);
-                              });
+                              if (data?.text != null) {
+                                sState(() {
+                                  txt.text = data!.text!;
+                                  txt.selection = TextSelection.collapsed(offset: txt.text.length);
+                                });
+                              }
                             },
                             child: Container(
                               decoration: const BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.all(Radius.circular(5.0))),
@@ -1721,7 +1721,7 @@ class Dialogs {
                                                   func!(cont);
                                                 },
                                                 leading: SizedBox(
-                                                  width: 50.0,
+                                                    width: 50.0,
                                                     child: AvatarPicker(
                                                       userID: cont.getAddr()!,
                                                       color: Colors.transparent,

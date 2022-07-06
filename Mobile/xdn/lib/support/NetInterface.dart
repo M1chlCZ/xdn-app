@@ -364,17 +364,15 @@ class NetInterface {
     try {
       // ComInterface ci = ComInterface();
       // Map<String, dynamic> rt = await ci.get("/getinfo", request: {}, debug: true);
-      final response = await http
-          .get(
+      final response = await http.get(
         Uri.parse('${globals.SERVER_URL}/getinfo'),
         headers: {"Content-Type": "application/json"},
-      )
-          .timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         print(response.body);
         var gi = GetInfo.fromJson(jsonDecode(response.body));
         return gi;
-      }else{
+      } else {
         return null;
       }
     } on TimeoutException catch (_) {
@@ -720,13 +718,16 @@ class NetInterface {
     return rt;
   }
 
-  static Future<bool> checkPassword(String password) async {
+  static Future<dynamic> checkPassword(String password, {String? pin}) async {
     String? username = await SecureStorage.read(key: globals.USERNAME);
     try {
       Map<String, dynamic> m = {
         "username": username,
         "password": password,
       };
+      if (pin != null) {
+        m['twoFactor'] = pin;
+      }
 
       // ComInterface ci = ComInterface();
       // Response res = await ci.post("/login", request: m, type: ComInterface.typePlain, debug: true);
@@ -739,6 +740,8 @@ class NetInterface {
 
       if (res.statusCode == 200) {
         return true;
+      } else if (res.statusCode == 409) {
+        return "fa";
       } else {
         return false;
       }
