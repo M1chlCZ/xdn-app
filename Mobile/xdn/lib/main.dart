@@ -196,10 +196,6 @@ class MyAppState extends State<MyApp> {
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               localeListResolutionCallback: (locales, supportedLocales) {
                 ms = 'device locales=$locales supported locales=$supportedLocales';
-                var l = locales?.where((element) => element.languageCode == 'en');
-                if (l != null) {
-                  return const Locale('en', '');
-                }
                 for (Locale locale in locales!) {
                   if (supportedLocales.contains(locale)) {
                     return locale;
@@ -246,6 +242,9 @@ class MyAppState extends State<MyApp> {
                 Locale('es', 'US'),
                 Locale('es', 'UY'),
                 Locale('es', 'VE'),
+                Locale('nl', 'NL'),
+                Locale('nl', 'BE'),
+                Locale('nl', 'AW'),
               ],
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
