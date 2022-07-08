@@ -189,32 +189,25 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         _switchWidget = _sendWait();
         _circleVisible = true;
       });
-      int _i = await NetInterface.sendContactCoins(amount, name, addr);
-      var _nick = await SecureStorage.read(key: globals.NICKNAME);
-      if (_i == 1) {
-        var _text = "${_nick!} ${AppLocalizations.of(context)!.message_tipped} ${widget.mgroup.sentAddr!} $amount KONJ!";
-        await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, _text, _replyid);
+      int i = await NetInterface.sendContactCoins(amount, name, addr);
+      if (i == 1) {
+        var text = "&TIP# $amount XDN!";
+        await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, text, _replyid);
         setState(() {
           _switchWidget = _sendWait();
           _circleVisible = true;
           _withoutNot = true;
         });
 
-        Future.delayed(const Duration(milliseconds: 7000), () {
-          if (_withoutNot) {
-            setState(() {
-              _withoutNot = false;
-              mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
-            });
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(AppLocalizations.of(context)!.message_not_warning),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.fixed,
-              elevation: 5.0,
-            ));
-          }
+        Future.delayed(const Duration(milliseconds: 100), () {
+          setState(() {
+            _withoutNot = false;
+            _switchWidget = _tipIcon();
+            _circleVisible = false;
+            mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+          });
         });
-      } else if (_i == 2) {
+      } else if (i == 2) {
         Navigator.of(context).pop();
         Dialogs.openInsufficientBox(context);
       }

@@ -38,7 +38,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                 offset: const Offset(0, 5), // changes position of shadow
               ),
             ],
-            image: DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitWidth, opacity: 1),
+            image: const DecorationImage(image:  AssetImage("images/card.png"), fit: BoxFit.fitWidth, opacity: 1),
           ),
           height: 100,
           child: Stack(

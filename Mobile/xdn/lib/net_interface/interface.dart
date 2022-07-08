@@ -43,8 +43,10 @@ class ComInterface {
       var rr = response;
       var data = decryptAESCryptoJS(rr.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
       debugPrint(data);
+      debugPrint(response.statusCode.toString());
     }
     if (typeContent == typePlain) {
+      print("PLAIN");
       return response;
     }
     responseJson = compute(_returnResponse, response);

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bubble/bubble.dart';
+import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/Swipeable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,11 +62,11 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
   }
 
   bool _checkForTip(String d) {
-    if (d.contains(AppLocalizations.of(context)!.message_reply_to)) {
-      if (d.contains("XDN")) {
-        return true;
-      }
+    // if (d.contains(AppLocalizations.of(context)!.message_reply_to)) {
+    if (d.contains("&TIP#")) {
+      return true;
     }
+    // }
     return false;
   }
 
@@ -147,8 +148,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
           radius: const Radius.circular(15.0),
           alignment: Alignment.topLeft,
           nip: BubbleNip.no,
-          color: _checkForTip(widget.messages.text!) == true ? Colors.green
-              : const Color.fromRGBO(217, 216, 216, 1.0),
+          color: _checkForTip(widget.messages.text!) == true ? Colors.green : const Color.fromRGBO(217, 216, 216, 1.0),
           child: Padding(
             padding: const EdgeInsets.all(2.0),
             child: IntrinsicWidth(
@@ -171,7 +171,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                                   Container(
                                       padding: const EdgeInsets.all(3.0),
                                       child: Text(
-                                        AppLocalizations.of(context)!.message_reply_to + ':',
+                                        '${AppLocalizations.of(context)!.message_reply_to}:',
                                         style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.black26),
                                         textAlign: TextAlign.start,
                                       )),
@@ -180,7 +180,10 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                                   ),
                                   Flexible(
                                     child: SimpleRichText(_replyText!,
-                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.black87, fontStyle: FontStyle.italic),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyText1!
+                                            .copyWith(fontSize: 12.0, color: Colors.black87, fontStyle: FontStyle.italic),
                                         textOverflow: TextOverflow.ellipsis),
                                   ),
                                 ],
@@ -207,26 +210,37 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                           width: 1,
                         ),
                   Padding(
-                    padding: const EdgeInsets.only(left: 0.0, right: 60.0),
-                    child: _checkForLink(widget.messages.text!) == false
-                        ? SimpleRichText(
-                            widget.messages.text!,
-                            textAlign: TextAlign.left,
-                            fontWeight: FontWeight.w600,
-                            style: Theme.of(context).textTheme.bodyText1!.copyWith(fontWeight: FontWeight.w600, letterSpacing: .6, fontSize: _textSize, color: Colors.black.withOpacity(0.55)),
-                          )
-                        : SelectableLinkify(
-                            onOpen: (link) async {
-                              if (await canLaunchUrl(Uri.parse(link.url))) {
-                                await launchUrl(Uri.parse(link.url));
-                              } else {
-                                print('Could not launch $link');
-                              }
-                            },
-                            text: widget.messages.text!,
-                            textAlign: TextAlign.left,
-                            style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0, color: const Color.fromRGBO(31, 30, 30, 1.0))),
-                  ),
+                      padding: const EdgeInsets.only(left: 0.0, right: 60.0),
+                      child: Stack(
+                        children: [
+                          if (_checkForLink(widget.messages.text!) == false && _checkForTip(widget.messages.text!) == false)
+                            SimpleRichText(
+                              widget.messages.text!,
+                              textAlign: TextAlign.left,
+                              fontWeight: FontWeight.w600,
+                              style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                                  fontWeight: FontWeight.w600, letterSpacing: .6, fontSize: _textSize, color: Colors.black.withOpacity(0.55)),
+                            )
+                          else if (_checkForLink(widget.messages.text!) == false && _checkForTip(widget.messages.text!) == true)
+                            SimpleRichText(_clearTip(widget.messages.text!),
+                                textAlign: TextAlign.left,
+                                fontWeight: FontWeight.w500,
+                                style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                                    fontWeight: FontWeight.w600, letterSpacing: .6, fontSize: _textSize, color: Colors.black.withOpacity(0.55)))
+                          else
+                            SelectableLinkify(
+                                onOpen: (link) async {
+                                  if (await canLaunchUrl(Uri.parse(link.url))) {
+                                    await launchUrl(Uri.parse(link.url));
+                                  } else {
+                                    print('Could not launch $link');
+                                  }
+                                },
+                                text: widget.messages.text!,
+                                textAlign: TextAlign.left,
+                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0, color: const Color.fromRGBO(31, 30, 30, 1.0))),
+                        ],
+                      )),
                   Align(
                     alignment: Alignment.centerRight,
                     child: Padding(
@@ -249,7 +263,8 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                             width: 10,
                           ),
                           Text(_getMeDate(widget.messages.lastMessage!),
-                              textAlign: TextAlign.right, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: const Color.fromRGBO(31, 30, 30, 1.0))),
+                              textAlign: TextAlign.right,
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: const Color.fromRGBO(31, 30, 30, 1.0))),
                         ],
                       ),
                     ),
@@ -301,8 +316,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
           alignment: widget.userMessage == true ? Alignment.topRight : Alignment.topLeft,
           radius: const Radius.circular(15.0),
           nip: BubbleNip.no,
-          color: _checkForTip(widget.messages.text!) == true ? Colors.green
-              : const Color(0xFF28303F),
+          color: _checkForTip(widget.messages.text!) == true ? Colors.green : const Color(0xFF28303F),
           child: Padding(
             padding: const EdgeInsets.all(3.0),
             child: IntrinsicWidth(
@@ -324,7 +338,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                                   Container(
                                       padding: const EdgeInsets.all(3.0),
                                       child: Text(
-                                        AppLocalizations.of(context)!.message_reply_to + ':',
+                                        '${AppLocalizations.of(context)!.message_reply_to}:',
                                         style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.white54),
                                       )),
                                   const SizedBox(
@@ -332,7 +346,10 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                                   ),
                                   Flexible(
                                     child: SimpleRichText(_replyText!,
-                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, fontWeight: FontWeight.bold, color: Colors.white, fontStyle: FontStyle.italic),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyText1!
+                                            .copyWith(fontSize: 12.0, fontWeight: FontWeight.bold, color: Colors.white, fontStyle: FontStyle.italic),
                                         textOverflow: TextOverflow.ellipsis),
                                   ),
                                 ],
@@ -358,22 +375,37 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                           height: 1,
                           width: 1,
                         ),
-                  _checkForLink(widget.messages.text!) == false
-                      ? SimpleRichText(widget.messages.text!,
-                          textAlign: TextAlign.left,
-                          fontWeight: FontWeight.w500,
-                          style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: _textSize, letterSpacing: 0.5, fontWeight: FontWeight.w500, color: Colors.white.withOpacity(0.55)))
-                      : SelectableLinkify(
-                          onOpen: (link) async {
-                            if (await canLaunchUrl(Uri.parse(link.url))) {
-                              await launchUrl(Uri.parse(link.url));
-                            } else {
-                              print('Could not launch $link');
-                            }
-                          },
-                          text: widget.messages.text!,
-                          textAlign: TextAlign.left,
-                          style: Theme.of(context).textTheme.bodyText1!.copyWith(fontWeight: FontWeight.w500, letterSpacing: 1.0, fontSize: _textSize, color: Colors.white.withOpacity(0.55))),
+                  if (_checkForLink(widget.messages.text!) == false && _checkForTip(widget.messages.text!) == false)
+                    SimpleRichText(widget.messages.text!,
+                        textAlign: TextAlign.left,
+                        fontWeight: FontWeight.w500,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText1!
+                            .copyWith(fontSize: _textSize, letterSpacing: 0.5, fontWeight: FontWeight.w500, color: Colors.white.withOpacity(0.55)))
+                  else if (_checkForLink(widget.messages.text!) == false && _checkForTip(widget.messages.text!) == true)
+                    SimpleRichText(_clearTip(widget.messages.text!),
+                        textAlign: TextAlign.left,
+                        fontWeight: FontWeight.w500,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText1!
+                            .copyWith(fontSize: _textSize, letterSpacing: 0.5, fontWeight: FontWeight.w500, color: Colors.white.withOpacity(0.55)))
+                  else
+                    SelectableLinkify(
+                        onOpen: (link) async {
+                          if (await canLaunchUrl(Uri.parse(link.url))) {
+                            await launchUrl(Uri.parse(link.url));
+                          } else {
+                            print('Could not launch $link');
+                          }
+                        },
+                        text: widget.messages.text!,
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText1!
+                            .copyWith(fontWeight: FontWeight.w500, letterSpacing: 1.0, fontSize: _textSize, color: Colors.white.withOpacity(0.55))),
                   Padding(
                     padding: const EdgeInsets.only(top: 5.0),
                     child: Row(
@@ -453,6 +485,14 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
         _heart = _fullHeart();
         _heartLeft = _fullHeart();
       });
+    }
+  }
+
+  String _clearTip(String s) {
+    if (s.contains("&TIP#")) {
+      return "${AppLocalizations.of(context)!.message_tipped.capitalize()} ${s.replaceAll("&TIP#", "")}";
+    } else {
+      return s;
     }
   }
 }

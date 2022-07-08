@@ -250,6 +250,7 @@ class NetInterface {
 
     ComInterface ci = ComInterface();
     Map<String, dynamic> rt = await ci.get("/data", request: m);
+    print(rt);
     return rt;
   }
 
@@ -570,7 +571,6 @@ class NetInterface {
         "param3": text,
         "request": "sendMessage",
       };
-
       ComInterface ci = ComInterface();
       await ci.get("/data", request: m, type: ComInterface.typePlain);
       await AppDatabase().updateMessageGroupRead(addr!, address);
@@ -607,7 +607,7 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      Response response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain, debug: true);
 
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {

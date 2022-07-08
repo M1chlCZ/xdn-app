@@ -1,5 +1,6 @@
-import 'dart:convert';
 
+import 'package:digitalnote/support/Dialogs.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
@@ -192,13 +193,13 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      Expanded(child: SmallMenuTile(name: "Messages", goto: gotoMessagesScreen)),
+                      Expanded(child: SmallMenuTile(name: AppLocalizations.of(context)!.messages, goto: gotoMessagesScreen)),
                       Expanded(
                           child: SmallMenuTile(
-                        name: "Contacts",
+                        name: AppLocalizations.of(context)!.contacts,
                         goto: gotoContactScreen,
                       )),
-                      Expanded(child: SmallMenuTile(name: "Settings", goto: gotoSettingsScreen)),
+                      Expanded(child: SmallMenuTile(name: AppLocalizations.of(context)!.set_headline.capitalize(), goto: gotoSettingsScreen)),
                     ],
                   ),
                 ),
