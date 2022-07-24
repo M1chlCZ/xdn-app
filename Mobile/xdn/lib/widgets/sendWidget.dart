@@ -1,31 +1,30 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/support/auto_size_text_field.dart';
+import 'package:digitalnote/support/barcode_scanner.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:http/http.dart' as http;
-import 'package:permission_handler/permission_handler.dart';
 
 import '../globals.dart' as globals;
 import '../support/AppDatabase.dart';
 import '../support/ColorScheme.dart';
 import '../support/Contact.dart';
 import '../support/Dialogs.dart';
-import '../support/Encrypt.dart';
 import '../support/NetInterface.dart';
-import '../support/QCodeScanner.dart';
 import '../support/Utils.dart';
 
 class SendWidget extends StatefulWidget {
   final Function? func;
   final Future? balance;
+  final VoidCallback cancel;
 
-  const SendWidget({Key? key, this.func, this.balance}) : super(key: key);
+  const SendWidget({Key? key, this.func, this.balance, required this.cancel}) : super(key: key);
 
   @override
   SendWidgetState createState() => SendWidgetState();
@@ -41,8 +40,6 @@ class SendWidgetState extends State<SendWidget> {
   final GlobalKey _textFieldKey = GlobalKey();
   final GlobalKey _textFieldAmountKey = GlobalKey();
 
-  double? _fontSize = textFieldTextStyle.fontSize;
-  double? _fontAmountSize = textFieldTextStyle.fontSize;
   double? _balance = 0.0;
 
   bool succ = false;
@@ -51,74 +48,6 @@ class SendWidgetState extends State<SendWidget> {
   bool sendView = true;
   Contact? _recipient;
 
-  void _onTextAddressChanged() {
-    try {
-      final inputWidth = _textFieldKey.currentContext!.size!.width - textFieldPadding.horizontal;
-
-      final textPainter = TextPainter(
-        textDirection: TextDirection.ltr,
-        text: TextSpan(
-          text: _controllerAddress.text,
-          style: textFieldTextStyle,
-        ),
-      );
-      textPainter.layout();
-
-      var textWidth = textPainter.width;
-      var fontSize = textFieldTextStyle.fontSize;
-
-      while (textWidth > inputWidth && fontSize! > 1.0) {
-        fontSize -= 0.5;
-        textPainter.text = TextSpan(
-          text: _controllerAddress.text,
-          style: textFieldTextStyle.copyWith(fontSize: fontSize),
-        );
-        textPainter.layout();
-        textWidth = textPainter.width;
-      }
-
-      setState(() {
-        _fontSize = fontSize;
-      });
-    } catch (e) {
-      // print(e);
-    }
-  }
-
-  void _onTextAmountChanged() {
-    try {
-      final inputWidth = _textFieldKey.currentContext!.size!.width - textFieldPadding.horizontal;
-
-      final textPainter = TextPainter(
-        textDirection: TextDirection.ltr,
-        text: TextSpan(
-          text: _controllerAmount.text,
-          style: textFieldTextStyle,
-        ),
-      );
-      textPainter.layout();
-
-      var textWidth = textPainter.width;
-      var fontSize = textFieldTextStyle.fontSize;
-
-      while (textWidth > inputWidth && fontSize! > 1.0) {
-        fontSize -= 0.5;
-        textPainter.text = TextSpan(
-          text: _controllerAmount.text,
-          style: textFieldTextStyle.copyWith(fontSize: fontSize),
-        );
-        textPainter.layout();
-        textWidth = textPainter.width;
-      }
-
-      setState(() {
-        _fontAmountSize = fontSize;
-      });
-    } catch (e) {
-      // print(e);
-    }
-  }
-
   void _sendConfirmation() async {
     Dialogs.openSendConfirmBox(context, _sendCoins);
   }
@@ -126,35 +55,31 @@ class SendWidgetState extends State<SendWidget> {
   void _sendCoins() async {
     Navigator.of(context).pop();
     try {
-      const storage = FlutterSecureStorage();
-      String? jwt = await storage.read(key: "jwt");
-      String? user = await storage.read(key: globals.USERNAME);
-      String? id = await storage.read(key: globals.ID);
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      String? user = await SecureStorage.read(key: globals.USERNAME);
+      String? id = await SecureStorage.read(key: globals.ID);
 
       String addr = _controllerAddress.text;
       String amnt = _controllerAmount.text;
-
+      Map<String, dynamic>? m;
       if (double.parse(amnt) > _balance!) {
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");
+        if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
         return;
       }
 
       if (double.parse(amnt) == 0.0) {
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.amount_empty);
+        if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.amount_empty);
         return;
       }
 
-      String? s;
-
-      if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
+      if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
         if (_recipient != null) {
           addr = _recipient!.addr!;
         } else {
-          displayDialog(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
+          if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
           return;
         }
       }
-
       setState(() {
         wait = true;
         succ = false;
@@ -163,16 +88,15 @@ class SendWidgetState extends State<SendWidget> {
       });
 
       if (_recipient == null) {
-        Map<String, dynamic> m = {
+        m = {
           "Authorization": jwt,
           "User": user,
           "request": "sendTransaction",
           "param1": addr,
           "param2": amnt,
         };
-        s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       } else {
-        Map<String, dynamic> mr = {
+        m = {
           "Authorization": jwt,
           "User": user,
           "id": id,
@@ -181,31 +105,16 @@ class SendWidgetState extends State<SendWidget> {
           "param2": amnt,
           "param3": _recipient!.name,
         };
-        s = encryptAESCryptoJS(json.encode(mr), "rp9ww*jK8KX_!537e%Crmf");
       }
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        setState(() {
-          wait = false;
-          succ = true;
-          fail = false;
-          sendView = false;
-          widget.func!();
-        });
-      } else {
-        setState(() {
-          wait = false;
-          succ = false;
-          fail = true;
-          sendView = false;
-          widget.func!();
-        });
-      }
+      ComInterface ci = ComInterface();
+      await ci.get("/data", request: m, debug: true);
+      setState(() {
+        wait = false;
+        succ = true;
+        fail = false;
+        sendView = false;
+        widget.func!();
+      });
     } on TimeoutException catch (_) {
       setState(() {
         succ = false;
@@ -251,59 +160,38 @@ class SendWidgetState extends State<SendWidget> {
   @override
   void initState() {
     super.initState();
-    _controllerAddress.addListener(_onTextAddressChanged);
-    _controllerAmount.addListener(_onTextAmountChanged);
     _getCurrentBalance();
     // fail = false;
     // succ = false;
     // sendView = true;
-    wait = false;
-    succ = false;
-    fail = false;
-    sendView = false;
+    Future.delayed(Duration.zero, () {
+      initView();
+    });
+
+    // wait = false;
+    // succ = false;
+    // fail = false;
+    // sendView = false;
   }
 
   void _getCurrentBalance() async {
     var result = await widget.balance;
     setState(() {
-      Map m = json.decode(result);
-      _balance = double.parse(m['balance'].toString());
+      _balance = double.parse(result['balance'].toString());
     });
   }
 
   void _openQRScanner() async {
     FocusScope.of(context).unfocus();
-
-    Future.delayed(const Duration(milliseconds: 200), () async {
-      var status = await Permission.camera.status;
-      if (await Permission.camera.isPermanentlyDenied) {
-        await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
-        openAppSettings();
-      } else if (status.isDenied) {
-        var r = await Permission.camera.request();
-        if (r.isGranted) {
-          Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-            return QScanWidget(
-              scanResult: (String s) {
-                _controllerAddress.text = s;
-              },
-            );
-          }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-            return FadeTransition(opacity: animation, child: child);
-          }));
-        }
-      } else {
-        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-          return QScanWidget(
-            scanResult: (String s) {
-              _controllerAddress.text = s;
-            },
-          );
-        }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-          return FadeTransition(opacity: animation, child: child);
-        }));
-      }
-    });
+    Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+      return BarcodeScanner(
+        scanResult: (String s) {
+          _controllerAddress.text = s;
+        },
+      );
+    }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+      return FadeTransition(opacity: animation, child: child);
+    }));
   }
 
   @override
@@ -319,21 +207,22 @@ class SendWidgetState extends State<SendWidget> {
           margin: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(color: const Color(0xFF79ad66), border: Border.all(color: Colors.green), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(
+              color: const Color(0xFF79ad66), border: Border.all(color: Colors.green), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width - 80,
-                  child: AutoSizeText(
-                    AppLocalizations.of(context)!.succ +'!',
-                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
-                    minFontSize: 8,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )),
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width - 80,
+              child: AutoSizeText(
+                '${AppLocalizations.of(context)!.succ}!',
+                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
+                minFontSize: 8,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )),
         ),
       ),
       Visibility(
@@ -343,7 +232,10 @@ class SendWidgetState extends State<SendWidget> {
           margin: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(color: Theme.of(context).konjCardColor, border: Border.all(color: Colors.transparent), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(
+              color: Theme.of(context).konjCardColor,
+              border: Border.all(color: Colors.transparent),
+              borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -367,13 +259,14 @@ class SendWidgetState extends State<SendWidget> {
           margin: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(color: const Color(0xFFF77066), border: Border.all(color: Colors.red), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(
+              color: const Color(0xFFF77066), border: Border.all(color: Colors.red), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
               width: MediaQuery.of(context).size.width - 80,
               child: AutoSizeText(
-                AppLocalizations.of(context)!.st_insufficient +'!',
+                '${AppLocalizations.of(context)!.st_insufficient}!',
                 style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
                 minFontSize: 8,
                 maxLines: 1,
@@ -388,7 +281,7 @@ class SendWidgetState extends State<SendWidget> {
         visible: sendView,
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
-            padding: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
+            padding: EdgeInsets.only(top: useTablet ? padding : 0.0, left: 11.0, right: 11.0),
             child: PhysicalModel(
               color: Theme.of(context).konjCardColor,
               shadowColor: Colors.black45,
@@ -398,7 +291,9 @@ class SendWidgetState extends State<SendWidget> {
                 height: useTablet ? heightVal : 220.0,
                 padding: const EdgeInsets.all(10.0),
                 width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(color: Theme.of(context).konjCardColor, borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+                decoration: const BoxDecoration(
+                    color: Color(0xFF475A9C),
+                    borderRadius: BorderRadius.all(Radius.circular(15.0))),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Column(
@@ -454,8 +349,8 @@ class SendWidgetState extends State<SendWidget> {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                                  color: Colors.white70,
-                                                ),
+                                              color: Colors.white70,
+                                            ),
                                           ),
                                         ),
                                         subtitle: SizedBox(
@@ -465,8 +360,8 @@ class SendWidgetState extends State<SendWidget> {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                                  color: Colors.white.withOpacity(0.5),
-                                                ),
+                                              color: Colors.white.withOpacity(0.5),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -559,8 +454,9 @@ class SendWidgetState extends State<SendWidget> {
                                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                         RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                 onPressed: () async {
-                                  String? s = await NetInterface.getBalance();
-                                  double max = double.parse(s!) - 0.001;
+                                  Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
+                                  _balance = double.parse(ss?["balance"]);
+                                  double max = _balance! - 0.001;
                                   _controllerAmount.text = max.toString();
                                   _controllerAmount.selection = TextSelection.fromPosition(TextPosition(offset: _controllerAmount.text.length));
                                 },
@@ -580,6 +476,29 @@ class SendWidgetState extends State<SendWidget> {
                             children: <Widget>[
                               Expanded(
                                 child: Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: TextButton.icon(
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                    ),
+                                    label: Text(
+                                      AppLocalizations.of(context)!.cancel.toUpperCase(),
+                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 22.0),
+                                    ),
+                                    style: ButtonStyle(
+                                        backgroundColor: MaterialStateProperty.resolveWith((states) => cancelColors(states)),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
+                                    onPressed: () {
+                                      widget.cancel();
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20.0,),
+                              Expanded(
+                                child: Directionality(
                                   textDirection: TextDirection.rtl,
                                   child: TextButton.icon(
                                     icon: const Icon(
@@ -588,7 +507,7 @@ class SendWidgetState extends State<SendWidget> {
                                     ),
                                     label: Text(
                                       AppLocalizations.of(context)!.send.toUpperCase(),
-                                      style: Theme.of(context).textTheme.bodyText1,
+                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 22.0),
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),
@@ -650,4 +569,16 @@ Color sendColors(Set<MaterialState> states) {
     return Colors.blue;
   }
   return Colors.white10;
+}
+
+Color cancelColors(Set<MaterialState> states) {
+  const Set<MaterialState> interactiveStates = <MaterialState>{
+    MaterialState.pressed,
+    MaterialState.hovered,
+    MaterialState.focused,
+  };
+  if (states.any(interactiveStates.contains)) {
+    return Colors.blue;
+  }
+  return Colors.redAccent;
 }

@@ -6,6 +6,10 @@ import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:digitalnote/support/auto_size_text_field.dart';
+import 'package:digitalnote/support/secure_storage.dart';
+import 'package:digitalnote/widgets/card_header.dart';
+import 'package:digitalnote/widgets/percent_switch_widget.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,16 +17,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/current_remaining_time.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:slide_to_act/slide_to_act.dart';
 
 import '../globals.dart' as globals;
-import '../support/CardHeader.dart';
 import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
-import '../support/DropdownMenu.dart';
+import '../widgets/DropdownMenu.dart';
 import '../support/Extensions.dart';
 import '../support/LifecycleWatcherState.dart';
 import '../support/NetInterface.dart';
@@ -30,19 +33,20 @@ import '../support/StakeData.dart';
 import '../widgets/backgroundWidget.dart';
 
 class StakingScreen extends StatefulWidget {
+  static const String route = "menu/staking";
+
   const StakingScreen({Key? key}) : super(key: key);
 
   @override
   StakingScreenState createState() => StakingScreenState();
 }
 
-class StakingScreenState extends LifecycleWatcherState<StakingScreen>
-    with TickerProviderStateMixin {
+class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   var _dropdownValue = 0;
-  var _getBalanceFuture;
+  Future? _getBalanceFuture;
+  final _percentageKey = GlobalKey<PercentSwitchWidgetState>();
+  final GlobalKey<SlideActionState> _keyStake = GlobalKey();
   final _controller = TextEditingController();
-  final _storage = const FlutterSecureStorage();
-  AnimationController? animationStakeController;
   var _touch = false;
   var _liveVisible = 0;
   List<FlSpot>? values = [];
@@ -75,9 +79,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
   @override
   void initState() {
     super.initState();
-
-    animationStakeController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
     _getBalance();
     // _graphByDay();
     _checkCountdown();
@@ -90,6 +91,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
       } else {
         t.cancel();
       }
+    });
+    _controller.addListener(() {
+      _percentageKey.currentState!.deActivate();
     });
   }
 
@@ -125,6 +129,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
           _countNot = 0;
           _awaitingNot = false;
         });
+        _keyStake.currentState!.reset();
         Navigator.of(context).pop();
         Future.delayed(const Duration(milliseconds: 50), () {
           FocusScope.of(context).unfocus();
@@ -133,53 +138,85 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
     }
   }
 
-  void _sendStakeCoins(String amount) async {
-    double amnt = double.parse(amount) - 0.01;
-    if (double.parse(_balance) < double.parse(amount)) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert,
-          AppLocalizations.of(context)!.st_insufficient);
-    } else if (amnt < 0) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
-          AppLocalizations.of(context)!.st_in_fees);
-    } else {
-      Dialogs.openWaitBox(context);
+  _changePercentage(double d) {
+    _controller.text = _formatPriceString(((double.parse(_balance)) * d).toString());
+    setState(() {});
+  }
 
-      _serverStatus = await NetInterface.sendStakeCoins(amnt.toString());
-      if (_serverStatus == 2) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
-            AppLocalizations.of(context)!.st_cannot_stake);
-        return;
-      } else if (_serverStatus == 4) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
-            AppLocalizations.of(context)!.st_not_balance);
-        return;
+  String _formatPriceString(String d) {
+    try {
+      var split = d.toString().split('.');
+      var decimal = split[1];
+      if (decimal.length >= 9) {
+        var sub = decimal.substring(0, 8);
+        return ("${split[0]}.$sub").trim();
+      } else {
+        return d.toString().trim();
       }
-      var _endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
-      _storage.write(key: globals.COUNTDOWN, value: _endTime.toString());
-      setState(() {
-        endTime = _endTime;
-        FocusScope.of(context).unfocus();
-      });
-      _awaitingNot = true;
-      _controller.clear();
+    } catch (e) {
+      return "0";
+    }
+  }
 
-      Future.delayed(const Duration(milliseconds: 10000), () {
-        if (_awaitingNot) {
-          setState(() {
-            _awaitingNot = false;
-            _countNot = 0;
-            _getBalance();
+  void _sendStakeCoins(String amount) async {
+    try {
+      double amnt = double.parse(amount) - 0.01;
+      if (amnt == 0) {
+        _keyStake.currentState!.reset();
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.amount_empty);
+      } else if (double.parse(_balance) < double.parse(amount)) {
+        _keyStake.currentState!.reset();
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_insufficient);
+      } else if (amnt < 0) {
+        _keyStake.currentState!.reset();
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_in_fees);
+      } else {
+        Dialogs.openWaitBox(context);
 
-            // Navigator.of(context).pop();
-          });
-          Navigator.of(context).pop();
-          Future.delayed(const Duration(milliseconds: 50), () {
-            FocusScope.of(context).unfocus();
-          });
+        _serverStatus = await NetInterface.sendStakeCoins(amnt.toString());
+        if (_serverStatus == 2) {
+          if (mounted) {
+            _keyStake.currentState!.reset();
+            Navigator.of(context).pop();
+            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_cannot_stake);
+          }
+          return;
+        } else if (_serverStatus == 4) {
+          if (mounted) {
+            _keyStake.currentState!.reset();
+            Navigator.of(context).pop();
+            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_not_balance);
+          }
+          return;
         }
-      });
+        var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
+        SecureStorage.write(key: globals.COUNTDOWN, value: endTime.toString());
+        setState(() {
+          endTime = endTime;
+          FocusScope.of(context).unfocus();
+        });
+        _awaitingNot = true;
+        _controller.clear();
+
+        Future.delayed(const Duration(milliseconds: 10000), () {
+          if (_awaitingNot) {
+            setState(() {
+              _awaitingNot = false;
+              _countNot = 0;
+              _getBalance();
+              // Navigator.of(context).pop();
+            });
+            Navigator.of(context).pop();
+            _keyStake.currentState!.reset();
+            Future.delayed(const Duration(milliseconds: 50), () {
+              FocusScope.of(context).unfocus();
+            });
+          }
+        });
+      }
+    } catch (e) {
+      _keyStake.currentState!.reset();
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.amount_empty);
     }
   }
 
@@ -203,9 +240,10 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
       }
     });
     if (i == 2) {
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert,
-          AppLocalizations.of(context)!.st_24h_timeout);
+      if (mounted) {
+        Navigator.of(context).pop();
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_24h_timeout);
+      }
       return;
     }
   }
@@ -247,17 +285,19 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
   static List<StakeData> _getData(String response) {
     try {
       List responseList = json.decode(response);
-      var _amount = 0.0;
+      var amount = 0.0;
       var l = List.generate(responseList.length, (i) {
-        _amount = _amount + responseList[i]['amount'];
+        amount = amount + responseList[i]['amount'];
         return StakeData(
           date: DateTime.parse(responseList[i]['date']),
-          amount: _amount,
+          amount: amount,
         );
       });
       return l;
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
       return [];
     }
   }
@@ -285,7 +325,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
         return max;
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
     return max;
   }
@@ -299,10 +341,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
     }
     await _checkPoolStats();
     await _checkStaking();
-    Future.delayed(const Duration(milliseconds: 100), () {
-      animationStakeController!.forward();
-    });
-
   }
 
   Future<void> _checkStaking() async {
@@ -340,13 +378,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
   }
 
   void _checkCountdown() async {
-    var _countDown = await _storage.read(key: globals.COUNTDOWN);
-    if (_countDown != null) {
+    var countDown = await SecureStorage.read(key: globals.COUNTDOWN);
+    if (countDown != null) {
       int nowDate = DateTime.now().millisecondsSinceEpoch;
-      int countTime = int.parse(_countDown);
+      int countTime = int.parse(countDown);
       if (nowDate < countTime) {
         setState(() {
-          endTime = int.parse(_countDown);
+          endTime = int.parse(countDown);
         });
       } else {
         setState(() {
@@ -370,8 +408,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
     }
 
     if (data.isNotEmpty) {
-      List<FlSpot>? _valuesData;
-      _valuesData = data
+      List<FlSpot>? valuesData;
+      valuesData = data
           .map((stakeData) {
             if (_dropdownValue == 0) {
               var hours = Jiffy(stakeData.date).hour;
@@ -392,36 +430,39 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
           .cast<FlSpot>()
           .toList();
 
-      values!.addAll(_valuesData);
+      values!.addAll(valuesData);
     }
 
     try {
       setState(() {});
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final List<int> showIndexes = [values!.length - 1];
-    final _lineBarData = [
+    final lineBarData = [
       LineChartBarData(
         spots: values,
         showingIndicators: showIndexes,
-        colors: [Colors.white70],
+        color: Colors.white70,
         barWidth: 1.2,
         isStrokeCapRound: true,
         isCurved: true,
         curveSmoothness: 0.25,
         dotData: FlDotData(show: false),
         belowBarData: BarAreaData(
-          show: true,
-          colors: _gradientColors,
-          gradientColorStops: const [0, 0.5, 0.7, 0.95],
-          gradientFrom: const Offset(0.25, 0),
-          gradientTo: const Offset(0.25, 1),
-        ),
+            show: true,
+            gradient: LinearGradient(
+              colors: _gradientColors,
+              stops: const [0, 0.5, 0.7, 0.95],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )),
       ),
     ];
 
@@ -437,15 +478,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
           ]),
           titlesData: FlTitlesData(
             show: true,
-            topTitles: SideTitles(),
-            rightTitles: SideTitles(),
+            topTitles: AxisTitles(sideTitles: SideTitles()),
+            rightTitles: AxisTitles(sideTitles: SideTitles()),
             bottomTitles: _bottomTitles(),
             leftTitles: _leftTitles(),
           ),
           borderData: FlBorderData(
-            border: const Border(
-                bottom: BorderSide(color: Colors.white30, width: 0.5),
-                left: BorderSide(color: Colors.white30, width: 0.5)),
+            border: const Border(bottom: BorderSide(color: Colors.white30, width: 0.5), left: BorderSide(color: Colors.white30, width: 0.5)),
           ),
           minX: _minX,
           maxX: _maxX,
@@ -453,16 +492,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
           maxY: _maxY,
           showingTooltipIndicators: showIndexes.map((index) {
             return ShowingTooltipIndicators([
-              LineBarSpot(_lineBarData[0], 0, values![index]),
+              LineBarSpot(lineBarData[0], 0, values![index]),
             ]);
           }).toList(),
-          lineBarsData: _lineBarData,
+          lineBarsData: lineBarData,
           lineTouchData: LineTouchData(
-              touchCallback:
-                  (FlTouchEvent? event, LineTouchResponse? touchResponse) {
-                if (event is FlTapDownEvent ||
-                    event is FlPointerHoverEvent ||
-                    event is FlPanDownEvent) {
+              touchCallback: (FlTouchEvent? event, LineTouchResponse? touchResponse) {
+                if (event is FlTapDownEvent || event is FlPointerHoverEvent || event is FlPanDownEvent) {
                   setState(() {
                     _touch = true;
                   });
@@ -474,32 +510,25 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                   setState(() {
                     _touch = false;
                   });
-                } else if (event is FlPanStartEvent ||
-                    event is FlLongPressMoveUpdate) {
+                } else if (event is FlPanStartEvent || event is FlLongPressMoveUpdate) {
                   setState(() {
                     _touch = true;
                   });
-                } else if (event is FlPanEndEvent ||
-                    event is FlPanCancelEvent) {
+                } else if (event is FlPanEndEvent || event is FlPanCancelEvent) {
                   setState(() {
                     _touch = false;
                   });
                 }
               },
               enabled: _touch,
-              getTouchedSpotIndicator:
-                  (LineChartBarData barData, List<int> spotIndexes) {
+              getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
                 return spotIndexes.map((spotIndex) {
                   return TouchedSpotIndicatorData(
                     FlLine(color: Colors.white54, strokeWidth: 0.8),
                     FlDotData(
                         show: true,
-                        getDotPainter: (FlSpot spot, double radius,
-                            LineChartBarData lc, int i) {
-                          return FlDotCirclePainter(
-                              color: const Color(0xFF312d53).withOpacity(0.5),
-                              strokeColor: Colors.white54,
-                              radius: 3.0);
+                        getDotPainter: (FlSpot spot, double radius, LineChartBarData lc, int i) {
+                          return FlDotCirclePainter(color: const Color(0xFF312d53).withOpacity(0.5), strokeColor: Colors.white54, radius: 3.0);
                         }),
                   );
                 }).toList();
@@ -517,21 +546,14 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                         // Duration d =  value.toInt());
                         _getToolTip(flSpot.x.toInt()),
                         // '${Duration(minutes: flSpot.x.toInt()).toHoursMinutes().toString()} \n',
-                        GoogleFonts.montserrat(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 12),
+                        GoogleFonts.montserrat(color: Colors.white70, fontWeight: FontWeight.w400, fontSize: 12),
                         children: [
                           TextSpan(
-                            text: flSpot.y.toStringAsFixed(3) + " KONJ",
+                            text: "${flSpot.y.toStringAsFixed(3)} XDN",
                             style: Theme.of(context)
                                 .textTheme
                                 .headline5!
-                                .copyWith(
-                                    fontStyle: FontStyle.normal,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14.0,
-                                    color: Colors.white),
+                                .copyWith(fontStyle: FontStyle.normal, fontWeight: FontWeight.bold, fontSize: 14.0, color: Colors.white),
                           ),
                         ],
                       );
@@ -541,7 +563,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
 
     return Stack(children: [
       const BackgroundWidget(
-        image: "stakingicon.png",
         mainMenu: false,
       ),
       Scaffold(
@@ -550,24 +571,18 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
         body: SingleChildScrollView(
           child: SafeArea(
             child: Column(children: [
-              CardHeader(
-                title: AppLocalizations.of(context)!.st_headline.toUpperCase(),
-                backArrow: true,
-              ),
-              const SizedBox(
-                height: 10,
+              Header(
+                header: AppLocalizations.of(context)!.st_headline.toUpperCase(),
               ),
               Padding(
-                padding: const EdgeInsets.only(
-                    left: 10.0, right: 10.0, bottom: 10.0),
+                padding: const EdgeInsets.only(left: 4.0, right: 3.0, bottom: 3.0),
                 child: ClipRect(
                   child: Container(
                     padding: const EdgeInsets.only(top: 0.0, bottom: 0.0),
                     decoration: BoxDecoration(
-                        color: Theme.of(context).konjHeaderColor,
+                        color: const Color(0xFF262C43),
                         border: Border.all(color: Colors.transparent),
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(10.0))),
+                        borderRadius: const BorderRadius.all(Radius.circular(10.0))),
                     child: Column(
                       children: [
                         Align(
@@ -580,9 +595,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                               size: 20,
                             ),
                             currentIndex: _dropdownValue,
-                            child: const Text(
-                              'dropdown',
-                            ),
                             onChange: (int value, int index) {
                               values!.clear();
                               setState(() {});
@@ -601,7 +613,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                             },
                             dropdownButtonStyle: DropdownButtonStyle(
                               mainAxisAlignment: MainAxisAlignment.start,
-                              width: 250,
+                              width: 300,
                               height: 40,
                               elevation: 0,
                               backgroundColor: Colors.transparent,
@@ -611,7 +623,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                               borderRadius: BorderRadius.circular(8),
                               elevation: 6,
                               padding: const EdgeInsets.all(5),
-                              color: Theme.of(context).konjTextFieldHeaderColor,
+                              color: const Color(0xFF2B3752),
                             ),
                             items: [
                               AppLocalizations.of(context)!.st_coins_today,
@@ -625,16 +637,14 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                     child: Padding(
                                       padding: const EdgeInsets.all(10.0),
                                       child: Text(item.value,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .button!
-                                              .copyWith(
-                                                  fontSize: 16.0,
-                                                  color: Colors.white70)),
+                                          style: Theme.of(context).textTheme.button!.copyWith(fontSize: 16.0, color: Colors.white70)),
                                     ),
                                   ),
                                 )
                                 .toList(),
+                            child: const Text(
+                              'dropdown',
+                            ),
                           ),
                         ),
 
@@ -646,61 +656,46 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                               duration: const Duration(milliseconds: 500),
                               child: Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.only(
-                                    right: 35.0, top: 5.0),
-                                child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(top: 0.8),
-                                        child: AvatarGlow(
-                                            glowColor: Colors.white,
-                                            endRadius: 5.5,
-                                            duration: const Duration(
-                                                milliseconds: 1500),
-                                            repeat: true,
-                                            showTwoGlows: true,
-                                            curve: Curves.easeOut,
-                                            repeatPauseDuration: const Duration(
-                                                milliseconds: 100),
-                                            child: Container(
-                                              height: 5.0,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white
-                                                    .withOpacity(0.5),
-                                                shape: BoxShape.circle,
-                                              ),
-                                            )),
-                                      ),
-                                      const SizedBox(
-                                        width: 2.0,
-                                      ),
-                                      Text(
-                                        AppLocalizations.of(context)!
-                                            .st_live
-                                            .toUpperCase(),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline5!
-                                            .copyWith(
-                                                fontSize: 8.0,
-                                                fontWeight: FontWeight.w300,
-                                                color: Colors.white54),
-                                      ),
-                                    ]),
+                                padding: const EdgeInsets.only(right: 35.0, top: 5.0),
+                                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 0.8),
+                                    child: AvatarGlow(
+                                        glowColor: Colors.white,
+                                        endRadius: 5.5,
+                                        duration: const Duration(milliseconds: 1500),
+                                        repeat: true,
+                                        showTwoGlows: true,
+                                        curve: Curves.easeOut,
+                                        repeatPauseDuration: const Duration(milliseconds: 100),
+                                        child: Container(
+                                          height: 5.0,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.5),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        )),
+                                  ),
+                                  const SizedBox(
+                                    width: 2.0,
+                                  ),
+                                  Text(
+                                    AppLocalizations.of(context)!.st_live.toUpperCase(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headline5!
+                                        .copyWith(fontSize: 8.0, fontWeight: FontWeight.w300, color: Colors.white54),
+                                  ),
+                                ]),
                               ),
                             ),
                             Align(
                               alignment: Alignment.topLeft,
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.only(top: 8.0, left: 5),
+                                padding: const EdgeInsets.only(top: 8.0, left: 5),
                                 child: SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.2,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.85,
+                                  height: MediaQuery.of(context).size.height * 0.2,
+                                  width: MediaQuery.of(context).size.width * 0.92,
                                   child: values!.isEmpty
                                       ? const Center(
                                           child: CircularProgressIndicator(
@@ -710,10 +705,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                                         )
                                       : LineChart(
                                           _mainData(),
-                                          swapAnimationDuration:
-                                              const Duration(milliseconds: 500),
-                                          swapAnimationCurve:
-                                              Curves.linearToEaseOut,
+                                          swapAnimationDuration: const Duration(milliseconds: 500),
+                                          swapAnimationCurve: Curves.linearToEaseOut,
                                         ),
                                 ),
                               ),
@@ -726,82 +719,62 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                 ),
               ),
               Padding(
-                  padding: const EdgeInsets.only(left: 10.0, right: 10.0),
+                  padding: const EdgeInsets.only(left: 2.0, right: 2.0),
                   child: ClipRect(
                       child: Container(
                     decoration: BoxDecoration(
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(10.0)),
-                      border:
-                          Border.all(color: Theme.of(context).konjHeaderColor),
-                      color: Theme.of(context).konjHeaderColor,
+                      borderRadius: const BorderRadius.all(Radius.circular(10.0)),
+                      border: Border.all(color: Theme.of(context).konjHeaderColor),
+                      color: const Color(0xFF262C43),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(
-                              top: 10, left: 17.0, right: 25.0),
+                          padding: const EdgeInsets.only(top: 10, left: 17.0, right: 25.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(AppLocalizations.of(context)!.available,
-                                  style: Theme.of(context).textTheme.headline5),
+                              Text(AppLocalizations.of(context)!.available, style: Theme.of(context).textTheme.headline5),
                               FutureBuilder(
                                   future: _getBalanceFuture,
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData) {
-                                      Map m =
-                                          json.decode(snapshot.data.toString());
+                                      Map m = snapshot.data as Map<String, dynamic>;
                                       _balance = m['balance'].toString();
                                       _imature = m['immature'].toString();
-                                      t = Timer(
-                                          const Duration(milliseconds: 100),
-                                          () {
+                                      t = Timer(const Duration(milliseconds: 100), () {
                                         setState(() {
-                                          _imatureVisible = _imature == "0.000"
-                                              ? false
-                                              : true;
+                                          _imatureVisible = _imature == "0.000" ? false : true;
                                           t!.cancel();
                                         });
                                       });
                                       return Expanded(
                                         child: AutoSizeText(
-                                          _balance + " KONJ",
+                                          "$_balance XDN",
                                           minFontSize: 8.0,
                                           maxLines: 1,
                                           overflow: TextOverflow.fade,
                                           textAlign: TextAlign.right,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline6!
-                                              .copyWith(fontSize: 20.0),
+                                          style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 20.0),
                                         ),
                                       );
                                     } else if (snapshot.hasError) {
                                       return Center(
                                           child: Text(
                                         snapshot.error.toString(),
-                                        style: GoogleFonts.montserrat(
-                                            fontStyle: FontStyle.normal,
-                                            fontSize: 24,
-                                            color: Colors.red),
+                                        style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 24, color: Colors.red),
                                       ));
                                     } else {
                                       return Center(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: const <Widget>[
-                                              SizedBox(
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    backgroundColor:
-                                                        Colors.black45,
-                                                  ),
-                                                  height: 24.0,
-                                                  width: 24.0),
-                                            ]),
+                                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
+                                          SizedBox(
+                                              height: 24.0,
+                                              width: 24.0,
+                                              child: CircularProgressIndicator(
+                                                backgroundColor: Colors.black45,
+                                              )),
+                                        ]),
                                       );
                                     }
                                   }),
@@ -811,548 +784,362 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                         Visibility(
                           visible: _imatureVisible,
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                                top: 5, left: 17.0, right: 25.0),
-                            child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(AppLocalizations.of(context)!.immature,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline5!
-                                          .copyWith(
-                                              fontSize: 14.0,
-                                              color: Colors.white38)),
-                                  Expanded(
-                                    child: AutoSizeText(_imature + " KONJ",
-                                        minFontSize: 8.0,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.fade,
-                                        textAlign: TextAlign.right,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline6!
-                                            .copyWith(
-                                                fontSize: 14.0,
-                                                color: Colors.white38)),
-                                  )
-                                ]),
+                            padding: const EdgeInsets.only(top: 5, left: 17.0, right: 25.0),
+                            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                              Text(AppLocalizations.of(context)!.immature,
+                                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                              Expanded(
+                                child: AutoSizeText("$_imature XDN",
+                                    minFontSize: 8.0,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.fade,
+                                    textAlign: TextAlign.right,
+                                    style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                              )
+                            ]),
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(
-                              top: 5, left: 17.0, right: 25.0),
+                          padding: const EdgeInsets.only(top: 5, left: 17.0, right: 25.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(AppLocalizations.of(context)!.st_headline,
-                                  style: Theme.of(context).textTheme.headline5),
+                              Text(AppLocalizations.of(context)!.st_headline, style: Theme.of(context).textTheme.headline5),
                               Expanded(
                                 child: AutoSizeText(
-                                  _stakeAmount.toString() + " KONJ",
+                                  "$_stakeAmount XDN",
                                   minFontSize: 8.0,
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
                                   textAlign: TextAlign.right,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headline6!
-                                      .copyWith(fontSize: 20.0),
+                                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 20.0),
                                 ),
                               )
                             ],
                           ),
                         ),
-                        SizeTransition(
-                          sizeFactor: CurvedAnimation(
-                              curve: Curves.elasticOut,
-                              parent: animationStakeController!),
-                          axis: Axis.vertical,
-                          axisAlignment: 3.0,
-                          child: Column(
-                            children: [
-                              Visibility(
-                                visible: _staking,
-                                child: Column(
-                                  children: [
-                                    const SizedBox(
-                                      height: 10,
+                        Column(
+                          children: [
+                            Visibility(
+                              visible: _staking,
+                              child: Column(
+                                children: [
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 8.0, right: 8.0),
+                                    child: Divider(
+                                      height: 1,
+                                      color: Colors.white60,
                                     ),
-                                    const Padding(
-                                      padding: EdgeInsets.only(
-                                          left: 8.0, right: 8.0),
-                                      child: Divider(
-                                        height: 1,
-                                        color: Colors.white60,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 0,
-                                          left: 17.0,
-                                          right: 25.0,
-                                          bottom: 10.0),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(_lockedText,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline6!
-                                                  .copyWith(fontSize: 14.0)),
-                                          Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  _locked.toString() + " KONJ",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headline6!
-                                                      .copyWith(
-                                                        fontSize: 12.0,
-                                                      ),
-                                                )
-                                              ])
-                                        ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 0, left: 17.0, right: 25.0),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(_lockedText, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
+                                        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                           Text(
-                                              AppLocalizations.of(context)!
-                                                  .st_reward,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline6!
-                                                  .copyWith(fontSize: 14.0)),
-                                          Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  _reward.toString() + " KONJ",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headline6!
-                                                      .copyWith(
-                                                        fontSize: 12.0,
-                                                      ),
+                                            "$_locked XDN",
+                                            style: Theme.of(context).textTheme.headline6!.copyWith(
+                                                  fontSize: 12.0,
                                                 ),
-                                              ]),
+                                          )
+                                        ])
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(AppLocalizations.of(context)!.st_reward,
+                                            style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
+                                        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                          Text(
+                                            "$_reward XDN",
+                                            style: Theme.of(context).textTheme.headline6!.copyWith(
+                                                  fontSize: 12.0,
+                                                ),
+                                          ),
+                                        ]),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                                    child: Divider(
+                                      height: 1,
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Opacity(
+                                    opacity: 0.7,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(AppLocalizations.of(context)!.st_total_coins,
+                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                            Text(
+                                              "${_totalCoins.toString()} XDN",
+                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                            ),
+                                            // SizedBox(width: 35, height: 14, child: Text('XDN', textAlign: TextAlign.end, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),))
+                                            // Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/logo_send.png'), fit: BoxFit.fitWidth))),
+                                          ])
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    const Padding(
-                                      padding: EdgeInsets.only(
-                                          left: 15.0, right: 15.0),
-                                      child: Divider(
-                                        height: 1,
-                                        color: Colors.white54,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    Opacity(
-                                      opacity: 0.7,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 0, left: 17.0, right: 25.0),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                                AppLocalizations.of(context)!
-                                                    .st_total_coins,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headline5!
-                                                    .copyWith(fontSize: 12.0)),
-                                            Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    _totalCoins.toString(),
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .headline5!
-                                                        .copyWith(
-                                                            fontSize: 12.0),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  Container(
-                                                      width: 12,
-                                                      height: 12,
-                                                      decoration: const BoxDecoration(
-                                                          image: DecorationImage(
-                                                              image: AssetImage(
-                                                                  'images/konjicon.png'),
-                                                              fit: BoxFit
-                                                                  .fitWidth))),
-                                                ])
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    Opacity(
-                                      opacity: 0.7,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 0, left: 17.0, right: 25.0),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                                AppLocalizations.of(context)!
-                                                    .st_contribution,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headline5!
-                                                    .copyWith(fontSize: 12.0)),
-                                            Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    _contribution.toString(),
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .headline5!
-                                                        .copyWith(
-                                                            fontSize: 12.0),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  Container(
-                                                      width: 12,
-                                                      height: 12,
-                                                      decoration: const BoxDecoration(
-                                                          image: DecorationImage(
-                                                              image: AssetImage(
-                                                                  'images/perc.png'),
-                                                              fit: BoxFit
-                                                                  .fitWidth))),
-                                                ])
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    Opacity(
-                                      opacity: 0.7,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 0, left: 17.0, right: 25.0),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                                AppLocalizations.of(context)!
-                                                    .st_estimated,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headline5!
-                                                    .copyWith(fontSize: 12.0)),
-                                            Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    _estimated.toString(),
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .headline5!
-                                                        .copyWith(
-                                                            fontSize: 12.0),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  Container(
-                                                      width: 12,
-                                                      height: 12,
-                                                      decoration: const BoxDecoration(
-                                                          image: DecorationImage(
-                                                              image: AssetImage(
-                                                                  'images/konjicon.png'),
-                                                              fit: BoxFit
-                                                                  .fitWidth))),
-                                                ])
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              Visibility(
-                                visible: endTime == 0 ? true : false,
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 15.0, right: 8.0),
-                                    child: SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.9,
-                                      child: AutoSizeText(
-                                        AppLocalizations.of(context)!
-                                            .st_24h_lock,
-                                        textAlign: TextAlign.start,
-                                        maxLines: 1,
-                                        minFontSize: 8,
-                                        overflow: TextOverflow.fade,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline5!
-                                            .copyWith(
-                                                fontSize: 12.0,
-                                                color: Colors.white54),
-                                      ),
-                                    ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 15,
-                              ),
-                              Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Flexible(
-                                        child: FractionallySizedBox(
-                                      widthFactor: 0.99,
-                                      child: Container(
-                                        padding: const EdgeInsets.only(
-                                            left: 10.0, right: 10.0),
-                                        height: 45,
-                                        child: TextField(
-                                          controller: _controller,
-                                          onChanged: (String text) async {
-                                            // _searchUsers(text);
-                                          },
-                                          keyboardType: Platform.isIOS
-                                              ? const TextInputType
-                                                      .numberWithOptions(
-                                                  signed: true)
-                                              : TextInputType.number,
-                                          inputFormatters: <TextInputFormatter>[
-                                            FilteringTextInputFormatter.allow(
-                                                RegExp(r'^\d*\.?\d{0,3}')),
-                                          ],
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline5!
-                                              .copyWith(
-                                                  fontStyle: FontStyle.normal,
-                                                  color: Colors.white),
-                                          decoration: InputDecoration(
-                                            focusedBorder: OutlineInputBorder(
-                                                borderSide: const BorderSide(
-                                                    color: Colors.white60,
-                                                    width: 1.0),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        15.0)),
-                                            enabledBorder: OutlineInputBorder(
-                                                borderSide: const BorderSide(
-                                                    color: Colors.white30,
-                                                    width: 1.0),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        15.0)),
-                                            floatingLabelBehavior:
-                                                FloatingLabelBehavior.always,
-                                            filled: true,
-                                            contentPadding:
-                                                const EdgeInsets.fromLTRB(
-                                                    10.0, 0.0, 20.0, 64.0),
-                                            hoverColor: Colors.white60,
-                                            focusColor: Colors.white60,
-                                            labelStyle: Theme.of(context)
-                                                .textTheme
-                                                .headline5!
-                                                .copyWith(color: Colors.white),
-                                            hintText:
-                                                AppLocalizations.of(context)!
-                                                    .st_enter_amount,
-                                            hintStyle: Theme.of(context)
-                                                .textTheme
-                                                .headline5!
-                                                .copyWith(
-                                                    fontSize: 10.0,
-                                                    color: Colors.white),
-                                          ),
-                                        ),
-                                      ),
-                                    )),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 15.0, top: 0.0),
-                                      child: SizedBox(
-                                        height: 47,
-                                        width: 100,
-                                        child: TextButton(
-                                          child: Text(
-                                              AppLocalizations.of(context)!
-                                                  .send
-                                                  .toUpperCase(),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline6!
-                                                  .copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 14.0)),
-                                          style: ButtonStyle(
-                                              backgroundColor:
-                                                  MaterialStateProperty.resolveWith(
-                                                      (states) =>
-                                                          qrColors(states)),
-                                              shape: MaterialStateProperty.all<
-                                                      RoundedRectangleBorder>(
-                                                  RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              15.0),
-                                                      side: const BorderSide(
-                                                          color: Colors
-                                                              .transparent)))),
-                                          onPressed: () =>
-                                              _sendStakeCoins(_controller.text),
-                                        ),
-                                      ),
-                                    )
-                                  ]),
-                              const SizedBox(
-                                height: 12.0,
-                              ),
-                              Visibility(
-                                visible: endTime == 0 ? false : true,
-                                child: SizedBox(
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Center(
-                                    child: Text(
-                                        AppLocalizations.of(context)!
-                                            .st_time_until_unlock,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline5!
-                                            .copyWith(
-                                                fontSize: 13.0,
-                                                color: Colors.white70)),
+                                  const SizedBox(
+                                    height: 10,
                                   ),
-                                ),
-                              ),
-                              Visibility(
-                                visible: endTime == 0 ? false : true,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: CountdownTimer(
-                                    onEnd: () async {
-                                      Future.delayed(
-                                          const Duration(milliseconds: 100),
-                                          () {
-                                        setState(() {
-                                          endTime = 0;
-                                        });
-                                      });
-                                    },
-                                    endTime: endTime,
-                                    widgetBuilder:
-                                        (_, CurrentRemainingTime? time) {
-                                      if (time == null) {
-                                        return const Text('');
-                                      }
-                                      return SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        child: Center(
-                                          child: Text(
-                                              '${_formatCountdownTime(time.hours!)}:${_formatCountdownTime(time.min!)}:${_formatCountdownTime(time.sec!)}',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline5!
-                                                  .copyWith(
-                                                      fontSize: 13.0,
-                                                      color: Colors.white70)),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              Visibility(
-                                visible: _staking,
-                                child: Visibility(
-                                  visible: endTime == 0 ? true : false,
-                                  child: Align(
-                                    alignment: Alignment.center,
+                                  Opacity(
+                                    opacity: 0.7,
                                     child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 8.0,
-                                          right: 8.0,
-                                          top: 0.0,
-                                          bottom: 5.0),
-                                      child: SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.75,
-                                        child: AutoSizeText(
-                                          AppLocalizations.of(context)!
-                                              .st_contains,
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          minFontSize: 8,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline5!
-                                              .copyWith(
-                                                  fontSize: 11.0,
-                                                  color: Colors.white54),
-                                        ),
+                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(AppLocalizations.of(context)!.st_contribution,
+                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                            Text(
+                                              _contribution.toString(),
+                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                            ),
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            Container(
+                                                width: 12,
+                                                height: 12,
+                                                decoration: const BoxDecoration(
+                                                    image: DecorationImage(image: AssetImage('images/perc.png'), fit: BoxFit.fitWidth))),
+                                          ])
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Opacity(
+                                    opacity: 0.7,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(AppLocalizations.of(context)!.st_estimated,
+                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                            Text(
+                                              "${_estimated.toString()} XDN",
+                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                            ),
+                                            // const SizedBox(
+                                            //   width: 10,
+                                            // ),
+                                            // Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/konjicon.png'), fit: BoxFit.fitWidth))),
+                                          ])
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                              child: Divider(
+                                height: 1,
+                                color: Colors.white12,
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                              Flexible(
+                                  child: Center(
+                                child: FractionallySizedBox(
+                                  widthFactor: 0.98,
+                                  child: Container(
+                                    padding: const EdgeInsets.only(left: 9.0, right: 9.0),
+                                    height: 50,
+                                    child: AutoSizeTextField(
+                                      controller: _controller,
+                                      onChanged: (String text) async {
+                                        // _searchUsers(text);
+                                      },
+                                      maxLines: 1,
+                                      minFontSize: 5.0,
+                                      keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
+                                      inputFormatters: <TextInputFormatter>[
+                                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                                      ],
+                                      textAlign: TextAlign.center,
+                                      textAlignVertical: TextAlignVertical.center,
+                                      cursorColor: Colors.white54,
+                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, color: Colors.white),
+                                      decoration: InputDecoration(
+                                        focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(color: Colors.white30, width: 1.0),
+                                            borderRadius: BorderRadius.circular(5.0)),
+                                        enabledBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(color: Colors.transparent, width: 1.0),
+                                            borderRadius: BorderRadius.circular(5.0)),
+                                        floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                        filled: true,
+                                        fillColor: const Color(0xFF1A1E2F),
+                                        hoverColor: Colors.white60,
+                                        focusColor: Colors.white60,
+                                        isCollapsed: true,
+                                        contentPadding: EdgeInsets.only(bottom: 18.0, top: 10.0),
+                                        labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
+                                        hintText: AppLocalizations.of(context)!.st_enter_amount,
+                                        hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white30),
                                       ),
                                     ),
                                   ),
                                 ),
+                              )),
+                            ]),
+                            const SizedBox(
+                              height: 5.0,
+                            ),
+                            ClipRRect(
+                              borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+                              child: Container(
+                                color: Colors.transparent,
+                                child: PercentSwitchWidget(
+                                  key: _percentageKey,
+                                  changePercent: _changePercentage,
+                                ),
                               ),
-                              const SizedBox(
-                                height: 5.0,
-                              )
-                            ],
-                          ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 5.0),
+                              child: SlideAction(
+                                sliderButtonIconPadding: 5.0,
+                                sliderButtonIconSize: 20.0,
+                                height: 50.0,
+                                borderRadius: 5.0,
+                                text: "${AppLocalizations.of(context)!.send_to} ${AppLocalizations.of(context)!.st_headline}",
+                                innerColor: Colors.white.withOpacity(0.02),
+                                outerColor: Colors.black.withOpacity(0.12),
+                                elevation: 0.5,
+                                // submittedIcon: const Icon(Icons.check, size: 30.0, color: Colors.lightGreenAccent,),
+                                submittedIcon: const CircularProgressIndicator(
+                                  strokeWidth: 2.0,
+                                  color: Colors.white70,
+                                ),
+                                sliderButtonIcon: const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  color: Colors.white70,
+                                  size: 25.0,
+                                ),
+                                sliderRotate: false,
+                                textStyle: const TextStyle(color: Colors.white24, fontSize: 24.0),
+                                key: _keyStake,
+                                onSubmit: () {
+                                  _sendStakeCoins(_controller.text);
+                                },
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 5.0,
+                            ),
+                            Visibility(
+                              visible: endTime == 0 ? true : false,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 15.0, right: 8.0),
+                                  child: SizedBox(
+                                    width: MediaQuery.of(context).size.width * 0.9,
+                                    child: AutoSizeText(
+                                      AppLocalizations.of(context)!.st_24h_lock,
+                                      textAlign: TextAlign.start,
+                                      maxLines: 1,
+                                      minFontSize: 8,
+                                      overflow: TextOverflow.fade,
+                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white54),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 5.0,
+                            ),
+                            Visibility(
+                              visible: endTime == 0 ? false : true,
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                child: Center(
+                                  child: AutoSizeText(AppLocalizations.of(context)!.st_time_until_unlock,
+                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 13.0, color: Colors.white70),
+                                      textAlign: TextAlign.start,
+                                      maxLines: 1,
+                                      minFontSize: 8,
+                                      overflow: TextOverflow.fade),
+                                ),
+                              ),
+                            ),
+                            Visibility(
+                              visible: endTime == 0 ? false : true,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
+                                child: CountdownTimer(
+                                  onEnd: () async {
+                                    Future.delayed(const Duration(milliseconds: 100), () {
+                                      setState(() {
+                                        endTime = 0;
+                                      });
+                                    });
+                                  },
+                                  endTime: endTime,
+                                  widgetBuilder: (_, CurrentRemainingTime? time) {
+                                    if (time == null) {
+                                      return const Text('');
+                                    }
+                                    return SizedBox(
+                                      width: MediaQuery.of(context).size.width,
+                                      child: Center(
+                                        child: Text(
+                                            '${_formatCountdownTime(time.hours!)}:${_formatCountdownTime(time.min!)}:${_formatCountdownTime(time.sec!)}',
+                                            style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 13.0, color: Colors.white70)),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 10.0,
                         ),
                       ],
                     ),
@@ -1373,24 +1160,14 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                             _unstakeCoins(1);
                             // Dialogs.openUserQR(context);
                           },
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.resolveWith((states) => getColor(states)),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0), side: BorderSide(color: Theme.of(context).konjHeaderColor)))),
                           child: Text(
                             AppLocalizations.of(context)!.st_withdraw_reward,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(fontSize: 18.0),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                           ),
-                          style: ButtonStyle(
-                              backgroundColor:
-                                  MaterialStateProperty.resolveWith(
-                                      (states) => getColor(states)),
-                              shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      side: BorderSide(
-                                          color: Theme.of(context)
-                                              .konjHeaderColor)))),
                         ),
                       ),
                     ),
@@ -1400,34 +1177,21 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
                     Visibility(
                       visible: endTime == 0 ? true : false,
                       child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                          child: SizedBox(
-                            height: 40,
-                            width: MediaQuery.of(context).size.width * 0.95,
-                            child: TextButton(
-                              onPressed: () {
-                                _unstakeCoins(0);
-                                // Dialogs.openUserQR(context);
-                              },
-                              child: Text(
-                                AppLocalizations.of(context)!.st_withdraw_all,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline5!
-                                    .copyWith(fontSize: 18.0),
-                              ),
-                              style: ButtonStyle(
-                                  backgroundColor:
-                                      MaterialStateProperty.resolveWith(
-                                          (states) => getColorAll(states)),
-                                  shape: MaterialStateProperty.all<
-                                          RoundedRectangleBorder>(
-                                      RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                          side: const BorderSide(
-                                              color: Colors.transparent)))),
+                        child: SizedBox(
+                          height: 40,
+                          width: MediaQuery.of(context).size.width * 0.95,
+                          child: TextButton(
+                            onPressed: () {
+                              _unstakeCoins(0);
+                              // Dialogs.openUserQR(context);
+                            },
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.resolveWith((states) => getColorAll(states)),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0), side: const BorderSide(color: Colors.transparent)))),
+                            child: Text(
+                              AppLocalizations.of(context)!.st_withdraw_all,
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                             ),
                           ),
                         ),
@@ -1463,16 +1227,14 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
 
   String _getToolTip(int time) {
     if (_dropdownValue == 0) {
-      return _getMeTime("0000-00-00 " +
-              Duration(minutes: time).toHoursMinutes().toString()) +
-          '\n';
+      return '${_getMeTime("0000-00-00 ${Duration(minutes: time).toHoursMinutes()}")}\n';
       // return '${Duration(minutes: time).toHoursMinutes().toString()} \n';
     } else if (_dropdownValue == 1) {
       // print(_date);
       List<String> dateParts = _date.toString().split("-");
-      String _tm = time < 10 ? "0" + time.toString() : time.toString();
-      String _dt = dateParts[0] + "-" + dateParts[1] + "-" + _tm;
-      return _getMeDate(_dt) + '\n';
+      String tm = time < 10 ? "0$time" : time.toString();
+      String dt = "${dateParts[0]}-${dateParts[1]}-$tm";
+      return '${_getMeDate(dt)}\n';
       // return '${_formatCountdownTime(Duration(days: time).inDays.toInt()) + "." + dateParts[1] + "." + dateParts[0]} \n';
     } else {
       return '${Duration(days: time * 31).inDays.toString()} \n';
@@ -1484,7 +1246,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
       return "00";
     } else if (time < 10) {
       var s = time.toString();
-      return '0' + s;
+      return '0$s';
     } else {
       return time.toString();
     }
@@ -1497,54 +1259,54 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
     const Color(0xFFFFFFFF).withOpacity(0.0),
   ];
 
-  SideTitles _leftTitles() {
-    return SideTitles(
+  AxisTitles _leftTitles() {
+    return AxisTitles(
+        sideTitles: SideTitles(
       showTitles: true,
-      getTextStyles: (value, margin) => Theme.of(context)
-          .textTheme
-          .headline5!
-          .copyWith(color: Colors.white70, fontSize: 10.0),
-      getTitles: (value) {
-        return _formatTitles(value.toInt());
+      getTitlesWidget: (value, meta) {
+        return Text(
+          _formatTitles(value.toInt()),
+          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 10.0),
+        );
       },
-      // NumberFormat.compactCurrency(symbol: '\$').format(value),
       reservedSize: _dropdownValue == 0 ? 19 : 27,
-      margin: 7,
+      // margin: 7,
       interval: _leftTitlesInterval,
-    );
+    ));
   }
 
-  SideTitles _bottomTitles() {
-    return SideTitles(
-      rotateAngle: 0.0,
+  AxisTitles _bottomTitles() {
+    return AxisTitles(
+        sideTitles: SideTitles(
       showTitles: true,
-      getTextStyles: (value, margin) => Theme.of(context)
-          .textTheme
-          .headline5!
-          .copyWith(color: Colors.white54, fontSize: 10.0),
-      getTitles: (value) {
+      reservedSize: 20.0,
+      getTitlesWidget: (value, meta) {
+        var text = "";
         if (_dropdownValue == 0) {
-          String _d = Duration(minutes: value.toInt()).toHoursMinutes();
-          String _dd = _getMeTime("0000-00-00 " + _d);
-          List<String> _dateParts = _dd.toString().split(" ");
-          String _finalDate = "";
-          if (_dateParts.length == 1) {
-            _finalDate = _dd;
+          String d = Duration(minutes: value.toInt()).toHoursMinutes();
+          String dd = _getMeTime("0000-00-00 $d");
+          List<String> dateParts = dd.toString().split(" ");
+          String finalDate = "";
+          if (dateParts.length == 1) {
+            finalDate = dd;
           } else {
-            _finalDate = _dateParts[0] + _dateParts[1];
+            finalDate = dateParts[0] + dateParts[1];
           }
-          return _finalDate;
+          text = finalDate;
         } else if (_dropdownValue == 1) {
           Duration d = Duration(days: value.toInt());
-          return d.inDays.toString();
+          text = d.inDays.toString();
         } else {
           Duration d = Duration(days: value.toInt());
-          return d.inDays.toString();
+          text = d.inDays.toString();
         }
+        return Text(
+          text,
+          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white54, fontSize: 10.0),
+        );
       },
-      margin: 8,
-      interval: (_maxX - _minX) / (4 + _dropdownValue * 4),
-    );
+      interval: _dropdownValue == 1 ? 3 : 300,
+    ));
   }
 
   FlGridData _gridData() {
@@ -1594,9 +1356,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen>
 
   String _formatTitles(int i) {
     if (i >= 1000) {
-      return (i / 1000).round().toString() + "k";
+      return "${(i / 1000).round()}k";
     } else if (i >= 500) {
-      return (i / 1000).toString() + "k";
+      return "${i / 1000}k";
     } else {
       return i.toString();
     }
@@ -1618,7 +1380,7 @@ Color getColor(Set<MaterialState> states) {
   if (states.any(interactiveStates.contains)) {
     return Colors.white.withOpacity(0.8);
   }
-  return const Color(0xFF423D70);
+  return const Color(0xff4d884f);
 }
 
 Color getColorAll(Set<MaterialState> states) {

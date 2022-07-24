@@ -55,6 +55,7 @@ class SimpleRichText extends StatelessWidget {
         this.style = const TextStyle(),
         this.textAlign,
         this.textOverflow,
+        this.fontWeight,
         this.textScaleFactor}) : super(key: key);
 
   final String? chars;
@@ -67,6 +68,8 @@ class SimpleRichText extends StatelessWidget {
 
   /// Pass in true for debugging/logging/trace
   final bool logIt;
+
+  final FontWeight? fontWeight;
 
   /// An optional maximum number of lines for the text to span, wrapping if necessary.
   /// If the text exceeds the given number of lines, it will be truncated according
@@ -197,7 +200,7 @@ class SimpleRichText extends StatelessWidget {
               fontStyle:
               set.contains('_') ? FontStyle.italic : FontStyle.normal,
               fontWeight:
-              set.contains('\\') ? FontWeight.bold : FontWeight.normal,
+              set.contains('\\') ? FontWeight.bold : fontWeight ??FontWeight.normal,
               fontSize: map.containsKey('fontSize')
                   ? double.parse(map['fontSize']!)
                   : style!.fontSize,

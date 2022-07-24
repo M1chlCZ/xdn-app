@@ -1,28 +1,30 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:digitalnote/bloc/contacts_bloc.dart';
+import 'package:digitalnote/net_interface/api_response.dart';
+import 'package:digitalnote/support/secure_storage.dart';
+import 'package:digitalnote/widgets/ContactTile.dart';
+import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:konjungate/screens/addrAddScreen.dart';
-import 'package:konjungate/support/MessageGroup.dart';
-import 'package:konjungate/support/NetInterface.dart';
+import 'package:digitalnote/support/MessageGroup.dart';
+import 'package:digitalnote/support/NetInterface.dart';
 
 import '../globals.dart' as globals;
 import '../screens/messageComposeScreen.dart';
 import '../support/AppDatabase.dart';
-import '../support/CardHeader.dart';
-import '../support/ColorScheme.dart';
 import '../support/Contact.dart';
-import '../support/ContactTile.dart';
 import '../support/Dialogs.dart';
 import '../support/Encrypt.dart';
 import '../support/RoundButton.dart';
 import '../widgets/backgroundWidget.dart';
-import 'messageDetailScreen.dart';
+import 'message_detail_screen.dart';
 
 class AddressScreen extends StatefulWidget {
+  static const String route = "menu/contacts";
+
   const AddressScreen({Key? key}) : super(key: key);
 
   @override
@@ -32,19 +34,31 @@ class AddressScreen extends StatefulWidget {
 class AddressScreenState extends State<AddressScreen> {
   final TextEditingController _controller = TextEditingController();
   Contact? _tempContact;
-  final storage = const FlutterSecureStorage();
-  Future<List<Contact>>? _getUserFuture;
   String user = "";
+  ContactBloc cb = ContactBloc();
 
   @override
   void initState() {
     super.initState();
-    _getUserFuture = _getUsers();
+    _getAddrBook();
+    cb.fetchContacts();
+    // _getUserFuture = _getUsers();
   }
 
   void _openSelectBox(String name, String addr, Contact c) {
     _tempContact = c;
     Dialogs.openSelectContactDialog(context, addr, name, _openMessageSend, _openSendBox, _openContactShare);
+  }
+
+  void _getAddrBook() async {
+    int i = await NetInterface.getAddrBook();
+    await AppDatabase().getContacts();
+    // if (i != 0) cb.fetchContacts();
+    if (i != 0) {
+      Future.delayed(Duration(milliseconds: 100), () {
+        cb.fetchContacts();
+      });
+    }
   }
 
   void _openMessageSend({Contact? contact}) async {
@@ -83,7 +97,7 @@ class AddressScreenState extends State<AddressScreen> {
   void _contactShareCallBack(Contact c) async {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
-    var sharemessage = AppLocalizations.of(context)!.contact +' ' + _tempContact!.name! + ':';
+    var sharemessage = '${AppLocalizations.of(context)!.contact} ${_tempContact!.name!}:';
     await NetInterface.sendMessage(c.addr!, sharemessage, 0);
     Future.delayed(const Duration(seconds: 3), () async {
       await NetInterface.sendMessage(c.addr!, _tempContact!.addr!, 0);
@@ -105,9 +119,7 @@ class AddressScreenState extends State<AddressScreen> {
   }
 
   void _editBoxCallback() {
-    setState(() {
-      _getUserFuture = _getUsers();
-    });
+    cb.fetchContacts();
   }
 
   void _sendBoxConfirmation(String amount, String name, String addr) async {
@@ -116,14 +128,12 @@ class AddressScreenState extends State<AddressScreen> {
   }
 
   void _sendBoxCallback(String amount, String name, String addr) async {
-    String? ss = await NetInterface.getBalance(details: true);
-    var sjson = json.decode(ss!);
-    double _balance = (double.parse(sjson["balance"]));
+    Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
+    double _balance = (double.parse(ss?["balance"]));
     Navigator.of(context).pop();
-    if(double.parse(amount) > _balance) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_insufficient + "!");
+    if (double.parse(amount) > _balance) {
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
       return;
-
     }
     Dialogs.openWaitBox(context);
     try {
@@ -135,18 +145,16 @@ class AddressScreenState extends State<AddressScreen> {
           elevation: 5.0,
         ));
       } else {
-        const storage = FlutterSecureStorage();
-        String? jwt = await storage.read(key: "jwt");
-        String? id = await storage.read(key: globals.ID);
-        String? user = await storage.read(key: globals.USERNAME);
+        String? jwt = await SecureStorage.read(key: globals.TOKEN);
+        String? id = await SecureStorage.read(key: globals.ID);
+        String? user = await SecureStorage.read(key: globals.USERNAME);
 
-        if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
-          Dialogs.displayDialog(context, "Error", "Invalid KONJ address");
+        if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+          if (mounted) Dialogs.displayDialog(context, "Error", "Invalid XDN address");
           return;
         }
 
         Map<String, dynamic> m = {
-          "Authorization": jwt,
           "User": user,
           "id": id,
           "request": "sendContactTransaction",
@@ -156,7 +164,8 @@ class AddressScreenState extends State<AddressScreen> {
         };
 
         var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-        final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
+        final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+          "Authorization": jwt!,
           "Content-Type": "application/json",
           "payload": s,
         }).timeout(const Duration(seconds: 10));
@@ -193,15 +202,14 @@ class AddressScreenState extends State<AddressScreen> {
 
   void _deleteContact(int contactID) async {
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? jwt = await SecureStorage.read(key: "jwt");
+      String? id = await SecureStorage.read(key: globals.ID);
 
       List<Contact> details = await AppDatabase().getContact(contactID);
       String? addr = details[0].addr;
       String? name = details[0].name;
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "request": "deleteContact",
         "param1": name,
@@ -210,16 +218,15 @@ class AddressScreenState extends State<AddressScreen> {
 
       var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
 
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
+      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+        "Authorization": jwt!,
         "Content-Type": "application/json",
         "payload": s,
       }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         AppDatabase().deleteContact(contactID);
-        setState(() {
-          _getUserFuture = _getUsers();
-        });
+        cb.fetchContacts();
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Contact deleted"),
           backgroundColor: Color(0xFF63C9F3),
@@ -235,28 +242,11 @@ class AddressScreenState extends State<AddressScreen> {
   }
 
   _refreshContacts() async {
-    setState(() {
-      _getUserFuture = null;
-      _getUserFuture = _getUsers();
-    });
+    cb.fetchContacts();
   }
 
   _searchUsers(String text) async {
-    var d = AppDatabase().searchContact(text);
-    setState(() {
-      _getUserFuture = d;
-    });
-  }
-
-  Future<List<Contact>> _getUsers() async {
-    var res = await AppDatabase().getContacts();
-    return List.generate(res.length, (i) {
-      return Contact(
-        id: res[i]['id'] as int,
-        name: res[i]['name'] as String,
-        addr: res[i]['addr'] as String,
-      );
-    });
+    cb.searchContacts(text);
   }
 
   @override
@@ -274,16 +264,17 @@ class AddressScreenState extends State<AddressScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CardHeader(
-                  title: AppLocalizations.of(context)!.contacts,
-                  backArrow: true,
-                ),
+                // CardHeader(
+                //   title: AppLocalizations.of(context)!.contacts,
+                //   backArrow: true,
+                // ),
+                Header(header: AppLocalizations.of(context)!.contacts),
                 Container(
                   margin: const EdgeInsets.only(left: 5.0, right: 5.0),
-                  padding: const EdgeInsets.only(top: 10.0, left: 10.0, bottom: 10.0),
+                  padding: const EdgeInsets.only(top: 5.0, left: 5.0, bottom: 5.0),
                   decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.1),
                     borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                    color: Theme.of(context).konjHeaderColor,
                   ),
                   child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
                     Flexible(
@@ -296,92 +287,118 @@ class AddressScreenState extends State<AddressScreen> {
                             onChanged: (String text) async {
                               _searchUsers(text);
                             },
+                            cursorColor: Colors.white30,
                             style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
                             decoration: InputDecoration(
-                              floatingLabelBehavior: FloatingLabelBehavior.always,
-                              contentPadding: const EdgeInsets.all(8.0),
-                              filled: true,
-                              hoverColor: Colors.white24,
-                              focusColor: Colors.white24,
-                              fillColor: Theme.of(context).konjTextFieldHeaderColor,
-                              labelText: "",
-                              labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
-                              hintText: AppLocalizations.of(context)!.search_contact,
-                              hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 18.0),
-                              prefixIcon: const Icon(
-                                Icons.person,
-                                color: Colors.white70,
-                              ),
-                              focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white30, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                              enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white10, width: 1.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                            ),
+                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                contentPadding: const EdgeInsets.only(bottom: 5.0),
+                                filled: true,
+                                hoverColor: Theme.of(context).cardColor,
+                                focusColor: Theme.of(context).cardColor,
+                                fillColor: const Color(0xFF22283A).withOpacity(0.5),
+                                labelText: "",
+                                labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
+                                hintText: AppLocalizations.of(context)!.search_contact,
+                                hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 18.0),
+                                prefixIcon: const Padding(
+                                  padding: EdgeInsets.only(top: 4.0),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Color(0xFF22283A).withOpacity(0.1), width: 2.0),
+                                    borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                                enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Color(0xFF22263A).withOpacity(0.1), width: 2.0),
+                                    borderRadius: BorderRadius.all(Radius.circular(10.0)))),
                           ),
                         ),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(right: 15.0, top: 1.0),
+                      padding: const EdgeInsets.only(right: 8.0, top: 1.0),
                       child: RoundButton(
-                          height: 40,
-                          width: 40,
-                          color: Theme.of(context).konjHeaderColor,
-                          onTap: () {
-                            Navigator.of(context)
-                                .push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-                                  return const AddressAddScreen();
-                                }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-                                  return FadeTransition(opacity: animation, child: child);
-                                }))
-                                .then((value) => _refreshContacts());
-                          },
-                          splashColor: Colors.black45,
-                          icon: const Icon(
-                            Icons.add,
-                            size: 35,
-                            color: Colors.white70,
-                          )),
+                        height: 40,
+                        width: 50,
+                        color: const Color(0xFF4B9B4C).withOpacity(0.8),
+                        onTap: () {
+                          Dialogs.openUserAddBox(context).then((value) => cb.fetchContacts());
+                          // Navigator.of(context)
+                          //     .push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+                          //       return const AddressAddScreen();
+                          //     }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+                          //       return FadeTransition(opacity: animation, child: child);
+                          //     }))
+                          //     .then((value) => _refreshContacts());
+                        },
+                        splashColor: Colors.black45,
+                        icon: const Icon(
+                          Icons.person_add,
+                          color: Colors.white70,
+                          size: 30,
+                        ),
+                      ),
                     ),
                   ]),
                 ),
                 Expanded(
-                  child: FutureBuilder(
-                      future: _getUserFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          var _data = snapshot.data as List<Contact>?;
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 5.0, right: 5.0),
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0)),
-                              child: Container(
-                                padding: const EdgeInsets.only(left: 0.0, right: 0.0),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: _data!.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    return ContactTile(
-                                      key: Key(_data[index].addr!),
-                                      contact: _data[index],
-                                      func: _deleteContactPrompt,
-                                      func2: _openSelectBox,
-                                      func3: _openEditBox,
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          );
-                        } else {
-                          return Container(
-                            height: MediaQuery.of(context).size.height,
-                            width: MediaQuery.of(context).size.width,
-                            margin: const EdgeInsets.all(10.0),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
-                              SizedBox(child: CircularProgressIndicator(), height: 50.0, width: 50.0),
-                            ]),
-                          );
-                        }
-                      }),
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 5.0, right: 5.0, top: 5.0),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                    ),
+                    child: StreamBuilder<ApiResponse<List<Contact>?>>(
+                        stream: cb.coinsListStream,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data!.data;
+                            switch (snapshot.data!.status) {
+                              case Status.LOADING:
+                                return Container(
+                                  height: MediaQuery.of(context).size.height,
+                                  width: MediaQuery.of(context).size.width,
+                                  margin: const EdgeInsets.all(10.0),
+                                  child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const <Widget>[
+                                        SizedBox(height: 50.0, width: 50.0, child: CircularProgressIndicator()),
+                                      ]),
+                                );
+                              case Status.COMPLETED:
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0)),
+                                    child: Container(
+                                      padding: const EdgeInsets.only(left: 0.0, right: 0.0),
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: data!.length,
+                                        itemBuilder: (BuildContext context, int index) {
+                                          return ContactTile(
+                                            key: Key(data[index].addr!),
+                                            contact: data[index],
+                                            func: _deleteContactPrompt,
+                                            func2: _openSelectBox,
+                                            func3: _openEditBox,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              case Status.ERROR:
+                                return Container();
+                            }
+                          } else {
+                            return Container();
+                          }
+                        }),
+                  ),
                 ),
               ],
             ),

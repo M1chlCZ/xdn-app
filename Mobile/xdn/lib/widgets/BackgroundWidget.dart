@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:konjungate/support/BackgroundArc.dart';
 
 class BackgroundWidget extends StatefulWidget {
   final bool mainMenu;
@@ -11,58 +10,31 @@ class BackgroundWidget extends StatefulWidget {
   const BackgroundWidget({Key? key, this.mainMenu = false, this.hasImage = true, this.image, this.arc = false}) : super(key: key);
 
   @override
-  _BackgroundWidgetState createState() => _BackgroundWidgetState();
+  BackgroundWidgetState createState() => BackgroundWidgetState();
 }
 
-class _BackgroundWidgetState extends State<BackgroundWidget> {
-
+class BackgroundWidgetState extends State<BackgroundWidget> {
   @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    return widget.mainMenu
-        ? Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: Image.asset(
-              widget.arc ? 'images/settingsbg.png' : 'images/mainmenubg.png',
-              fit: BoxFit.fitWidth,
-            ),
-          )
-        : Stack(
-            children: [
-              Container(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: Image.asset(
-                  'images/sectionbackground.png',
-                  fit: BoxFit.fitWidth,
-                ),
-              ),
-              widget.arc ? BackgroundArc(width: height, height: width) : Container(),
-             SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: Column(
-                  children: [
-                    Expanded(child: Container()),
-                    widget.hasImage ? Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SizedBox(
-                        width: 70,
-                        child: Image.asset(
-                          'images/' + widget.image!,
-                          color: Colors.white.withAlpha(50),
-                          alignment: Alignment.bottomCenter,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ) : Container(),
-                  ],
-                ),
-              ),
-
-            ],
-          );
+    return Container(
+    width: width,
+    height: height,
+    decoration:  BoxDecoration(
+      gradient:  RadialGradient(
+        // stops: [0.1, 0.9],
+        center: const Alignment(0.9, 0.0),
+        colors: [
+          const  Color(0xFF6175B2).withOpacity(0.5),
+          const Color(0xFF323A57)
+        ],
+        radius: 1.0,
+      ),
+    ),
+    // color: const Color(0xFF323D62),
+      );
   }
 }
+// FF323D62
+// 0xFF222B46

@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.m1chl.konjungate">
+    package="com.m1chl.xdn">
     <!-- Flutter needs it to communicate with the running application
          to allow setting breakpoints, to provide hot reload, etc.
     -->
@@ -19,7 +19,7 @@
     </queries>
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="Konjungate"
+        android:label="DigitalNote"
         android:exported="true"
         android:requestLegacyExternalStorage="true"
         >

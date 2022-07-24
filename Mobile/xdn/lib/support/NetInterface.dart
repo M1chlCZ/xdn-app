@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/support/get_info.dart';
+import 'package:digitalnote/support/summary.dart' as sum;
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -20,13 +24,11 @@ import 'TranSaction.dart';
 
 class NetInterface {
   static void uploadPicture(BuildContext context, String base64) async {
-    const storage = FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "param1": base64,
         "param2": "upload",
@@ -36,12 +38,15 @@ class NetInterface {
 
       Response response = await http
           .post(
-            Uri.parse(globals.SERVER_URL + '/apiAvatar'),
+            Uri.parse('${globals.SERVER_URL}/apiAvatar'),
             body: {
               "Content-Type": "application/json",
               "payload": s,
             },
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "Authorization": jwt!,
+            },
             encoding: Encoding.getByName('utf-8'),
           )
           .timeout(const Duration(seconds: 10));
@@ -55,21 +60,21 @@ class NetInterface {
     } on SocketException catch (_) {
       Dialogs.openAlertBox(context, 'Warning', "Service is not available, can't save the picture to cloud");
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Warning', e.toString());
     }
   }
 
   static Future<Uint8List?> downloadCSV(BuildContext context) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.USERNAME);
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      String? id = await SecureStorage.read(key: globals.USERNAME);
 
-      Map<String, dynamic> m = {"Authorization": jwt, "User": id, "request": "getcsv"};
+      Map<String, dynamic> m = {"User": id, "request": "getcsv"};
 
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
+      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
         "Content-Type": "application/json",
+        "Authorization": jwt!,
         "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
       }).timeout(const Duration(seconds: 10));
 
@@ -87,20 +92,17 @@ class NetInterface {
       Dialogs.openAlertBox(context, 'Error', "Service is not available, can't save the picture to cloud");
       return null;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Error', e.toString());
       return null;
     }
   }
 
   static Future<String?> dowloadPicture(BuildContext context, int? userID) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
-
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      String? id = await SecureStorage.read(key: globals.ID);
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "param1": userID ?? 0,
         "param2": "download",
@@ -110,12 +112,12 @@ class NetInterface {
 
       final response = await http
           .post(
-            Uri.parse(globals.SERVER_URL + '/apiAvatar'),
+            Uri.parse('${globals.SERVER_URL}/apiAvatar'),
             body: {
               "Content-Type": "application/json",
               "payload": s,
             },
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            headers: {"Content-Type": "application/x-www-form-urlencoded", "Authorization": jwt!},
             encoding: Encoding.getByName('utf-8'),
           )
           .timeout(const Duration(seconds: 10));
@@ -135,20 +137,17 @@ class NetInterface {
       //     "Service is not available, can't save the picture to cloud");
       return null;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       // Dialogs.openAlertBox(context, 'Warning', e.toString());
       return null;
     }
   }
 
-  static Future<String?> dowloadPictureByAddr(BuildContext context, String addr) async {
-    var storage = const FlutterSecureStorage();
+  static Future<String?> dowloadPictureByAddr(String addr) async {
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
-
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      String? id = await SecureStorage.read(key: globals.ID);
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "param1": addr,
         "param2": "download",
@@ -158,12 +157,12 @@ class NetInterface {
 
       final response = await http
           .post(
-            Uri.parse(globals.SERVER_URL + '/apiAvatar'),
+            Uri.parse('${globals.SERVER_URL}/apiAvatar'),
             body: {
               "Content-Type": "application/json",
               "payload": s,
             },
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            headers: {"Content-Type": "application/x-www-form-urlencoded", "Authorization": jwt!},
             encoding: Encoding.getByName('utf-8'),
           )
           .timeout(const Duration(seconds: 10));
@@ -171,161 +170,120 @@ class NetInterface {
       if (response.statusCode == 200) {
         return response.body;
       } else {
+        if (kDebugMode) print("sucks");
         // Dialogs.openAlertBox(context, 'Warning', response.toString());
         return null;
       }
-    } on TimeoutException catch (_) {
-      // Dialogs.openAlertBox(context, 'Warning',
-      //     "Request timed out, can't save the picture to cloud");
-      return null;
-    } on SocketException catch (_) {
-      // Dialogs.openAlertBox(context, 'Warning',
-      //     "Service is not available, can't save the picture to cloud");
-      return null;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       // Dialogs.openAlertBox(context, 'Warning', e.toString());
       return null;
     }
   }
 
   static Future<void> registerFirebaseToken(String token) async {
-    var storage = const FlutterSecureStorage();
-    String? jwt = await storage.read(key: "jwt");
-    String? id = await storage.read(key: globals.ID);
+    if (kDebugMode) print("FRRRRRRR");
+    String? id = await SecureStorage.read(key: globals.ID);
+    Map<String, dynamic> m = {"id": id, "param1": token, "param2": Platform.isAndroid ? "A" : "I", "request": "registerFirebaseToken"};
 
-    Map<String, dynamic> m = {"Authorization": jwt, "id": id, "param1": token, "param2": Platform.isAndroid ? "A" : "I", "request": "registerFirebaseToken"};
-
+    ComInterface ci = ComInterface();
     try {
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
-      }).timeout(const Duration(seconds: 10));
+      await ci.get("/data", request: m, debug: false);
 
-      if (response.statusCode == 200) {
-        // print("shit saved");
-      }
+      // final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
+      // }).timeout(const Duration(seconds: 10));
+      //
+      // if (response.statusCode == 200) {
+      //   // if(kDebugMode)print("shit saved");
+      // }
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
   static Future<int> getTranData() async {
-    var storage = const FlutterSecureStorage();
-    String? jwt = await storage.read(key: "jwt");
-    String? user = await storage.read(key: globals.USERNAME);
-    String? locale = await storage.read(key: globals.LOCALE);
+    String? user = await SecureStorage.read(key: globals.USERNAME);
+    String? locale = await SecureStorage.read(key: globals.LOCALE);
     Map<String, dynamic> m = {
-      "Authorization": jwt,
       "User": user,
       "param1": locale,
       "request": "getTransaction",
     };
-    try {
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
-      }).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        var l = await compute(getTransactionCompute, response.body);
-        await AppDatabase().addTransactions(l);
-        return 1;
-      } else {
-        print("err.");
-        return 0;
-      }
+    try {
+      ComInterface ci = ComInterface();
+      List<dynamic> rt = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      var l = await compute(getTransactionCompute, rt);
+      var i = await AppDatabase().addTransactions(l);
+      return i;
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
 
-  static List<TranSaction> getTransactionCompute(String response) {
-    var data = decryptAESCryptoJS(response, "rp9ww*jK8KX_!537e%Crmf");
-
-    List responseList = json.decode(data);
-    List<TranSaction> l = responseList.map((data) => TranSaction.fromJson(data)).toList();
+  static List<TranSaction> getTransactionCompute(List<dynamic> response) {
+    List<TranSaction> l = response.map((data) => TranSaction.fromJson(data)).toList();
     return l;
   }
 
-  static Future<String?> getBalance({bool details = false}) async {
-    var storage = const FlutterSecureStorage();
-    String? jwt = await storage.read(key: "jwt");
-    String? user = await storage.read(key: globals.USERNAME);
+  static Future<Map<String, dynamic>>? getBalance({bool details = false}) async {
+    String? user = await SecureStorage.read(key: globals.USERNAME);
     Map<String, dynamic> m;
     if (details) {
-      m = {"Authorization": jwt, "User": user, "param1": 1, "request": "getBalance"};
+      m = {"User": user, "param1": 1, "request": "getBalance"};
     } else {
-      m = {"Authorization": jwt, "User": user, "request": "getBalance"};
+      m = {"User": user, "request": "getBalance"};
     }
-    var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-    try {
-      var response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        return data;
-      } else {
-        return "err.";
-      }
-    } on SocketException catch (_) {
-      return Future.error('No internet');
-    } on TimeoutException catch (_) {
-      return Future.error('Service unreachable');
-    } catch (e) {
-      return Future.error("err.");
-    }
+
+    ComInterface ci = ComInterface();
+    Map<String, dynamic> rt = await ci.get("/data", request: m);
+    print(rt);
+    return rt;
   }
 
-  static Future<void> getAddrBook() async {
-    var storage = const FlutterSecureStorage();
+  static Future<int> getAddrBook() async {
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
-
+      String? id = await SecureStorage.read(key: globals.ID);
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "request": "getAddrBook",
       };
-
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        List responseList = json.decode(data);
-        List<Contact> l = responseList.map((data) => Contact.fromJson(data)).toList();
+      ComInterface ci = ComInterface();
+      List<dynamic> rt = await ci.get("/data", request: m, debug: true);
+      if (rt.isNotEmpty) {
+        List<Contact> l = rt.map((l) => Contact.fromJson(l)).toList();
         AppDatabase().addAddrBook(l);
+        return 1;
       }
+      return 0;
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
+      return 0;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
+      return 0;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
+      return 0;
     }
   }
 
   static Future<int> saveContact(String name, String addr, BuildContext context) async {
-    if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'K') {
-      Dialogs.openAlertBox(context, "Error", "Invalid KONJ address");
+    if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+      Dialogs.openAlertBox(context, "Error", "Invalid XDN address");
       return 0;
     }
 
@@ -335,23 +293,28 @@ class NetInterface {
     }
 
     try {
-      Navigator.of(context).pop();
-      Dialogs.openWaitBox(context);
-      var storage = const FlutterSecureStorage();
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "request": "saveAdrrBook",
         "param1": name,
         "param2": addr,
       };
 
+      // ComInterface ci = ComInterface();
+      // List responseList = await ci.get("/data", request: m, debug: true);
+      // responseList.forEach((element) {if(kDebugMode)print(element);});
+      // List<Contact> l = responseList.map((data) => Contact.fromJson(data)).toList();
+      // var db = await AppDatabase().addAddrBook(l);
+      // if (db == 1) {
+      //   return 1;
+      // }
+      // return 0;
       var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
+      var jwt = await SecureStorage.read(key: globals.TOKEN);
+      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+        "Authorization": jwt!,
         "Content-Type": "application/json",
         "payload": s,
       }).timeout(const Duration(seconds: 10));
@@ -365,72 +328,102 @@ class NetInterface {
         }
         return 0;
       } else {
-        print("problemo");
         return 0;
       }
     } on TimeoutException catch (_) {
-      print("Timeout");
+      if (kDebugMode) print("Timeout");
       return 0;
     } catch (e) {
-      print(e);
+      if (kDebugMode) print(e);
       return 0;
     }
   }
 
   static Future<void> saveMessageGroup() async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? addr = await storage.read(key: globals.ADR);
-      String? timez = await storage.read(key: globals.LOCALE);
-
+      String? addr = await SecureStorage.read(key: globals.ADR);
+      String? timez = await SecureStorage.read(key: globals.LOCALE);
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "param1": addr,
         "param2": timez,
         "request": "getMessageGroup",
       };
-
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        List<MessageGroup>? l = await compute(parseMessagesGroup, response.body);
-        await AppDatabase().addMessageGroup(l!);
-      }
+      ComInterface ci = ComInterface();
+      List rt = await ci.get("/data", request: m, debug: true, type: ComInterface.typePlain);
+      List<MessageGroup> list = rt.map((data) => MessageGroup.fromJson(data)).toList();
+      await AppDatabase().addMessageGroup(list);
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
-  static List<MessageGroup>? parseMessagesGroup(String body) {
+  static Future<GetInfo?> getInfo() async {
     try {
-      var data = decryptAESCryptoJS(body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-      List responseList = json.decode(data);
-      List<MessageGroup> l = responseList.map((data) => MessageGroup.fromJson(data)).toList();
-      return l;
+      // ComInterface ci = ComInterface();
+      // Map<String, dynamic> rt = await ci.get("/getinfo", request: {}, debug: true);
+      final response = await http.get(
+        Uri.parse('${globals.SERVER_URL}/getinfo'),
+        headers: {"Content-Type": "application/json"},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        print(response.body);
+        var gi = GetInfo.fromJson(jsonDecode(response.body));
+        return gi;
+      } else {
+        return null;
+      }
+    } on TimeoutException catch (_) {
+      if (kDebugMode) print('Service unreachable');
+      return null;
+    } on SocketException catch (_) {
+      if (kDebugMode) print('No internet');
+      return null;
     } catch (e) {
-      print(e);
+      if (kDebugMode) print(e.toString());
       return null;
     }
   }
 
-  static Future<int> saveMessages(String address, int idMax) async {
-    var storage = const FlutterSecureStorage();
+  static Future<sum.Sumry?> getSummary() async {
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? addr = await storage.read(key: globals.LOCALE);
-      String? addr2 = await storage.read(key: globals.ADR);
+      http.Response rt = await http.get(Uri.parse("https://xdn-explorer.com/ext/summary"));
+      var js = jsonDecode(rt.body);
+      var gi = sum.Sumry.fromJson(js);
+      return gi;
+    } on TimeoutException catch (_) {
+      if (kDebugMode) print('Service unreachable');
+      return null;
+    } on SocketException catch (_) {
+      if (kDebugMode) print('No internet');
+      return null;
+    } catch (e) {
+      if (kDebugMode) print(e.toString());
+      return null;
+    }
+  }
+
+  // static List<MessageGroup>? parseMessagesGroup(String body) {
+  //   try {
+  //     var data = decryptAESCryptoJS(body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+  //     List responseList = json.decode(data);
+  //
+  //     return l;
+  //   } catch (e) {
+  //     if(kDebugMode)print(e);
+  //     return null;
+  //   }
+  // }
+
+  static Future<int> saveMessages(String address, int idMax) async {
+    try {
+      String? addr = await SecureStorage.read(key: globals.LOCALE);
+      String? addr2 = await SecureStorage.read(key: globals.ADR);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": idMax,
         "param1": address,
         "param2": addr,
@@ -438,33 +431,19 @@ class NetInterface {
         "request": "getMessages",
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        try {
-          // var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-          // print(data);
-          final l = await compute(parseMessages, response.body);
-          int i = await AppDatabase().addMessages(l!);
-          return i;
-        } catch (e) {
-          print(e);
-          return 0;
-        }
-      }
-      return 0;
+      ComInterface ci = ComInterface();
+      List<dynamic> response = await ci.get("/data", request: m);
+      List<Message> l = response.map((data) => Message.fromJson(data)).toList();
+      int i = await AppDatabase().addMessages(l);
+      return i;
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
@@ -476,154 +455,149 @@ class NetInterface {
       List<Message> l = responseList.map((data) => Message.fromJson(data)).toList();
       return l;
     } catch (e) {
-      print(e);
+      if (kDebugMode) print(e);
       return null;
     }
   }
 
   static Future<void> updateRead(String address) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? addr = await storage.read(key: globals.ADR);
+      String? addr = await SecureStorage.read(key: globals.ADR);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "param1": address,
         "param2": addr,
         "request": "updateRead",
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      ComInterface ci = ComInterface();
+      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
 
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      //
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         await AppDatabase().updateMessageGroupRead(addr!, address);
       }
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
   static Future<int> updateLikes(int id) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? addr = await storage.read(key: globals.ADR);
+      String? addr = await SecureStorage.read(key: globals.ADR);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "param": addr,
         "request": "updateLikes",
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      ComInterface ci = ComInterface();
+      Map<dynamic, dynamic> response = await ci.get("/data", request: m);
 
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        Map m = json.decode(data);
-        int i = int.parse(m['likes'].toString().trim());
-        await AppDatabase().updateMessageLikes(id, i);
-        return i;
-      }else{
-        return 0;
-      }
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      //
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
+
+      // var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+      // Map m = json.decode(data);
+      int i = int.parse(response['likes'].toString().trim());
+      await AppDatabase().updateMessageLikes(id, i);
+      return i;
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
 
   static Future<void> updateContact(String name, String id) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "param1": id,
         "param2": name,
         "request": "updateContact",
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      ComInterface ci = ComInterface();
+      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
       if (response.statusCode == 200) {
         // AppDatabase().updateMessageGroupRead(addr, address);
       }
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      //
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
+      // if (response.statusCode == 200) {
+      //   // AppDatabase().updateMessageGroupRead(addr, address);
+      // }
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
   static Future<void> sendMessage(String address, String text, int idReply) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? addr = await storage.read(key: globals.ADR);
+      // String? jwt = await storage.read(key: "jwt");
+      String? addr = await SecureStorage.read(key: globals.ADR);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": idReply,
         "param1": addr,
         "param2": address,
         "param3": text,
         "request": "sendMessage",
       };
-
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        await AppDatabase().updateMessageGroupRead(addr!, address);
-      }
+      ComInterface ci = ComInterface();
+      await ci.get("/data", request: m, type: ComInterface.typePlain);
+      await AppDatabase().updateMessageGroupRead(addr!, address);
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      //
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
+      // if (response.statusCode == 200) {
+      //
+      // }
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
     }
   }
 
   static Future<int> sendContactCoins(String amount, String name, String addr) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
-      String? user = await storage.read(key: globals.USERNAME);
+      String? id = await SecureStorage.read(key: globals.ID);
+      String? user = await SecureStorage.read(key: globals.USERNAME);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "User": user,
         "id": id,
         "request": "sendContactTransaction",
@@ -632,11 +606,14 @@ class NetInterface {
         "param3": name,
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      ComInterface ci = ComInterface();
+      Response response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain, debug: true);
+
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return 1;
@@ -644,37 +621,37 @@ class NetInterface {
         return 2;
       }
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
 
   static Future<int> sendStakeCoins(String amount) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
-      String? user = await storage.read(key: globals.USERNAME);
+      String? id = await SecureStorage.read(key: globals.ID);
+      String? user = await SecureStorage.read(key: globals.USERNAME);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "User": user,
         "id": id,
         "request": "setStake",
         "param1": amount,
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      ComInterface ci = ComInterface();
+      Response response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain, debug: true);
+
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return 1;
@@ -686,36 +663,35 @@ class NetInterface {
         return 3;
       }
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
 
   static Future<int> unstakeCoins(int type) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "param1": type,
         "request": "unstake",
       };
+      ComInterface ci = ComInterface();
+      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      //
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return 1;
@@ -723,105 +699,81 @@ class NetInterface {
         return 2;
       }
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
 
   static Future<Map<String, dynamic>?> getAdminNickname() async {
-    var storage = const FlutterSecureStorage();
-    String? jwt = await storage.read(key: "jwt");
-    String? id = await storage.read(key: globals.ID);
-    Map<String, dynamic> m = {"Authorization": jwt, "id": id, "request": "getAdminNickname"};
-    try {
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
-      }).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        Map<String, dynamic> map = json.decode(data);
-        return map;
-      } else {
-        return null;
-      }
-    } on TimeoutException catch (_) {
-      print('Service unreachable');
-      return null;
-    } on SocketException catch (_) {
-      print('No internet');
-      return null;
-    } catch (e) {
-      print(e.toString());
-      return null;
-    }
+    String? id = await SecureStorage.read(key: globals.ID);
+    Map<String, dynamic> m = {"id": id, "request": "getAdminNickname"};
+    ComInterface ci = ComInterface();
+    Map<String, dynamic> rt = await ci.get("/data", request: m, debug: true);
+    return rt;
   }
 
-  static Future<bool> checkPassword(String password) async {
-    var storage = const FlutterSecureStorage();
-    String? username = await storage.read(key: globals.USERNAME);
+  static Future<dynamic> checkPassword(String password, {String? pin}) async {
+    String? username = await SecureStorage.read(key: globals.USERNAME);
     try {
       Map<String, dynamic> m = {
         "username": username,
         "password": password,
       };
+      if (pin != null) {
+        m['twoFactor'] = pin;
+      }
+
+      // ComInterface ci = ComInterface();
+      // Response res = await ci.post("/login", request: m, type: ComInterface.typePlain, debug: true);
       var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
 
-      var res = await http.post(Uri.parse(globals.SERVER_URL + "/login"), headers: {
+      var res = await http.post(Uri.parse("${globals.SERVER_URL}/login"), headers: {
         "Content-Type": "application/json",
         "payload": s,
       }).timeout(const Duration(seconds: 10));
 
       if (res.statusCode == 200) {
         return true;
+      } else if (res.statusCode == 409) {
+        return "fa";
       } else {
         return false;
       }
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return false;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return false;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return false;
     }
   }
 
   static Future<String?> getPrivKey() async {
-    var storage = const FlutterSecureStorage();
-    String? addr = await storage.read(key: globals.ADR);
-    String? jwt = await storage.read(key: "jwt");
+    String? addr = await SecureStorage.read(key: globals.ADR);
     try {
-      Map<String, dynamic> m = {"Authorization": jwt, "param1": addr, "request": "getPrivKey"};
+      Map<String, dynamic> m = {"param1": addr, "request": "getPrivKey"};
+      ComInterface ci = ComInterface();
+      var res = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
 
-      final res = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
-      }).timeout(const Duration(seconds: 10));
-
-      if (res.statusCode == 200) {
-        String? data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        return data;
-      } else {
-        return null;
-      }
+      String? data = decryptAESCryptoJS(res.body, "rp9ww*jK8KX_!537e%Crmf");
+      return data;
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return null;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return null;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return null;
     }
   }
@@ -839,25 +791,25 @@ class NetInterface {
         ));
         Navigator.of(context).pop();
       } else {
-        const storage = FlutterSecureStorage();
-        String? jwt = await storage.read(key: "jwt");
-        String? id = await storage.read(key: globals.ID);
+        String? id = await SecureStorage.read(key: globals.ID);
 
         Map<String, dynamic> m = {
-          "Authorization": jwt,
           "id": id,
           "param1": nickname,
           "request": "renameUser",
         };
+        ComInterface ci = ComInterface();
+        var response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
 
-        var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-        final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-          "Content-Type": "application/json",
-          "payload": s,
-        }).timeout(const Duration(seconds: 10));
+        // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+        // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+        //   "Content-Type": "application/json",
+        //   "payload": s,
+        // }).timeout(const Duration(seconds: 10));
 
         if (response.statusCode == 200) {
           globals.reloadData = true;
+
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Your nickname has been changed!"),
@@ -865,9 +817,10 @@ class NetInterface {
             behavior: SnackBarBehavior.fixed,
             elevation: 5.0,
           ));
+
           var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
           Map<String, dynamic> map = json.decode(data);
-          await storage.write(key: globals.NICKNAME, value: map['nick']);
+          await SecureStorage.write(key: globals.NICKNAME, value: map['nick']);
         } else {
           Navigator.of(context).pop();
           Dialogs.openAlertBox(context, 'Warning', 'Server error');
@@ -889,31 +842,32 @@ class NetInterface {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
     try {
-      const storage = FlutterSecureStorage();
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "param1": pass,
         "request": "changePassword",
       };
+      // ComInterface ci = ComInterface();
+      // Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
 
       var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
+      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
         "Content-Type": "application/json",
         "payload": s,
       }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Your password has been changed!"),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.fixed,
-          elevation: 5.0,
-        ));
+        if (context.owner != null) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Your password has been changed!"),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.fixed,
+            elevation: 5.0,
+          ));
+        }
       } else {
         Navigator.of(context).pop();
         Dialogs.openAlertBox(context, 'Error', 'Password has not been changed');
@@ -931,50 +885,46 @@ class NetInterface {
   }
 
   static Future<int> getAvatarVersion(String? addr) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "param1": addr,
         "request": "avatarVersion",
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      ComInterface ci = ComInterface();
+      dynamic response = await ci.get("/data", request: m);
+      return AppDatabase().insertUpdateAvatar(response['addr'], response['version']);
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      //
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
 
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        Map reponseMap = json.decode(data);
-        return AppDatabase().insertUpdateAvatar(reponseMap['addr'], reponseMap['version']);
-      }
-      return 0;
+      // if (response.statusCode == 200) {
+      //   var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+      //   Map reponseMap = json.decode(data);
+      //
+      // }
+      // return 0;
     } on TimeoutException catch (_) {
-      print('Service unreachable');
+      if (kDebugMode) print('Service unreachable');
       return 0;
     } on SocketException catch (_) {
-      print('No internet');
+      if (kDebugMode) print('No internet');
       return 0;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       return 0;
     }
   }
 
   static Future<String?> getRewardsByDay(BuildContext context, String date, int type) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
-      String? tz = await storage.read(key: globals.LOCALE);
+      String? id = await SecureStorage.read(key: globals.ID);
+      String? tz = await SecureStorage.read(key: globals.LOCALE);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "param1": date,
         "param2": type,
@@ -982,20 +932,24 @@ class NetInterface {
         "request": "getRewards",
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      ComInterface ci = ComInterface();
+      List<dynamic> response = await ci.get("/data", request: m, debug: true);
+      return response.toString();
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      //
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
 
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        return data.toString();
-      } else {
-        Dialogs.openAlertBox(context, 'Warning', response.toString());
-        return null;
-      }
+      // if (response.statusCode == 200) {
+      //   var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+      //   if(kDebugMode)print(data.toString());
+      //   return data.toString();
+      // } else {
+      //   Dialogs.openAlertBox(context, 'Warning', response.toString());
+      //   return null;
+      // }
     } on TimeoutException catch (_) {
       Navigator.of(context).pop();
       Dialogs.openAlertBox(context, 'Warning', "Request timed out");
@@ -1004,20 +958,17 @@ class NetInterface {
       Dialogs.openAlertBox(context, 'Warning', "Service is not available");
       return null;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Warning', e.toString());
       return null;
     }
   }
 
   static Future<String?> getRewardsByMonth(BuildContext context, String year, String month, int type) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? id = await SecureStorage.read(key: globals.ID);
 
       Map<String, dynamic> m = {
-        "Authorization": jwt,
         "id": id,
         "param1": year,
         "param2": type,
@@ -1025,12 +976,14 @@ class NetInterface {
         "request": "getRewards",
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      ComInterface ci = ComInterface();
+      Response response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      //
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
@@ -1046,33 +999,34 @@ class NetInterface {
       Dialogs.openAlertBox(context, 'Warning', "Service is not available");
       return null;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Warning', e.toString());
       return null;
     }
   }
 
   static Future<Map?> getPoolStats(BuildContext context) async {
-    var storage = const FlutterSecureStorage();
     try {
-      String? jwt = await storage.read(key: "jwt");
-      String? id = await storage.read(key: globals.ID);
+      String? id = await SecureStorage.read(key: globals.ID);
 
-      Map<String, dynamic> m = {"Authorization": jwt, "id": id, "request": "getPoolStats"};
+      Map<String, dynamic> m = {"id": id, "request": "getPoolStats"};
 
-      final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
-      }).timeout(const Duration(seconds: 10));
+      ComInterface ci = ComInterface();
+      Map response = await ci.get("/data", request: m);
+      return response;
+      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
+      // }).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        Map reponseMap = json.decode(data);
-        return reponseMap;
-      } else {
-        // Dialogs.openAlertBox(context, 'Error', response.body.toString());
-        return null;
-      }
+      // if (response.statusCode == 200) {
+      //   var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+      //   Map reponseMap = json.decode(data);
+      //   return reponseMap;
+      // } else {
+      //   // Dialogs.openAlertBox(context, 'Error', response.body.toString());
+      //   return null;
+      // }
     } on TimeoutException catch (_) {
       // Dialogs.openAlertBox(context, 'Error',
       //     "Request timed out, can't save the picture to cloud");
@@ -1082,7 +1036,7 @@ class NetInterface {
       //     "Service is not available, can't save the picture to cloud");
       return null;
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) print(e.toString());
       // Dialogs.openAlertBox(context, 'Error', e.toString());
       return null;
     }

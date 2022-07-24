@@ -1,7 +1,7 @@
 import 'dart:io' show Platform;
 import "dart:io" as io;
 
-import 'package:html/parser.dart' show parse;
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -16,7 +16,7 @@ import 'MessageGroup.dart';
 import 'NetInterface.dart';
 import 'TranSaction.dart';
 
-const DB_VERSION = 9;
+const dbVersion = 1;
 
 class AppDatabase {
   static Database? _db;
@@ -68,7 +68,6 @@ class AppDatabase {
     tablesSql.add(tableMessages);
     tablesSql.add(tableTransactions);
     tablesSql.add(tableAvatars);
-
     if (_db != null) {
       return _db!;
     }
@@ -78,8 +77,8 @@ class AppDatabase {
 
   initDb() async {
     io.Directory documentDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentDirectory.path, 'maindb.db');
-    var db = await openDatabase(path, version: DB_VERSION, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    String path = join(documentDirectory.path, 'db_diginot.db');
+    var db = await openDatabase(path, version: dbVersion, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return db;
   }
 
@@ -96,8 +95,8 @@ class AppDatabase {
     final dbClient = await db;
     dbClient.delete(globals.TABLE_ADDR);
     dbClient.execute(tableAddr);
-    for (var _i = 0; _i < input.length; _i++) {
-      await dbClient.insert(globals.TABLE_ADDR, input[_i].toMap());
+    for (var i = 0; i < input.length; i++) {
+      await dbClient.insert(globals.TABLE_ADDR, input[i].toMap());
     }
     return 1;
   }
@@ -137,7 +136,7 @@ class AppDatabase {
     dynamic contact = {
       "name": name,
     };
-    var res = dbClient.update(globals.TABLE_ADDR, contact, where: globals.ADDR_ID + " = ?", whereArgs: [id]);
+    var res = dbClient.update(globals.TABLE_ADDR, contact, where: "${globals.ADDR_ID} = ?", whereArgs: [id]);
     NetInterface.updateContact(name, id);
     return res;
   }
@@ -194,7 +193,7 @@ class AppDatabase {
 
   Future<List<Contact>> searchContact(String searchQuery) async {
     var d = await db;
-    var res = await d.rawQuery("SELECT * FROM " + globals.TABLE_ADDR + " WHERE name" + " LIKE " + "'" + searchQuery + "%'");
+    var res = await d.rawQuery("SELECT * FROM ${globals.TABLE_ADDR} WHERE name LIKE '$searchQuery%'");
     return List.generate(res.length, (i) {
       return Contact(
         id: res[i]['id'] as int,
@@ -206,7 +205,7 @@ class AppDatabase {
 
   Future<List<Contact>> getShareContactList(String searchQuery) async {
     var d = await db;
-    var res = await d.rawQuery("SELECT * FROM " + globals.TABLE_ADDR + " WHERE name" + " IS NOT " + "'" + searchQuery + "'");
+    var res = await d.rawQuery("SELECT * FROM ${globals.TABLE_ADDR} WHERE name IS NOT '$searchQuery'");
     return List.generate(res.length, (i) {
       return Contact(
         id: res[i]['id'] as int,
@@ -221,36 +220,25 @@ class AppDatabase {
     // await dbClient.delete(globals.TABLE_MGROUP);
     // await dbClient.execute(tableMessageGroup);
     // print(input.length.toString());
-    for (var _i = 0; _i < input.length; _i++) {
-      if (input[_i].text!.contains("<!DOCTYPE")) {
-        var s = parse(input[_i].text);
-        var innerBody = s.body!.innerHtml;
-        final startIndex = innerBody.indexOf(">");
-        final endIndex = innerBody.indexOf("<", startIndex + ">".length);
-        input[_i].setText(innerBody.substring(startIndex + ">".length, endIndex)); // print(s.body.innerHtml.);
-      }
-      var check = await dbClient.query(globals.TABLE_MGROUP, where: globals.MGROUP_SENT_ADDR + " = ? ", whereArgs: [input[_i].sentAddr]);
+    for (var i = 0; i < input.length; i++) {
+      var check = await dbClient.query(globals.TABLE_MGROUP, where: "${globals.MGROUP_SENT_ADDR} = ? ", whereArgs: [input[i].sentAddr]);
       if (check.isNotEmpty) {
-        var getUnread = await dbClient.query(globals.TABLE_MGROUP, columns: [globals.MGROUP_UNREAD], where: globals.MGROUP_SENT_ADDR + " = ? ", whereArgs: [input[_i].sentAddr]);
-        if (int.parse(getUnread.first['unread'].toString()) < input[_i].unread!.toInt()) {
-          await dbClient.update(globals.TABLE_MGROUP, input[_i].toMap(), where: globals.MGROUP_SENT_ADDR + " = ? ", whereArgs: [input[_i].sentAddr]);
+        var getUnread = await dbClient.query(globals.TABLE_MGROUP, columns: [globals.MGROUP_UNREAD], where: "${globals.MGROUP_SENT_ADDR} = ? ", whereArgs: [input[i].sentAddr]);
+        if (int.parse(getUnread.first['unread'].toString()) < input[i].unread!.toInt()) {
+          await dbClient.update(globals.TABLE_MGROUP, input[i].toMap(), where: "${globals.MGROUP_SENT_ADDR} = ? ", whereArgs: [input[i].sentAddr]);
         } else {
-          Map<String, dynamic> row = {globals.MGROUP_LAST_MESSAGE: input[_i].lastReceivedMessage, globals.MGROUP_TEXT: input[_i].text};
-          await dbClient.update(globals.TABLE_MGROUP, row, where: globals.MGROUP_OG_SENT_ADDR + "= ?", whereArgs: [input[_i].sentAddressOrignal]);
+          Map<String, dynamic> row = {globals.MGROUP_LAST_MESSAGE: input[i].lastReceivedMessage, globals.MGROUP_TEXT: input[i].text};
+          await dbClient.update(globals.TABLE_MGROUP, row, where: "${globals.MGROUP_OG_SENT_ADDR}= ?", whereArgs: [input[i].sentAddressOrignal]);
         }
       } else {
-        await dbClient.insert(globals.TABLE_MGROUP, input[_i].toMap());
+        await dbClient.insert(globals.TABLE_MGROUP, input[i].toMap());
       }
     }
   }
 
   Future<List<MessageGroup>> getMessageGroup() async {
     final dbClient = await db;
-    var res = await dbClient.rawQuery("SELECT COALESCE(t2.name, t1.sentAddr) as sentAddr, t1.sentAddressOrignal, t1.unread, t1.lastReceivedMessage, t1.text FROM " +
-        globals.TABLE_MGROUP +
-        " t1 LEFT JOIN " +
-        globals.TABLE_ADDR +
-        " t2 ON t1.sentAddr = t2.addr ORDER BY t1.lastReceivedMessage DESC");
+    var res = await dbClient.rawQuery("SELECT COALESCE(t2.name, t1.sentAddr) as sentAddr, t1.sentAddressOrignal, t1.unread, t1.lastReceivedMessage, t1.text FROM ${globals.TABLE_MGROUP} t1 LEFT JOIN ${globals.TABLE_ADDR} t2 ON t1.sentAddr = t2.addr ORDER BY t1.lastReceivedMessage DESC");
     return List.generate(res.length, (i) {
       return MessageGroup(
           sentAddr: res[i]['sentAddr'].toString(),
@@ -264,11 +252,7 @@ class AppDatabase {
 
   Future<MessageGroup?> getMessageGroupByAddr(String addr) async {
     final dbClient = await db;
-    var res = await dbClient.rawQuery("SELECT COALESCE(t2.name, t1.sentAddr) as sentAddr, t1.sentAddressOrignal, t1.unread, t1.lastReceivedMessage, t1.text FROM " +
-        globals.TABLE_MGROUP +
-        " t1 LEFT JOIN " +
-        globals.TABLE_ADDR +
-        " t2 ON t1.sentAddr = t2.addr WHERE t1.sentAddressOrignal = '" + addr + "' ORDER BY t1.lastReceivedMessage DESC");
+    var res = await dbClient.rawQuery("SELECT COALESCE(t2.name, t1.sentAddr) as sentAddr, t1.sentAddressOrignal, t1.unread, t1.lastReceivedMessage, t1.text FROM ${globals.TABLE_MGROUP} t1 LEFT JOIN ${globals.TABLE_ADDR} t2 ON t1.sentAddr = t2.addr WHERE t1.sentAddressOrignal = '$addr' ORDER BY t1.lastReceivedMessage DESC");
     if(res.isEmpty) return null;
 
       return MessageGroup(
@@ -288,7 +272,7 @@ class AppDatabase {
 
   Future<int>? getLikes(int id) async {
     final dbClient = await db;
-    var res = await dbClient.rawQuery("SELECT likes FROM messages WHERE id = " + id.toString());
+    var res = await dbClient.rawQuery("SELECT likes FROM messages WHERE id = $id");
     if (res.first['likes'] == null) return 0;
     return res.first['likes'] as int;
   }
@@ -297,40 +281,36 @@ class AppDatabase {
     final dbClient = await db;
     // await dbClient.delete(globals.TABLE_MESSAGES);
     // await dbClient.execute(tableMessages);
-    int _count = 0;
-    for (var _i = 0; _i < input.length; _i++) {
-      if (input[_i].text!.contains("<!DOCTYPE")) {
-        var s = parse(input[_i].text);
-        var innerBody = s.body!.innerHtml;
-        final startIndex = innerBody.indexOf(">");
-        final endIndex = innerBody.indexOf("<", startIndex + ">".length);
-        input[_i].setText(innerBody.substring(startIndex + ">".length, endIndex)); // print(s.body.innerHtml.);
-      }
+    int count = 0;
+    for (var i = 0; i < input.length; i++) {
       var check = await dbClient.query(
         globals.TABLE_MESSAGES,
-        where: globals.MESSAGES_ID + " = ? ",
-        whereArgs: [input[_i].id],
+        where: "${globals.MESSAGES_ID} = ? ",
+        whereArgs: [input[i].id],
       );
       if (check.isEmpty) {
-        _count += 1;
-        await dbClient.insert(globals.TABLE_MESSAGES, input[_i].toMap());
+        count += 1;
+        await dbClient.insert(globals.TABLE_MESSAGES, input[i].toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
       } else {
-        await updateMessageLikes(input[_i].id as int, input[_i].likes as int);
-        await updateMessageLastChange(input[_i].id as int, input[_i].lastChange as int);
+        // print("MESSAGE UPDATE");
+        await updateMessageLikes(input[i].id as int, input[i].likes as int);
+        await updateMessageLastChange(input[i].id as int, input[i].lastChange as int);
       }
     }
-    return _count;
+    return count;
   }
 
   Future<List<dynamic>>? getMessages(String receiveAddr, String sentAddr) async {
-    var lastDate;
+    String? lastDate;
     var len = 0;
     final dbClient = await db;
-    var res = await dbClient.query(globals.TABLE_MESSAGES,
-        where: "(" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?) OR (" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?)",
-        whereArgs: [receiveAddr, sentAddr, sentAddr, receiveAddr],
-        orderBy: globals.MESSAGES_LAST_MESSAGE + " DESC");
+    var res = await dbClient.rawQuery("SELECT * FROM messages WHERE (receiveAddr LIKE '%$receiveAddr%' AND sentAddr LIKE '%$sentAddr%') UNION ALL SELECT * FROM messages WHERE (receiveAddr LIKE '%$sentAddr%' AND sentAddr LIKE '%$receiveAddr%') ORDER BY lastMessage DESC" );
+    // var res = await dbClient.query(globals.TABLE_MESSAGES,
+    //     where: "(" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?) OR (" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?)",
+    //     whereArgs: [receiveAddr, sentAddr, sentAddr, receiveAddr],
+    //     orderBy: globals.MESSAGES_LAST_MESSAGE + " DESC");
     var l = List.generate(res.length, (i) {
+
       return Message(
         id: res[i]['id'] as int,
         receiveAddr: res[i]['sentAddr'].toString(),
@@ -371,7 +351,7 @@ class AppDatabase {
     var res = await dbClient.query(
       globals.TABLE_MESSAGES,
       columns: ["MAX(lastChange) as lastChange"],
-      where: "(" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?) OR (" + globals.MESSAGES_RECEIVE_ADDR + " = ? AND " + globals.MESSAGES_SENT_ADDR + " = ?)",
+      where: "(${globals.MESSAGES_RECEIVE_ADDR} = ? AND ${globals.MESSAGES_SENT_ADDR} = ?) OR (${globals.MESSAGES_RECEIVE_ADDR} = ? AND ${globals.MESSAGES_SENT_ADDR} = ?)",
       whereArgs: [receiveAddr, sentAddr, sentAddr, receiveAddr],
     );
 
@@ -385,7 +365,7 @@ class AppDatabase {
     var res = await dbClient.query(
       globals.TABLE_MESSAGES,
       columns: [globals.MESSAGES_TEXT],
-      where: globals.MESSAGES_ID + " = " + id.toString(),
+      where: "${globals.MESSAGES_ID} = $id",
     );
     return res.first[globals.MESSAGES_TEXT] as String;
   }
@@ -401,7 +381,7 @@ class AppDatabase {
     Map<String, dynamic> row = {
       globals.MGROUP_UNREAD: 0,
     };
-    await dbClient.update(globals.TABLE_MGROUP, row, where: globals.MGROUP_OG_SENT_ADDR + "= ?", whereArgs: [sentAddr]);
+    await dbClient.update(globals.TABLE_MGROUP, row, where: "${globals.MGROUP_OG_SENT_ADDR}= ?", whereArgs: [sentAddr]);
   }
 
   Future<void> updateMessageLikes(int id, int value) async {
@@ -409,26 +389,21 @@ class AppDatabase {
     Map<String, dynamic> row = {
       globals.MESSAGES_LIKES: value,
     };
-    var i = await dbClient.update(globals.TABLE_MESSAGES, row, where: globals.MESSAGES_ID + "= ?", whereArgs: [id]);
+    await dbClient.update(globals.TABLE_MESSAGES, row, where: "${globals.MESSAGES_ID}= ?", whereArgs: [id]);
   }
 
   Future<void> updateMessageLastChange(int id, int value) async {
     final dbClient = await db;
     Map<String, dynamic> row = {
+      globals.MESSAGES_ID: id,
       globals.MESSAGES_LAST_CHANGE: value,
     };
-    await dbClient.update(globals.TABLE_MESSAGES, row, where: globals.MESSAGES_ID + "= ?", whereArgs: [id]);
+    await dbClient.update(globals.TABLE_MESSAGES, row, where: "${globals.MESSAGES_ID}=?", whereArgs: [id], conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<MessageGroup>> searchMessages(String searchQuery) async {
     final d = await db;
-    var res = await d.rawQuery("SELECT COALESCE(t2.name, t1.sentAddr) as sentAddr, t1.sentAddressOrignal, t1.unread, t1.lastReceivedMessage, t1.text FROM " +
-        globals.TABLE_MGROUP +
-        " t1 LEFT JOIN " +
-        globals.TABLE_ADDR +
-        " t2 ON t1.sentAddr = t2.addr WHERE t2.name LIKE '" +
-        searchQuery +
-        "%' ORDER BY t1.lastReceivedMessage DESC");
+    var res = await d.rawQuery("SELECT COALESCE(t2.name, t1.sentAddr) as sentAddr, t1.sentAddressOrignal, t1.unread, t1.lastReceivedMessage, t1.text FROM ${globals.TABLE_MGROUP} t1 LEFT JOIN ${globals.TABLE_ADDR} t2 ON t1.sentAddr = t2.addr WHERE t2.name LIKE '$searchQuery%' ORDER BY t1.lastReceivedMessage DESC");
     return List.generate(res.length, (i) {
       return MessageGroup(
           sentAddr: res[i]['sentAddr'].toString(),
@@ -439,49 +414,45 @@ class AppDatabase {
     });
   }
 
-  Future<void> addTransactions(List<TranSaction> list) async {
+  Future<int> addTransactions(List<TranSaction> list) async {
     final dbClient = await db;
     try {
-      for (var _i = 0; _i < list.length; _i++) {
-        var res = await dbClient.query(globals.TABLE_TRANSACTION, where: "id = ?", whereArgs: [list[_i].id]);
-        if (res.isNotEmpty) {
-          Map<String, dynamic> row = {
-            globals.TRAN_CONFIRMATION: list[_i].confirmation,
-          };
-          await dbClient.update(globals.TABLE_TRANSACTION, row, where: "id = ? ", whereArgs: [list[_i].id]);
-        } else {
-          await dbClient.insert(globals.TABLE_TRANSACTION, list[_i].toMap());
+      for (var l in list) {
+          await dbClient.insert(globals.TABLE_TRANSACTION, l.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
         }
-      }
+      return 1;
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
+      return 0;
     }
   }
 
   Future<List<TranSaction>> getTransactions({int count = 0}) async {
     final dbClient = await db;
-    var res;
+    List<Map<String, Object?>> res;
     if (count == 0) {
-      res = await dbClient.query(globals.TABLE_TRANSACTION, orderBy: globals.TRAN_DATE + " DESC");
+      res = await dbClient.query(globals.TABLE_TRANSACTION, orderBy: "${globals.TRAN_DATE} DESC");
     } else {
-      res = await dbClient.query(globals.TABLE_TRANSACTION, orderBy: globals.TRAN_DATE + " DESC", limit: count);
+      res = await dbClient.query(globals.TABLE_TRANSACTION, orderBy: "${globals.TRAN_DATE} DESC", limit: count);
     }
     return List.generate(res.length, (i) {
       return TranSaction(
-        id: res[i]['id'],
-        txid: res[i]['txid'],
-        category: res[i]['category'],
-        datetime: res[i]['datetime'],
+        id: res[i]['id'] as int?,
+        txid: res[i]['txid'].toString(),
+        category: res[i]['category'].toString(),
+        datetime: res[i]['datetime'].toString(),
         amount: res[i]['amount'].toString(),
-        confirmation: res[i]['confirmation'],
-        contactName: res[i]['contactName'],
+        confirmation: res[i]['confirmation'] as int?,
+        contactName: res[i]['contactName'].toString(),
       );
     });
   }
 
   Future<String> getLastTransactionDate() async {
     final dbClient = await db;
-    var res = await dbClient.rawQuery('SELECT MAX(datetime) as date FROM ' + globals.TABLE_TRANSACTION);
+    var res = await dbClient.rawQuery('SELECT MAX(datetime) as date FROM ${globals.TABLE_TRANSACTION}');
     return res.last['date'].toString();
   }
 
@@ -507,7 +478,9 @@ class AppDatabase {
         return 1;
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
       return 0;
     }
   }
@@ -523,55 +496,15 @@ class AppDatabase {
     switch (oldVersion) {
       case 1:
         try {
-          await db.execute(tableMessageGroup);
-          await db.execute(tableMessages);
-          await db.execute(tableTransactions);
-          await db.execute(tableAvatars);
+          // await db.execute(tableMessageGroup);
+          // await db.execute(tableMessages);
+          // await db.execute(tableTransactions);
+          // await db.execute(tableAvatars);
         } catch (e) {
-          print(e);
+          if (kDebugMode) {
+            print(e);
+          }
         }
-        break;
-
-      case 2:
-        try {
-          await db.execute(tableTransactions);
-          await db.execute(tableAvatars);
-          await db.execute('DROP TABLE IF EXISTS messages');
-          await db.execute(tableMessages);
-        } catch (e) {
-          print(e);
-        }
-        break;
-
-      case 3:
-        await db.execute(tableAvatars);
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 4:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 5:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 6:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 7:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
-        break;
-
-      case 8:
-        await db.execute('DROP TABLE IF EXISTS messages');
-        await db.execute(tableMessages);
         break;
     }
   }

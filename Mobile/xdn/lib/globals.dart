@@ -1,4 +1,4 @@
-library konjungate.globals;
+library digitalnote.globals;
 
 bool isLoggedIn = false;
 const String SERVER_URL = 'http://194.60.201.213:3000';
@@ -15,6 +15,7 @@ const String ADMINPRIV = "admin";
 const String FIRETOKEN = "firetoken";
 const String COUNTDOWN = "countdownTime";
 const String LOCALE_APP = 'locale_app';
+const String AUTH_TYPE = 'auth_type';
 
 const String DB_NAME = "databazia";
 
@@ -58,7 +59,7 @@ const String AV_VER = "aversion";
 
 const String APP_NOT = 'showMessages';
 
-const List<String> LANGUAGES = ['English', 'Bosnian', 'Croatian', 'Czech', 'Finnish', 'German', 'Hindi', 'Japanese', 'Russian', 'Serbian Latin', 'Serbian Цyриллиц', 'Spanish', 'Panjabi'];
-const List<String> LANGUAGES_CODES = ['en', 'bs_BA', 'hr_HR', 'cs_CZ', 'fi_FI', 'de_DE', 'hi_IN', 'ja_JP', 'ru_RU', 'sr_Latn_RS', 'sr_Cyrl_RS', 'es_ES' 'pa_IN'];
+const List<String> LANGUAGES = ['English', 'Bosnian', 'Croatian', 'Czech', 'Dutch', 'Finnish', 'German', 'Hindi', 'Japanese', 'Russian', 'Serbian Latin', 'Serbian Цyриллиц', 'Spanish', 'Panjabi'];
+const List<String> LANGUAGES_CODES = ['en', 'bs_BA', 'hr_HR', 'cs_CZ', 'nl_NL', 'fi_FI', 'de_DE', 'hi_IN', 'ja_JP', 'ru_RU', 'sr_Latn_RS', 'sr_Cyrl_RS', 'es_ES' 'pa_IN'];
 
 bool reloadData = false;

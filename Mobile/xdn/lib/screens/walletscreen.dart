@@ -1,38 +1,45 @@
 import 'dart:async';
 
+import 'package:digitalnote/support/Utils.dart';
+import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-import '../support/CardHeader.dart';
 import '../support/NetInterface.dart';
 import '../widgets/backgroundWidget.dart';
 import '../widgets/balanceCard.dart';
 import '../widgets/sendWidget.dart';
 import '../widgets/transactionWidget.dart';
 
-class DetailScreenWidget extends StatefulWidget {
+class WalletScreen extends StatefulWidget {
+  static const String route = "menu/wallet";
+
   @override
   DetailScreenState createState() => DetailScreenState();
   final VoidCallback? refreshData;
+  final Object arguments;
 
-  const DetailScreenWidget({Key? key, this.refreshData}) : super(key: key);
+  const WalletScreen({Key? key, this.refreshData, required this.arguments}) : super(key: key);
 }
 
 final Map<String, dynamic> payload = {};
 
-class DetailScreenState extends State<DetailScreenWidget>
-    with TickerProviderStateMixin {
+class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixin {
   final GlobalKey<SendWidgetState> _key = GlobalKey();
   final GlobalKey<TransactionWidgetState> _keyTran = GlobalKey();
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
 
-  Future? _getBalance;
+  Future<Map<String, dynamic>>? _getBalance;
 
-  AnimationController? animationController;
-  AnimationController? animationSendController;
-  Animation<double>? tween;
-
+  // AnimationController? animationController;
+  // AnimationController? animationSendController;
+  // Animation<double>? tween;
+  // Animation<Offset>? sendTween;
+  // Animation<double>? opacityTween;
   bool _forward = false;
+  Widget? _switchWidget;
+  double? heightVal;
+  bool? useTablet;
 
   void refreshBalance() {
     setState(() {
@@ -53,20 +60,24 @@ class DetailScreenState extends State<DetailScreenWidget>
   void initState() {
     super.initState();
     refreshBalance();
-    animationController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    _switchWidget = balanceCard();
+    // animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    //
+    // animationSendController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    //
+    // sendTween = Tween<Offset>(begin: const Offset(0, 0), end: const Offset(0, 0.2))
+    //     .animate(CurvedAnimation(parent: animationSendController!, curve: Curves.decelerate));
+    //
+    // opacityTween = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: animationSendController!, curve: Curves.easeOut));
+    //
+    // tween = Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(parent: animationController!, curve: Curves.easeOut));
 
-    animationSendController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
-
-    tween = Tween<double>(begin: 1.0, end: 0.0).animate(
-        CurvedAnimation(parent: animationController!, curve: Curves.easeOut));
   }
 
   void shrinkSendView() {
     Future.delayed(const Duration(milliseconds: 1000), () {
-      animationController!.reverse();
-      animationSendController!.reverse();
+      // animationController!.reverse();
+      // animationSendController!.reverse();
       _forward = false;
 
       setState(() {
@@ -77,7 +88,7 @@ class DetailScreenState extends State<DetailScreenWidget>
 
   void refreshDataScroll() {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(AppLocalizations.of(context)!.wl_refreshing + "..."),
+      content: Text("${AppLocalizations.of(context)!.wl_refreshing}..."),
       duration: const Duration(seconds: 1),
       backgroundColor: Colors.green,
       behavior: SnackBarBehavior.fixed,
@@ -90,15 +101,19 @@ class DetailScreenState extends State<DetailScreenWidget>
 
   void animateButton() {
     if (_forward) {
-      animationController!.reverse();
-      animationSendController!.reverse();
+      _switchWidget = balanceCard();
+      // animationController!.reverse();
+      // animationSendController!.reverse();
       _forward = false;
     } else {
-      animationController!.forward();
-      animationSendController!.forward();
-      _key.currentState!.initView();
+      _switchWidget = sendWidget();
+      // animationController!.forward();
+      // animationSendController!.forward();
+
       _forward = true;
     }
+    setState(() {});
+    _key.currentState?.initView();
   }
 
   void showTransactions() {
@@ -108,71 +123,98 @@ class DetailScreenState extends State<DetailScreenWidget>
 
   @override
   void dispose() {
-    animationController!.dispose();
-    animationSendController!.dispose();
+    // animationController!.dispose();
+    // animationSendController!.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    heightVal = MediaQuery.of(context).size.height * 0.3;
+    useTablet = Utils.isTablet(MediaQuery.of(context));
     return Stack(children: [
       const BackgroundWidget(
         image: "walleticon.png",
-        mainMenu: false,),
+        mainMenu: false,
+      ),
       Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: Container(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(15.0)),
-            ),
-            child: Stack(children: [
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
-                    child: BalanceCard(
-                      key: _keyBal,
-                      getBalanceFuture: _getBalance,
-                      onPressSend: showTransactions,
+          child: Stack(children: [
+            // Padding(
+            //   padding: const EdgeInsets.only(top: 80.0),
+            //   child: FadeTransition(
+            //     opacity: opacityTween!,
+            //     child: SlideTransition(
+            //       position: sendTween!,
+            //       child: SendWidget(
+            //         key: _key,
+            //         func: shrinkSendView,
+            //         balance: _getBalance,
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            Column(
+              children: [
+                Header(header: AppLocalizations.of(context)!.wl_balance),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  switchInCurve: Curves.easeIn,
+                  switchOutCurve: Curves.decelerate,
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return ScaleTransition(scale: animation, child: child);
+                  },
+                  child: _switchWidget,
+                ),
+                // Padding(
+                //   padding: const EdgeInsets.only(top: 0.0),
+                //   child: BalanceCard(
+                //     key: _keyBal,
+                //     getBalanceFuture: _getBalance,
+                //     onPressSend: showTransactions,
+                //   ),
+                // ),
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10.0),
+                    child: TransactionWidget(
+                      key: _keyTran,
+                      func: refreshDataScroll,
                     ),
                   ),
-                  Stack(
-                    children: [
-                      FadeTransition(
-                        opacity: tween!,
-                        child: Container(
-                          margin: const EdgeInsets.only(top: 10.0),
-                          child: TransactionWidget(
-                            key: _keyTran,
-                            func: refreshDataScroll,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 0.0),
-                        child: SizeTransition(
-                          sizeFactor: CurvedAnimation(
-                              curve: Curves.decelerate, parent: animationSendController!),
-                          axis: Axis.vertical,
-                          axisAlignment: 3.0,
-                          child: SendWidget(
-                            key: _key,
-                            func: shrinkSendView,
-                            balance: _getBalance,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              CardHeader(title: AppLocalizations.of(context)!.wl_balance, backArrow: true,),
-            ]),
-          ),
+                ),
+              ],
+            ),
+            // CardHeader(title: AppLocalizations.of(context)!.wl_balance, backArrow: true,),
+          ]),
         ),
       ),
     ]);
+  }
+
+  Widget balanceCard() {
+    return Padding(
+      key: const ValueKey<int>(0),
+      padding: const EdgeInsets.only(top: 0.0),
+      child: BalanceCard(
+        key: _keyBal,
+        getBalanceFuture: _getBalance,
+        onPressSend: showTransactions,
+      ),
+    );
+  }
+
+  Widget sendWidget() {
+    return Padding(
+      key: const ValueKey<int>(1),
+      padding: const EdgeInsets.only(top: 0.0),
+      child: SendWidget(
+        key: _key,
+        func: shrinkSendView,
+        balance: _getBalance,
+        cancel: showTransactions,
+      ),
+    );
   }
 }
