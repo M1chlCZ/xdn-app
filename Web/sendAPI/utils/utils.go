@@ -187,7 +187,7 @@ func ScheduleFunc(f func(), interval time.Duration) *time.Ticker {
 }
 
 func logToFile(message string) {
-	f, err := os.OpenFile("api.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile("sendApi.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Printf("error opening file: %v\n", err)
 	}

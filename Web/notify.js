@@ -34,7 +34,7 @@ async function runNotify() {
 async function saveTransactions() {
   var json;
   try {
-    const res = await rpc.run('listtransactions', ["*", 20]);
+    const res = await rpc.run('listtransactions', ["*", 5]);
     var k = JSON.stringify(res);
     json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
     // console.log(json);

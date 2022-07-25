@@ -422,9 +422,11 @@ app.get('/data', async (req, res) => {
       await cleanupDuplicities();
       var bal = await getBalanceUser(user);
       var balImature = await getBalanceImmature(user);
+      var balSpendable = await getBalanceSpendable(user);
       var add = {
         balance: bal,
         immature: balImature,
+        spendable: balSpendable
       }
       let ciphertext;
       if (param1 === 1) {
@@ -1258,7 +1260,7 @@ app.listen(port, function () {
 async function saveTransactions() {
   var json;
   try {
-    const res = await rpc.run('listtransactions', ["*", 4]);
+    const res = await rpc.run('listtransactions', ["*", 10]);
     var k = JSON.stringify(res);
     json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
     // console.log(json);
@@ -1282,40 +1284,55 @@ async function insertTransactions(js) {
     var timed = new Date(Number(key.time + "000"));
     var time = timed.toISOString().slice(0, 19).replace('T', ' ');
 
-    var [r, f] = await con.query('SELECT * FROM transaction WHERE txid = ? AND category = ?', [txid, cat]);
-    if (r[0] == null) {
-      if (!isEmptyStr(account)) {
 
-        var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ? AND account = ?', [txid, account]);
-        if (rows[0] != null) {
-          await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND account = ?', [confirmation, txid, account], function (err, result) {
-          }).catch((e) => {
-            console.log(e);
-          });
-        } else {
-          await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
-          }).catch((e) => {
-            console.log(e);
-          });
-        }
 
-      } else {
-        var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ? AND category = ?', [txid, cat]);
-        if (rows[0] != null) {
-          await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND category = ?', [confirmation, txid, cat], function (err, result) {
-          }).catch((e) => {
-            console.log(e);
-          });
-        } else {
-          await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
-          }).catch((e) => {
-            console.log(e);
-          });
-        }
-      }
+    var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ?', [txid]);
+    if (rows[0] != null) {
+      await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? ', [confirmation, txid], function (err, result) {
+      }).catch((e) => {
+        console.log(e);
+      });
     } else {
-      await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND category = ?', [confirmation, txid, cat]);
+      console.log(txid, cat, account, address, amount);
+      if (account == "") {
+        var [name, fields] = await con.query('SELECT username FROM users WHERE addr = ?', [address]);
+        account = name[0].username;
+      }
+      await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
+      }).catch((e) => {
+        console.log(e);
+      });
     }
+    // if (!isEmptyStr(account)) {
+
+    //   var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ? AND category = ? AND account = ? AND address = ?', [txid,cat, account, address]);
+    //   if (rows[0] != null) {
+    //     await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND account = ? AND address = ? ', [confirmation, txid, account, address], function (err, result) {
+    //     }).catch((e) => {
+    //       console.log(e);
+    //     });
+    //   } else {
+    //     await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
+    //     }).catch((e) => {
+    //       console.log(e);
+    //     });
+    //   }
+
+    // } else {
+    //   var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ? AND category = ? AND account = ? AND address = ?', [txid, cat, "", address]);
+    //   if (rows[0] != null) {
+    //     await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND category = ? AND address = ?', [confirmation, txid, cat, address], function (err, result) {
+    //     }).catch((e) => {
+    //       console.log(e);
+    //     });
+    //   } else {
+    //     await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
+    //     }).catch((e) => {
+    //       console.log(e);
+    //     });
+    //   }
+    // }
+
   }
 
 }
@@ -1350,7 +1367,7 @@ async function getTransaction(user, timezone) {
 async function getBalanceImmature(user) {
   var bal = 0;
   try {
-    var [rows, fields] = await con.query("SELECT SUM(amount) as immature FROM transaction WHERE account = ? AND confirmation < 10 AND category = 'receive' ", [user]);
+    var [rows, fields] = await con.query("SELECT SUM(amount) as immature FROM transaction WHERE account = ? AND confirmation < 3 AND category = 'receive' ", [user]);
     bal += Math.abs(rows[0].immature);
     return bal.toFixed(3);
   } catch (error) {
@@ -1365,7 +1382,7 @@ async function getBalanceUser(user) {
   // return res.result[user].toFixed(3);
   // console.log(res[0][user]);
   try {
-    var [rows, fields] = await con.query("SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 10 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send' ", [user, user]);
+    var [rows, fields] = await con.query("SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 3 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send' ", [user, user]);
     for (var i = 0; i < rows.length; i++) {
       if (rows[i].category === "receive") {
         bal += Math.abs(rows[i].amount);
@@ -1381,6 +1398,33 @@ async function getBalanceUser(user) {
   }
 }
 
+async function getBalanceSpendable(user) {
+  var bal = 0;
+  // var res = await rpc.run('listaccounts', []);
+  // return res.result[user].toFixed(3);
+  // console.log(res[0][user]);
+  try {
+    var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
+    if (rows[0] != null) {
+      let address = rows[0].addr
+      let res = await rpc.run('listunspent', [1, 99999999, [address]]);
+      let k = JSON.stringify(res);
+      let json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
+      for (let key of json.result) {
+        if (key.spendable == true) {
+          bal += key.amount;
+        }
+      }
+      return bal.toFixed(3);
+    } else {
+      return "err";
+    }
+  } catch (error) {
+    console.log("BALANCE: " + error);
+    return "err";
+  }
+}
+
 async function sendTransaction(user, address, amount) {
   let userBalance = await getBalanceUser(user);
   if (userBalance === "err") {
@@ -1389,24 +1433,39 @@ async function sendTransaction(user, address, amount) {
     }
     return add;
   }
+  var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
+  if (rows[0] == null) {
+    let add = {
+      error: "User not found",
+    }
+    console.log(add)
+    return add;
+  }
+  console.log(rows[0].addr);
+  console.log(parseFloat(userBalance))
+  console.log(parseFloat(amount))
   if (parseFloat(amount) < parseFloat(userBalance)) {
     try {
+      let addrUser = rows[0].addr;
       console.log("---------SEND TRANSACTION---------")
       console.log(user + " " + address + " " + amount);
       console.log("----------------------------------")
       // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-      var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
+      let res = await doSendRequest(addrUser, address, parseFloat(amount));
       await rpc.run('walletlock', []);
-      if (res.error !== null) {
-        console.log(res.error);
-        return "err";
-      }
-      await saveTransactions();
-      await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.result, 'send']);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
-      return json;
+      if (json.error != null) {
+        console.log(json.error);
+        return "err";
+      }
+      console.log(json.tx);
+      // await saveTransactions();
+      // await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.tx, 'send']);
+      // var k = JSON.stringify(res);
+      // var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
+      // return json;
     } catch (e) {
       console.log(e);
       return 'err';
@@ -1444,22 +1503,22 @@ async function sendRawTransaction(user, address, amount) {
       console.log("---------SEND TRANSACTION---------")
       console.log(user + " " + address + " " + amount);
       console.log("----------------------------------")
-      
+
       // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
       // var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
       let res = await doSendRequest(addrUser, address, parseFloat(amount));
       await rpc.run('walletlock', []);
-      if (res.error !== null) {
-        console.log(res.error);
-        return "err";
-      }
-      console.log(res.tx);
-      await saveTransactions();
-      await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.tx, 'send']);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
-      return json;
+      if (json.error != null) {
+        console.log(json.error);
+        return "err";
+      }
+      console.log(json.tx);
+      // await saveTransactions();
+      // await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.tx, 'send']);
+
     } catch (e) {
       console.log(e);
       return 'err';
@@ -1481,24 +1540,37 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
     }
     return add;
   }
+  var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
+  if (rows[0] == null) {
+    let add = {
+      error: "User not found",
+    }
+    console.log(add)
+    return add;
+  }
+  console.log(rows[0].addr);
+  console.log(parseFloat(userBalance))
+  console.log(parseFloat(amount))
   if (parseFloat(amount) < parseFloat(userBalance)) {
     try {
+      let addrUser = rows[0].addr;
       console.log("---------SEND CONTACT TRANSACTION---------")
       console.log(user + " " + idUser + " " + address + " " + amount + " " + contactName);
       console.log("------------------------------------------")
 
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-      var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
+      let res = await doSendRequest(addrUser, address, parseFloat(amount));
       await rpc.run('walletlock', []);
-      if (res.error !== null) {
-        console.log(res.error);
-        return "err";
-      }
-      await saveTransactions();
-      await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.result, 'send']);
-      await con.query('UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [contactName, res.result, 'send']);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
+      if (json.error != null) {
+        console.log(json.error);
+        return "err";
+      }
+      // await saveTransactions();
+      // await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.tx, 'send']);
+      await con.query('UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [contactName, json.tx, 'send']);
+
       return json;
     } catch (e) {
       console.log(e);
@@ -2372,7 +2444,7 @@ async function getCurrentDate() {
 
 
 
- function doRequest(options, data) {
+function doRequest(options, data) {
   return new Promise((resolve, reject) => {
     const req = http.request(options, (res) => {
       res.setEncoding('utf8');
@@ -2399,10 +2471,10 @@ async function getCurrentDate() {
 async function doSendRequest(addrReceive, addrSend, amount) {
   const data = JSON.stringify({
     "address_receive": addrReceive,
-    "address_send" : addrSend,
+    "address_send": addrSend,
     "amount": amount
   });
-  
+
   const options = {
     hostname: 'localhost',
     port: 6900,
