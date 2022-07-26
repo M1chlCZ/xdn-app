@@ -14,3 +14,4 @@ node notifyStake.js
 
 # Remove lock file
 rm $HOME/.locks/mss.file
+

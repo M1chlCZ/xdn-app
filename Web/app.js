@@ -1,4 +1,5 @@
 const CampusAsync = require('./lib/campus-async.js');
+var authenticator = require('authenticator');
 const mysql = require('mysql2/promise');
 var express = require('express');
 var jwt = require('jsonwebtoken');
@@ -7,8 +8,10 @@ var CryptoJS = require("crypto-js");
 const nodemailer = require("nodemailer");
 require('dotenv').config();
 const bodyParser = require('body-parser');
+const https = require('axios')
 var gcm = require('node-gcm');
 const fs = require('fs');
+var http = require('http');
 const moment = require('moment-timezone');
 const Json2csvParser = require('json2csv').Parser;
 
@@ -24,7 +27,6 @@ const jwt_decode = require('jwt-decode');
 // async function run() {
 //   setInterval(cronJob.runNotify, 300000);
 // }
-
 
 async function unlock() {
   await sleep(60000);
@@ -51,6 +53,7 @@ var con = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  timezone: 'gmt',
 });
 
 
@@ -88,11 +91,11 @@ app.post('/signup', async function (req, res) {
       const daemonRPC = await rpc.run('getnewaddress', [username]);
       if (daemonRPC.result[0] == null) {
         console.error("Failure / get new addr");
-          res.statusCode = 410;
-          res.setHeader("Content-Type", "text/html");
-          res.send(CryptoJS.AES.encrypt("Server internal error", process.env.ENC_PASS).toString());
-          res.end();
-          throw "Daemon is not giving addr";
+        res.statusCode = 410;
+        res.setHeader("Content-Type", "text/html");
+        res.send(CryptoJS.AES.encrypt("Server internal error", process.env.ENC_PASS).toString());
+        res.end();
+        throw "Daemon is not giving addr";
       } else {
         var newAddr = daemonRPC.result.toString();
         // console.log(wnd);
@@ -119,36 +122,98 @@ app.post('/login', async function (req, res) {
     const jsonResponse = JSON.parse(payload);
     let userName = jsonResponse.username;
     let passUser = jsonResponse.password;
+    let twoFactor = jsonResponse.twoFactor;
 
     console.log(userName + " attempted login");
 
     var password = crypto.createHash('sha256').update(passUser).digest('hex');
     var [rows, fields] = await con.query("SELECT * FROM users WHERE (username, password) = (?, ?) OR (email, password) = (?, ?)", [userName, password, userName, password]);
-    if (rows[0] != undefined) {
-      var payload = {
-        username: userName,
+    if (rows[0].twoActive == true || rows[0].twoActive == 1) {
+      console.log("2 FACTOR");
+      if (twoFactor == null) {
+        res.statusCode = 409;
+        res.setHeader("Content-Type", "text/html");
+        res.send("2FA required");
+        res.end();
+
+      } else {
+        var t = await twoFactorValidate(rows[0].id, twoFactor);
+        console.log(t);
+        if (t !== "err") {
+          if (rows[0] !== undefined) {
+            var payload = {
+              username: userName,
+            }
+
+            var token = jwt.sign(payload, KEY, { algorithm: 'HS256', expiresIn: "365d" });
+
+            var add = {
+              userid: rows[0].id,
+              username: rows[0].username,
+              nickname: rows[0].nickname,
+              addr: rows[0].addr,
+              admin: rows[0].admin,
+              jwt: token,
+            }
+
+
+            console.log("Success");
+            var json = JSON.stringify(add);
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "text/html");
+            var ciphertext = CryptoJS.AES.encrypt(json, process.env.ENC_PASS).toString();
+            res.write(ciphertext);
+            res.end();
+
+          } else {
+            res.statusCode = 401;
+            res.setHeader("Content-Type", "text/html");
+            res.send("No such user registered");
+            res.end();
+
+          }
+        } else {
+          res.statusCode = 401;
+          res.setHeader("Content-Type", "text/html");
+          res.send("No such user registered");
+          res.end();
+
+        }
       }
+    } else {
+      if (rows[0] !== undefined) {
+        var payload = {
+          username: userName,
+        }
 
-      var token = jwt.sign(payload, KEY, { algorithm: 'HS256', expiresIn: "365d" });
+        var token = jwt.sign(payload, KEY, { algorithm: 'HS256', expiresIn: "365d" });
 
-      var add = {
-        userid: rows[0].id,
-        username: rows[0].username,
-        nickname: rows[0].nickname,
-        addr: rows[0].addr,
-        admin: rows[0].admin,
-        jwt: token,
+        var add = {
+          userid: rows[0].id,
+          username: rows[0].username,
+          nickname: rows[0].nickname,
+          addr: rows[0].addr,
+          admin: rows[0].admin,
+          jwt: token,
+        }
+
+
+        console.log("Success");
+        let json = JSON.stringify(add);
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        let ciphertext = CryptoJS.AES.encrypt(json, process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+
+
+      } else {
+        res.statusCode = 401;
+        res.setHeader("Content-Type", "text/html");
+        res.send("No such user registered");
+        res.end();
+
       }
-
-
-      console.log("Success");
-      var json = JSON.stringify(add);
-      res.statusCode = 200;
-      res.setHeader("Content-Type", "text/html");
-      var ciphertext = CryptoJS.AES.encrypt(json, process.env.ENC_PASS).toString();
-      res.write(ciphertext);
-      res.end();
-
 
     }
   } catch (e) {
@@ -162,16 +227,36 @@ app.post('/login', async function (req, res) {
   }
 });
 
+app.get('/getinfo', async (req, res) => {
+  console.log('shit');
+  var t = await getInfo();
+  if (t === "err") {
+    res.statusCode = 400;
+    res.setHeader("Content-Type", "text/html");
+    var err = { "status": "ko" }
+    var ciphertext = JSON.stringify(err);
+    res.write(ciphertext);
+    res.end();
+
+  } else {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html");
+    res.write(t);
+    res.end();
+
+  }
+});
+
 
 
 app.post('/forgotPass', async function (req, res) {
   console.log("--------Forgot Pass--------");
   let passNew = Math.random().toString(36).substring(7);
   var pass = crypto.createHash('sha256').update(passNew).digest('hex');
-  var [rr, f] = await con.query("SELECT * FROM users WHERE username = ?", [req.headers.username]);
+  var [rr, f] = await con.query("SELECT * FROM users WHERE email = ?", [req.headers.username]);
   if (rr[0] != null) {
-    var [a, b] = await con.query("UPDATE users SET password = ? WHERE id = ?", [pass, rr[0].id]);
-    emailSend(passNew, rr[0].email)
+    await con.query("UPDATE users SET password = ? WHERE id = ?", [pass, rr[0].id]);
+    await emailSend(passNew, rr[0].email)
     console.log("Success");
     res.status(200)
     res.send("ok");
@@ -198,7 +283,8 @@ app.post('/apiAvatar', async function (req, res) {
     return;
   }
   const jsonResponse = JSON.parse(payload);
-  var str = jsonResponse.Authorization;
+  var str = req.headers.authorization;
+  console.log(str)
   var param1 = jsonResponse.param1;
   var param2 = jsonResponse.param2;
   var id = jsonResponse.id;
@@ -303,7 +389,8 @@ app.get('/data', async (req, res) => {
   }
   console.log(payload);
   const jsonResponse = JSON.parse(payload);
-  var str = jsonResponse.Authorization;
+  var str = req.headers.authorization;
+  // console.log(jsonResponse)
   var rrr = jsonResponse.request;
   var param1 = jsonResponse.param1;
   var param2 = jsonResponse.param2;
@@ -319,17 +406,29 @@ app.get('/data', async (req, res) => {
     return;
   }
 
+  if (rrr === null) {
+    res.statusCode = 400;
+    res.setHeader("Content-Type", "text/html");
+    let err = { "status": "ko" }
+    let ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+    res.write(ciphertext);
+    res.end();
+    return;
+  }
+
   try {
     if (rrr === "getBalance") {
       await saveTransactions();
       await cleanupDuplicities();
       var bal = await getBalanceUser(user);
       var balImature = await getBalanceImmature(user);
+      var balSpendable = await getBalanceSpendable(user);
       var add = {
         balance: bal,
         immature: balImature,
+        spendable: balSpendable
       }
-      var ciphertext;
+      let ciphertext;
       if (param1 === 1) {
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/html");
@@ -346,8 +445,8 @@ app.get('/data', async (req, res) => {
 
     if (rrr === "getTransaction") {
       await saveTransactions();
-      var trans = await getTransaction(user.toLocaleLowerCase(), param1);
-      var ciphertext = CryptoJS.AES.encrypt(trans, process.env.ENC_PASS).toString();
+      let trans = await getTransaction(user.toLocaleLowerCase(), param1);
+      let ciphertext = CryptoJS.AES.encrypt(trans, process.env.ENC_PASS).toString();
       // console.log(trans);
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
@@ -361,13 +460,38 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/html");
-        res.write("ok");
+        var err = { "status": "ok" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
+    if (rrr === "sendRawTransaction") {
+      var t = await sendRawTransaction(user, param1, param2);
+      if (t === "err") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ok" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       }
@@ -378,13 +502,17 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/html");
-        res.write("ok");
+        var err = { "status": "ok" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       }
@@ -413,7 +541,9 @@ app.get('/data', async (req, res) => {
       await deleteContact(id, param1, param2);
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
-      res.write("ok");
+      var err = { "status": "ok" }
+      var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+      res.write(ciphertext);
       res.end();
       return;
     }
@@ -460,7 +590,9 @@ app.get('/data', async (req, res) => {
       await saveFirebaseToken(id, param1, param2);
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
-      res.write("ok");
+      var err = { "status": "ok" }
+      var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+      res.write(ciphertext);
       res.end();
       return;
     }
@@ -477,6 +609,7 @@ app.get('/data', async (req, res) => {
 
     if (rrr === "getMessages") {
       var t = await getMessages(param1, param2, param3, id);
+      console.log(t);
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
       var ciphertext = CryptoJS.AES.encrypt(t, process.env.ENC_PASS).toString();
@@ -489,7 +622,9 @@ app.get('/data', async (req, res) => {
       await updateRead(param1, param2);
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
-      res.write("ok");
+      var err = { "status": "ok" }
+      var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+      res.write(ciphertext);
       res.end();
       return;
     }
@@ -499,7 +634,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -517,13 +654,17 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/html");
-        res.write("ok");
+        var err = { "status": "ok" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       }
@@ -533,23 +674,30 @@ app.get('/data', async (req, res) => {
       await updateContact(param1, param2);
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
-      res.write("ok");
+      var err = { "status": "ok" }
+      var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+      res.write(ciphertext);
       res.end();
       return;
     }
 
     if (rrr === "changePassword") {
       var t = await changePassword(id, param1)
+      console.log(t);
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/html");
-        res.write("ok");
+        var err = { "status": "ok" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       }
@@ -560,7 +708,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -578,13 +728,17 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else if (t === "bal") {
         res.statusCode = 406;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
       } else {
         res.statusCode = 200;
@@ -601,13 +755,17 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else if (t === 'time') {
         res.statusCode = 406;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -625,7 +783,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -643,7 +803,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -661,7 +823,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -687,7 +851,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -706,7 +872,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -725,7 +893,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       } else {
@@ -744,7 +914,9 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
         return;
       }
@@ -763,14 +935,144 @@ app.get('/data', async (req, res) => {
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
-        res.write("ko");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
         res.end();
-
+        return;
       }
       else {
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/html");
         var ciphertext = CryptoJS.AES.encrypt(t.toString(), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
+    if (rrr === "twofactor") {
+      var t = await twoFactor(id);
+      if (t === "err") {
+        res.statusCode = 401;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else if (t === "err1") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var ciphertext = CryptoJS.AES.encrypt(t.toString(), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
+    if (rrr === "twofactorValidate") {
+      var t = await twoFactorValidate(id, param1);
+      if (t === "err") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var ciphertext = CryptoJS.AES.encrypt(t.toString(), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
+    if (rrr === "twofactorRemove") {
+      var t = await twoFactorRemove(id, param1);
+      if (t === "err") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var ciphertext = CryptoJS.AES.encrypt(t.toString(), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
+    if (rrr === "twofactorCheck") {
+      var t = await twoFactorCheck(id);
+      if (t === "err") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var ciphertext = CryptoJS.AES.encrypt(t.toString(), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
+    if (rrr === "getDaemonStatus") {
+      var t = await getDaemonStatus();
+      if (t === "err") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var ciphertext = CryptoJS.AES.encrypt(t, process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
+    if (rrr === "getInfo") {
+      var t = await getInfo();
+      if (t === "err") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var ciphertext = CryptoJS.AES.encrypt(t, process.env.ENC_PASS).toString();
         res.write(ciphertext);
         res.end();
 
@@ -784,6 +1086,152 @@ app.get('/data', async (req, res) => {
   }
 
 });
+
+async function getDaemonStatus() {
+  let walletblk = false;
+  let walletblkStake = false;
+  let stakingActive = false;
+  let blk = await getBlockheighReq();
+  if (blk !== "err") {
+    let res = await rpc.run('getblockcount');
+    let k = JSON.stringify(res);
+    let json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
+    let localBlock = json.result
+    let resStake = await rpcStake.run('getblockcount');
+    let kk = JSON.stringify(resStake);
+    let jsonStake = JSON.parse(kk.toString('utf8').replace(/^\uFFFD/, ''));
+    let localBlockStake = jsonStake.result
+    if (localBlock === blk) {
+      walletblk = true;
+    } else {
+      walletblk = false;
+    }
+    if (localBlock === localBlockStake) {
+      walletblkStake = true;
+    } else {
+      walletblkStake = false;
+    }
+
+    resStake = await rpcStake.run('getstakinginfo');
+    kk = JSON.stringify(resStake);
+    jsonStake = JSON.parse(kk.toString('utf8').replace(/^\uFFFD/, ''));
+    stakingActive = jsonStake.result.staking;
+
+    var resp = {
+      "block": walletblk,
+      "blockStake": walletblkStake,
+      "stakingActive": stakingActive,
+    }
+    return JSON.stringify(resp);
+  } else {
+    return "err";
+  }
+}
+
+async function getInfo() {
+  try {
+    var daemonRPC = await rpcStake.run('getinfo');
+    var kk = JSON.stringify(daemonRPC);
+    var jsonGetInfo = JSON.parse(kk.toString('utf8').replace(/^\uFFFD/, ''));
+    return JSON.stringify(jsonGetInfo.result);
+  } catch (e) {
+    return err;
+  }
+}
+
+async function getBlockheighReq() {
+  let blockheight = 0;
+
+  await https.get('https://xdn-explorer.com/api/getblockcount')
+    .then(response => {
+      blockheight = parseInt(response.data);
+    })
+    .catch(error => {
+      blockheight = "err"
+    });
+  return blockheight;
+}
+
+async function twoFactor(id) {
+  try {
+    var [rows, fields] = await con.query("SELECT twoActive FROM users WHERE id = ?", [id])
+    if (rows[0].twoActive == true || rows[0].twoActive == 1) {
+      return "err1";
+    }
+    var secret = authenticator.generateKey();
+    var formatted = secret.replace(/\W/g, '').toLowerCase()
+    await con.query("UPDATE users SET twoKey = ? WHERE id = ?", [formatted, id]);
+    var res = {
+      "secret": formatted
+    }
+    return JSON.stringify(res)
+  } catch (e) {
+    console.log(e)
+    return "err"
+  }
+}
+
+async function twoFactorValidate(id, token) {
+  try {
+    var [rows, fields] = await con.query("SELECT twoKey FROM users WHERE id = ?", [id])
+    var key = rows[0].twoKey;
+    console.log(key);
+    let tk = token.toString();
+    let valid = authenticator.verifyToken(key, tk);
+    console.log(valid)
+    if (valid !== null) {
+      if (valid.delta == 0) {
+        await con.query("UPDATE users SET twoActive = 1 WHERE id = ?", [id])
+        var res = {
+          "status": "ok"
+        }
+        return JSON.stringify(res)
+      }
+    }
+    return "err"
+  } catch (e) {
+    // console.log(e);
+    return "err"
+  }
+}
+
+async function twoFactorCheck(id) {
+  try {
+    var [rows, fields] = await con.query("SELECT twoActive FROM users WHERE id = ?", [id])
+    var key = rows[0].twoActive;
+    var obj = {
+      "twoFactor": key
+    }
+    return JSON.stringify(obj);
+  } catch (e) {
+    // console.log(e);
+    return "err"
+  }
+}
+
+async function twoFactorRemove(id, token) {
+  try {
+    var [rows, fields] = await con.query("SELECT twoKey FROM users WHERE id = ?", [id])
+    var key = rows[0].twoKey;
+    let tk = token.toString();
+    let valid = authenticator.verifyToken(key, tk);
+
+    if (valid !== null) {
+      if (valid.delta == 0) {
+        await con.query("UPDATE users SET twoActive = 0 WHERE id = ?", [id])
+        await con.query("UPDATE users SET twoKey = NULL WHERE id = ?", [id])
+        var res = {
+          "status": "ok"
+        }
+        return JSON.stringify(res)
+      }
+    }
+    return "err"
+  } catch (e) {
+    // console.log(e);
+    return "err"
+  }
+}
 
 async function getCSV(user) {
   let csv;
@@ -812,7 +1260,7 @@ app.listen(port, function () {
 async function saveTransactions() {
   var json;
   try {
-    const res = await rpc.run('listtransactions', ["*", 4]);
+    const res = await rpc.run('listtransactions', ["*", 10]);
     var k = JSON.stringify(res);
     json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
     // console.log(json);
@@ -836,40 +1284,55 @@ async function insertTransactions(js) {
     var timed = new Date(Number(key.time + "000"));
     var time = timed.toISOString().slice(0, 19).replace('T', ' ');
 
-    var [r, f] = await con.query('SELECT * FROM transaction WHERE txid = ? AND category = ?', [txid, cat]);
-    if (r[0] == null) {
-      if (!isEmptyStr(account)) {
 
-        var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ? AND account = ?', [txid, account]);
-        if (rows[0] != null) {
-          await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND account = ?', [confirmation, txid, account], function (err, result) {
-          }).catch((e) => {
-            console.log(e);
-          });
-        } else {
-          await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
-          }).catch((e) => {
-            console.log(e);
-          });
-        }
 
-      } else {
-        var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ? AND category = ?', [txid, cat]);
-        if (rows[0] != null) {
-          await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND category = ?', [confirmation, txid, cat], function (err, result) {
-          }).catch((e) => {
-            console.log(e);
-          });
-        } else {
-          await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
-          }).catch((e) => {
-            console.log(e);
-          });
-        }
-      }
+    var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ?', [txid]);
+    if (rows[0] != null) {
+      await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? ', [confirmation, txid], function (err, result) {
+      }).catch((e) => {
+        console.log(e);
+      });
     } else {
-      await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND category = ?', [confirmation, txid, cat]);
+      console.log(txid, cat, account, address, amount);
+      if (account == "") {
+        var [name, fields] = await con.query('SELECT username FROM users WHERE addr = ?', [address]);
+        account = name[0].username;
+      }
+      await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
+      }).catch((e) => {
+        console.log(e);
+      });
     }
+    // if (!isEmptyStr(account)) {
+
+    //   var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ? AND category = ? AND account = ? AND address = ?', [txid,cat, account, address]);
+    //   if (rows[0] != null) {
+    //     await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND account = ? AND address = ? ', [confirmation, txid, account, address], function (err, result) {
+    //     }).catch((e) => {
+    //       console.log(e);
+    //     });
+    //   } else {
+    //     await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
+    //     }).catch((e) => {
+    //       console.log(e);
+    //     });
+    //   }
+
+    // } else {
+    //   var [rows, fields] = await con.query('SELECT * FROM transaction WHERE txid = ? AND category = ? AND account = ? AND address = ?', [txid, cat, "", address]);
+    //   if (rows[0] != null) {
+    //     await con.query('UPDATE transaction SET confirmation = ? WHERE txid = ? AND category = ? AND address = ?', [confirmation, txid, cat, address], function (err, result) {
+    //     }).catch((e) => {
+    //       console.log(e);
+    //     });
+    //   } else {
+    //     await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
+    //     }).catch((e) => {
+    //       console.log(e);
+    //     });
+    //   }
+    // }
+
   }
 
 }
@@ -904,7 +1367,7 @@ async function getTransaction(user, timezone) {
 async function getBalanceImmature(user) {
   var bal = 0;
   try {
-    var [rows, fields] = await con.query("SELECT SUM(amount) as immature FROM transaction WHERE account = ? AND confirmation < 1 AND category = 'receive' ", [user]);
+    var [rows, fields] = await con.query("SELECT SUM(amount) as immature FROM transaction WHERE account = ? AND confirmation < 3 AND category = 'receive' ", [user]);
     bal += Math.abs(rows[0].immature);
     return bal.toFixed(3);
   } catch (error) {
@@ -919,7 +1382,7 @@ async function getBalanceUser(user) {
   // return res.result[user].toFixed(3);
   // console.log(res[0][user]);
   try {
-    var [rows, fields] = await con.query("SELECT amount, category FROM  transaction WHERE account = ? AND confirmation > 9 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send' ", [user, user]);
+    var [rows, fields] = await con.query("SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 3 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send' ", [user, user]);
     for (var i = 0; i < rows.length; i++) {
       if (rows[i].category === "receive") {
         bal += Math.abs(rows[i].amount);
@@ -927,6 +1390,7 @@ async function getBalanceUser(user) {
         bal -= Math.abs(rows[i].amount);
       }
     }
+    console.log(bal + " " + user);
     return bal.toFixed(3);
   } catch (error) {
     console.log("BALANCE: " + error);
@@ -934,32 +1398,127 @@ async function getBalanceUser(user) {
   }
 }
 
+async function getBalanceSpendable(user) {
+  var bal = 0;
+  // var res = await rpc.run('listaccounts', []);
+  // return res.result[user].toFixed(3);
+  // console.log(res[0][user]);
+  try {
+    var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
+    if (rows[0] != null) {
+      let address = rows[0].addr
+      let res = await rpc.run('listunspent', [1, 99999999, [address]]);
+      let k = JSON.stringify(res);
+      let json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
+      for (let key of json.result) {
+        if (key.spendable == true) {
+          bal += key.amount;
+        }
+      }
+      return bal.toFixed(3);
+    } else {
+      return "err";
+    }
+  } catch (error) {
+    console.log("BALANCE: " + error);
+    return "err";
+  }
+}
+
 async function sendTransaction(user, address, amount) {
-  var userBalance = await getBalanceUser(user);
+  let userBalance = await getBalanceUser(user);
   if (userBalance === "err") {
-    var add = {
+    let add = {
       error: "Can't get balance",
     }
     return add;
   }
+  var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
+  if (rows[0] == null) {
+    let add = {
+      error: "User not found",
+    }
+    console.log(add)
+    return add;
+  }
+  console.log(rows[0].addr);
+  console.log(parseFloat(userBalance))
+  console.log(parseFloat(amount))
   if (parseFloat(amount) < parseFloat(userBalance)) {
     try {
+      let addrUser = rows[0].addr;
       console.log("---------SEND TRANSACTION---------")
       console.log(user + " " + address + " " + amount);
       console.log("----------------------------------")
       // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-      var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
+      let res = await doSendRequest(addrUser, address, parseFloat(amount));
       await rpc.run('walletlock', []);
-      if (res.error !== null) {
-        console.log(res.error);
-        return "err";
-      }
-      await saveTransactions();
-      await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.result, 'send']);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
-      return json;
+      if (json.error != null) {
+        console.log(json.error);
+        return "err";
+      }
+      console.log(json.tx);
+      // await saveTransactions();
+      // await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.tx, 'send']);
+      // var k = JSON.stringify(res);
+      // var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
+      // return json;
+    } catch (e) {
+      console.log(e);
+      return 'err';
+    }
+  } else {
+    var add = {
+      error: "Not enough balance",
+    }
+    return add;
+  }
+}
+
+async function sendRawTransaction(user, address, amount) {
+  let userBalance = await getBalanceUser(user);
+  if (userBalance === "err") {
+    let add = {
+      error: "Can't get balance",
+    }
+    return add;
+  }
+  var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
+  if (rows[0] == null) {
+    let add = {
+      error: "User not found",
+    }
+    console.log(add)
+    return add;
+  }
+  console.log(rows[0].addr);
+  console.log(parseFloat(userBalance))
+  console.log(parseFloat(amount))
+  if (parseFloat(amount) < parseFloat(userBalance)) {
+    try {
+      let addrUser = rows[0].addr;
+      console.log("---------SEND TRANSACTION---------")
+      console.log(user + " " + address + " " + amount);
+      console.log("----------------------------------")
+
+      // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
+      await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
+      // var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
+      let res = await doSendRequest(addrUser, address, parseFloat(amount));
+      await rpc.run('walletlock', []);
+      var k = JSON.stringify(res);
+      var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
+      if (json.error != null) {
+        console.log(json.error);
+        return "err";
+      }
+      console.log(json.tx);
+      // await saveTransactions();
+      // await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.tx, 'send']);
+
     } catch (e) {
       console.log(e);
       return 'err';
@@ -981,24 +1540,37 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
     }
     return add;
   }
+  var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
+  if (rows[0] == null) {
+    let add = {
+      error: "User not found",
+    }
+    console.log(add)
+    return add;
+  }
+  console.log(rows[0].addr);
+  console.log(parseFloat(userBalance))
+  console.log(parseFloat(amount))
   if (parseFloat(amount) < parseFloat(userBalance)) {
     try {
+      let addrUser = rows[0].addr;
       console.log("---------SEND CONTACT TRANSACTION---------")
       console.log(user + " " + idUser + " " + address + " " + amount + " " + contactName);
       console.log("------------------------------------------")
 
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-      var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
+      let res = await doSendRequest(addrUser, address, parseFloat(amount));
       await rpc.run('walletlock', []);
-      if (res.error !== null) {
-        console.log(res.error);
-        return "err";
-      }
-      await saveTransactions();
-      await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.result, 'send']);
-      await con.query('UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [contactName, res.result, 'send']);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
+      if (json.error != null) {
+        console.log(json.error);
+        return "err";
+      }
+      // await saveTransactions();
+      // await con.query('UPDATE transaction SET account = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [user, res.tx, 'send']);
+      await con.query('UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1', [contactName, json.tx, 'send']);
+
       return json;
     } catch (e) {
       console.log(e);
@@ -1057,9 +1629,9 @@ async function emailSend(password, email) {
 
   try {
     let transporter = nodemailer.createTransport({
-      host: "mail.reizfeld.net",
-      port: 587,
-      secure: false, // true for 465, false for other ports
+      host: process.env.MAIL_SERVER,
+      port: 465,
+      secure: true, // true for 465, false for other ports
       auth: {
         user: process.env.MAIL_USR,
         pass: process.env.MAIL_PASS
@@ -1067,10 +1639,10 @@ async function emailSend(password, email) {
     });
 
     let info = await transporter.sendMail({
-      from: '"KONJUNGATE robot" <password@konjungate.net>',
+      from: '"DigitalNote robot" <no-reply@digitalnote.org>',
       to: email,
       subject: "Password reset",
-      text: "Your new password is: " + password,
+      text: "Your new password is: " + password + "\n Don't forget to change it afterwards in settings menu",
       html: "",
     });
 
@@ -1261,8 +1833,7 @@ async function getMessageGroup(param1, timezone) {
 }
 
 async function getMessagesTime(myTime) {
-  var str = myTime;
-  var d = new Date(str);
+  var d = new Date(myTime);
   d.setHours(d.getHours()); //CEST TO GMT
   return d;
 }
@@ -1272,8 +1843,9 @@ async function getMessages(param1, timezone, param3, lastChange) {
   if (lastChange == null || lastChange === 0) {
     dateString = lastChange;
   } else {
-    dateString = moment.unix(lastChange).format('YYYY-MM-DD HH:mm:ss');
+    dateString = moment.unix(lastChange).tz('GMT').format('YYYY-MM-DD HH:mm:ss');
   }
+  console.log(dateString);
   let myArray = [];
   if (timezone === null) timezone = 'GMT';
 
@@ -1282,7 +1854,8 @@ async function getMessages(param1, timezone, param3, lastChange) {
     if (r != null) {
       for (var i = 0; i < r.length; i++) {
         var d = await getMessagesTime(r[i].lastMessage);
-        var date = await dateTimeConvertZone(d, timezone);
+        // console.log(d)
+        var date = await dateTimeConvertZone(r[i].lastMessage, timezone);
         var add = {
           id: r[i].id,
           idReply: r[i].idReply,
@@ -1350,13 +1923,20 @@ async function updateContact(param1, param2) {
   return "ok";
 }
 
-async function sendMessage(param1, param2, param3, idReply) {
+async function sendMessage(param1, param2, param3, idReply) { //address from, address to, message
   try {
-    await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-    var r = await rpc.run('smsgsend', [param1.toString(), param2.toString(), param3.toString()]);
-    console.log(r);
-    await rpc.run('walletlock', []);
-    saveMessages(idReply);
+    let dateNow = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    var [r, f] = await con.query('SELECT * FROM messages WHERE sentAddr = ? AND receiveAddr = ? AND sentTime = ?', [param1, param2, dateNow]);
+
+    if (r[0] == null) {
+      await con.query('INSERT INTO messages(sentAddr, receiveAddr, sentTime, receiveTime, text, direction, idReply) VALUES (?, ?, ?, ?, ?, ?, ?)', [param1, param2, dateNow, dateNow, param3, "out", idReply]);
+    }
+    await notify();
+    // await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
+    // var r = await rpc.run('smsgsend', [param1.toString(), param2.toString(), param3.toString()]);
+    // console.log(r);
+    // await rpc.run('walletlock', []);
+    // saveMessages(idReply);
     return "ok";
   } catch (error) {
     console.log(error);
@@ -1444,6 +2024,7 @@ async function notify() {
       }
 
       fireSender.send(message, { registrationTokens: registrationReceiveTokens }, function (err, response) {
+        console.log(response);
         if (err) console.error(err);
       });
     }
@@ -1522,7 +2103,9 @@ async function setStake(id, amount, user) {
           console.log("noted");
           await con.query("UPDATE users_stake SET amount = ? WHERE idUser = ? AND active = ?", [balance, id, 1]);
           await con.query("UPDATE users_stake SET dateStart = ? WHERE idUser = ? AND active = ?", [mySqlTimestamp, id, 1]);
-          return "ok";
+          await timeout(2000);
+          var objSucc = { "status": "ok" };
+          return JSON.stringify(objSucc);
         } else if (resWall.error === "bal") {
           return "bal";
         } else {
@@ -1531,7 +2114,6 @@ async function setStake(id, amount, user) {
       } else {
         return "err";
       }
-      return "ok";
     } else {
       var [rSession, f] = await con.query('SELECT MAX(session) as smax FROM users_stake WHERE idUser = ?', [id]);
       var [rServer, f] = await con.query('SELECT addr FROM servers_stake WHERE id = ?', [1]);
@@ -1554,14 +2136,15 @@ async function setStake(id, amount, user) {
             var session = parseInt(rSession[0].smax) + 1;
             await con.query('INSERT INTO users_stake(idUser, amount, session, active, dateStart) VALUES (?, ?, ?, ?, ?)', [id, amount, session, 1, mySqlTimestamp]);
           }
+          await timeout(2000);
+          var objSucc = { "status": "ok" };
+          return JSON.stringify(objSucc);
         } else {
           return "err";
         }
       } else {
         return "err";
       }
-      await timeout(2000);
-      return "ok";
     }
   } catch (e) {
     console.log(e);
@@ -1759,8 +2342,10 @@ async function dateTimeConvertZone(date, timezone) {
   } else {
     f = timezone;
   }
+  // console.log(timezone);
   var a = await toUTC(date, 'GMT');
-  return fromUTC(a, f);
+  // console.log(date);
+  return date;
 }
 
 async function getRewardsPerMonth(id, year, month) {
@@ -1790,17 +2375,17 @@ async function getEstimatedRewards(id) {
   var grandtotal = 0;
   var totalCoins = 0;
 
-  var [r, f] = await con.query("SELECT SUM(amount) as amount FROM transaction_stake WHERE datetime >= now() - INTERVAL 1 DAY");
+  var [r, f] = await con.query("SELECT IFNULL(SUM(amount), 0) as amount FROM transaction_stake WHERE datetime >= now() - INTERVAL 1 DAY");
   if (r[0].amount !== null) totalCoins = r[0].amount;
-  else return "err";
+  else return 0.0;
 
-  var [rowsAmount, failAmount] = await con.query('SELECT SUM(amount) as amount FROM users_stake WHERE active = ?', [1]);
+  var [rowsAmount, failAmount] = await con.query('SELECT IFNULL(SUM(amount), 0) as amount FROM users_stake WHERE active = ?', [1]);
   if (rowsAmount[0].amount != null) grandtotal = rowsAmount[0].amount;
-  else return "err";
+  else return 0.0;
 
-  var [rowsUserAmount, failUA] = await con.query('SELECT amount FROM users_stake WHERE active = ? AND idUser = ?', [1, id]);
-  if (rowsUserAmount[0].amount != null) userAmount = rowsUserAmount[0].amount;
-  else return "err";
+  var [rowsUserAmount, failUA] = await con.query('SELECT IFNULL(amount, 0) as amount FROM users_stake WHERE active = ? AND idUser = ?', [1, id]);
+  if (rowsUserAmount !== null) userAmount = rowsUserAmount[0].amount;
+  else return 0.0;
 
   var percentage = parseFloat((userAmount / grandtotal).toFixed(3));
   var credit = parseFloat(totalCoins * percentage).toFixed(3);
@@ -1810,9 +2395,9 @@ async function getEstimatedRewards(id) {
 
 async function getStakeStats(id) {
   var [rowsSum, failAmount] = await con.query('SELECT ROUND(sum(amount), 2) as sum FROM users_stake where active = 1');
-  var sum = rowsSum[0].sum;
+  var sum = rowsSum != null ? rowsSum[0].sum : 0.0;
   var [rowsUserAmount, failUA] = await con.query('SELECT amount FROM users_stake WHERE active = ? AND idUser = ?', [1, id]);
-  var percentage = parseFloat((rowsUserAmount[0].amount / sum).toFixed(3));
+  var percentage = rowsUserAmount[0] != undefined ? parseFloat((rowsUserAmount[0].amount / sum).toFixed(3)) : 0.0;
   var est = await getEstimatedRewards(id);
   var locker = await stakeAmountLocked(id);
   var rew = await stakeAmountReward(id);
@@ -1855,4 +2440,50 @@ async function getCurrentDate() {
     d.getMilliseconds()
   ).toISOString().slice(0, 19).replace('T', ' ');
   return mySqlTimestamp;
+}
+
+
+
+function doRequest(options, data) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, (res) => {
+      res.setEncoding('utf8');
+      let responseBody = '';
+
+      res.on('data', (chunk) => {
+        responseBody += chunk;
+      });
+
+      res.on('end', () => {
+        resolve(JSON.parse(responseBody));
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.write(data)
+    req.end();
+  });
+}
+
+async function doSendRequest(addrReceive, addrSend, amount) {
+  const data = JSON.stringify({
+    "address_receive": addrReceive,
+    "address_send": addrSend,
+    "amount": amount
+  });
+
+  const options = {
+    hostname: 'localhost',
+    port: 6900,
+    path: '/send',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': data.length
+    },
+  };
+  return await doRequest(options, data);
 }

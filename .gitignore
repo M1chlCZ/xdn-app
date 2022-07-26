@@ -151,3 +151,5 @@ app.*.map.json
 /android/app/release
 /webpages/captcha.html
 XDN APP SOW v1. 0.docx
+wallet.dat
+/SQL
