@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
-import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:digitalnote/support/secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -91,7 +91,7 @@ class SendWidgetState extends State<SendWidget> {
         m = {
           "Authorization": jwt,
           "User": user,
-          "request": "sendTransaction",
+          "request": "sendRawTransaction",
           "param1": addr,
           "param2": amnt,
         };
@@ -114,6 +114,10 @@ class SendWidgetState extends State<SendWidget> {
         fail = false;
         sendView = false;
         widget.func!();
+      });
+
+      Future.delayed(const Duration(seconds: 2), () {
+        initView();
       });
     } on TimeoutException catch (_) {
       setState(() {
@@ -149,9 +153,11 @@ class SendWidgetState extends State<SendWidget> {
 
   void initView() {
     setState(() {
+      wait = false;
       succ = false;
+      fail = false;
       sendView = true;
-      sendView = true;
+      widget.func!();
       _controllerAmount.clear();
       _controllerAddress.clear();
     });
@@ -166,7 +172,14 @@ class SendWidgetState extends State<SendWidget> {
     // sendView = true;
     Future.delayed(Duration.zero, () {
       initView();
+      if (kDebugMode){
+        setState(() {
+        _controllerAddress.text = "dcjvrzkNmPCV8f2e2C9UVB5wTroo4iELzt";
+        });
+      }
     });
+
+
 
     // wait = false;
     // succ = false;
@@ -329,7 +342,7 @@ class SendWidgetState extends State<SendWidget> {
                                     hoverColor: Colors.white60,
                                     focusColor: Colors.white60,
                                     labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
-                                    hintText: AppLocalizations.of(context)!.address + ' / ' + AppLocalizations.of(context)!.contact,
+                                    hintText: '${AppLocalizations.of(context)!.address} / ${AppLocalizations.of(context)!.contact}',
                                     hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white),
                                   ),
                                 ),
@@ -447,7 +460,7 @@ class SendWidgetState extends State<SendWidget> {
                                 ),
                                 label: Text(
                                   'MAX   ',
-                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14.0),
+                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16.0),
                                 ),
                                 style: ButtonStyle(
                                     backgroundColor: MaterialStateProperty.resolveWith((states) => amountColors(states)),
@@ -484,13 +497,16 @@ class SendWidgetState extends State<SendWidget> {
                                     ),
                                     label: Text(
                                       AppLocalizations.of(context)!.cancel.toUpperCase(),
-                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 22.0),
+                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0),
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => cancelColors(states)),
                                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                             RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                     onPressed: () {
+                                      widget.cancel();
+                                    },
+                                    onLongPress: () {
                                       widget.cancel();
                                     },
                                   ),
@@ -507,13 +523,16 @@ class SendWidgetState extends State<SendWidget> {
                                     ),
                                     label: Text(
                                       AppLocalizations.of(context)!.send.toUpperCase(),
-                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 22.0),
+                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),
                                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                             RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                     onPressed: () {
+                                      _sendConfirmation();
+                                    },
+                                    onLongPress: () {
                                       _sendConfirmation();
                                     },
                                   ),

@@ -1,9 +1,11 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/barcode_scanner.dart';
+import 'package:digitalnote/widgets/button_neu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../support/AppDatabase.dart';
 import '../support/CardHeader.dart';
@@ -75,40 +77,18 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
     }).then((value) => Navigator.of(context).pop(_address));
   }
 
-  // void _openQRScanner() async {
-  //   FocusScope.of(context).unfocus();
-  //
-  //   Future.delayed(const Duration(milliseconds: 200), () async {
-  //     var status = await Permission.camera.status;
-  //     if (await Permission.camera.isPermanentlyDenied) {
-  //       await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.camera_perm);
-  //       openAppSettings();
-  //     } else if (status.isDenied) {
-  //       var r = await Permission.camera.request();
-  //       if (r.isGranted) {
-  //         Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-  //           return QScanWidget(
-  //             scanResult: (String s) {
-  //               _controllerAddress.text = s;
-  //             },
-  //           );
-  //         }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-  //           return FadeTransition(opacity: animation, child: child);
-  //         }));
-  //       }
-  //     } else {
-  //       Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
-  //         return QScanWidget(
-  //           scanResult: (String s) {
-  //             _controllerAddress.text = s;
-  //           },
-  //         );
-  //       }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-  //         return FadeTransition(opacity: animation, child: child);
-  //       }));
-  //     }
-  //   });
-  // }
+  void _openQRScanner() async {
+    FocusScope.of(context).unfocus();
+    Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+      return BarcodeScanner(
+        scanResult: (String s) {
+          _controllerAddress.text = s;
+        },
+      );
+    }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+      return FadeTransition(opacity: animation, child: child);
+    }));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,19 +97,55 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
         image: "messageicon.png",
       ),
       Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: Column(children: [
-            CardHeader(
-              title: AppLocalizations.of(context)!.message_new,
-              backArrow: true,
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+              child: Column(children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8.0, left: 5.0),
+              width: MediaQuery.of(context).size.width,
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 15.0),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.15),
+                  borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  children: <Widget>[
+                    Container(
+                      color: Colors.transparent,
+                      child: const CardHeader(
+                        title: '',
+                        backArrow: true,
+                        noPadding: true,
+                      ),
+                    ),
+                    Expanded(
+                      child: AutoSizeText(AppLocalizations.of(context)!.message_new,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          minFontSize: 16.0,
+                          textAlign: TextAlign.start,
+                          style: Theme.of(context).textTheme.headline1!.copyWith(
+                                fontSize: 24.0,
+                                color: Colors.white.withOpacity(0.85),
+                              )),
+                    ),
+                    const SizedBox(
+                      width: 6,
+                    ),
+                  ],
+                ),
+              ),
             ),
             Container(
               margin: const EdgeInsets.only(left: 5.0, right: 5.0),
               padding: const EdgeInsets.only(top: 15.0, left: 20.0, bottom: 10.0),
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(32.0), topRight: Radius.circular(32.0)),
-                color: Theme.of(context).konjHeaderColor,
+                color: const Color(0xFF22283A).withOpacity(0.5),
               ),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Flexible(
@@ -140,7 +156,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                       child: TypeAheadField(
                         suggestionsBoxDecoration: SuggestionsBoxDecoration(
                           borderRadius: BorderRadius.circular(15.0),
-                          color: Theme.of(context).konjCardColor,
+                          color: const Color(0xFF22283A).withOpacity(0.5),
                         ),
                         noItemsFoundBuilder: (context) {
                           return const SizedBox(width: 0, height: 0);
@@ -151,22 +167,23 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                           autofocus: false,
                           style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
                           decoration: InputDecoration(
-                              floatingLabelBehavior: FloatingLabelBehavior.always,
-                              contentPadding: const EdgeInsets.all(8.0),
                               filled: true,
-                              hoverColor: Colors.white24,
-                              focusColor: Colors.white24,
-                              fillColor: Theme.of(context).konjTextFieldHeaderColor,
-                              labelText: "",
-                              labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
-                              hintText: AppLocalizations.of(context)!.message_choose_recipient,
-                              hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 18.0),
+                              hoverColor: Theme.of(context).cardColor,
+                              focusColor: Theme.of(context).cardColor,
+                              fillColor: const Color(0xFF22283A).withOpacity(0.5),
+                              hintStyle: GoogleFonts.montserrat(fontStyle: FontStyle.normal, color: Colors.white70),
+                              labelText: AppLocalizations.of(context)!.message_choose_recipient,
+                              labelStyle: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                               prefixIcon: const Icon(
                                 Icons.person,
-                                color: Colors.white70,
+                                color: Colors.white,
                               ),
-                              focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white30, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                              enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0)))),
+                              focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: const Color(0xFF22283A).withOpacity(0.1), width: 2.0),
+                                  borderRadius: const BorderRadius.all(Radius.circular(10.0))),
+                              enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: const Color(0xFF22263A).withOpacity(0.1), width: 2.0),
+                                  borderRadius: const BorderRadius.all(Radius.circular(10.0)))),
                         ),
                         suggestionsCallback: (pattern) async {
                           return await AppDatabase().searchContact(pattern);
@@ -184,8 +201,8 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                      color: Colors.white70,
-                                    ),
+                                          color: Colors.white70,
+                                        ),
                                   ),
                                 ),
                                 subtitle: SizedBox(
@@ -195,8 +212,8 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                      color: Colors.white.withOpacity(0.5),
-                                    ),
+                                          color: Colors.white.withOpacity(0.5),
+                                        ),
                                   ),
                                 ),
                               ),
@@ -223,9 +240,9 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                   child: RoundButton(
                       height: 50,
                       width: 50,
-                      color: Theme.of(context).konjHeaderColor,
+                      color: const Color(0xFF22283A).withOpacity(0.1),
                       onTap: () {
-                        // _openQRScanner(); //TODO
+                        _openQRScanner();
                       },
                       splashColor: Colors.white70,
                       icon: const Icon(
@@ -236,89 +253,59 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                 ),
               ]),
             ),
-            Expanded(
-              child: Container(
-                height: MediaQuery.of(context).size.height,
+            Container(
+
                 width: MediaQuery.of(context).size.width,
                 margin: const EdgeInsets.only(left: 5.0, right: 5.0),
-                decoration: BoxDecoration(color: Theme.of(context).konjTextFieldHeaderColor, borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0))),
+                decoration: BoxDecoration(
+                    color: const Color(0xFF22283A).withOpacity(0.5),
+                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(15.0), bottomRight: Radius.circular(15.0))),
                 child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Wrap(children: [
-                      Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).konjHeaderColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(32.0),
-                      bottomRight: Radius.circular(32.0),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 15.0, right: 5.0, bottom: 5.0),
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: TextField(
-                            autofocus: false,
-                            textCapitalization: TextCapitalization.sentences,
-                            controller: _controllerMessage,
-                            keyboardType: TextInputType.multiline,
-                            inputFormatters: <TextInputFormatter>[
-                              LengthLimitingTextInputFormatter(720),
-                            ],
-                            textAlign: TextAlign.left,
-                            style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0),
-                            decoration: const InputDecoration(
-                              contentPadding: EdgeInsets.all(15.0),
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white30),
-                              ),
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white),
-                              ),
-                            ),
-                            maxLines: null,
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 5.0, right: 5.0, bottom: 5.0),
+                      child: TextField(
+                        autofocus: false,
+                        textCapitalization: TextCapitalization.sentences,
+                        controller: _controllerMessage,
+                        keyboardType: TextInputType.multiline,
+                        inputFormatters: <TextInputFormatter>[
+                          LengthLimitingTextInputFormatter(720),
+                        ],
+                        textAlign: TextAlign.left,
+                        textAlignVertical: TextAlignVertical.top,
+                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0),
+                        decoration: const InputDecoration(
+                          hintText: "Type your message here",
+                          hintStyle: TextStyle(color: Colors.white70),
+                          contentPadding: EdgeInsets.all(15.0),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white30),
                           ),
-                          // child: RoundedContainer(controller: _textController,),
-                        ),
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left:5.0),
-                            child: SizedBox(
-                              width: 55,
-                              height: 55,
-                              child: GestureDetector(
-                                onTap: () {
-                                  _sendMessage();
-                                },
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 200),
-                                  transitionBuilder: (Widget child, Animation<double> animation) {
-                                    return ScaleTransition(child: child, scale: animation);
-                                  },
-                                  child: const Icon(
-                                    Icons.expand_less,
-                                    size: 45,
-                                    color: Colors.white,
-                                    key: ValueKey<int>(1),
-                                  ),
-                                ),
-                              ),
-                            ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
+                        maxLines: null,
                       ),
-                    ]),
-                ),
-              ),
-            ),
-          ]),
-        ),
-      ),
+                    ))),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: NeuButton(
+                    height: 40,
+                    width: double.infinity,
+                    color: Colors.green,
+                    child: Text(AppLocalizations.of(context)!.send),
+                    onTap: () {
+                      _sendMessage();
+                    },
+                  ),
+                )
+          ])))
     ]);
   }
 }
+
+// onTap: () {
+// _sendMessage();
+// },

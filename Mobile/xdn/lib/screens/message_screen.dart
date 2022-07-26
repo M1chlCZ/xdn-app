@@ -193,11 +193,11 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
                                     color: Colors.white,
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(color: Color(0xFF22283A).withOpacity(0.1), width: 2.0),
-                                      borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                                      borderSide: BorderSide(color: const Color(0xFF22283A).withOpacity(0.1), width: 2.0),
+                                      borderRadius: const BorderRadius.all(Radius.circular(10.0))),
                                   enabledBorder:  OutlineInputBorder(
-                                      borderSide: BorderSide(color: Color(0xFF22263A).withOpacity(0.1), width: 2.0),
-                                      borderRadius: BorderRadius.all(Radius.circular(10.0)))),
+                                      borderSide: BorderSide(color: const Color(0xFF22263A).withOpacity(0.1), width: 2.0),
+                                      borderRadius: const BorderRadius.all(Radius.circular(10.0)))),
                             ),
                           ),
                         ),
