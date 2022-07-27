@@ -2099,7 +2099,7 @@ async function setStake(id, amount, user) {
         // console.log(resWall.result);
         // console.log("///////////////////////////////");
 
-        if (resWall.result !== null && resWall.error === null && resWall !== 'err') {
+        if (resWall !== 'err' && resWall.error == null) {
           console.log("noted");
           await con.query("UPDATE users_stake SET amount = ? WHERE idUser = ? AND active = ?", [balance, id, 1]);
           await con.query("UPDATE users_stake SET dateStart = ? WHERE idUser = ? AND active = ?", [mySqlTimestamp, id, 1]);
