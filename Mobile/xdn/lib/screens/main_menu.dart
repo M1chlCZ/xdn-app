@@ -193,13 +193,18 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      Expanded(child: SmallMenuTile(name: AppLocalizations.of(context)!.messages, goto: gotoMessagesScreen)),
+                      Expanded(child: SmallMenuTile(name: AppLocalizations.of(context)!.messages, iconName: "messages", goto: gotoMessagesScreen)),
                       Expanded(
                           child: SmallMenuTile(
                         name: AppLocalizations.of(context)!.contacts,
                         goto: gotoContactScreen,
+                            iconName: "contacts",
                       )),
-                      Expanded(child: SmallMenuTile(name: AppLocalizations.of(context)!.set_headline.capitalize(), goto: gotoSettingsScreen)),
+                      Expanded(child: SmallMenuTile(
+                          name: AppLocalizations.of(context)!.set_headline.capitalize(),
+                          goto: gotoSettingsScreen,
+                        iconName: "settings",
+                      )),
                     ],
                   ),
                 ),

@@ -10,6 +10,7 @@ import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/locator.dart';
 import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/support/notification_service.dart';
@@ -22,6 +23,7 @@ import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
@@ -77,9 +79,10 @@ class MyAppState extends State<MyApp> {
   bool pinUsed = false;
   String? initRoute;
   var ms = '';
+  AppDatabase db = GetIt.I.get<AppDatabase>();
 
   Future<String> get jwtOrEmpty async {
-    await precache();
+    precache();
     await getPin();
     var mJWT = await SecureStorage.read(key: globals.TOKEN);
     if (mJWT == null) {
@@ -108,15 +111,15 @@ class MyAppState extends State<MyApp> {
     return s;
   }
 
-  precache() async {
-    await precacheImage(const AssetImage('images/logo.png'), context);
-    await precacheImage(const AssetImage('images/logo_send.png'), context);
-    await precacheImage(const AssetImage('images/wallet_big.png'), context);
-    await precacheImage(const AssetImage('images/staking_big.png'), context);
-    await precacheImage(const AssetImage('images/messages_big.png'), context);
-    await precacheImage(const AssetImage('images/contacts_big.png'), context);
-    await precacheImage(const AssetImage('images/settings_big.png'), context);
-    await precacheImage(const AssetImage('images/card.png'), context);
+  precache() {
+    precacheImage(const AssetImage('images/logo.png'), context);
+    precacheImage(const AssetImage('images/logo_send.png'), context);
+    precacheImage(const AssetImage('images/wallet_big.png'), context);
+    precacheImage(const AssetImage('images/staking_big.png'), context);
+    precacheImage(const AssetImage('images/messages_big.png'), context);
+    precacheImage(const AssetImage('images/contacts_big.png'), context);
+    precacheImage(const AssetImage('images/settings_big.png'), context);
+    precacheImage(const AssetImage('images/card.png'), context);
   }
 
   getPin() async {
@@ -145,7 +148,19 @@ class MyAppState extends State<MyApp> {
     _setOptimalDisplayMode();
     super.initState();
     _getSetLang();
-    // storage.deleteAll();
+   _manageStorage();
+  }
+
+  void _manageStorage() async {
+    String? s = await SecureStorage.read(key: 'nextgen');
+    if (s == null || s == "1") {
+      SecureStorage.deleteAllStorage();
+      AppDatabase().deleteTableAddr();
+      AppDatabase().deleteTableMessages();
+      AppDatabase().deleteTableMgroup();
+      AppDatabase().deleteTableTran();
+      await SecureStorage.write(key: 'nextgen', value: "2");
+    }
   }
 
   Locale? _locale;
@@ -287,7 +302,11 @@ class MyAppState extends State<MyApp> {
                       color: Colors.white,
                       fontWeight: FontWeight.w200,
                       fontSize: 18.0,
-                    )),
+                    )), textSelectionTheme: const TextSelectionThemeData(
+                  cursorColor: Colors.white,
+                selectionColor: Colors.blue,
+                selectionHandleColor: Colors.blue,
+              ),
               ),
               home: const BackgroundWidget(mainMenu: true),
             );
@@ -306,10 +325,6 @@ class MyAppState extends State<MyApp> {
             builder: (_) => WalletScreen(
                   arguments: shit!,
                 ));
-      // case MainMenuNew.route:
-      //   return MaterialPageRoute(
-      //       builder: (_) => const MainMenuNew(
-      //       ));
       case AddressScreen.route:
         return MaterialPageRoute(builder: (_) => const AddressScreen());
       case StakingScreen.route:

@@ -50,9 +50,11 @@ class BalanceCardState extends State<BalanceCard> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
-                        var balance = m['balance'].toString();
+                        var balance = m['spendable'].toString();
                         var immature = m['immature'].toString();
+                        var spedanble = m['balance'].toString();
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
+                        var textPending = spedanble == balance ? '' : "Pending ${double.parse(spedanble) - double.parse(balance)} XDN";
                         return Column(
                           children: [
                             Padding(
@@ -87,9 +89,9 @@ class BalanceCardState extends State<BalanceCard> {
                                         padding: const EdgeInsets.all(10.0),
                                         child: const Center(
                                             child: Text(
-                                          "XDN",
-                                          style: TextStyle(color: Colors.white54, fontSize: 18.0),
-                                        ))),
+                                              "XDN",
+                                              style: TextStyle(color: Colors.white54, fontSize: 18.0),
+                                            ))),
                                   ],
                                 ),
                               ),
@@ -97,12 +99,19 @@ class BalanceCardState extends State<BalanceCard> {
                             const SizedBox(
                               height: 5,
                             ),
+                            textPending != ''
+                                ? SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.8,
+                              child: AutoSizeText(textPending,
+                                  minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                            )
+                                : Container(),
                             textImature != ''
                                 ? SizedBox(
-                                    width: MediaQuery.of(context).size.width * 0.8,
-                                    child: AutoSizeText(textImature,
-                                        minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
-                                  )
+                              width: MediaQuery.of(context).size.width * 0.8,
+                              child: AutoSizeText(textImature,
+                                  minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                            )
                                 : Container(),
                           ],
                         );

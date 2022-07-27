@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 class SmallMenuTile extends StatelessWidget {
   final String name;
   final VoidCallback goto;
+  final String iconName;
 
-  const SmallMenuTile({Key? key, required this.name, required this.goto}) : super(key: key);
+  const SmallMenuTile({Key? key, required this.name, required this.iconName, required this.goto}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +46,7 @@ class SmallMenuTile extends StatelessWidget {
               Center(
                 child: SizedBox(
                     width: 90,
-                    child: Image.asset("images/${name.toLowerCase()}_big.png")),
+                    child: Image.asset("images/${iconName.toLowerCase()}_big.png")),
               )
             ],
           )),

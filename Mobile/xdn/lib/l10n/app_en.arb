@@ -40,7 +40,7 @@
   "name_invalid" : "Invalid name",
   "name_invalid_message" : "Please enter name which is longer than 6 characters",
   "password_mismatch" : "Passwords don't match",
-  "password_mismatch_message" : "Please enter same passowrd to password and password confirmation box",
+  "password_mismatch_message" : "Please enter same password to password and password confirmation box",
   "amount" : "Amount",
   "amount_empty" : "Amount cannot be empty!",
   "konj_addr_invalid" : "Invalid XDN address",

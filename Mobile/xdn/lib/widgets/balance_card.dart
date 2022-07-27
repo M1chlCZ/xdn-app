@@ -49,9 +49,11 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
-                        var balance = m['balance'].toString();
+                        var balance = m['spendable'].toString();
                         var immature = m['immature'].toString();
+                        var spedanble = m['balance'].toString();
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
+                        var textPending = spedanble == balance ? '' : "Pending ${double.parse(spedanble) - double.parse(balance)} XDN";
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -93,8 +95,15 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                 ),
                               ),
                               const SizedBox(
-                                height: 5,
+                                height: 0,
                               ),
+                              textPending != ''
+                                  ? SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.8,
+                                child: AutoSizeText(textPending,
+                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                              )
+                                  : Container(),
                               textImature != ''
                                   ? SizedBox(
                                       width: MediaQuery.of(context).size.width * 0.8,
@@ -102,6 +111,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                           minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
                                     )
                                   : Container(),
+
                             ],
                           ),
                         );

@@ -79,7 +79,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
       // animationController!.reverse();
       // animationSendController!.reverse();
       _forward = false;
-
       setState(() {
         refreshBalance();
       });
@@ -160,8 +159,8 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
                 Header(header: AppLocalizations.of(context)!.wl_balance),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
-                  switchInCurve: Curves.easeIn,
-                  switchOutCurve: Curves.decelerate,
+                  switchInCurve: Curves.bounceIn,
+                  switchOutCurve: Curves.easeInOutCubic,
                   transitionBuilder: (Widget child, Animation<double> animation) {
                     return ScaleTransition(scale: animation, child: child);
                   },

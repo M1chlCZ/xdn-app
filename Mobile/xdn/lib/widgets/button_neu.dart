@@ -37,7 +37,7 @@ class NeuButton extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.all(Radius.circular(radius)),
         child: Material(
-          color: Theme.of(context).canvasColor, // button color
+          color: color ?? Theme.of(context).canvasColor, // button color
           child: InkWell(
             // highlightColor: splashColor!.withOpacity(0.5),
             splashColor: splashColor ?? Colors.white30, // splash color
