@@ -9,7 +9,6 @@ import 'package:digitalnote/support/summary.dart' as sum;
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 
@@ -250,7 +249,14 @@ class NetInterface {
 
     ComInterface ci = ComInterface();
     Map<String, dynamic> rt = await ci.get("/data", request: m);
-    print(rt);
+    return rt;
+  }
+
+  static Future<Map<String, dynamic>>? getPriceData({bool details = false}) async {;
+    Map<String, dynamic> m = {"request": "priceData"};
+
+    ComInterface ci = ComInterface();
+    Map<String, dynamic> rt = await ci.get("/data", request: m);
     return rt;
   }
 
@@ -370,7 +376,6 @@ class NetInterface {
         headers: {"Content-Type": "application/json"},
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        print(response.body);
         var gi = GetInfo.fromJson(jsonDecode(response.body));
         return gi;
       } else {
@@ -843,6 +848,7 @@ class NetInterface {
     Dialogs.openWaitBox(context);
     try {
       String? id = await SecureStorage.read(key: globals.ID);
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
 
       Map<String, dynamic> m = {
         "id": id,
@@ -856,6 +862,7 @@ class NetInterface {
       final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
         "Content-Type": "application/json",
         "payload": s,
+        "Authorization": jwt!,
       }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {

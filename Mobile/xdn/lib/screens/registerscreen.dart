@@ -2,20 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:digitalnote/globals.dart' as globals;
+import 'package:digitalnote/screens/loginscreen.dart';
+import 'package:digitalnote/support/Dialogs.dart';
+import 'package:digitalnote/support/Encrypt.dart';
+import 'package:digitalnote/widgets/BackgroundWidget.dart';
+import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:http/http.dart' as http;
-import 'package:digitalnote/globals.dart' as globals;
-import 'package:digitalnote/screens/loginscreen.dart';
-import 'package:digitalnote/support/Dialogs.dart';
-import 'package:digitalnote/support/Encrypt.dart';
-import 'package:digitalnote/widgets/BackgroundWidget.dart';
-import 'package:styled_text/styled_text.dart';
-
-import '../support/ColorScheme.dart';
 
 const serverIP = globals.SERVER_URL;
 
@@ -82,7 +80,6 @@ class _RegisterState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Locale myLocale = Localizations.localeOf(context);
     return Stack(
       children: [
         const BackgroundWidget(hasImage: false, image: ""),
@@ -90,7 +87,9 @@ class _RegisterState extends State<RegisterScreen> {
             child: Stack(children: [
           Column(
             children: [
-              const SizedBox(height: 30.0,),
+              const SizedBox(
+                height: 30.0,
+              ),
               Align(
                 alignment: Alignment.topCenter,
                 child: Container(
@@ -250,18 +249,18 @@ class _RegisterState extends State<RegisterScreen> {
                                   style: Theme.of(context).textTheme.bodyText2,
                                 ),
                               ),
-                              const SizedBox(height: 20.0,),
+                              const SizedBox(
+                                height: 20.0,
+                              ),
                               Padding(
                                   padding: const EdgeInsets.only(top: 5.0, bottom: 10.0),
                                   child: SizedBox(
                                     width: 300,
-                                    child: RaisedButton(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
+                                    child: FlatCustomButton(
+                                        radius: 15.0,
                                         color: Colors.white70,
-                                        textColor: Colors.black,
                                         padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
-                                        onPressed: () async {
+                                        onTap: () async {
                                           var realname = _realnameController.text;
                                           var username = _usernameController.text;
                                           var password = _passwordController.text;
@@ -337,7 +336,10 @@ class _RegisterState extends State<RegisterScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const <Widget>[
-                      Icon(Icons.arrow_back, color: Colors.white70,), // icon
+                      Icon(
+                        Icons.arrow_back,
+                        color: Colors.white70,
+                      ), // icon
                     ],
                   ),
                 ),

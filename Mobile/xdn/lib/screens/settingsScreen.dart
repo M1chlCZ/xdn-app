@@ -45,7 +45,6 @@ class _SettingsState extends State<SettingsScreen> {
   bool isAuthenticated = false;
   int confirmation = 1;
   String? firstPass;
-  bool _reload = false;
   var twoFactor = false;
   var settingUP = false;
   var run = false;
@@ -800,7 +799,6 @@ class _SettingsState extends State<SettingsScreen> {
 
   _renameboxCallback(String nickname) {
     NetInterface.renameUser(context, nickname);
-    _reload = true;
   }
 
   _passCheck(String password, {String? pin}) async {

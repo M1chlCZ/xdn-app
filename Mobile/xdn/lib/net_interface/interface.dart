@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../globals.dart' as globals;
 
@@ -19,11 +18,8 @@ class ComInterface {
       {required Map<String, dynamic> request, bool wholeURL = false, Map<String, dynamic>? query, dynamic body, int type = 0, int typeContent = typeJson, bool debug = false}) async {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
     dynamic responseJson;
-    dynamic mBody;
     http.Response response;
-    if (body != null) {
-      mBody = json.encode(body);
-    }
+
 
     var mUrl = "";
     if (!wholeURL) {
@@ -46,7 +42,6 @@ class ComInterface {
       debugPrint(response.statusCode.toString());
     }
     if (typeContent == typePlain) {
-      print("PLAIN");
       return response;
     }
     responseJson = compute(_returnResponse, response);
@@ -76,6 +71,7 @@ class ComInterface {
       return response;
     }
     responseJson = compute(_returnResponse, response);
+    return responseJson;
   }
 
   // Future<dynamic> delete(String url, {Map<String, dynamic>? query, int type = 0, dynamic body, int typeContent = typeJson, bool debug = false}) async {

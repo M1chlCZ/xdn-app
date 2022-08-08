@@ -7,7 +7,6 @@ import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/MessageGroup.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 
-import '../support/ColorScheme.dart';
 import '../support/SimpleRichText.dart';
 
 class MessageGroupTile extends StatefulWidget {

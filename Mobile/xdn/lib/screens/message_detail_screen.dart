@@ -39,12 +39,9 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   final _scrollController = ScrollController();
   final MessagesBloc mBlock = MessagesBloc();
   String? _addr;
-  String? _lastDate;
   var _running = true;
   var _circleVisible = false;
-  final _tip = true;
   Widget? _switchWidget;
-  bool _withoutNot = false;
   String? _replyMessage;
   int _replyid = 0;
   double _replyHeight = 0.0;
@@ -115,7 +112,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   }
 
   Future<void> notReceived({String? ev}) async {
-    _withoutNot = false;
     // mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
     if (_running) {
       Future.delayed(const Duration(milliseconds: 10), () {
@@ -140,7 +136,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
       await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, _textController.text.trimRight(), _replyid);
       _textController.text = '';
-      _withoutNot = true;
       setState(() {
         _replyid = 0;
         _replyMessage = null;
@@ -148,7 +143,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       });
       Future.delayed(const Duration(milliseconds: 100), () {
         setState(() {
-          _withoutNot = false;
           _switchWidget = _tipIcon();
           _circleVisible = false;
           mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
@@ -196,12 +190,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         setState(() {
           _switchWidget = _sendWait();
           _circleVisible = true;
-          _withoutNot = true;
         });
 
         Future.delayed(const Duration(milliseconds: 100), () {
           setState(() {
-            _withoutNot = false;
             _switchWidget = _tipIcon();
             _circleVisible = false;
             mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
@@ -250,7 +242,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 switch (snapshot.data!.status) {
-                                  case Status.COMPLETED:
+                                  case Status.completed:
                                     var mData = snapshot.data!.data as List<dynamic>;
                                     return Flexible(
                                       child: Padding(
@@ -299,7 +291,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                         ),
                                       ),
                                     );
-                                  case Status.LOADING:
+                                  case Status.loading:
                                     return const Padding(
                                       padding: EdgeInsets.only(bottom: 200.0),
                                       child: SizedBox(
@@ -310,7 +302,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             strokeWidth: 2.0,
                                           )),
                                     );
-                                  case Status.ERROR:
+                                  case Status.error:
                                     return Container();
                                 }
                               } else {

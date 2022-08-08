@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -39,10 +38,10 @@ class DrownDownMenu<T> extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _DrownDownMenuState<T> createState() => _DrownDownMenuState<T>();
+  DrownDownMenuState<T> createState() => DrownDownMenuState<T>();
 }
 
-class _DrownDownMenuState<T> extends State<DrownDownMenu<T>>
+class DrownDownMenuState<T> extends State<DrownDownMenu<T>>
     with TickerProviderStateMixin {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
@@ -74,7 +73,7 @@ class _DrownDownMenuState<T> extends State<DrownDownMenu<T>>
     var style = widget.dropdownButtonStyle;
     // link the overlay to the button
     return CompositedTransformTarget(
-      link: this._layerLink,
+      link: _layerLink,
       child: SizedBox(
         width: style.width,
         height: style.height,
@@ -139,7 +138,7 @@ class _DrownDownMenuState<T> extends State<DrownDownMenu<T>>
                 child: CompositedTransformFollower(
                   offset:
                   widget.dropdownStyle.offset ?? Offset(0, size.height + 5),
-                  link: this._layerLink,
+                  link: _layerLink,
                   showWhenUnlinked: false,
                   child: Material(
 
@@ -165,7 +164,7 @@ class _DrownDownMenuState<T> extends State<DrownDownMenu<T>>
                             return InkWell(
                               onTap: () {
                                 setState(() => _currentIndex = item.key);
-                                widget.onChange!(item.value.value!, item.key);
+                                widget.onChange!(item.value.value as T, item.key);
                                 _toggleDropdown();
                               },
                               child: item.value,
@@ -187,13 +186,13 @@ class _DrownDownMenuState<T> extends State<DrownDownMenu<T>>
   void _toggleDropdown({bool close = false}) async {
     if (_isOpen || close) {
       await _animationController!.reverse();
-      this._overlayEntry!.remove();
+      _overlayEntry!.remove();
       setState(() {
         _isOpen = false;
       });
     } else {
-      this._overlayEntry = this._createOverlayEntry();
-      Overlay.of(context)!.insert(this._overlayEntry!);
+      _overlayEntry = _createOverlayEntry();
+      Overlay.of(context)!.insert(_overlayEntry!);
       setState(() => _isOpen = true);
       _animationController!.forward();
     }

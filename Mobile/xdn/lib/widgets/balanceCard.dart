@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/NetInterface.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,11 +21,20 @@ class BalanceCard extends StatefulWidget {
 
 class BalanceCardState extends State<BalanceCard> {
   final key = GlobalKey<ScaffoldState>();
+  Map<String, dynamic>? _priceData;
+  String _balPlaceholder = "";
 
   @override
   void initState() {
     super.initState();
+    getPriceData();
   }
+
+  void getPriceData() async {
+    _priceData = await NetInterface.getPriceData();
+    setState(() {});
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -59,45 +70,53 @@ class BalanceCardState extends State<BalanceCard> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.only(top: 5.0),
-                              child: Container(
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 2.0),
-                                      child: SizedBox(
-                                        width: MediaQuery.of(context).size.width * 0.5,
-                                        height: 40,
-                                        child: Center(
-                                          child: AutoSizeText(balance,
-                                              minFontSize: 18.0,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.montserrat(fontWeight: FontWeight.w200, fontSize: 28.0)),
-                                        ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2.0),
+                                    child: SizedBox(
+                                      width: MediaQuery.of(context).size.width * 0.5,
+                                      height: 40,
+                                      child: Center(
+                                        child: AutoSizeText(balance,
+                                            minFontSize: 18.0,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.montserrat(fontWeight: FontWeight.w200, fontSize: 28.0)),
                                       ),
                                     ),
-                                    const SizedBox(
-                                      width: 10.0,
-                                    ),
-                                    Container(
-                                        height: 45,
-                                        margin: const EdgeInsets.only(right: 10.0),
-                                        padding: const EdgeInsets.all(10.0),
-                                        child: const Center(
-                                            child: Text(
-                                              "XDN",
-                                              style: TextStyle(color: Colors.white54, fontSize: 18.0),
-                                            ))),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(
+                                    width: 10.0,
+                                  ),
+                                  Container(
+                                      height: 45,
+                                      margin: const EdgeInsets.only(right: 10.0),
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: const Center(
+                                          child: Text(
+                                            "XDN",
+                                            style: TextStyle(color: Colors.white54, fontSize: 18.0),
+                                          ))),
+                                ],
                               ),
                             ),
                             const SizedBox(
-                              height: 5,
+                              height: 2,
+                            ),
+                            _priceData != null &&  _priceData!.isNotEmpty
+                                ? SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.8,
+                              child: AutoSizeText("${((_priceData!['usd'] * double.parse(m['balance'])) as double).toStringAsFixed(4)} USD",
+                                  minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
+                            )
+                                : Container(),
+                            const SizedBox(
+                              height: 2,
                             ),
                             textPending != ''
                                 ? SizedBox(
@@ -106,6 +125,9 @@ class BalanceCardState extends State<BalanceCard> {
                                   minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
                             )
                                 : Container(),
+                            const SizedBox(
+                              height: 2,
+                            ),
                             textImature != ''
                                 ? SizedBox(
                               width: MediaQuery.of(context).size.width * 0.8,
@@ -113,6 +135,9 @@ class BalanceCardState extends State<BalanceCard> {
                                   minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
                             )
                                 : Container(),
+                            const SizedBox(
+                              height: 2,
+                            ),
                           ],
                         );
                       } else if (snapshot.hasError) {

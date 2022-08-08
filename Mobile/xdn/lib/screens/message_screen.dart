@@ -276,7 +276,7 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: const <Widget>[
-                                    SizedBox(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0), height: 50.0, width: 50.0),
+                                    SizedBox(height: 50.0, width: 50.0, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0)),
                                   ]),
                             );
                           }

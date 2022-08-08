@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
 
@@ -360,8 +359,7 @@ class AutoSizeTextField extends StatefulWidget {
   /// The appearance of the keyboard.
   ///
   /// This setting is only honored on iOS devices.
-  ///
-  /// If unset, defaults to the brightness of [ThemeData.primaryColorBrightness].
+
   final Brightness? keyboardAppearance;
 
   /// {@macro flutter.widgets.editableText.scrollPadding}
@@ -534,10 +532,10 @@ class AutoSizeTextField extends StatefulWidget {
   bool get selectionEnabled => enableInteractiveSelection;
 
   @override
-  _AutoSizeTextFieldState createState() => _AutoSizeTextFieldState();
+  AutoSizeTextFieldState createState() => AutoSizeTextFieldState();
 }
 
-class _AutoSizeTextFieldState extends State<AutoSizeTextField> {
+class AutoSizeTextFieldState extends State<AutoSizeTextField> {
   late double _textSpanWidth;
 
   @override
@@ -575,14 +573,14 @@ class _AutoSizeTextFieldState extends State<AutoSizeTextField> {
     super.initState();
 
     widget.controller!.addListener(() {
-      if (this.mounted) {
-        this.setState(() {});
+      if (mounted) {
+        setState(() {});
       }
     });
   }
 
   Widget _buildTextField(double fontSize, TextStyle style, int? maxLines) {
-    return Container(
+    return SizedBox(
       width: widget.fullwidth
           ? double.infinity
           : math.max(fontSize, _textSpanWidth * MediaQuery.of(context).textScaleFactor),
@@ -710,10 +708,12 @@ class _AutoSizeTextFieldState extends State<AutoSizeTextField> {
       List<String?> words = text.toPlainText().split(RegExp('\\s+'));
 
       // Adds prefix and suffix text
-      if (widget.decoration.prefixText != null)
+      if (widget.decoration.prefixText != null) {
         words.add(widget.decoration.prefixText);
-      if (widget.decoration.suffixText != null)
+      }
+      if (widget.decoration.suffixText != null) {
         words.add(widget.decoration.suffixText);
+      }
 
       var wordWrapTp = TextPainter(
         text: TextSpan(
@@ -729,10 +729,10 @@ class _AutoSizeTextFieldState extends State<AutoSizeTextField> {
       );
 
       wordWrapTp.layout(maxWidth: constraintWidth);
-      double _width = (widget.decoration.contentPadding != null)
+      double width = (widget.decoration.contentPadding != null)
           ? wordWrapTp.width + widget.decoration.contentPadding!.horizontal
           : wordWrapTp.width;
-      _textSpanWidth = math.max(_width, widget.minWidth ?? 0);
+      _textSpanWidth = math.max(width, widget.minWidth ?? 0);
 
       if (wordWrapTp.didExceedMaxLines ||
           wordWrapTp.width > constraints.maxWidth) {
@@ -742,7 +742,7 @@ class _AutoSizeTextFieldState extends State<AutoSizeTextField> {
 
     String word = text.toPlainText();
 
-    if (word.length > 0) {
+    if (word.isNotEmpty) {
       // replace all \n with 'space with \n' to prevent dropping last character to new line
       var textContents = text.text ?? '';
       word = textContents.replaceAll('\n', ' \n');
@@ -774,24 +774,24 @@ class _AutoSizeTextFieldState extends State<AutoSizeTextField> {
     );
 
     tp.layout(maxWidth: constraintWidth);
-    double _width = (widget.decoration.contentPadding != null)
+    double width = (widget.decoration.contentPadding != null)
         ? tp.width + widget.decoration.contentPadding!.horizontal
         : tp.width;
 
-    double _height = (widget.decoration.contentPadding != null)
+    double height = (widget.decoration.contentPadding != null)
         ? tp.height + widget.decoration.contentPadding!.vertical
         : tp.height;
 
-    _textSpanWidth = math.max(_width, widget.minWidth ?? 0);
+    _textSpanWidth = math.max(width, widget.minWidth ?? 0);
 
     if (maxLines == null) {
-      if (_height >= constraintHeight) {
+      if (height >= constraintHeight) {
         return false;
       } else {
         return true;
       }
     } else {
-      if (_width >= constraintWidth) {
+      if (width >= constraintWidth) {
         return false;
       } else {
         return true;

@@ -3,11 +3,11 @@ import 'dart:convert';
 
 List<File> fileFromJson(String str) {
   final jsonData = json.decode(str);
-  return new List<File>.from(jsonData.map((x) => File.fromJson(x)));
+  return List<File>.from(jsonData.map((x) => File.fromJson(x)));
 }
 
 String fileToJson(List<File> data) {
-  final dyn = new List<dynamic>.from(data.map((x) => x.toJson()));
+  final dyn = List<dynamic>.from(data.map((x) => x.toJson()));
   return json.encode(dyn);
 }
 
@@ -25,7 +25,7 @@ class File {
   factory File.fromJson(Map<String, dynamic> json) {
     //print( "Datum: ${json["dateModified"]}");
 
-    return new File(
+    return File(
       fileName: json["fileName"],
       dateModified: DateTime.parse(json["dateModified"]),
       size: json["size"],

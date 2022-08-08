@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'dart:math';
 
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class Utils {
@@ -21,7 +21,7 @@ class Utils {
     DateTime dt = DateTime.now();
     int offset = dt.timeZoneOffset.inHours;
     var date = DateTime.parse(d).toLocal();
-    var newDate = new DateTime(date.year, date.month, date.day,
+    var newDate = DateTime(date.year, date.month, date.day,
         date.hour + offset, date.minute, date.second);
     var format = DateFormat.yMMMMd(Platform.localeName).add_jm();
     return format.format(newDate);
@@ -33,6 +33,31 @@ class Utils {
     var date = DateTime.parse(d).toLocal();
     var format = DateFormat.MMMMd(locale);
     return format.format(date);
+  }
+
+  static void openLink(String? s) async {
+    var succ = false;
+    if (s != null) {
+      try {
+        succ = await launchUrl(Uri.parse(s), mode: LaunchMode.externalNonBrowserApplication);
+      } catch (e) {
+        debugPrint(e.toString());
+      }
+      if (!succ) {
+        try {
+          succ = await launchUrl(Uri.parse(s), mode: LaunchMode.externalApplication);
+        } catch (e) {
+          debugPrint(e.toString());
+        }
+      }
+      if (!succ) {
+        try {
+          await launchUrl(Uri.parse(s), mode: LaunchMode.platformDefault);
+        } catch (e) {
+          debugPrint(e.toString());
+        }
+      }
+    }
   }
 
   

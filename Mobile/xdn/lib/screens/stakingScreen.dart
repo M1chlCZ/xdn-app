@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
@@ -1015,7 +1014,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                         hoverColor: Colors.white60,
                                         focusColor: Colors.white60,
                                         isCollapsed: true,
-                                        contentPadding: EdgeInsets.only(bottom: 18.0, top: 10.0),
+                                        contentPadding: const EdgeInsets.only(bottom: 18.0, top: 10.0),
                                         labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
                                         hintText: AppLocalizations.of(context)!.st_enter_amount,
                                         hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white30),

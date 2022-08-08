@@ -3,7 +3,7 @@ description: DigitalNode App Wallet
 
 publish_to: 'none'
 
-version: 1.0.38+38
+version: 1.0.41+41
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -13,8 +13,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  http: ^0.13.4
-  flutter_secure_storage: ^5.0.2
+  http: ^0.13.5
+  flutter_secure_storage: ^5.1.0
   flutter_local_notifications: ^9.7.0
   firebase_messaging: any
   firebase_core: any
@@ -29,7 +29,7 @@ dependencies:
   get_it: ^7.2.0
   auto_size_text: ^3.0.0
   share: any
-  vibration: ^1.7.4-nullsafety.0
+  vibration: ^1.7.5
   flutter_udid: ^2.0.0
   url_launcher: ^6.1.5
   image_cropper: ^2.0.3
@@ -48,16 +48,16 @@ dependencies:
   badges: ^2.0.3
   crypto: any
   mobile_scanner: ^2.0.0
-  fl_chart: ^0.55.0
+  fl_chart: ^0.55.1
   jiffy: ^5.0.0
   permission_handler: ^10.0.0
-  local_auth: ^2.1.0
+  local_auth: ^2.1.1
   open_file:
     git:
       url: https://github.com/MathiasCochet/open_file.git
       ref: gradle-update
   external_path: ^1.0.1
-  flutter_native_splash: ^2.2.6
+  flutter_native_splash: ^2.2.7
   avatar_glow: any
   styled_text: any
   flutter_displaymode: ^0.4.0

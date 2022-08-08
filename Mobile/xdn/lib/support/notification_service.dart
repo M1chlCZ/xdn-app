@@ -1,17 +1,13 @@
 import 'dart:io';
 
-import 'package:digitalnote/support/NetInterface.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:vibration/vibration.dart';
 
 class NotificationService {
   //NotificationService a singleton object
   static final NotificationService _notificationService =
   NotificationService._internal();
 
-  late FirebaseMessaging _messaging;
 
   factory NotificationService() {
     return _notificationService;

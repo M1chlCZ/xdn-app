@@ -75,7 +75,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void gotoBalanceScreen() {
-    Navigator.of(context).pushNamed(WalletScreen.route, arguments: "shit").then((value) => refreshBalance());
+    Navigator.of(context).pushNamed(WalletScreen.route, arguments: _getBalance).then((value) => refreshBalance());
   }
 
   void gotoContactScreen() {

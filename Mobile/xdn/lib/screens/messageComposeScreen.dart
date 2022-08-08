@@ -9,7 +9,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../support/AppDatabase.dart';
 import '../support/CardHeader.dart';
-import '../support/ColorScheme.dart';
 import '../support/Contact.dart';
 import '../support/Dialogs.dart';
 import '../support/NetInterface.dart';
@@ -68,13 +67,13 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
       return;
     }
     _send = false;
-    var _address = _recipient == null ? _controllerAddress.text : _recipient!.getAddr();
+    var address = _recipient == null ? _controllerAddress.text : _recipient!.getAddr();
     FocusScope.of(context).unfocus();
     Dialogs.openWaitBox(context);
-    await NetInterface.sendMessage(_address!, _controllerMessage.text.trimRight(), 0);
+    await NetInterface.sendMessage(address!, _controllerMessage.text.trimRight(), 0);
     Future.delayed(const Duration(milliseconds: 1000), () {
       Navigator.of(context).pop();
-    }).then((value) => Navigator.of(context).pop(_address));
+    }).then((value) => Navigator.of(context).pop(address));
   }
 
   void _openQRScanner() async {

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:digitalnote/bloc/transaction_bloc.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,7 +21,6 @@ class TransactionWidget extends StatefulWidget {
 
 class TransactionWidgetState extends State<TransactionWidget> {
   bool shouldRefresh = true;
-  Future<List<TranSaction>>? _transactions;
   bool _circleVisible = true;
   TransactionBloc tb = TransactionBloc();
 
@@ -115,7 +113,7 @@ class TransactionWidgetState extends State<TransactionWidget> {
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
                           switch (snapshot.data!.status) {
-                            case Status.COMPLETED:
+                            case Status.completed:
                               Future.delayed(Duration.zero, () {
                                 setState(() {
                                   _circleVisible = false;
@@ -131,7 +129,7 @@ class TransactionWidgetState extends State<TransactionWidget> {
                                       customLocale: Localizations.localeOf(context).languageCode, transaction: data[index]);
                                 },
                               );
-                            case Status.ERROR:
+                            case Status.error:
                               Future.delayed(Duration.zero, () {
                                 setState(() {
                                   _circleVisible = false;
@@ -142,7 +140,7 @@ class TransactionWidgetState extends State<TransactionWidget> {
                                 snapshot.error.toString(),
                                 style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 32, color: Colors.red),
                               ));
-                            case Status.LOADING:
+                            case Status.loading:
                               Future.delayed(Duration.zero, () {
                                 setState(() {
                                   _circleVisible = true;

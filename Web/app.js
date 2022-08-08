@@ -21,12 +21,15 @@ const fireSender = new gcm.Sender(process.env.ENC_FIRE);
 const cryptoOptions = { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 };
 const KEY = process.env.ENC_JSON;
 var app = express();
+var priceData = {}
 
 const jwt_decode = require('jwt-decode');
 
-// async function run() {
-//   setInterval(cronJob.runNotify, 300000);
-// }
+async function run() {
+  //get price
+  price()
+  setInterval(price, 1800000);
+}
 
 async function unlock() {
   await sleep(60000);
@@ -41,7 +44,7 @@ function sleep(ms) {
 }
 
 unlock();
-// run();
+run();
 
 require('dotenv').config();
 
@@ -557,6 +560,7 @@ app.get('/data', async (req, res) => {
       return;
     }
 
+  
     if (rrr === "renameUser") {
       var t = await renameUser(id, param1);
       res.statusCode = 200;
@@ -1039,6 +1043,26 @@ app.get('/data', async (req, res) => {
       }
     }
 
+    if (rrr === "priceData") {
+      var t = await twoFactorCheck(id);
+      if (priceData === null || priceData === undefined) {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(priceData), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
     if (rrr === "getDaemonStatus") {
       var t = await getDaemonStatus();
       if (t === "err") {
@@ -1151,6 +1175,13 @@ async function getBlockheighReq() {
     });
   return blockheight;
 }
+
+async function price() {
+  var p = await https.get('https://api.coingecko.com/api/v3/coins/digitalnote?tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false');
+  priceData = p.data.market_data.current_price;
+  console.log(priceData);
+}
+
 
 async function twoFactor(id) {
   try {
@@ -1538,19 +1569,16 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
     var add = {
       error: "Can't get balance",
     }
-    return add;
+    return "err";
   }
   var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
   if (rows[0] == null) {
     let add = {
       error: "User not found",
     }
-    console.log(add)
-    return add;
+    return "err";
   }
-  console.log(rows[0].addr);
-  console.log(parseFloat(userBalance))
-  console.log(parseFloat(amount))
+
   if (parseFloat(amount) < parseFloat(userBalance)) {
     try {
       let addrUser = rows[0].addr;
@@ -1564,7 +1592,6 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
       if (json.error != null) {
-        console.log(json.error);
         return "err";
       }
       // await saveTransactions();
@@ -1580,7 +1607,7 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
     var add = {
       error: "bal",
     }
-    return add;
+    return "err";
   }
 }
 
@@ -2099,7 +2126,7 @@ async function setStake(id, amount, user) {
         // console.log(resWall.result);
         // console.log("///////////////////////////////");
 
-        if (resWall.result !== null && resWall.error === null && resWall !== 'err') {
+        if (resWall !== 'err' && resWall.error == null) {
           console.log("noted");
           await con.query("UPDATE users_stake SET amount = ? WHERE idUser = ? AND active = ?", [balance, id, 1]);
           await con.query("UPDATE users_stake SET dateStart = ? WHERE idUser = ? AND active = ?", [mySqlTimestamp, id, 1]);
@@ -2129,7 +2156,7 @@ async function setStake(id, amount, user) {
         // console.log(resWall.result);
         // console.log("///////////////////////////////")
 
-        if (resWall.result !== null && resWall.error === null && resWall !== 'err') {
+        if (resWall !== 'err' && resWall.error == null) {
           if (rSession[0].smax == null) {
             await con.query('INSERT INTO users_stake(idUser, amount, session, active, dateStart) VALUES (?, ?, ?, ?, ?)', [id, amount, 1, 1, mySqlTimestamp]);
           } else {

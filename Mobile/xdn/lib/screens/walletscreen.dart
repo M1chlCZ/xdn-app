@@ -30,6 +30,7 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
 
   Future<Map<String, dynamic>>? _getBalance;
+  Map<String, dynamic>? _priceData;
 
   // AnimationController? animationController;
   // AnimationController? animationSendController;
@@ -59,25 +60,13 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
   @override
   void initState() {
     super.initState();
+    _getBalance = widget.arguments as Future<Map<String, dynamic>>?;
     refreshBalance();
     _switchWidget = balanceCard();
-    // animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-    //
-    // animationSendController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-    //
-    // sendTween = Tween<Offset>(begin: const Offset(0, 0), end: const Offset(0, 0.2))
-    //     .animate(CurvedAnimation(parent: animationSendController!, curve: Curves.decelerate));
-    //
-    // opacityTween = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: animationSendController!, curve: Curves.easeOut));
-    //
-    // tween = Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(parent: animationController!, curve: Curves.easeOut));
-
   }
 
   void shrinkSendView() {
     Future.delayed(const Duration(milliseconds: 1000), () {
-      // animationController!.reverse();
-      // animationSendController!.reverse();
       _forward = false;
       setState(() {
         refreshBalance();
