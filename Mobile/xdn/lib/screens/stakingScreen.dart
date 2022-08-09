@@ -255,6 +255,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     var res = await NetInterface.getRewardsByDay(context, _date, 0);
     if (res == null) return;
     List<StakeData> d = await compute(_getData, res);
+    d.sort(((a, b) => a.date.compareTo(b.date)));
+
     _maxX = const Duration(minutes: 00, hours: 24).inMinutes.toDouble();
     _maxY = await compute(_getMaxY, d);
     _leftTitlesInterval = (_maxY / 2);
@@ -272,7 +274,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
 
     var res = await NetInterface.getRewardsByMonth(context, year, month, 1);
     if (res == null) return;
-    List<StakeData> d = await compute(_getData, res);
+    List<StakeData> d = await compute(_getDataMonth, res);
     _maxX = Duration(days: Jiffy().daysInMonth).inDays.toDouble();
     _maxY = await compute(_getMaxY, d);
     _leftTitlesInterval = (_maxY / 2);
@@ -282,6 +284,28 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   }
 
   static List<StakeData> _getData(String response) {
+    try {
+      List responseList = json.decode(response);
+      responseList.removeLast();
+      responseList.sort((a, b) => DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])));
+      var amount = 0.0;
+      var l = List.generate(responseList.length, (i) {
+        amount = amount + responseList[i]['amount'];
+        return StakeData(
+          date: DateTime.parse(responseList[i]['date']),
+          amount: amount,
+        );
+      });
+      return l;
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      return [];
+    }
+  }
+
+  static List<StakeData> _getDataMonth(String response) {
     try {
       List responseList = json.decode(response);
       var amount = 0.0;

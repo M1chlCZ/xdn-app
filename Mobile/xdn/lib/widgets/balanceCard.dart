@@ -118,7 +118,7 @@ class BalanceCardState extends State<BalanceCard> {
                             const SizedBox(
                               height: 2,
                             ),
-                            textPending != ''
+                            textPending != '' && textImature.isEmpty
                                 ? SizedBox(
                               width: MediaQuery.of(context).size.width * 0.8,
                               child: AutoSizeText(textPending,

@@ -940,8 +940,14 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      List<dynamic> response = await ci.get("/data", request: m, debug: true);
-      return response.toString();
+      var response = await ci.get("/data", request: m, debug: true, typeContent: ComInterface.typePlain);
+      if (response.statusCode == 200) {
+        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+        return data.toString();
+      } else {
+        Dialogs.openAlertBox(context, 'Warning', response.toString());
+        return null;
+      }
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       //
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {

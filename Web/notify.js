@@ -69,7 +69,7 @@ async function insertTransactions(js) {
             console.log(e);
           });
         } else {
-          await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
+          await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat], function (err, result) {
           }).catch((e) => {
             console.log(e);
           });
@@ -83,7 +83,7 @@ async function insertTransactions(js) {
             console.log(e);
           });
         } else {
-          await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat, time], function (err, result) {
+          await con.query('INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)', [txid, account, amount, confirmation, address, cat], function (err, result) {
           }).catch((e) => {
             console.log(e);
           });

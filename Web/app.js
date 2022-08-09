@@ -1398,7 +1398,7 @@ async function getTransaction(user, timezone) {
 async function getBalanceImmature(user) {
   var bal = 0;
   try {
-    var [rows, fields] = await con.query("SELECT SUM(amount) as immature FROM transaction WHERE account = ? AND confirmation < 3 AND category = 'receive' ", [user]);
+    var [rows, fields] = await con.query("SELECT SUM(amount) as immature FROM transaction WHERE account = ? AND confirmation < 5 AND category = 'receive' ", [user]);
     bal += Math.abs(rows[0].immature);
     return bal.toFixed(3);
   } catch (error) {
@@ -1413,7 +1413,7 @@ async function getBalanceUser(user) {
   // return res.result[user].toFixed(3);
   // console.log(res[0][user]);
   try {
-    var [rows, fields] = await con.query("SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 3 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send' ", [user, user]);
+    var [rows, fields] = await con.query("SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 5 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send' ", [user, user]);
     for (var i = 0; i < rows.length; i++) {
       if (rows[i].category === "receive") {
         bal += Math.abs(rows[i].amount);
@@ -1472,9 +1472,7 @@ async function sendTransaction(user, address, amount) {
     console.log(add)
     return add;
   }
-  console.log(rows[0].addr);
-  console.log(parseFloat(userBalance))
-  console.log(parseFloat(amount))
+
   if (parseFloat(amount) < parseFloat(userBalance)) {
     try {
       let addrUser = rows[0].addr;
