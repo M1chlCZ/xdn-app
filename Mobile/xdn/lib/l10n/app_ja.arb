@@ -188,5 +188,6 @@
     "settings_privacy": "プライバシー設定",
     "password_forgot": "パスワードを忘れてしまった",
     "user_not_exists": "ユーザーは存在しません",
-    "change_language" : "言語の選択"
+    "change_language" : "言語の選択",
+  "delete_acc" : "Delete account"
   }

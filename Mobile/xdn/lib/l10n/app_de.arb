@@ -187,5 +187,6 @@
     "settings_privacy": "Datenschutzeinstellungen",
   "password_forgot" : "Forgot Password",
   "user_not_exists" : "Falsche Login-Informationen",
-  "change_language" : "Sprache ändern"
+  "change_language" : "Sprache ändern",
+  "delete_acc" : "Delete account"
   }

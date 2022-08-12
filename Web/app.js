@@ -560,7 +560,7 @@ app.get('/data', async (req, res) => {
       return;
     }
 
-  
+
     if (rrr === "renameUser") {
       var t = await renameUser(id, param1);
       res.statusCode = 200;
@@ -1100,6 +1100,26 @@ app.get('/data', async (req, res) => {
         res.write(ciphertext);
         res.end();
 
+      }
+    }
+
+    if (rrr === "deleteAccount") {
+      console.log("DELETE ACC")
+      var t = await deleteAccount(id);
+      if (t === "err") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var resP = { "status": "ok" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(resP), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
       }
     }
 
@@ -2451,6 +2471,31 @@ async function getPrivKey(address) {
   } catch (e) {
     return "err";
   }
+}
+
+async function deleteAccount(id) {
+  console.log("SHIT " + id)
+  let [rows, fields] = await con.query('SELECT * FROM users WHERE id = ?', [id]);
+  if (rows.length > 0) {
+    let addr = rows[0].addr;
+    console.log(addr);
+    let username = rows[0].username;
+    console.log(username);
+    await con.query('DELETE FROM users_stake WHERE idUser = ?', [id]);
+    await con.query('DELETE FROM devices WHERE idUser = ?', [id]);
+    await con.query('DELETE FROM transaction WHERE account = ?', [username]);
+    await con.query('DELETE FROM payouts_stake WHERE idUser = ?', [id]);
+    await con.query('UPDATE addressbook SET name = ? WHERE addr = ?', ["Deleted user", addr]);
+    let [rowsDelete, fields2] = await con.query('DELETE FROM users WHERE id = ?', [id]);
+    if (rowsDelete.affectedRows > 0) {
+      return "ok";
+    } else {
+      return "err";
+    }
+  } else {
+    return "err";
+  }
+
 }
 
 async function getCurrentDate() {

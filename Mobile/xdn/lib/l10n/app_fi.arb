@@ -188,5 +188,6 @@
   "settings_privacy": "Yksityisyysasetukset",
   "password_forgot" : "Unohditko salasanasi",
   "user_not_exists" : "Käyttäjätunnus tai salasana on virheellinen",
-  "change_language" : "Vaihda kieltä"
+  "change_language" : "Vaihda kieltä",
+  "delete_acc" : "Delete account"
 }

@@ -415,6 +415,40 @@ class Dialogs {
         });
   }
 
+  static void openDeleteAccountSecondBox(context, VoidCallback wellOkay) async {
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return DialogBody(
+            header: AppLocalizations.of(context)!.alert,
+            buttonLabel: AppLocalizations.of(context)!.yes,
+            onTap: () {
+              wellOkay();
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
+                child: AutoSizeText(
+                  "Warning! You are about to delete your account, which means that any balance or any data (like messages) you have on your account, will be forever lost. Do you want to proceed?",
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 10,
+                  minFontSize: 8.0,
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.red.shade700),
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
   static Future<void> open2FABox(context, Function(String? s) func) async {
     final TextEditingController txt = TextEditingController();
     return showDialog(
@@ -1077,6 +1111,45 @@ class Dialogs {
   }
 
   static void openPasswordChangeBox(context, Function(String password) func) async {
+    TextEditingController textController = TextEditingController();
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return DialogBody(
+              header: AppLocalizations.of(context)!.dl_enter_current_pass,
+              buttonLabel: "OK",
+              onTap: () {
+                func(textController.text);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 500,
+                  child: TextField(
+                    obscureText: true,
+                    autofocus: true,
+                    textAlignVertical: TextAlignVertical.center,
+                    textAlign: TextAlign.left,
+                    controller: textController,
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
+                    decoration: InputDecoration(
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintText: AppLocalizations.of(context)!.dl_enter_pass,
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ));
+        });
+  }
+
+  static void openDeleteAccountFirstBox(context, Function(String password) func) async {
     TextEditingController textController = TextEditingController();
     return showDialog(
         barrierDismissible: false,

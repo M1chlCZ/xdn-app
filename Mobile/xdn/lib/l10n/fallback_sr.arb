@@ -187,5 +187,6 @@
   "settings_privacy": "Подешавања приватности",
   "password_forgot" : "Заборављена лозинка",
   "user_not_exists" : "User does not exists",
-  "change_language" : "Vaihda kieltä"
+  "change_language" : "Vaihda kieltä",
+  "delete_acc" : "Delete account"
 }

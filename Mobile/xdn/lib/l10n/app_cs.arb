@@ -188,5 +188,6 @@
   "settings_privacy": "Privacy Settings",
   "password_forgot" : "Passwort vergessen",
   "user_not_exists" : "Špatné přihlašovací údaje",
-  "change_language" : "Změnit jazyk"
+  "change_language" : "Změnit jazyk",
+  "delete_acc" : "Zrušit účet"
 }

@@ -186,6 +186,7 @@
     "settings_privacy": "प्राइवेसी सेटिंग्स",
   "password_forgot" : "पासवर्ड भूल गया",
   "user_not_exists" : "उपयोगकर्ता मौजूद नहीं है",
-  "change_language" : "भाषा बदलें"
+  "change_language" : "भाषा बदलें",
+    "delete_acc" : "Delete account"
 
 }
