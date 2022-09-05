@@ -51,9 +51,12 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                         Map<String, dynamic> m = snapshot.data!;
                         var balance = m['spendable'].toString();
                         var immature = m['immature'].toString();
-                        var spedanble = m['balance'].toString();
+                        var spendable = m['balance'].toString();
+                        if (double.parse(spendable) < 0.99) {
+                          spendable = balance;
+                        }
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
-                        var textPending = spedanble == balance ? '' : "Pending ${double.parse(spedanble) - double.parse(balance)} XDN";
+                        var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -66,7 +69,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(bottom: 2.0),
+                                      padding: const EdgeInsets.only(bottom: 2.0, left: 10.0),
                                       child: SizedBox(
                                         width: 220,
                                         height: 40,

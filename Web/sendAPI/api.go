@@ -32,6 +32,8 @@ func main() {
 	}
 	database.New(db)
 
+	utils.ReportMessage("Server started on port 6900, v 0.0.3")
+
 	app.Get("/hello", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World 👋!")
 	})
@@ -68,7 +70,9 @@ func sendCoin(c *fiber.Ctx) error {
 			"error":   errJson.Error(),
 		})
 	}
-	utils.ReportMessage(fmt.Sprintf("Sending %f to %s from %s", payload.Amount, payload.AddressReceiver, payload.AddressSender))
+	amount := payload.Amount
+
+	utils.ReportMessage(fmt.Sprintf("Sending %f to %s from %s", amount, payload.AddressReceiver, payload.AddressSender))
 	totalCoins := 0.0
 	myUnspent := make([]models.ListUnspent, 0)
 	for _, unspent := range ing {
@@ -80,22 +84,22 @@ func sendCoin(c *fiber.Ctx) error {
 			}
 		}
 	}
-
 	inputs := make([]models.ListUnspent, 0)
 	inputsAmount := 0.0
 	for _, spent := range myUnspent {
 		inputsAmount += spent.Amount
 		inputs = append(inputs, spent)
-		if inputsAmount > payload.Amount {
+		if inputsAmount > amount {
 			break
 		}
 	}
 
 	inputsCount := len(inputs)
-	fee := 0.0001 * float64(inputsCount)
-	txBack := inputsAmount - fee - payload.Amount
+	fee := 0.01 * float64(inputsCount)
+	amount -= fee
+	txBack := inputsAmount - fee - amount
 
-	if totalCoins <= (payload.Amount + fee) {
+	if totalCoins <= (amount + fee) {
 		utils.WrapErrorLog(fmt.Sprintf("not enough coins, addr: %s", payload.AddressReceiver))
 		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{
 			"success": false,
@@ -113,7 +117,7 @@ func sendCoin(c *fiber.Ctx) error {
 	}
 
 	secondParam := map[string]interface{}{
-		payload.AddressReceiver: payload.Amount,
+		payload.AddressReceiver: amount,
 		payload.AddressSender:   txBack}
 
 	utils.ReportMessage(fmt.Sprintf("firstParam: %v secondParam %v", firstParam, secondParam))
@@ -130,6 +134,14 @@ func sendCoin(c *fiber.Ctx) error {
 
 	hex := strings.Trim(string(call), "\"")
 
+	if fmt.Sprintf("createrawtransaction: %s", string(call)) == "createrawtransaction: null" {
+		utils.WrapErrorLog(fmt.Sprintf("createrawtransaction error, addr: %s", payload.AddressReceiver))
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"success": false,
+			"error":   "createrawtransaction Error",
+		})
+	}
+
 	call, err = client.Call("signrawtransaction", hex)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("signrawtransaction error, addr: %s", payload.AddressReceiver))
@@ -144,7 +156,10 @@ func sendCoin(c *fiber.Ctx) error {
 	errJson = json.Unmarshal(call, &sign)
 	if errJson != nil {
 		utils.ReportMessage(errJson.Error())
-		return errJson
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"success": false,
+			"error":   "signrawtransaction Error",
+		})
 	}
 
 	call, err = client.Call("sendrawtransaction", sign.Hex)
@@ -158,14 +173,23 @@ func sendCoin(c *fiber.Ctx) error {
 	utils.ReportMessage(fmt.Sprintf("sendrawtransaction: %s", string(call)))
 
 	tx := strings.Trim(string(call), "\"")
+
+	if fmt.Sprintf("sendrawtransaction: %s", string(call)) == "sendrawtransaction: null" {
+		utils.WrapErrorLog(fmt.Sprintf("sendrawtransaction error, addr: %s", payload.AddressReceiver))
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"success": false,
+			"error":   "sendrawtransaction Error",
+		})
+	}
+
 	userSend, _ := database.ReadValue[sql.NullString]("SELECT username FROM users WHERE addr = ?", payload.AddressSender)
 	userReceive, _ := database.ReadValue[sql.NullString]("SELECT username FROM users WHERE addr = ?", payload.AddressReceiver)
-	_, errInsert := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userSend.String, payload.Amount*-1, 0, payload.AddressSender, "send")
+	_, errInsert := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userSend.String, amount*-1, 0, payload.AddressSender, "send")
 	if errInsert != nil {
 		utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", payload.AddressSender, errInsert.Error()))
 	}
 	if userReceive.Valid {
-		_, errInsert2 := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userReceive.String, payload.Amount, 0, payload.AddressReceiver, "receive")
+		_, errInsert2 := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userReceive.String, amount, 0, payload.AddressReceiver, "receive")
 		if errInsert2 != nil {
 			utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error: %s", payload.AddressReceiver, errInsert2.Error()))
 		}

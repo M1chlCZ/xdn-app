@@ -63,9 +63,12 @@ class BalanceCardState extends State<BalanceCard> {
                         Map<String, dynamic> m = snapshot.data!;
                         var balance = m['spendable'].toString();
                         var immature = m['immature'].toString();
-                        var spedanble = m['balance'].toString();
+                        var spendable = m['balance'].toString();
+                        if (double.parse(spendable) < 0.99) {
+                          spendable = balance;
+                        }
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
-                        var textPending = spedanble == balance ? '' : "Pending ${double.parse(spedanble) - double.parse(balance)} XDN";
+                        var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
                         return Column(
                           children: [
                             Padding(

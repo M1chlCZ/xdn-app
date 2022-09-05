@@ -1552,7 +1552,6 @@ async function sendRawTransaction(user, address, amount) {
       console.log("---------SEND TRANSACTION---------")
       console.log(user + " " + address + " " + amount);
       console.log("----------------------------------")
-
       // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
       // var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
