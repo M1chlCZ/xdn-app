@@ -95,11 +95,11 @@ func sendCoin(c *fiber.Ctx) error {
 	}
 
 	inputsCount := len(inputs)
-	fee := 0.01 * float64(inputsCount)
+	fee := 0.001 * float64(inputsCount)
 	amount -= fee
 	txBack := inputsAmount - fee - amount
 
-	if totalCoins <= (amount + fee) {
+	if totalCoins < (amount + fee) {
 		utils.WrapErrorLog(fmt.Sprintf("not enough coins, addr: %s", payload.AddressReceiver))
 		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{
 			"success": false,
@@ -125,7 +125,7 @@ func sendCoin(c *fiber.Ctx) error {
 	call, err = client.Call("createrawtransaction", firstParam, secondParam)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("createrawtransaction error, addr: %s", payload.AddressReceiver))
-		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{
 			"success": false,
 			"error":   "createrawtransaction Error",
 		})
@@ -136,7 +136,7 @@ func sendCoin(c *fiber.Ctx) error {
 
 	if fmt.Sprintf("createrawtransaction: %s", string(call)) == "createrawtransaction: null" {
 		utils.WrapErrorLog(fmt.Sprintf("createrawtransaction error, addr: %s", payload.AddressReceiver))
-		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{
 			"success": false,
 			"error":   "createrawtransaction Error",
 		})
@@ -145,7 +145,7 @@ func sendCoin(c *fiber.Ctx) error {
 	call, err = client.Call("signrawtransaction", hex)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("signrawtransaction error, addr: %s", payload.AddressReceiver))
-		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{
 			"success": false,
 			"error":   "signrawtransaction Error",
 		})
@@ -156,7 +156,7 @@ func sendCoin(c *fiber.Ctx) error {
 	errJson = json.Unmarshal(call, &sign)
 	if errJson != nil {
 		utils.ReportMessage(errJson.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{
 			"success": false,
 			"error":   "signrawtransaction Error",
 		})
@@ -165,7 +165,7 @@ func sendCoin(c *fiber.Ctx) error {
 	call, err = client.Call("sendrawtransaction", sign.Hex)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("sendrawtransaction error, addr: %s", payload.AddressReceiver))
-		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{
 			"success": false,
 			"error":   "sendrawtransaction Error",
 		})
@@ -176,7 +176,7 @@ func sendCoin(c *fiber.Ctx) error {
 
 	if fmt.Sprintf("sendrawtransaction: %s", string(call)) == "sendrawtransaction: null" {
 		utils.WrapErrorLog(fmt.Sprintf("sendrawtransaction error, addr: %s", payload.AddressReceiver))
-		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{
 			"success": false,
 			"error":   "sendrawtransaction Error",
 		})
