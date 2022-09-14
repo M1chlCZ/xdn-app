@@ -22,13 +22,18 @@ const cryptoOptions = { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 };
 const KEY = process.env.ENC_JSON;
 var app = express();
 var priceData = {}
+var walletblk = false;
+var walletblkStake = false;
+var stakingActive = false;
 
 const jwt_decode = require('jwt-decode');
 
 async function run() {
   //get price
   price()
+  getDaemonStatusPeriodic()
   setInterval(price, 1800000);
+  setInterval(getDaemonStatusPeriodic, 1800000);
 }
 
 async function unlock() {
@@ -1131,10 +1136,7 @@ app.get('/data', async (req, res) => {
 
 });
 
-async function getDaemonStatus() {
-  let walletblk = false;
-  let walletblkStake = false;
-  let stakingActive = false;
+async function getDaemonStatusPeriodic() {
   let blk = await getBlockheighReq();
   if (blk !== "err") {
     let res = await rpc.run('getblockcount');
@@ -1160,16 +1162,18 @@ async function getDaemonStatus() {
     kk = JSON.stringify(resStake);
     jsonStake = JSON.parse(kk.toString('utf8').replace(/^\uFFFD/, ''));
     stakingActive = jsonStake.result.staking;
+  }else{
+    console.log("Error getting daemon info")
+  } 
+}
 
-    var resp = {
-      "block": walletblk,
-      "blockStake": walletblkStake,
-      "stakingActive": stakingActive,
-    }
-    return JSON.stringify(resp);
-  } else {
-    return "err";
+async function getDaemonStatus() {
+  var resp = {
+    "block": walletblk,
+    "blockStake": walletblkStake,
+    "stakingActive": stakingActive,
   }
+  return JSON.stringify(resp);
 }
 
 async function getInfo() {
