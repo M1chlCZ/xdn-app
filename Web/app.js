@@ -683,7 +683,6 @@ app.get('/data', async (req, res) => {
 
     if (rrr === "changePassword") {
       var t = await changePassword(id, param1)
-      console.log(t);
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
@@ -1452,7 +1451,7 @@ async function sendTransaction(user, address, amount) {
       console.log("----------------------------------")
       // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-      let res = await doSendRequest(addrUser, address, parseFloat(amount));
+      let res = await doSendRequest(addrUser, address, parseFloat(amount - 0.001));
       await rpc.run('walletlock', []);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
@@ -1507,7 +1506,7 @@ async function sendRawTransaction(user, address, amount) {
       // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
       // var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
-      let res = await doSendRequest(addrUser, address, parseFloat(amount));
+      let res = await doSendRequest(addrUser, address, parseFloat(amount - 0.001));
       await rpc.run('walletlock', []);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
@@ -1559,7 +1558,7 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
       console.log("------------------------------------------")
 
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-      let res = await doSendRequest(addrUser, address, parseFloat(amount));
+      let res = await doSendRequest(addrUser, address, parseFloat(amount - 0.001));
       await rpc.run('walletlock', []);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
@@ -1642,8 +1641,66 @@ async function emailSend(password, email) {
       from: '"DigitalNote robot" <no-reply@digitalnote.org>',
       to: email,
       subject: "Password reset",
-      text: "Your new password is: " + password + "\n Don't forget to change it afterwards in settings menu",
-      html: "",
+      text: "",
+      html: `<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="x-apple-disable-message-reformatting">
+    <title></title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style>
+        table, td, div, h1, p {font-family: Arial, sans-serif;}
+        table, td {border:2px transparent #000000 !important;}
+    </style>
+</head>
+
+
+<body style="margin:0;padding:0;">
+    <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
+        <tr>
+            <td align="center" style="padding:0;">
+                <table role="presentation" style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
+					<tr>
+						<td align="center" style="padding:40px 0 30px 0;background:#7705DD;">
+							<img src="https://www.digitalnote.org/botmail/DN2020.png" alt="" width="200" style="height:auto;display:block;" />
+						</td>
+					</tr>
+					<tr>
+						<td style="padding:36px 30px 42px 30px;">
+							<table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+								<tr>
+									<td style="padding:0;">
+										<h1>Password reset</h1>
+										<p>Your new password is: <b> ` + password + ` </b><br> Don't forget to change it afterwards in settings menu.</p>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td align="center" style="padding:40px 0 30px 0;background:#7705DD;">
+							<a href="http://www.digitalnote.org"><img src="https://www.digitalnote.org/botmail/digitalnote-blue.png" alt="" width="200" style="height:auto;display:block;" /></a>
+						</td>
+					</tr>
+				</table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
+`,
     });
 
     console.log("Message sent: %s", info.messageId);
@@ -2129,7 +2186,7 @@ async function setStake(id, amount, user) {
         // console.log(resWall.result);
         // console.log("///////////////////////////////")
 
-        if (resWall.result !== null && resWall.error === null && resWall !== 'err') {
+        if (resWall !== 'err' && resWall.error == null) {
           if (rSession[0].smax == null) {
             await con.query('INSERT INTO users_stake(idUser, amount, session, active, dateStart) VALUES (?, ?, ?, ?, ?)', [id, amount, 1, 1, mySqlTimestamp]);
           } else {

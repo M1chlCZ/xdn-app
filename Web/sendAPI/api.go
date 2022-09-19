@@ -32,9 +32,6 @@ func main() {
 	}
 	database.New(db)
 
-	app.Get("/hello", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World 👋!")
-	})
 	app.Post("/send", sendCoin)
 
 	err := app.Listen("127.0.0.1:6900")
