@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:bubble/bubble.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/Swipeable.dart';
+import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../support/SimpleRichText.dart';
 import '../support/AppDatabase.dart';
@@ -230,11 +230,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                           else
                             SelectableLinkify(
                                 onOpen: (link) async {
-                                  if (await canLaunchUrl(Uri.parse(link.url))) {
-                                    await launchUrl(Uri.parse(link.url));
-                                  } else {
-                                    print('Could not launch $link');
-                                  }
+                                  Utils.openLink(link.url);
                                 },
                                 text: widget.messages.text!,
                                 textAlign: TextAlign.left,
@@ -394,11 +390,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                   else
                     SelectableLinkify(
                         onOpen: (link) async {
-                          if (await canLaunchUrl(Uri.parse(link.url))) {
-                            await launchUrl(Uri.parse(link.url));
-                          } else {
-                            print('Could not launch $link');
-                          }
+                          Utils.openLink(link.url);
                         },
                         text: widget.messages.text!,
                         textAlign: TextAlign.left,
@@ -418,7 +410,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
                           switchInCurve: Curves.bounceOut,
                           switchOutCurve: Curves.bounceOut,
                           transitionBuilder: (Widget child, Animation<double> animation) {
-                            return ScaleTransition(child: child, scale: animation);
+                            return ScaleTransition(scale: animation, child: child);
                           },
                           child: _heart,
                         ),

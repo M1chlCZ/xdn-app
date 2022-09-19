@@ -18,7 +18,6 @@ import 'package:digitalnote/globals.dart' as globals;
 import 'package:digitalnote/screens/registerscreen.dart';
 import 'package:digitalnote/support/Encrypt.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
-import 'package:styled_text/styled_text.dart';
 
 import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
@@ -204,7 +203,6 @@ class _LoginState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    Locale myLocale = Localizations.localeOf(context);
     return Stack(
       children: [
         const BackgroundWidget(

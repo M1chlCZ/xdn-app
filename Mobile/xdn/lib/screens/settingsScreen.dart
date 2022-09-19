@@ -6,9 +6,13 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
+import 'package:digitalnote/screens/loginscreen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
+import 'package:digitalnote/support/Dialogs.dart';
+import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/get_info.dart';
 import 'package:digitalnote/support/secure_storage.dart';
+import 'package:digitalnote/widgets/backgroundWidget.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/foundation.dart';
@@ -17,16 +21,15 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:digitalnote/support/Dialogs.dart';
-import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/widgets/backgroundWidget.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:http/http.dart' as http;
+
 import '../globals.dart' as globals;
+import '../support/AppDatabase.dart';
 
 class SettingsScreen extends StatefulWidget {
   static const String route = "menu/settings";
@@ -45,7 +48,6 @@ class _SettingsState extends State<SettingsScreen> {
   bool isAuthenticated = false;
   int confirmation = 1;
   String? firstPass;
-  bool _reload = false;
   var twoFactor = false;
   var settingUP = false;
   var run = false;
@@ -76,9 +78,10 @@ class _SettingsState extends State<SettingsScreen> {
       }
     }
   }
+
   _getInfoGet() async {
     getInfo = await NetInterface.getInfo();
-    setState((){});
+    setState(() {});
   }
 
   void _saveFile() async {
@@ -482,7 +485,7 @@ class _SettingsState extends State<SettingsScreen> {
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
-                                        onTap: ()  {
+                                        onTap: () {
                                           Navigator.of(context).pushNamed(BlockInfoScreen.route);
                                           // Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
                                         },
@@ -775,6 +778,58 @@ class _SettingsState extends State<SettingsScreen> {
                                   ),
                                 ),
                               ),
+                              const Divider(
+                                height: 5.0,
+                                color: Colors.transparent,
+                              ),
+                              SizedBox(
+                                height: 60,
+                                width: MediaQuery.of(context).size.width - 20.0,
+                                child: Card(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    child: Material(
+                                      child: InkWell(
+                                        splashColor: Colors.white54,
+                                        // splash color
+                                        onTap: () {
+                                          Dialogs.openDeleteAccountFirstBox(context, _removeCheck);
+                                        },
+                                        // button pressed
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.only(left: 15.0),
+                                              child: Icon(
+                                                FontAwesomeIcons.remove,
+                                                color: Colors.red,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 15.0,
+                                            ),
+                                            SizedBox(
+                                              width: MediaQuery.of(context).size.width - 100.0,
+                                              child: AutoSizeText(
+                                                AppLocalizations.of(context)!.delete_acc,
+                                                style: const TextStyle(fontSize: 20, color: Colors.red),
+                                                minFontSize: 8,
+                                                maxLines: 1,
+                                                textAlign: TextAlign.start,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           )
                         ]),
@@ -800,7 +855,6 @@ class _SettingsState extends State<SettingsScreen> {
 
   _renameboxCallback(String nickname) {
     NetInterface.renameUser(context, nickname);
-    _reload = true;
   }
 
   _passCheck(String password, {String? pin}) async {
@@ -809,23 +863,78 @@ class _SettingsState extends State<SettingsScreen> {
     dynamic succ = await NetInterface.checkPassword(password, pin: pin);
     if (succ is bool) {
       if (succ) {
-            if (mounted) {
-              Navigator.of(context).pop();
-              Dialogs.openPasswordConfirmBox(context, _passChange);
-            }
-          } else {
-            if (mounted) {
-              Navigator.of(context).pop();
-              Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
-            }
-          }
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openDeleteAccountSecondBox(context, _removeAccount);
+        }
+      } else {
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
+        }
+      }
       if (tempPass != null && pin != null) {
         tempPass == null;
       }
-    }else if (succ is String) {
+    } else if (succ is String) {
       if (mounted) Navigator.of(context).pop();
       tempPass = password;
       if (mounted) Dialogs.open2FABox(context, _auth2FAPass);
+    }
+  }
+
+  _removeCheck(String password, {String? pin}) async {
+    Navigator.of(context).pop();
+    Dialogs.openWaitBox(context);
+    dynamic succ = await NetInterface.checkPassword(password, pin: pin);
+    if (succ is bool) {
+      if (succ) {
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openDeleteAccountSecondBox(context, _removeAccount);
+        }
+      } else {
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
+        }
+      }
+      if (tempPass != null && pin != null) {
+        tempPass == null;
+      }
+    } else if (succ is String) {
+      if (mounted) Navigator.of(context).pop();
+      tempPass = password;
+      if (mounted) Dialogs.open2FABox(context, _remove2FAPass);
+    }
+  }
+
+  var runDelete = false;
+
+  _removeAccount() async {
+    if (runDelete) return;
+    runDelete = true;
+    Navigator.of(context).pop();
+    var succ = await NetInterface.deleteAccount();
+    if (succ != null && succ['status'] == 'ok') {
+      SecureStorage.deleteAllStorage();
+      AppDatabase().deleteTableAddr();
+      AppDatabase().deleteTableMessages();
+      AppDatabase().deleteTableMgroup();
+      AppDatabase().deleteTableTran();
+      String fileName = "avatar";
+      String dir = (await getApplicationDocumentsDirectory()).path;
+      String savePath = '$dir/$fileName';
+      File f = File(savePath);
+      try {
+        await f.delete();
+      } catch (e) {
+        print(e);
+      }
+      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+    }else{
+      runDelete = false;
+      if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "We were unable to delete your account, please contact support");
     }
   }
 
@@ -833,11 +942,15 @@ class _SettingsState extends State<SettingsScreen> {
     _passCheck(tempPass!, pin: s);
   }
 
+  _remove2FAPass(String? s) async {
+    _removeCheck(tempPass!, pin: s);
+  }
+
   _passChange(String password) {
     NetInterface.changePassword(context, password);
   }
 
-  _passCheckPrivKey(String password,{String? pin}) async {
+  _passCheckPrivKey(String password, {String? pin}) async {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
     dynamic succ = await NetInterface.checkPassword(password, pin: pin);
@@ -864,7 +977,7 @@ class _SettingsState extends State<SettingsScreen> {
       if (tempPass != null && pin != null) {
         tempPass == null;
       }
-    }else if (succ is String) {
+    } else if (succ is String) {
       if (mounted) Navigator.of(context).pop();
       tempPass = password;
       if (mounted) Dialogs.open2FABox(context, _auth2FA);
@@ -907,7 +1020,7 @@ class _SettingsState extends State<SettingsScreen> {
           setState(() {
             twoFactor = true;
           });
-          if(mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "2FA activated");
+          if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "2FA activated");
         }
       } catch (e) {
         if (kDebugMode) {
@@ -934,7 +1047,7 @@ class _SettingsState extends State<SettingsScreen> {
         setState(() {
           twoFactor = false;
         });
-        if(mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
               "2FA disabled",
@@ -948,14 +1061,14 @@ class _SettingsState extends State<SettingsScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text(
-                      "2FA disable error",
-                      textAlign: TextAlign.center,
-                    ),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.fixed,
-                    elevation: 5.0,
-                  ));
+            content: Text(
+              "2FA disable error",
+              textAlign: TextAlign.center,
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.fixed,
+            elevation: 5.0,
+          ));
         }
       }
     } catch (e) {

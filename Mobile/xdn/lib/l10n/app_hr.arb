@@ -187,5 +187,6 @@
   "settings_privacy": "Postavke privatnosti",
   "password_forgot" : "Zapomenuté heslo",
   "user_not_exists" : "Korisnik ne postoji",
-  "change_language" : "Promijeniti jezik"
+  "change_language" : "Promijeniti jezik",
+  "delete_acc" : "Delete account"
 }

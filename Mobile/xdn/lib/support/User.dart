@@ -19,12 +19,12 @@ class User {
     };
   }
   void setLevel(int value) {
-    this.level = value;
+    level = value;
   }
   void setNick(String value) {
-    this.nickname = value;
+    nickname = value;
   }
   void setAdmin(int value) {
-    this.admin = value;
+    admin = value;
   }
 }

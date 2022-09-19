@@ -2,12 +2,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-import '../support/ColorScheme.dart';
-
-import 'package:auto_size_text/auto_size_text.dart';
-import 'package:digitalnote/widgets/button_neu.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class DialogBody extends StatefulWidget {
   final VoidCallback? onTap;
@@ -113,7 +107,7 @@ class DialogBodyState extends State<DialogBody> {
                               Navigator.of(context).pop();
                             },
                           style: TextButton.styleFrom(
-                              padding: EdgeInsets.all(3.0),
+                              padding: const EdgeInsets.all(3.0),
                               minimumSize: const Size(20, 20),
                               alignment: Alignment.center,
                               backgroundColor: Colors.black.withOpacity(0.05),
@@ -149,7 +143,7 @@ class DialogBodyState extends State<DialogBody> {
                               widget.onTap == null ? Navigator.of(context).pop() : widget.onTap!();
                             },
                               style: TextButton.styleFrom(
-                                  padding: EdgeInsets.all(3.0),
+                                  padding: const EdgeInsets.all(3.0),
                                   minimumSize: const Size(20, 20),
                                   alignment: Alignment.center,
                                   backgroundColor: Colors.black.withOpacity(0.05),
@@ -177,7 +171,7 @@ class DialogBodyState extends State<DialogBody> {
                               widget.onCancel == null ? Navigator.of(context).pop() : widget.onCancel!();
                             },
                               style: TextButton.styleFrom(
-                                  padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                                  padding: const EdgeInsets.only(left: 15.0, right: 15.0),
                                   minimumSize: const Size(20, 20),
                                   alignment: Alignment.center,
                                   backgroundColor: Colors.black.withOpacity(0.05),

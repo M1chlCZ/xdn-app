@@ -188,5 +188,6 @@
   "settings_privacy": "Privacy Settings",
   "password_forgot" : "Forgot Password",
   "user_not_exists" : "User does not exists",
-  "change_language" : "Change language"
+  "change_language" : "Change language",
+  "delete_acc" : "Delete account"
 }

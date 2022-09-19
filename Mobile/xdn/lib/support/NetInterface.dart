@@ -9,7 +9,6 @@ import 'package:digitalnote/support/summary.dart' as sum;
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 
@@ -250,7 +249,14 @@ class NetInterface {
 
     ComInterface ci = ComInterface();
     Map<String, dynamic> rt = await ci.get("/data", request: m);
-    print(rt);
+    return rt;
+  }
+
+  static Future<Map<String, dynamic>>? getPriceData({bool details = false}) async {;
+    Map<String, dynamic> m = {"request": "priceData"};
+
+    ComInterface ci = ComInterface();
+    Map<String, dynamic> rt = await ci.get("/data", request: m);
     return rt;
   }
 
@@ -370,7 +376,6 @@ class NetInterface {
         headers: {"Content-Type": "application/json"},
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        print(response.body);
         var gi = GetInfo.fromJson(jsonDecode(response.body));
         return gi;
       } else {
@@ -843,6 +848,7 @@ class NetInterface {
     Dialogs.openWaitBox(context);
     try {
       String? id = await SecureStorage.read(key: globals.ID);
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
 
       Map<String, dynamic> m = {
         "id": id,
@@ -856,6 +862,7 @@ class NetInterface {
       final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
         "Content-Type": "application/json",
         "payload": s,
+        "Authorization": jwt!,
       }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -933,8 +940,14 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      List<dynamic> response = await ci.get("/data", request: m, debug: true);
-      return response.toString();
+      var response = await ci.get("/data", request: m, debug: true, typeContent: ComInterface.typePlain);
+      if (response.statusCode == 200) {
+        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+        return data.toString();
+      } else {
+        Dialogs.openAlertBox(context, 'Warning', response.toString());
+        return null;
+      }
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       //
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
@@ -1014,30 +1027,33 @@ class NetInterface {
       ComInterface ci = ComInterface();
       Map response = await ci.get("/data", request: m);
       return response;
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
-      // }).timeout(const Duration(seconds: 10));
 
-      // if (response.statusCode == 200) {
-      //   var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-      //   Map reponseMap = json.decode(data);
-      //   return reponseMap;
-      // } else {
-      //   // Dialogs.openAlertBox(context, 'Error', response.body.toString());
-      //   return null;
-      // }
     } on TimeoutException catch (_) {
-      // Dialogs.openAlertBox(context, 'Error',
-      //     "Request timed out, can't save the picture to cloud");
+
       return null;
     } on SocketException catch (_) {
-      // Dialogs.openAlertBox(context, 'Error',
-      //     "Service is not available, can't save the picture to cloud");
+
       return null;
     } catch (e) {
       if (kDebugMode) print(e.toString());
-      // Dialogs.openAlertBox(context, 'Error', e.toString());
+      return null;
+    }
+  }
+  static Future<Map?> deleteAccount() async {
+    try {
+      String? id = await SecureStorage.read(key: globals.ID);
+      Map<String, dynamic> m = {"id": id, "request": "deleteAccount"};
+      ComInterface ci = ComInterface();
+      Map response = await ci.get("/data", request: m, debug: true);
+      return response;
+    } on TimeoutException catch (_) {
+
+      return null;
+    } on SocketException catch (_) {
+
+      return null;
+    } catch (e) {
+      if (kDebugMode) print(e.toString());
       return null;
     }
   }

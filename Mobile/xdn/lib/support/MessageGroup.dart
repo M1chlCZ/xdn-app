@@ -31,7 +31,7 @@ class MessageGroup {
   }
 
   void setText(String t) {
-    this.text = t;
+    text = t;
   }
 
 }

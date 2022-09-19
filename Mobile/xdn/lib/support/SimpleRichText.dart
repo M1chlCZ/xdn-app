@@ -1,8 +1,8 @@
 library simple_rich_text;
 
+import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 const Map<String, int> colorMap = {
   'aqua': 0x00FFFF,
@@ -170,22 +170,22 @@ class SimpleRichText extends StatelessWidget {
             }
 
             // TextDecorationStyle "values" is ignored
-            TextDecorationStyle? _textDecorationStyle;
+            TextDecorationStyle? textDecorationStyle;
             if (map.containsKey('decorationStyle')) {
               if (map['decorationStyle'] == 'dashed') {
-                _textDecorationStyle = TextDecorationStyle.dashed;
+                textDecorationStyle = TextDecorationStyle.dashed;
               }
               if (map['decorationStyle'] == 'double') {
-                _textDecorationStyle = TextDecorationStyle.double;
+                textDecorationStyle = TextDecorationStyle.double;
               }
               if (map['decorationStyle'] == 'dotted') {
-                _textDecorationStyle = TextDecorationStyle.dotted;
+                textDecorationStyle = TextDecorationStyle.dotted;
               }
               if (map['decorationStyle'] == 'solid') {
-                _textDecorationStyle = TextDecorationStyle.solid;
+                textDecorationStyle = TextDecorationStyle.solid;
               }
               if (map['decorationStyle'] == 'wavy') {
-                _textDecorationStyle = TextDecorationStyle.wavy;
+                textDecorationStyle = TextDecorationStyle.wavy;
               }
             }
 
@@ -213,7 +213,7 @@ class SimpleRichText extends StatelessWidget {
               decorationColor: map.containsKey('decorationColor')
                   ? parseColor(map['decorationColor']!)
                   : style!.decorationColor,
-              decorationStyle: _textDecorationStyle ?? style!.decorationStyle,
+              decorationStyle: textDecorationStyle ?? style!.decorationStyle,
               decorationThickness: map.containsKey('decorationThickness')
                   ? double.parse(map['decorationThickness']!)
                   : style!.decorationThickness,
@@ -268,11 +268,11 @@ class SimpleRichText extends StatelessWidget {
                     log("TAP: HTTP: $caption => /$v");
                     // assert(v != null);
                     try {
-                      await launch('http://$v');
+                      Utils.openLink('http://$v');
                     } catch (e) {
                       log('Could not launch http://$v: $e');
                       try {
-                        await launch('https://$v');
+                        Utils.openLink('https://$v');
                       } catch (e) {
                         log('Could not launch https://$v: $e');
                       }
@@ -367,7 +367,7 @@ class SimpleRichText extends StatelessWidget {
       }
 
       return RichText(
-          maxLines: maxLines ?? null,
+          maxLines: maxLines,
           overflow: textOverflow ?? TextOverflow.clip,
           text: TextSpan(children: children),
           textAlign: textAlign ?? TextAlign.start,
@@ -377,6 +377,6 @@ class SimpleRichText extends StatelessWidget {
   } // build
 
   void log(String s) {
-    if (logIt) print('---- $s');
+    if (logIt) debugPrint('---- $s');
   }
 } // class

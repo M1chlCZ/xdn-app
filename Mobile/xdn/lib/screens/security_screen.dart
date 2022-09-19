@@ -299,14 +299,14 @@ class SecurityScreenState extends State<SecurityScreen> {
   }
 
   void _changeSucc(bool? b) async {
-    bool _state = false;
+    bool state = false;
     if (b != null || b != false) {
-      _state = true;
+      state = true;
     }
     Future.delayed(const Duration(milliseconds: 200), () {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: SizedBox(height: 40.0, child: Center(child: Text(_state ? "PIN change successful" : "PIN change unsuccessful"))),
-        backgroundColor: _state ? Colors.green : Colors.red,
+        content: SizedBox(height: 40.0, child: Center(child: Text(state ? "PIN change successful" : "PIN change unsuccessful"))),
+        backgroundColor: state ? Colors.green : Colors.red,
       ));
     });
   }

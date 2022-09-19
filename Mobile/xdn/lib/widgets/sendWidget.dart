@@ -37,7 +37,6 @@ class SendWidgetState extends State<SendWidget> {
   final TextEditingController _controllerAddress = TextEditingController();
   final TextEditingController _controllerAmount = TextEditingController();
 
-  final GlobalKey _textFieldKey = GlobalKey();
   final GlobalKey _textFieldAmountKey = GlobalKey();
 
   double? _balance = 0.0;

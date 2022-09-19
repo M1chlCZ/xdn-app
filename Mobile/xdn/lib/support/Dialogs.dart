@@ -11,16 +11,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share/share.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
 
 import '../globals.dart' as globals;
 import '../screens/loginscreen.dart';
 import 'AppDatabase.dart';
-import 'ColorScheme.dart';
 import 'Contact.dart';
 import 'DialogBody.dart';
 import 'NetInterface.dart';
@@ -411,6 +408,40 @@ class Dialogs {
                   maxLines: 2,
                   minFontSize: 8.0,
                   style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
+  static void openDeleteAccountSecondBox(context, VoidCallback wellOkay) async {
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return DialogBody(
+            header: AppLocalizations.of(context)!.alert,
+            buttonLabel: AppLocalizations.of(context)!.yes,
+            onTap: () {
+              wellOkay();
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
+                child: AutoSizeText(
+                  "Warning! You are about to delete your account, which means that any balance or any data (like messages) you have on your account, will be forever lost. Do you want to proceed?",
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 10,
+                  minFontSize: 8.0,
+                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.red.shade700),
                 ),
               ),
             ),
@@ -921,9 +952,9 @@ class Dialogs {
   }
 
   static void openContactAddBox(context, Function(String name, String addr) func, Function func2, String addr) async {
-    TextEditingController _textControllerName = TextEditingController();
-    TextEditingController _textControllerAddr = TextEditingController();
-    _textControllerAddr.text = addr;
+    TextEditingController textControllerName = TextEditingController();
+    TextEditingController textControllerAddr = TextEditingController();
+    textControllerAddr.text = addr;
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -932,7 +963,7 @@ class Dialogs {
             header: AppLocalizations.of(context)!.dl_new_contact,
             buttonLabel: AppLocalizations.of(context)!.save,
             onTap: () {
-              func(_textControllerName.text, _textControllerAddr.text);
+              func(textControllerName.text, textControllerAddr.text);
             },
             child: Padding(
               padding: const EdgeInsets.only(top: 5.0, left: 10.0, right: 10.0, bottom: 5.0),
@@ -941,7 +972,7 @@ class Dialogs {
                   width: 350,
                   child: AutoSizeTextField(
                     autofocus: true,
-                    controller: _textControllerName,
+                    controller: textControllerName,
                     keyboardType: TextInputType.text,
                     style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
@@ -962,7 +993,7 @@ class Dialogs {
                   width: 350,
                   child: AutoSizeTextField(
                     autofocus: false,
-                    controller: _textControllerAddr,
+                    controller: textControllerAddr,
                     keyboardType: TextInputType.text,
                     style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
@@ -1005,7 +1036,7 @@ class Dialogs {
   }
 
   static Future<void> openMessageContactAddBox(context, String addr) async {
-    TextEditingController _textControllerName = TextEditingController();
+    TextEditingController textControllerName = TextEditingController();
     var res = await AppDatabase().getContactByAddr(addr);
     if (res != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -1026,7 +1057,7 @@ class Dialogs {
             buttonLabel: AppLocalizations.of(context)!.save,
             onTap: () async {
               try {
-                NetInterface.saveContact(_textControllerName.text.toString(), addr, context);
+                NetInterface.saveContact(textControllerName.text.toString(), addr, context);
               } catch (e) {
                 debugPrint(e.toString());
               }
@@ -1039,7 +1070,7 @@ class Dialogs {
                   width: 350,
                   child: AutoSizeTextField(
                     autofocus: true,
-                    controller: _textControllerName,
+                    controller: textControllerName,
                     keyboardType: TextInputType.text,
                     style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
@@ -1118,6 +1149,45 @@ class Dialogs {
         });
   }
 
+  static void openDeleteAccountFirstBox(context, Function(String password) func) async {
+    TextEditingController textController = TextEditingController();
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return DialogBody(
+              header: AppLocalizations.of(context)!.dl_enter_current_pass,
+              buttonLabel: "OK",
+              onTap: () {
+                func(textController.text);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 500,
+                  child: TextField(
+                    obscureText: true,
+                    autofocus: true,
+                    textAlignVertical: TextAlignVertical.center,
+                    textAlign: TextAlign.left,
+                    controller: textController,
+                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
+                    decoration: InputDecoration(
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintText: AppLocalizations.of(context)!.dl_enter_pass,
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ));
+        });
+  }
+
   static void openTransactionBox(context, TranSaction tx) async {
     return showDialog(
         barrierDismissible: true,
@@ -1130,11 +1200,7 @@ class Dialogs {
             buttonCancelLabel: AppLocalizations.of(context)!.close,
             oneButton: false,
             onTap: () async {
-              if (await canLaunch(link)) {
-                await launch(link);
-              } else {
-                print('Could not launch $link');
-              }
+              Utils.openLink(link);
             },
             child: Padding(
                 padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
@@ -1671,9 +1737,9 @@ class Dialogs {
     showDialog(
         context: context,
         builder: (context) {
-          Locale _myLocale = Localizations.localeOf(context);
+          Locale myLocale = Localizations.localeOf(context);
           return DialogBody(
-              header: _myLocale.countryCode == "FI"
+              header: myLocale.countryCode == "FI"
                   ? AppLocalizations.of(context)!.to
                   : '${AppLocalizations.of(context)!.share} ${AppLocalizations.of(context)!.contact.toLowerCase()} ${AppLocalizations.of(context)!.to}:',
               buttonLabel: 'OK',

@@ -21,12 +21,20 @@ const fireSender = new gcm.Sender(process.env.ENC_FIRE);
 const cryptoOptions = { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 };
 const KEY = process.env.ENC_JSON;
 var app = express();
+var priceData = {}
+var walletblk = false;
+var walletblkStake = false;
+var stakingActive = false;
 
 const jwt_decode = require('jwt-decode');
 
-// async function run() {
-//   setInterval(cronJob.runNotify, 300000);
-// }
+async function run() {
+  //get price
+  price()
+  getDaemonStatusPeriodic()
+  setInterval(price, 1800000);
+  setInterval(getDaemonStatusPeriodic, 1800000);
+}
 
 async function unlock() {
   await sleep(60000);
@@ -41,7 +49,7 @@ function sleep(ms) {
 }
 
 unlock();
-// run();
+run();
 
 require('dotenv').config();
 
@@ -557,6 +565,7 @@ app.get('/data', async (req, res) => {
       return;
     }
 
+
     if (rrr === "renameUser") {
       var t = await renameUser(id, param1);
       res.statusCode = 200;
@@ -683,6 +692,7 @@ app.get('/data', async (req, res) => {
 
     if (rrr === "changePassword") {
       var t = await changePassword(id, param1)
+      console.log(t);
       if (t === "err") {
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
@@ -1038,6 +1048,26 @@ app.get('/data', async (req, res) => {
       }
     }
 
+    if (rrr === "priceData") {
+      var t = await twoFactorCheck(id);
+      if (priceData === null || priceData === undefined) {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(priceData), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+        return;
+      }
+    }
+
     if (rrr === "getDaemonStatus") {
       var t = await getDaemonStatus();
       if (t === "err") {
@@ -1078,6 +1108,26 @@ app.get('/data', async (req, res) => {
       }
     }
 
+    if (rrr === "deleteAccount") {
+      console.log("DELETE ACC")
+      var t = await deleteAccount(id);
+      if (t === "err") {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "text/html");
+        var err = { "status": "ko" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(err), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+      } else {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        var resP = { "status": "ok" }
+        var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(resP), process.env.ENC_PASS).toString();
+        res.write(ciphertext);
+        res.end();
+      }
+    }
+
   } catch (e) {
     console.log(e);
     res.status(401);
@@ -1086,10 +1136,7 @@ app.get('/data', async (req, res) => {
 
 });
 
-async function getDaemonStatus() {
-  let walletblk = false;
-  let walletblkStake = false;
-  let stakingActive = false;
+async function getDaemonStatusPeriodic() {
   let blk = await getBlockheighReq();
   if (blk !== "err") {
     let res = await rpc.run('getblockcount');
@@ -1115,16 +1162,18 @@ async function getDaemonStatus() {
     kk = JSON.stringify(resStake);
     jsonStake = JSON.parse(kk.toString('utf8').replace(/^\uFFFD/, ''));
     stakingActive = jsonStake.result.staking;
+  }else{
+    console.log("Error getting daemon info")
+  } 
+}
 
-    var resp = {
-      "block": walletblk,
-      "blockStake": walletblkStake,
-      "stakingActive": stakingActive,
-    }
-    return JSON.stringify(resp);
-  } else {
-    return "err";
+async function getDaemonStatus() {
+  var resp = {
+    "block": walletblk,
+    "blockStake": walletblkStake,
+    "stakingActive": stakingActive,
   }
+  return JSON.stringify(resp);
 }
 
 async function getInfo() {
@@ -1150,6 +1199,13 @@ async function getBlockheighReq() {
     });
   return blockheight;
 }
+
+async function price() {
+  var p = await https.get('https://api.coingecko.com/api/v3/coins/digitalnote?tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false');
+  priceData = p.data.market_data.current_price;
+  console.log(priceData);
+}
+
 
 async function twoFactor(id) {
   try {
@@ -1366,7 +1422,7 @@ async function getTransaction(user, timezone) {
 async function getBalanceImmature(user) {
   var bal = 0;
   try {
-    var [rows, fields] = await con.query("SELECT SUM(amount) as immature FROM transaction WHERE account = ? AND confirmation < 3 AND category = 'receive' ", [user]);
+    var [rows, fields] = await con.query("SELECT SUM(amount) as immature FROM transaction WHERE account = ? AND confirmation < 5 AND category = 'receive' ", [user]);
     bal += Math.abs(rows[0].immature);
     return bal.toFixed(3);
   } catch (error) {
@@ -1381,7 +1437,7 @@ async function getBalanceUser(user) {
   // return res.result[user].toFixed(3);
   // console.log(res[0][user]);
   try {
-    var [rows, fields] = await con.query("SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 3 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send' ", [user, user]);
+    var [rows, fields] = await con.query("SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 5 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send' ", [user, user]);
     for (var i = 0; i < rows.length; i++) {
       if (rows[i].category === "receive") {
         bal += Math.abs(rows[i].amount);
@@ -1440,9 +1496,7 @@ async function sendTransaction(user, address, amount) {
     console.log(add)
     return add;
   }
-  console.log(rows[0].addr);
-  console.log(parseFloat(userBalance))
-  console.log(parseFloat(amount))
+
   if (parseFloat(amount) < parseFloat(userBalance)) {
     try {
       let addrUser = rows[0].addr;
@@ -1451,7 +1505,7 @@ async function sendTransaction(user, address, amount) {
       console.log("----------------------------------")
       // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-      let res = await doSendRequest(addrUser, address, parseFloat(amount - 0.001));
+      let res = await doSendRequest(addrUser, address, parseFloat(amount));
       await rpc.run('walletlock', []);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
@@ -1502,11 +1556,10 @@ async function sendRawTransaction(user, address, amount) {
       console.log("---------SEND TRANSACTION---------")
       console.log(user + " " + address + " " + amount);
       console.log("----------------------------------")
-
       // const res = await rpc.run('sendtoaddress', [address.toString(), parseFloat(amount)]);
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
       // var res = await rpc.run('sendfrom', [user.toString(), address.toString(), parseFloat(amount)]);
-      let res = await doSendRequest(addrUser, address, parseFloat(amount - 0.001));
+      let res = await doSendRequest(addrUser, address, parseFloat(amount));
       await rpc.run('walletlock', []);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
@@ -1537,19 +1590,16 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
     var add = {
       error: "Can't get balance",
     }
-    return add;
+    return "err";
   }
   var [rows, fields] = await con.query("SELECT addr FROM users WHERE username = ?", [user]);
   if (rows[0] == null) {
     let add = {
       error: "User not found",
     }
-    console.log(add)
-    return add;
+    return "err";
   }
-  console.log(rows[0].addr);
-  console.log(parseFloat(userBalance))
-  console.log(parseFloat(amount))
+
   if (parseFloat(amount) < parseFloat(userBalance)) {
     try {
       let addrUser = rows[0].addr;
@@ -1558,12 +1608,11 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
       console.log("------------------------------------------")
 
       await rpc.run('walletpassphrase', [process.env.ENC_WALLET_PASS, 100]);
-      let res = await doSendRequest(addrUser, address, parseFloat(amount - 0.001));
+      let res = await doSendRequest(addrUser, address, parseFloat(amount));
       await rpc.run('walletlock', []);
       var k = JSON.stringify(res);
       var json = JSON.parse(k.toString('utf8').replace(/^\uFFFD/, ''));
       if (json.error != null) {
-        console.log(json.error);
         return "err";
       }
       // await saveTransactions();
@@ -1579,7 +1628,7 @@ async function sendContactTransaction(user, idUser, address, amount, contactName
     var add = {
       error: "bal",
     }
-    return add;
+    return "err";
   }
 }
 
@@ -1643,64 +1692,64 @@ async function emailSend(password, email) {
       subject: "Password reset",
       text: "",
       html: `<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="x-apple-disable-message-reformatting">
-    <title></title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
-    <style>
-        table, td, div, h1, p {font-family: Arial, sans-serif;}
-        table, td {border:2px transparent #000000 !important;}
-    </style>
-</head>
-
-
-<body style="margin:0;padding:0;">
-    <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
-        <tr>
-            <td align="center" style="padding:0;">
-                <table role="presentation" style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
-					<tr>
-						<td align="center" style="padding:40px 0 30px 0;background:#7705DD;">
-							<img src="https://www.digitalnote.org/botmail/DN2020.png" alt="" width="200" style="height:auto;display:block;" />
-						</td>
-					</tr>
-					<tr>
-						<td style="padding:36px 30px 42px 30px;">
-							<table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
-								<tr>
-									<td style="padding:0;">
-										<h1>Password reset</h1>
-										<p>Your new password is: <b> ` + password + ` </b><br> Don't forget to change it afterwards in settings menu.</p>
-									</td>
-								</tr>
-							</table>
-						</td>
-					</tr>
-					<tr>
-						<td align="center" style="padding:40px 0 30px 0;background:#7705DD;">
-							<a href="http://www.digitalnote.org"><img src="https://www.digitalnote.org/botmail/digitalnote-blue.png" alt="" width="200" style="height:auto;display:block;" /></a>
-						</td>
-					</tr>
-				</table>
-            </td>
-        </tr>
-    </table>
-</body>
-
-</html>
-`,
+      <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+      
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <meta name="x-apple-disable-message-reformatting">
+          <title></title>
+          <!--[if mso]>
+          <noscript>
+              <xml>
+                  <o:OfficeDocumentSettings>
+                      <o:PixelsPerInch>96</o:PixelsPerInch>
+                  </o:OfficeDocumentSettings>
+              </xml>
+          </noscript>
+          <![endif]-->
+          <style>
+              table, td, div, h1, p {font-family: Arial, sans-serif;}
+              table, td {border:2px transparent #000000 !important;}
+          </style>
+      </head>
+      
+      
+      <body style="margin:0;padding:0;">
+          <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
+              <tr>
+                  <td align="center" style="padding:0;">
+                      <table role="presentation" style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
+                <tr>
+                  <td align="center" style="padding:40px 0 30px 0;background:#7705DD;">
+                    <img src="https://www.digitalnote.org/botmail/DN2020.png" alt="" width="200" style="height:auto;display:block;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:36px 30px 42px 30px;">
+                    <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                      <tr>
+                        <td style="padding:0;">
+                          <h1>Password reset</h1>
+                          <p>Your new password is: <b> ` + password  +` </b><br> Don't forget to change it afterwards in settings menu.</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:40px 0 30px 0;background:#7705DD;">
+                    <a href="http://www.digitalnote.org"><img src="https://www.digitalnote.org/botmail/digitalnote-blue.png" alt="" width="200" style="height:auto;display:block;" /></a>
+                  </td>
+                </tr>
+              </table>
+                  </td>
+              </tr>
+          </table>
+      </body>
+      
+      </html>
+      `,
     });
 
     console.log("Message sent: %s", info.messageId);
@@ -2483,6 +2532,31 @@ async function getPrivKey(address) {
   } catch (e) {
     return "err";
   }
+}
+
+async function deleteAccount(id) {
+  console.log("SHIT " + id)
+  let [rows, fields] = await con.query('SELECT * FROM users WHERE id = ?', [id]);
+  if (rows.length > 0) {
+    let addr = rows[0].addr;
+    console.log(addr);
+    let username = rows[0].username;
+    console.log(username);
+    await con.query('DELETE FROM users_stake WHERE idUser = ?', [id]);
+    await con.query('DELETE FROM devices WHERE idUser = ?', [id]);
+    await con.query('DELETE FROM transaction WHERE account = ?', [username]);
+    await con.query('DELETE FROM payouts_stake WHERE idUser = ?', [id]);
+    await con.query('UPDATE addressbook SET name = ? WHERE addr = ?', ["Deleted user", addr]);
+    let [rowsDelete, fields2] = await con.query('DELETE FROM users WHERE id = ?', [id]);
+    if (rowsDelete.affectedRows > 0) {
+      return "ok";
+    } else {
+      return "err";
+    }
+  } else {
+    return "err";
+  }
+
 }
 
 async function getCurrentDate() {

@@ -8,14 +8,14 @@ import 'package:path_provider/path_provider.dart';
 
 import 'File.dart' as model;
 
-typedef void OnDownloadProgressCallback(int receivedBytes, int totalBytes);
-typedef void OnUploadProgressCallback(int sentBytes, int totalBytes);
+typedef OnDownloadProgressCallback = void Function(int receivedBytes, int totalBytes);
+typedef OnUploadProgressCallback = void Function(int sentBytes, int totalBytes);
 
 class FileService {
   static bool trustSelfSigned = true;
 
   static HttpClient getHttpClient() {
-    HttpClient httpClient = new HttpClient()
+    HttpClient httpClient = HttpClient()
       ..connectionTimeout = const Duration(seconds: 10)
       ..badCertificateCallback = ((X509Certificate cert, String host, int port) => trustSelfSigned);
 
@@ -82,7 +82,7 @@ class FileService {
 
     int byteCount = 0;
     Stream<List<int>> streamUpload = fileStream.transform(
-      new StreamTransformer.fromHandlers(
+      StreamTransformer.fromHandlers(
         handleData: (data, sink) {
           byteCount += data.length;
 
@@ -143,7 +143,7 @@ class FileService {
         HttpHeaders.contentTypeHeader, requestMultipart.headers[HttpHeaders.contentTypeHeader].toString());
 
     Stream<List<int>> streamUpload = msStream.transform(
-      new StreamTransformer.fromHandlers(
+      StreamTransformer.fromHandlers(
         handleData: (data, sink) {
           sink.add(data);
 
@@ -195,11 +195,11 @@ class FileService {
 
     //appDocPath = "/storage/emulated/0/Download";
 
-    File file = new File(appDocPath + "/" + fileName);
+    File file = File("$appDocPath/$fileName");
 
     var raf = file.openSync(mode: FileMode.write);
 
-    Completer completer = new Completer<String>();
+    Completer completer = Completer<String>();
 
     httpResponse.listen(
           (data) {
@@ -226,8 +226,8 @@ class FileService {
   }
 
   static Future<String> readResponseAsString(HttpClientResponse response) {
-    var completer = new Completer<String>();
-    var contents = new StringBuffer();
+    var completer = Completer<String>();
+    var contents = StringBuffer();
     response.transform(utf8.decoder).listen((String data) {
       contents.write(data);
     }, onDone: () => completer.complete(contents.toString()));

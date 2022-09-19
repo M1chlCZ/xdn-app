@@ -1,9 +1,9 @@
 name: digitalnote
-description: DigitalNode App Wallet
+description: DigitalNote App Wallet
 
 publish_to: 'none'
 
-version: 1.0.38+38
+version: 1.0.45+45
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -13,30 +13,30 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  http: ^0.13.4
-  flutter_secure_storage: ^5.0.2
-  flutter_local_notifications: ^9.7.0
+  http: ^0.13.5
+  flutter_secure_storage: ^6.0.0
+  flutter_local_notifications: ^9.9.1
   firebase_messaging: any
   firebase_core: any
   package_info: any
   google_fonts: any
   intl: ^0.17.0
   qr_flutter: ^4.0.0
-  sqflite: ^2.0.1
+  sqflite: ^2.0.3+1
   tuple: ^2.0.0
   encrypt: ^5.0.1
   sprintf: any
   get_it: ^7.2.0
   auto_size_text: ^3.0.0
   share: any
-  vibration: ^1.7.4-nullsafety.0
+  vibration: ^1.7.6
   flutter_udid: ^2.0.0
   url_launcher: ^6.1.5
-  image_cropper: ^2.0.3
+  image_cropper: ^3.0.0
   image_picker: ^0.8.5+3
   path_provider: ^2.0.11
   flutter_native_image: ^0.0.6+1
-  flutter_phoenix: ^1.0.0
+  flutter_phoenix: ^1.1.0
   flutter_app_badger: ^1.4.0
   bubble: ^1.2.1
   flutter_typeahead: ^4.0.0
@@ -48,16 +48,16 @@ dependencies:
   badges: ^2.0.3
   crypto: any
   mobile_scanner: ^2.0.0
-  fl_chart: ^0.55.0
+  fl_chart: ^0.55.1
   jiffy: ^5.0.0
   permission_handler: ^10.0.0
-  local_auth: ^2.1.0
+  local_auth: ^2.1.2
   open_file:
     git:
       url: https://github.com/MathiasCochet/open_file.git
       ref: gradle-update
-  external_path: ^1.0.1
-  flutter_native_splash: ^2.2.6
+  external_path: ^1.0.3
+  flutter_native_splash: ^2.2.8
   avatar_glow: any
   styled_text: any
   flutter_displaymode: ^0.4.0

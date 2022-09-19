@@ -3,14 +3,14 @@ import 'dart:convert';
 
 import 'package:digitalnote/bloc/contacts_bloc.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
+import 'package:digitalnote/support/MessageGroup.dart';
+import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/ContactTile.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
-import 'package:digitalnote/support/MessageGroup.dart';
-import 'package:digitalnote/support/NetInterface.dart';
 
 import '../globals.dart' as globals;
 import '../screens/messageComposeScreen.dart';
@@ -55,7 +55,7 @@ class AddressScreenState extends State<AddressScreen> {
     await AppDatabase().getContacts();
     // if (i != 0) cb.fetchContacts();
     if (i != 0) {
-      Future.delayed(Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: 100), () {
         cb.fetchContacts();
       });
     }
@@ -71,21 +71,25 @@ class AddressScreenState extends State<AddressScreen> {
     }
 
     if (l == null) {
-      Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+      if (mounted) {
+        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
         return MessageComposeScreen(
           cont: _tempContact,
         );
       }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
         return FadeTransition(opacity: animation, child: child);
       }));
+      }
     } else {
-      Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+      if (mounted) {
+        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
         return MessageDetailScreen(
           mgroup: l!,
         );
       }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
         return FadeTransition(opacity: animation, child: child);
       }));
+      }
     }
   }
 
@@ -103,7 +107,7 @@ class AddressScreenState extends State<AddressScreen> {
       await NetInterface.sendMessage(c.addr!, _tempContact!.addr!, 0);
       Future.delayed(const Duration(seconds: 2), () async {
         await NetInterface.updateRead(c.addr!);
-        Navigator.of(context).pop();
+        if(mounted)Navigator.of(context).pop();
         _openMessageSend(contact: c);
       });
     });
@@ -129,21 +133,23 @@ class AddressScreenState extends State<AddressScreen> {
 
   void _sendBoxCallback(String amount, String name, String addr) async {
     Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
-    double _balance = (double.parse(ss?["balance"]));
-    Navigator.of(context).pop();
-    if (double.parse(amount) > _balance) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
+    double balance = (double.parse(ss?["balance"]));
+    if (mounted) Navigator.of(context).pop();
+    if (double.parse(amount) > balance) {
+      if (mounted)  Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
       return;
     }
-    Dialogs.openWaitBox(context);
+    if (mounted)   Dialogs.openWaitBox(context);
     try {
       if (amount.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Amount cannot be empty!"),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.fixed,
           elevation: 5.0,
         ));
+        }
       } else {
         String? jwt = await SecureStorage.read(key: globals.TOKEN);
         String? id = await SecureStorage.read(key: globals.ID);
@@ -172,22 +178,25 @@ class AddressScreenState extends State<AddressScreen> {
 
         if (response.statusCode == 200) {
           globals.reloadData = true;
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Coins were sent!"),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.fixed,
-            elevation: 5.0,
-          ));
+          if (mounted) Navigator.of(context).pop();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Coins were sent!"),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.fixed,
+              elevation: 5.0,
+            ));
+          }
         } else {
-          Navigator.of(context).pop();
-          Dialogs.openInsufficientBox(context);
+          if (mounted) {
+            Navigator.of(context).pop();
+            Dialogs.openInsufficientBox(context);
+          }
         }
       }
     } on TimeoutException catch (_) {
-      print("Timeout");
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -227,23 +236,25 @@ class AddressScreenState extends State<AddressScreen> {
       if (response.statusCode == 200) {
         AppDatabase().deleteContact(contactID);
         cb.fetchContacts();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Contact deleted"),
-          backgroundColor: Color(0xFF63C9F3),
-          behavior: SnackBarBehavior.fixed,
-          elevation: 5.0,
-        ));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Contact deleted"),
+            backgroundColor: Color(0xFF63C9F3),
+            behavior: SnackBarBehavior.fixed,
+            elevation: 5.0,
+          ));
+        }
       }
     } on TimeoutException catch (_) {
-      print("Timeout");
+
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
-  _refreshContacts() async {
-    cb.fetchContacts();
-  }
+  // _refreshContacts() async {
+  //   cb.fetchContacts();
+  // }
 
   _searchUsers(String text) async {
     cb.searchContacts(text);
@@ -308,11 +319,11 @@ class AddressScreenState extends State<AddressScreen> {
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Color(0xFF22283A).withOpacity(0.1), width: 2.0),
-                                    borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                                    borderSide: BorderSide(color: const Color(0xFF22283A).withOpacity(0.1), width: 2.0),
+                                    borderRadius: const BorderRadius.all(Radius.circular(10.0))),
                                 enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Color(0xFF22263A).withOpacity(0.1), width: 2.0),
-                                    borderRadius: BorderRadius.all(Radius.circular(10.0)))),
+                                    borderSide: BorderSide(color: const Color(0xFF22263A).withOpacity(0.1), width: 2.0),
+                                    borderRadius: const BorderRadius.all(Radius.circular(10.0)))),
                           ),
                         ),
                       ),
@@ -356,7 +367,7 @@ class AddressScreenState extends State<AddressScreen> {
                           if (snapshot.hasData) {
                             var data = snapshot.data!.data;
                             switch (snapshot.data!.status) {
-                              case Status.LOADING:
+                              case Status.loading:
                                 return Container(
                                   height: MediaQuery.of(context).size.height,
                                   width: MediaQuery.of(context).size.width,
@@ -368,7 +379,7 @@ class AddressScreenState extends State<AddressScreen> {
                                         SizedBox(height: 50.0, width: 50.0, child: CircularProgressIndicator()),
                                       ]),
                                 );
-                              case Status.COMPLETED:
+                              case Status.completed:
                                 return Padding(
                                   padding: const EdgeInsets.only(left: 5.0, right: 5.0),
                                   child: ClipRRect(
@@ -391,7 +402,7 @@ class AddressScreenState extends State<AddressScreen> {
                                     ),
                                   ),
                                 );
-                              case Status.ERROR:
+                              case Status.error:
                                 return Container();
                             }
                           } else {
