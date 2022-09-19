@@ -39,10 +39,10 @@ dependencies:
   flutter_phoenix: ^1.1.0
   flutter_app_badger: ^1.4.0
   bubble: ^1.2.1
-  flutter_typeahead: ^4.0.0
+  flutter_typeahead: ^4.1.0
   flutter_linkify: ^5.0.2
   vector_math: ^2.1.2
-  font_awesome_flutter: ^10.1.0
+  font_awesome_flutter: ^10.2.1
   flutter_native_timezone: ^2.0.0
   flutter_countdown_timer: ^4.1.0
   badges: ^2.0.3
@@ -57,7 +57,7 @@ dependencies:
       url: https://github.com/MathiasCochet/open_file.git
       ref: gradle-update
   external_path: ^1.0.3
-  flutter_native_splash: ^2.2.8
+  flutter_native_splash: ^2.2.9
   avatar_glow: any
   styled_text: any
   flutter_displaymode: ^0.4.0

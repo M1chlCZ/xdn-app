@@ -29,7 +29,6 @@ var stakingActive = false;
 const jwt_decode = require('jwt-decode');
 
 async function run() {
-  //get price
   price()
   getDaemonStatusPeriodic()
   setInterval(price, 1800000);
