@@ -21,7 +21,7 @@ class NotificationService {
   Future<void> init() async {
     if (Platform.isAndroid) {
       AndroidNotificationChannel channel = const AndroidNotificationChannel(
-        'konj1', // id
+        'xdn1', // id
         'Send/Receive notifications', // title
         description: 'This channel is used for transaction notifications.',
         // description
@@ -34,7 +34,7 @@ class NotificationService {
       await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!.createNotificationChannel(channel);
 
       AndroidNotificationChannel channel2 = const AndroidNotificationChannel(
-        'konj2', // id
+        'xdn2', // id
         'Message notifications', // title
         description: 'This channel is used for message notifications.',
         // description
@@ -47,9 +47,9 @@ class NotificationService {
       await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!.createNotificationChannel(channel2);
     }
     const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_notification');
-    final IOSInitializationSettings initializationSettingsIOS = IOSInitializationSettings(onDidReceiveLocalNotification: _onDidReceiveLocalNotification);
+    final DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(onDidReceiveLocalNotification: _onDidReceiveLocalNotification);
     final InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: _onSelectNotification);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings,  onDidReceiveNotificationResponse: _onDidReceiveLocalNotificationResponse);
   }
 
   // void _registerNotification() async {
@@ -116,6 +116,11 @@ class NotificationService {
 
   Future _onSelectNotification(String? payload) async {
     print(payload);
+    // _refreshBalance();
+  }
+
+  void _onDidReceiveLocalNotificationResponse(NotificationResponse details) {
+    print(details);
     // _refreshBalance();
   }
 }

@@ -22,7 +22,6 @@ class BalanceCard extends StatefulWidget {
 class BalanceCardState extends State<BalanceCard> {
   final key = GlobalKey<ScaffoldState>();
   Map<String, dynamic>? _priceData;
-  String _balPlaceholder = "";
 
   @override
   void initState() {
@@ -61,14 +60,10 @@ class BalanceCardState extends State<BalanceCard> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
-                        var balance = m['spendable'].toString();
+                        var balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
                         var immature = m['immature'].toString();
-                        var spendable = m['balance'].toString();
-                        if (double.parse(spendable) < 0.99) {
-                          spendable = balance;
-                        }
+
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
-                        var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
                         return Column(
                           children: [
                             Padding(
@@ -116,16 +111,6 @@ class BalanceCardState extends State<BalanceCard> {
                               width: MediaQuery.of(context).size.width * 0.8,
                               child: AutoSizeText("${((_priceData!['usd'] * double.parse(m['balance'])) as double).toStringAsFixed(4)} USD",
                                   minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
-                            )
-                                : Container(),
-                            const SizedBox(
-                              height: 2,
-                            ),
-                            textPending != '' && textImature.isEmpty
-                                ? SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.8,
-                              child: AutoSizeText(textPending,
-                                  minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
                             )
                                 : Container(),
                             const SizedBox(

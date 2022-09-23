@@ -1,5 +1,6 @@
 
 import 'package:digitalnote/support/Dialogs.dart';
+import 'package:digitalnote/support/notification_helper.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
@@ -21,6 +22,7 @@ import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:get_it/get_it.dart';
 import '../globals.dart' as globals;
 
 class MainMenuNew extends StatefulWidget {
@@ -46,14 +48,22 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   Sumry? sumry;
 
+  Map<String, dynamic>? _priceData;
+
   @override
   void initState() {
     _getLocale();
     super.initState();
     refreshBalance();
     getInfo();
+    getPriceData();
     // fmc.setNotifications();
     // fmc.bodyCtlr.stream.listen((event) {print(event + "adfadfadf");});
+  }
+
+  void getPriceData() async {
+    _priceData = await NetInterface.getPriceData();
+    setState(() {});
   }
 
   getInfo() async {
@@ -140,24 +150,28 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                     ),
                   ),
                 ),
+                Align(alignment: Alignment.center,child: Text("\$${_priceData?['usd'].toString()?? "0.0"}" , style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white54),)),
                 const SizedBox(
                   height: 20,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20.0),
+                  padding: const EdgeInsets.only(left: 15, right: 15.0),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getDatetimeHeadline(),
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
-                          ),
-                          Text(name ?? '', style: Theme.of(context).textTheme.headline5),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text(
+                              _getDatetimeHeadline(),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
+                            ),
+                            Text(name ?? '', style: Theme.of(context).textTheme.headline5),
+                          ],
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.all(0.0),
@@ -172,7 +186,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                   ),
                 ),
                 const SizedBox(
-                  height: 40,
+                  height: 30,
                 ),
                 BalanceCardMainMenu(
                   key: _keyBal,

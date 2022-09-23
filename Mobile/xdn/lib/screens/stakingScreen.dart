@@ -9,6 +9,7 @@ import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/percent_switch_widget.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +47,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   final _percentageKey = GlobalKey<PercentSwitchWidgetState>();
   final GlobalKey<SlideActionState> _keyStake = GlobalKey();
   final _controller = TextEditingController();
+  StreamSubscription? _fcmSubscription;
   var _touch = false;
   var _liveVisible = 0;
   List<FlSpot>? values = [];
@@ -94,6 +96,15 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     _controller.addListener(() {
       _percentageKey.currentState!.deActivate();
     });
+
+    _fcmSubscription = FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Got a message whilst in the foreground!');
+      print('Message data: ${message.data}');
+      _not();
+      if (message.notification != null) {
+        print('Message also contained a notification: ${message.notification}');
+      }
+    });
   }
 
   @override
@@ -106,10 +117,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   @override
   void dispose() {
     t!.cancel();
+    _fcmSubscription!.cancel();
     super.dispose();
   }
 
-  void not() async {
+  void _not() async {
     if (!_awaitingNot) {
       Future.delayed(const Duration(milliseconds: 1000), () {
         setState(() {
@@ -197,7 +209,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
         _awaitingNot = true;
         _controller.clear();
 
-        Future.delayed(const Duration(milliseconds: 10000), () {
+        Future.delayed(const Duration(milliseconds: 1000), () {
           if (_awaitingNot) {
             setState(() {
               _awaitingNot = false;
@@ -214,6 +226,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
         });
       }
     } catch (e) {
+      Navigator.of(context).pop();
       _keyStake.currentState!.reset();
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.amount_empty);
     }
@@ -223,7 +236,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     Dialogs.openWaitBox(context);
     var i = await NetInterface.unstakeCoins(type);
     _awaitingNot = true;
-    Future.delayed(const Duration(milliseconds: 10000), () {
+    Future.delayed(const Duration(milliseconds: 4000), () {
       if (_awaitingNot) {
         setState(() {
           _awaitingNot = false;
@@ -764,7 +777,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData) {
                                       Map m = snapshot.data as Map<String, dynamic>;
-                                      _balance = m['balance'].toString();
+                                      _balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
                                       _imature = m['immature'].toString();
                                       t = Timer(const Duration(milliseconds: 100), () {
                                         setState(() {

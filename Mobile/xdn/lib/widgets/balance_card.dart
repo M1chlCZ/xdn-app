@@ -49,14 +49,11 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
-                        var balance = m['spendable'].toString();
+                        var balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
                         var immature = m['immature'].toString();
-                        var spendable = m['balance'].toString();
-                        if (double.parse(spendable) < 0.99) {
-                          spendable = balance;
-                        }
+
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
-                        var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
+                        // var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -65,20 +62,19 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                 padding: const EdgeInsets.only(top: 5.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 2.0, left: 10.0),
-                                      child: SizedBox(
-                                        width: 220,
-                                        height: 40,
-                                        child: Center(
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(bottom: 2.0, left: 10.0),
+                                        child: SizedBox(
+                                          height: 38,
                                           child: AutoSizeText(balance,
                                               minFontSize: 18.0,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
+                                              textAlign: TextAlign.right,
                                               style: Theme.of(context).textTheme.headline5!.copyWith(fontWeight: FontWeight.w200, fontSize: 28.0)),
                                         ),
                                       ),
@@ -87,26 +83,20 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                       width: 10.0,
                                     ),
                                     Container(
-                                        height: 45,
+                                        height: 38,
                                         margin: const EdgeInsets.only(right: 10.0, bottom: 2.0),
                                         child: Center(
                                             child: Text(
                                           "XDN",
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70,  fontSize: 22.0, fontWeight: FontWeight.w600),
+                                          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70,  fontSize: 24.0, fontWeight: FontWeight.w800),
                                         ))),
+                                    const SizedBox(
+                                      width: 78.0,
+                                    ),
                                   ],
+
                                 ),
                               ),
-                              const SizedBox(
-                                height: 0,
-                              ),
-                              textPending != '' && textImature.isEmpty
-                                  ? SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.8,
-                                child: AutoSizeText(textPending,
-                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
-                              )
-                                  : Container(),
                               textImature != ''
                                   ? SizedBox(
                                       width: MediaQuery.of(context).size.width * 0.8,

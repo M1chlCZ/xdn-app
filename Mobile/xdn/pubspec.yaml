@@ -3,7 +3,7 @@ description: DigitalNote App Wallet
 
 publish_to: 'none'
 
-version: 1.0.45+45
+version: 1.0.46+46
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -15,14 +15,14 @@ dependencies:
     sdk: flutter
   http: ^0.13.5
   flutter_secure_storage: ^6.0.0
-  flutter_local_notifications: ^9.9.1
+  flutter_local_notifications: ^11.0.1
   firebase_messaging: any
   firebase_core: any
   package_info: any
   google_fonts: any
   intl: ^0.17.0
   qr_flutter: ^4.0.0
-  sqflite: ^2.0.3+1
+  sqflite: ^2.1.0
   tuple: ^2.0.0
   encrypt: ^5.0.1
   sprintf: any
@@ -37,9 +37,9 @@ dependencies:
   path_provider: ^2.0.11
   flutter_native_image: ^0.0.6+1
   flutter_phoenix: ^1.1.0
-  flutter_app_badger: ^1.4.0
+  flutter_app_badger: ^1.5.0
   bubble: ^1.2.1
-  flutter_typeahead: ^4.1.0
+  flutter_typeahead: ^4.1.1
   flutter_linkify: ^5.0.2
   vector_math: ^2.1.2
   font_awesome_flutter: ^10.2.1
@@ -48,9 +48,9 @@ dependencies:
   badges: ^2.0.3
   crypto: any
   mobile_scanner: ^2.0.0
-  fl_chart: ^0.55.1
+  fl_chart: ^0.55.2
   jiffy: ^5.0.0
-  permission_handler: ^10.0.0
+  permission_handler: ^10.0.1
   local_auth: ^2.1.2
   open_file:
     git:
