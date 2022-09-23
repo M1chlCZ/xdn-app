@@ -122,11 +122,11 @@ async function notify() {
       priority: 'high',
       contentAvailable: true,
       notification: {
-        body: "You've received " + x[i].amount + " KONJ",
+        body: "You've received " + x[i].amount + " XDN",
         title: "Incoming transaction",
         icon: "@drawable/ic_notification",
         sound: "default",
-        android_channel_id: "ccash1",
+        android_channel_id: "xdn1",
         badge: "1"
       },
       data: {
@@ -153,11 +153,11 @@ async function notify() {
       priority: 'high',
       contentAvailable: true,
       notification: {
-        body: "You've sent " + Math.abs(f[i].amount) + " KONJ",
+        body: "You've sent " + Math.abs(f[i].amount) + " XDN",
         title: "Coins sent",
         icon: "@drawable/ic_notification",
         sound: "default",
-        android_channel_id: "ccash1",
+        android_channel_id: "xdn1",
         badge: "1"
       },
       data: {

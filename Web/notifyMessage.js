@@ -177,7 +177,7 @@ async function notify() {
                     title: x[i].text,
                     icon: "@drawable/ic_notification",
                     sound: "default",
-                    android_channel_id: "ccash2",
+                    android_channel_id: "xdn2",
                     badge: "1"
                 },
                 data: {
@@ -195,13 +195,13 @@ async function notify() {
             });
         }
 
-        var [f, g] = await con.query("SELECT sentAddr FROM konjungate.messages WHERE notify = 1 GROUP BY sentAddr");
+        var [f, g] = await con.query("SELECT sentAddr FROM messages WHERE notify = 1 GROUP BY sentAddr");
         for (var i = 0; i < f.length; i++) {
             var message = new gcm.Message({
                 priority: 'high',
                 contentAvailable: true,
                 notification: {
-                    android_channel_id: "ccash2",
+                    android_channel_id: "xdn2",
                 },
                 data: {
                     outMessage: 'intransaction',
