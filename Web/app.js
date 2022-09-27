@@ -1472,7 +1472,15 @@ async function getBalanceSpendable(user) {
           bal += key.amount;
         }
       }
-      return bal;
+      var bl = await getBalanceImmature(user);
+      let bbb = 0.0;
+      if (bal > bl) {
+        bbb = bal - bl;
+      }else{
+        bbb = bal;
+      }
+      console.log(bbb + " " + user);
+      return bbb;
     } else {
       return "err";
     }

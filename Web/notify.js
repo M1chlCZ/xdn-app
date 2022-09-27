@@ -104,7 +104,6 @@ async function cleanupDuplicities() {
   var [r, f] = await con.query('SELECT txid, COUNT(category) as type FROM  transaction WHERE 1 GROUP BY txid, category');
   for (var i = 0; i < r.length; i++) {
     if (r[i].type == 2) {
-      console.log("duplicate " + r[i].txid);
       await con.query('DELETE FROM transaction WHERE txid = ? LIMIT 1', [r[i].txid]);
     }
   }
@@ -114,10 +113,9 @@ async function notify() {
   var registrationReceiveTokens = [];
   var registrationSendTokens = [];
 
-  var [x, z] = await con.query(" SELECT amount, account FROM transaction WHERE notified = 0 AND category = 'receive' ");
-  console.log(x.length);
-  console.log(x);
-  for (var i = 0; i < x.length; i++) {
+  var [x, z] = await con.query("SELECT amount, account FROM transaction WHERE notified = 0 AND category = 'receive'");
+  for (let i = 0; i < x.length; i++) {
+    console.log(x[i].account + " received " + x[i].amount + " coins");
     var message = new gcm.Message({
       priority: 'high',
       contentAvailable: true,
@@ -134,12 +132,10 @@ async function notify() {
       },
     });
     var [k, l] = await con.query("SELECT devices.token FROM devices, users WHERE users.username = ? AND users.id = devices.idUser GROUP BY devices.token", x[i].account);
-    console.log(k);
-    for (var i = 0; i < k.length; i++) {
-      registrationReceiveTokens.push(k[i].token);
+    for (let xx = 0; xx < k.length; xx++) {
+      registrationReceiveTokens.push(k[xx].token);
     }
     console.log(registrationReceiveTokens.length);
-
     fireSender.send(message, { registrationTokens: registrationReceiveTokens }, function (err, response) {
       if (err) console.error(err);
     });
@@ -147,8 +143,7 @@ async function notify() {
 
   var [f, g] = await con.query("SELECT amount, account FROM transaction WHERE notified = 0 AND category = 'send' ");
 
-  console.log(f.length);
-  for (var i = 0; i < f.length; i++) {
+  for (let i = 0; i < f.length; i++) {
     var message = new gcm.Message({
       priority: 'high',
       contentAvailable: true,
@@ -166,8 +161,8 @@ async function notify() {
     });
     var [r, t] = await con.query("SELECT devices.token FROM devices, users WHERE users.username = ? AND users.id = devices.idUser", f[i].account);
 
-    for (var i = 0; i < r.length; i++) {
-      registrationSendTokens.push(r[i].token);
+    for (let b = 0; b < r.length; b++) {
+      registrationSendTokens.push(r[b].token);
     }
     console.log(registrationReceiveTokens.length);
     
