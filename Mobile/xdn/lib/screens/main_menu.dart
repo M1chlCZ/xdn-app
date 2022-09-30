@@ -1,6 +1,11 @@
+import 'dart:io';
 
 import 'package:digitalnote/support/Dialogs.dart';
-import 'package:digitalnote/support/notification_helper.dart';
+import 'package:digitalnote/support/Utils.dart';
+import 'package:digitalnote/support/ethereum_connector.dart';
+import 'package:path/path.dart' show join, dirname;
+import 'package:digitalnote/screens/wallet.dart';
+import 'package:digitalnote/support/wallet_connector.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
@@ -22,8 +27,20 @@ import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
-import 'package:get_it/get_it.dart';
+import 'package:http/http.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:walletconnect_dart/walletconnect_dart.dart';
+import 'package:walletconnect_qrcode_modal_dart/walletconnect_qrcode_modal_dart.dart';
+import 'package:web3dart/web3dart.dart';
 import '../globals.dart' as globals;
+
+enum ConnectionState {
+  disconnected,
+  connecting,
+  connected,
+  connectionFailed,
+  connectionCancelled,
+}
 
 class MainMenuNew extends StatefulWidget {
   static const String route = "menu";
@@ -38,8 +55,12 @@ class MainMenuNew extends StatefulWidget {
 class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
 
-  // final GlobalKey<DetailScreenState> _walletKey = GlobalKey();
-  // FCM fmc = GetIt.I.get<FCM>();
+  WalletConnector connector = EthereumTestConnector();
+
+  static const _networks = ['Ethereum (Ropsten)', 'Algorand (Testnet)'];
+
+  ConnectionState _state = ConnectionState.disconnected;
+  String? _networkName = _networks.first;
   ComInterface cm = ComInterface();
 
   Future<Map<String, dynamic>>? _getBalance;
@@ -50,6 +71,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   Map<String, dynamic>? _priceData;
 
+  SessionStatus? session;
+
+
   @override
   void initState() {
     _getLocale();
@@ -57,10 +81,100 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     refreshBalance();
     getInfo();
     getPriceData();
-    // fmc.setNotifications();
-    // fmc.bodyCtlr.stream.listen((event) {print(event + "adfadfadf");});
+    connector.registerListeners(
+      // connected
+            (session) => print('Connected: $session'),
+        // session updated
+            (response) => print('Session updated: $response'),
+        // disconnected
+            () {
+          setState(() => _state = ConnectionState.disconnected);
+          print('Disconnected');
+        });
+
+    try {
+      var abiFile = File(join(dirname(Platform.script.path), 'abi.json'));
+      print(abiFile.path);
+    } catch (e) {
+      print(e);
+    }
   }
 
+
+  String _transactionStateToString({required ConnectionState state}) {
+    switch (state) {
+      case ConnectionState.disconnected:
+        return 'Connect!';
+      case ConnectionState.connecting:
+        return 'Connecting';
+      case ConnectionState.connected:
+        return 'Session connected';
+      case ConnectionState.connectionFailed:
+        return 'Connection failed';
+      case ConnectionState.connectionCancelled:
+        return 'Connection cancelled';
+    }
+  }
+
+  void _openWalletPage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WalletPage(connector: connector),
+      ),
+    );
+  }
+
+  VoidCallback? _transactionStateToAction(BuildContext context,
+      {required ConnectionState state}) {
+    print('State: ${_transactionStateToString(state: state)}');
+    switch (state) {
+    // Progress, action disabled
+      case ConnectionState.connecting:
+        return null;
+      case ConnectionState.connected:
+      // Open new page
+        return () => _openWalletPage();
+
+    // Initiate the connection
+      case ConnectionState.disconnected:
+      case ConnectionState.connectionCancelled:
+      case ConnectionState.connectionFailed:
+        return () async {
+          setState(() => _state = ConnectionState.connecting);
+          try {
+            final session = await connector.connect(context);
+            if (session != null) {
+              setState(() => _state = ConnectionState.connected);
+              Future.delayed(Duration.zero, () => _openWalletPage());
+            } else {
+              setState(() => _state = ConnectionState.connectionCancelled);
+            }
+          } catch (e) {
+            print('WC exception occured: $e');
+            setState(() => _state = ConnectionState.connectionFailed);
+          }
+        };
+    }
+  }
+
+  void _changeNetwork(String? network) {
+    if (network == null || _networkName == network) return;
+
+    final index = _networks.indexOf(network);
+    // update connector
+    switch (index) {
+      case 0:
+        connector = EthereumTestConnector();
+        break;
+    }
+
+    setState(
+          () {
+        _networkName = network;
+        _state = ConnectionState.disconnected;
+      },
+    );
+  }
   void getPriceData() async {
     _priceData = await NetInterface.getPriceData();
     setState(() {});
@@ -93,7 +207,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void gotoStakingScreen() {
-    Navigator.of(context).pushNamed(StakingScreen.route, arguments: "shit");
+    Navigator.of(context).pushNamed(StakingScreen.route, arguments: "shit").then((value) => refreshBalance());;
   }
 
   void gotoMessagesScreen() {
@@ -140,13 +254,20 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                     alignment: Alignment.center,
                     child: Padding(
                       padding: const EdgeInsets.only(right: 0.0),
-                      child: SizedBox(
-                          width: 200.0,
-                          height: 50.0,
-                          child: Image.asset(
-                            "images/logo.png",
-                            color: Colors.white70,
-                          )),
+                      child: GestureDetector(
+                        onTap: () {
+                          // loginUsingMetamask(context);
+                          _transactionStateToAction(context, state: _state)?.call();
+                          // _createConnection();
+                        },
+                        child: SizedBox(
+                            width: 200.0,
+                            height: 50.0,
+                            child: Image.asset(
+                              "images/logo.png",
+                              color: Colors.white70,
+                            )),
+                      ),
                     ),
                   ),
                 ),
