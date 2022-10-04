@@ -1,5 +1,7 @@
+import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:decimal/decimal.dart';
 import 'package:digitalnote/support/wallet_connector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,6 +51,9 @@ class EthereumTestConnector implements WalletConnector {
   String? abiFile;
   final EthereumAddress contractAddr =
   EthereumAddress.fromHex('0xC14527D6E8BdFbE2c57c41Bd6014b80639cde364', enforceEip55: true);
+  DeployedContract? contract;
+  ContractFunction? sendFunction;
+  EtherAmount? gas;
   EthereumTestConnector() {
     _connector = WalletConnectQrCodeModal(
       connector: WalletConnect(
@@ -94,24 +99,35 @@ class EthereumTestConnector implements WalletConnector {
   }) async {
     final sender =
     EthereumAddress.fromHex(_connector.connector.session.accounts[0]);
-    final recipient = EthereumAddress.fromHex(address);
+    final recipient = EthereumAddress.fromHex(recipientAddress, enforceEip55: true);
 
     final etherAmount = EtherAmount.fromUnitAndValue(
-        EtherUnit.szabo, (amount * 1000 * 1000).toInt());
+        EtherUnit.ether, amount.toInt());
 
-    final transaction = Transaction(
-      to: recipient,
+    // final transaction = Transaction(
+    //   to: recipient,
+    //   from: sender,
+    //   gasPrice: EtherAmount.inWei(BigInt.one),
+    //   maxGas: 100000,
+    //   value: etherAmount,
+    // );
+
+    final tx = Transaction.callContract(contract: contract!,
+      function: sendFunction!,
+      parameters: [recipient, etherAmount.getInWei],
       from: sender,
-      gasPrice: EtherAmount.inWei(BigInt.one),
-      maxGas: 100000,
-      value: etherAmount,
+        maxFeePerGas: EtherAmount.zero(),
+        gasPrice: gas,
+      // gasPrice: null,
+      // value: etherAmount,
+      // maxGas: 100000,
     );
 
     final credentials = WalletConnectEthereumCredentials(provider: _provider);
 
     // Sign the transaction
     try {
-      final txBytes = await _ethereum.sendTransaction(credentials, transaction);
+      final txBytes = await _ethereum.sendTransaction(credentials, tx, fetchChainIdFromNetworkId: true);
       return txBytes;
     } catch (e) {
       print('Error: $e');
@@ -140,17 +156,22 @@ class EthereumTestConnector implements WalletConnector {
       final abiCode = await rootBundle.loadString('assets/abi.json');
       // final abiCode = await abiFile!.readAsString();
       print('${abiCode.length}abi code length');
-      final contract =
+      contract =
           DeployedContract(ContractAbi.fromJson(abiCode, '2XDN'), contractAddr);
       final address =
-          EthereumAddress.fromHex(_connector.connector.session.accounts[0]);
+      EthereumAddress.fromHex(_connector.connector.session.accounts[0]);
       print('${address} address');
+      final amount = await _ethereum.getBalance(address);
+      gas = await _ethereum.getGasPrice();
+      final g = gas!.getInWei / BigInt.from(pow(10, 18));
+      print('bnb amount ${amount.getInWei / BigInt.from(pow(10, 18))} gas ${Decimal.parse(g.toString()).toString()}');
       // extracting some functions and events that we'll need later
       // final transferEvent = contract.event('Transfer');
-      final balanceFunction = contract.function('balanceOf');
+      final balanceFunction = contract!.function('balanceOf');
+      sendFunction = contract!.function("transfer");
       // final sendFunction = contract.function('sendCoin');
       final balance = await _ethereum.call(
-              contract: contract, function: balanceFunction, params: [address]);
+          contract: contract!, function: balanceFunction, params: [address]);
       var dd = balance.first as BigInt;
       var the = EtherAmount.inWei(dd);
       print('We have $dd MetaCoins ////////// ');

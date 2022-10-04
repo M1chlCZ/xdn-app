@@ -194,6 +194,7 @@ class _WalletPageState extends State<WalletPage> {
 
         Future.delayed(Duration.zero, () => widget.connector.openWalletApp());
 
+        print("sending");
         final hash = await widget.connector.sendTestingAmount(
             recipientAddress: addressController.text,
             amount: double.parse(amountController.text));
