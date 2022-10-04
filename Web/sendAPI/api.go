@@ -50,7 +50,6 @@ func sendCoin(c *fiber.Ctx) error {
 	if err := c.BodyParser(&payload); err != nil {
 		return err
 	}
-
 	call, err := client.Call("listunspent")
 	if err != nil {
 		utils.ReportMessage(err.Error())
