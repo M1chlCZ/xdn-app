@@ -38,7 +38,10 @@ post_install do |installer|
   installer.pods_project.targets.each do |target| 
     flutter_additional_ios_build_settings(target)
       target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.1'
+      if config.build_settings['WRAPPER_EXTENSION'] == 'bundle'
+                    config.build_settings['DEVELOPMENT_TEAM'] = 'D2VD7YVAQ5'
+             end
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.3'
           config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
             '$(inherited)',
 

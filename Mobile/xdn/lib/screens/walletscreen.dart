@@ -90,18 +90,13 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
   void animateButton() {
     if (_forward) {
       _switchWidget = balanceCard();
-      // animationController!.reverse();
-      // animationSendController!.reverse();
       _forward = false;
     } else {
       _switchWidget = sendWidget();
-      // animationController!.forward();
-      // animationSendController!.forward();
-
       _forward = true;
     }
-    setState(() {});
     _key.currentState?.initView();
+    setState(() {});
   }
 
   void showTransactions() {

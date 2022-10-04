@@ -29,7 +29,6 @@ var stakingActive = false;
 const jwt_decode = require('jwt-decode');
 
 async function run() {
-  //get price
   price()
   getDaemonStatusPeriodic()
   setInterval(price, 1800000);
@@ -735,6 +734,7 @@ app.get('/data', async (req, res) => {
     if (rrr === "setStake") { //id, amount, user
       var t = await setStake(id, param1, user);
       if (t === "err") {
+        console.log("ERRR STAKING");
         res.statusCode = 400;
         res.setHeader("Content-Type", "text/html");
         var err = { "status": "ko" }
@@ -743,6 +743,7 @@ app.get('/data', async (req, res) => {
         res.end();
         return;
       } else if (t === "bal") {
+        console.log("BAL STAKING");
         res.statusCode = 406;
         res.setHeader("Content-Type", "text/html");
         var err = { "status": "ko" }
@@ -750,6 +751,7 @@ app.get('/data', async (req, res) => {
         res.write(ciphertext);
         res.end();
       } else {
+        console.log("OK STAKING");
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/html");
         var ciphertext = CryptoJS.AES.encrypt(t, process.env.ENC_PASS).toString();
@@ -1470,7 +1472,15 @@ async function getBalanceSpendable(user) {
           bal += key.amount;
         }
       }
-      return bal.toFixed(3);
+      var bl = await getBalanceImmature(user);
+      let bbb = 0.0;
+      if (bal > bl) {
+        bbb = bal - bl;
+      }else{
+        bbb = bal;
+      }
+      console.log(bbb + " " + user);
+      return bbb;
     } else {
       return "err";
     }
@@ -1796,7 +1806,7 @@ async function getAdminNickname(idee) {
       }
       return JSON.stringify(add);
     } else {
-      return "err."
+      return "err"
     }
   } catch (e) {
     return e;
@@ -2046,7 +2056,7 @@ async function sendMessage(param1, param2, param3, idReply) { //address from, ad
     return "ok";
   } catch (error) {
     console.log(error);
-    return "err.";
+    return "err";
   }
 }
 
@@ -2097,7 +2107,7 @@ async function changePassword(id, passUser) {
     await con.query("UPDATE users SET password = ? WHERE id = ? ", [password, id]);
     return "ok";
   } catch (error) {
-    return "err.";
+    return "err";
   }
 }
 
@@ -2116,7 +2126,7 @@ async function notify() {
           title: "Incoming message",
           icon: "@drawable/ic_notification",
           sound: "default",
-          android_channel_id: "konj2",
+          android_channel_id: "xdn2",
           badge: "1"
         },
         data: {
@@ -2141,7 +2151,7 @@ async function notify() {
         priority: 'high',
         contentAvailable: true,
         notification: {
-          android_channel_id: "konj2",
+          android_channel_id: "xdn2",
         },
         data: {
           outMessage: 'intransaction',
@@ -2209,13 +2219,13 @@ async function setStake(id, amount, user) {
           console.log("noted");
           await con.query("UPDATE users_stake SET amount = ? WHERE idUser = ? AND active = ?", [balance, id, 1]);
           await con.query("UPDATE users_stake SET dateStart = ? WHERE idUser = ? AND active = ?", [mySqlTimestamp, id, 1]);
-          await timeout(2000);
+          await timeout(1000);
           var objSucc = { "status": "ok" };
           return JSON.stringify(objSucc);
         } else if (resWall.error === "bal") {
           return "bal";
         } else {
-          return "err."
+          return "err"
         }
       } else {
         return "err";
@@ -2242,7 +2252,7 @@ async function setStake(id, amount, user) {
             var session = parseInt(rSession[0].smax) + 1;
             await con.query('INSERT INTO users_stake(idUser, amount, session, active, dateStart) VALUES (?, ?, ?, ?, ?)', [id, amount, session, 1, mySqlTimestamp]);
           }
-          await timeout(2000);
+          await timeout(1000);
           var objSucc = { "status": "ok" };
           return JSON.stringify(objSucc);
         } else {

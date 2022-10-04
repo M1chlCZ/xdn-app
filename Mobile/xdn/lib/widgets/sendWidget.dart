@@ -338,6 +338,7 @@ class SendWidgetState extends State<SendWidget> {
                                     floatingLabelBehavior: FloatingLabelBehavior.always,
                                     contentPadding: const EdgeInsets.only(left: 14.0),
                                     filled: true,
+                                    fillColor: Colors.transparent,
                                     hoverColor: Colors.white60,
                                     focusColor: Colors.white60,
                                     labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
@@ -503,9 +504,6 @@ class SendWidgetState extends State<SendWidget> {
                                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                             RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                     onPressed: () {
-                                      widget.cancel();
-                                    },
-                                    onLongPress: () {
                                       widget.cancel();
                                     },
                                   ),

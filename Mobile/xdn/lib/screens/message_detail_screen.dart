@@ -112,6 +112,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   }
 
   Future<void> notReceived({String? ev}) async {
+    print("notReceived: $ev");
     // mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
     if (_running) {
       Future.delayed(const Duration(milliseconds: 10), () {

@@ -181,7 +181,6 @@ class NetInterface {
   }
 
   static Future<void> registerFirebaseToken(String token) async {
-    if (kDebugMode) print("FRRRRRRR");
     String? id = await SecureStorage.read(key: globals.ID);
     Map<String, dynamic> m = {"id": id, "param1": token, "param2": Platform.isAndroid ? "A" : "I", "request": "registerFirebaseToken"};
 
