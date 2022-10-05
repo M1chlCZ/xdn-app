@@ -63,7 +63,8 @@ var con = mysql.createPool({
   timezone: 'gmt',
 });
 
-
+app.use(express.json())
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }));
 
 
 app.post('/signup', async function (req, res) {
@@ -254,7 +255,36 @@ app.get('/getinfo', async (req, res) => {
   }
 });
 
+app.post('/verify', async function (req, res) {
+  const jsonResponse = req.body
+  let str = jsonResponse.token;
+  try {
+    let dec = jwt.verify(str, KEY, { algorithm: 'HS256' });
+    let username = dec.username;
+    var [rows, fields] = await con.query("SELECT id FROM users WHERE username = ? ", [username]);
+    if (rows[0] !== undefined) {
+      var payload = {
+        "id": rows[0].id,
+      }
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200);
+      res.json(payload);
+      return;
+    } else {
+      throw "No such user";
+    }
+  } catch (e){
+    res.status(401);
+    res.send("Bad Token");
+    res.end();
+    return;
+  }
+  // var payload;
+  // try { //some "magic" for library error
+  //   payload = CryptoJS.AES.decrypt(req.headers.payload, process.env.ENC_PASS, cryptoOptions).toString(CryptoJS.enc.Utf8);
+  // } catch (e) { }
 
+});
 
 app.post('/forgotPass', async function (req, res) {
   console.log("--------Forgot Pass--------");
@@ -274,8 +304,6 @@ app.post('/forgotPass', async function (req, res) {
   }
 
 });
-
-app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }));
 
 app.post('/apiAvatar', async function (req, res) {
   var payload;
@@ -616,13 +644,14 @@ app.get('/data', async (req, res) => {
     }
 
     if (rrr === "getMessages") {
+      console.time("getMessages");
       var t = await getMessages(param1, param2, param3, id);
-      console.log(t);
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
       var ciphertext = CryptoJS.AES.encrypt(t, process.env.ENC_PASS).toString();
       res.write(ciphertext);
       res.end();
+      console.timeEnd("getMessages");
       return;
     }
 
@@ -1164,9 +1193,9 @@ async function getDaemonStatusPeriodic() {
     kk = JSON.stringify(resStake);
     jsonStake = JSON.parse(kk.toString('utf8').replace(/^\uFFFD/, ''));
     stakingActive = jsonStake.result.staking;
-  }else{
+  } else {
     console.log("Error getting daemon info")
-  } 
+  }
 }
 
 async function getDaemonStatus() {
@@ -1205,7 +1234,6 @@ async function getBlockheighReq() {
 async function price() {
   var p = await https.get('https://api.coingecko.com/api/v3/coins/digitalnote?tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false');
   priceData = p.data.market_data.current_price;
-  console.log(priceData);
 }
 
 
@@ -1476,7 +1504,7 @@ async function getBalanceSpendable(user) {
       let bbb = 0.0;
       if (bal > bl) {
         bbb = bal - bl;
-      }else{
+      } else {
         bbb = bal;
       }
       console.log(bbb + " " + user);
@@ -1741,7 +1769,7 @@ async function emailSend(password, email) {
                       <tr>
                         <td style="padding:0;">
                           <h1>Password reset</h1>
-                          <p>Your new password is: <b> ` + password  +` </b><br> Don't forget to change it afterwards in settings menu.</p>
+                          <p>Your new password is: <b> ` + password + ` </b><br> Don't forget to change it afterwards in settings menu.</p>
                         </td>
                       </tr>
                     </table>

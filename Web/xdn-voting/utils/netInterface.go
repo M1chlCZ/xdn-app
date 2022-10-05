@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -74,6 +75,36 @@ func GETAny(url string) (*http.Response, *GetError) {
 		_ = resp.Body.Close()
 		client.CloseIdleConnections()
 		return nil, &GetError{message: resp.Status, statusCode: http.StatusUnauthorized}
+	}
+	_ = req.Body.Close()
+	client.CloseIdleConnections()
+	return resp, nil
+}
+
+func POSTReq(url string, body map[string]string) (*http.Response, *GetError) {
+	urlGet := url
+	var jsonStr, _ = json.Marshal(body)
+	req, err := http.NewRequest("POST", urlGet, bytes.NewBuffer(jsonStr))
+	req.Header.Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Connection", "close")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		_ = req.Body.Close()
+		client.CloseIdleConnections()
+		return nil, &GetError{message: err.Error(), statusCode: http.StatusInternalServerError}
+	}
+
+	//fmt.Println("response Status:", resp.StatusCode)
+	//fmt.Println("response Headers:", resp.Header)
+	//fmt.Println("response body:", resp.Body)
+	if resp.StatusCode != 200 {
+		_ = req.Body.Close()
+		_ = resp.Body.Close()
+		client.CloseIdleConnections()
+		return nil, &GetError{message: resp.Status, statusCode: resp.StatusCode}
 	}
 	_ = req.Body.Close()
 	client.CloseIdleConnections()

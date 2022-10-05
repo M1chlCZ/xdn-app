@@ -66,16 +66,13 @@ func GetENV(key string) string {
 	return os.Getenv(key)
 }
 
-func ReportError(w http.ResponseWriter, err string, statusCode int) {
-	json := simplejson.New()
-	json.Set("errorMessage", err)
-	json.Set(STATUS, FAIL)
-	json.Set(ERROR, true)
-
-	payload, e := json.MarshalJSON()
-	if e != nil {
-		log.Println(err)
+func ReportError(c *fiber.Ctx, err string, statusCode int) error {
+	json := fiber.Map{
+		"errorMessage": err,
+		STATUS:         FAIL,
+		ERROR:          true,
 	}
+
 	if !strings.Contains(err, "tx_id_UNIQUE") || strings.Contains(err, "Invalid Token, id User") {
 		logToFile("")
 		logToFile("//// - HTTP ERROR - ////")
@@ -84,11 +81,8 @@ func ReportError(w http.ResponseWriter, err string, statusCode int) {
 		logToFile("")
 	}
 
-	w.WriteHeader(statusCode)
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(payload)
+	return c.Status(statusCode).JSON(json)
 	// json.NewEncoder(w).Encode(err)
-	return
 }
 
 func ReportOK(w http.ResponseWriter, err string, statusCode int) {
@@ -110,17 +104,12 @@ func ReportOK(w http.ResponseWriter, err string, statusCode int) {
 }
 
 func ReportErrorSilent(c *fiber.Ctx, err string, statusCode int) error {
-	json := simplejson.New()
-	json.Set("errorMessage", err)
-	json.Set(STATUS, FAIL)
-	json.Set(ERROR, true)
-
-	payload, e := json.MarshalJSON()
-	if e != nil {
-		log.Println(err)
+	json := fiber.Map{
+		"errorMessage": err,
+		STATUS:         FAIL,
+		ERROR:          true,
 	}
-
-	return c.Status(statusCode).JSON(payload)
+	return c.Status(statusCode).JSON(json)
 }
 
 func ReportEncError(enc string, w http.ResponseWriter, err string, statusCode int) {
@@ -349,22 +338,57 @@ func IsLower(s string) bool {
 	return true
 }
 
-//func DecryptRequest(r *http.Request, url string) ([]byte, string, error) {
-//	var urlNode string
-//	cryptKey, errCrypt := database.ReadRow[string]("SELECT encryptKey FROM masternodes WHERE url = ?", urlNode, url)
-//	if errCrypt != nil {
-//		WrapErrorLog(errCrypt.Error())
-//		return nil, "", errCrypt
-//	}
-//
-//	body, err := io.ReadAll(r.Body)
-//	bodyString := string(body)
-//
-//	message, err := DecryptMessage([]byte(cryptKey), bodyString)
-//	if err != nil {
-//		WrapErrorLog(err.Error())
-//		return nil, "", err
-//	}
-//
-//	return []byte(message), cryptKey, nil
-//}
+func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		if len(c.Get("Authorization")) == 0 {
+			err := "no token provided"
+			return ReportError(c, err, http.StatusUnauthorized)
+		}
+		if len(c.Get("Content-Type")) != 0 {
+			value := c.Get("Content-Type")
+			if value != "application/json" {
+				msg := "Content-Type header is not application/json"
+				return ReportError(c, msg, http.StatusUnsupportedMediaType)
+			}
+		}
+
+		tokenSplit := strings.Fields(c.Get("Authorization"))
+		if len(tokenSplit) != 2 {
+			return ReportErrorSilent(c, "Invalid Token", http.StatusUnauthorized)
+		}
+
+		if tokenSplit[0] == "Bearer" {
+			id, secret, err := ValidateKeyToken(tokenSplit[1])
+			//data, err := database.ReadValue[sql.NullInt64]("SELECT ban FROM users WHERE idUser= ?", id)
+			//if data.Valid {
+			//	if data.Int64 == 1 {
+			//		utils.ReportErrorSilent(c, "Banned user", http.StatusUnauthorized)
+			//		return errors.New("banned user")
+			//	}
+			//}
+			if secret != nil {
+				decodeString, err := hex.DecodeString(secret.(string))
+				if err != nil {
+					return ReportErrorSilent(c, "Invalid Token", http.StatusUnauthorized)
+				} else {
+					lenght := len(decodeString)
+					if lenght != 32 {
+						return ReportErrorSilent(c, "Invalid Token", http.StatusUnauthorized)
+					}
+				}
+			} else {
+				return ReportErrorSilent(c, "Invalid Token", http.StatusUnauthorized)
+			}
+
+			if err != nil {
+				return ReportError(c, "Invalid token", http.StatusUnauthorized)
+			} else {
+				c.Request().Header.Set("user_id", fmt.Sprintf("%d", id))
+				return handler(c)
+			}
+		} else {
+			return ReportError(c, "Invalid Token", http.StatusUnauthorized)
+		}
+
+	}
+}

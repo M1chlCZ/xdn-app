@@ -9,7 +9,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.38.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.4.0
-	github.com/mutecomm/go-sqlcipher v0.0.0-20190227152316-55dbde17881f
+	gopkg.in/guregu/null.v4 v4.0.0
 )
 
 require (
@@ -20,6 +20,5 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.40.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 )

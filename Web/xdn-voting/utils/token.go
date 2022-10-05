@@ -3,8 +3,8 @@ package utils
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"io/ioutil"
 	"log"
+	"os"
 	"time"
 )
 
@@ -16,11 +16,11 @@ type JWT struct {
 var JWTTOKEN JWT
 
 func NewJWT() {
-	pubKey, err := ioutil.ReadFile(".cert/id_rsa.pub")
+	pubKey, err := os.ReadFile(".cert/id_rsa.pub")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	prvKey, err := ioutil.ReadFile(".cert/id_rsa")
+	prvKey, err := os.ReadFile(".cert/id_rsa")
 	if err != nil {
 		log.Fatalln(err)
 	}
