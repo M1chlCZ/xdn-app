@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/gofiber/fiber/v2/utils"
 	"gopkg.in/guregu/null.v4"
@@ -50,7 +49,6 @@ func login(c *fiber.Ctx) error {
 	if resp.StatusCode != http.StatusOK {
 		return utils.ReportErrorSilent(c, "Invalid Token", http.StatusUnauthorized)
 	}
-	utils.ReportMessage(fmt.Sprintf("%s", resp.Body))
 	decGet := json.NewDecoder(resp.Body)
 	decGet.DisallowUnknownFields()
 
