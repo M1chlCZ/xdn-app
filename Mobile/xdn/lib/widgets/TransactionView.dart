@@ -8,7 +8,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import '../support/Dialogs.dart';
-import '../support/TranSaction.dart';
+import '../models/TranSaction.dart';
 
 class TransactionView extends StatelessWidget {
   final TranSaction? transaction;

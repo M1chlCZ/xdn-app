@@ -188,7 +188,8 @@
   "password_forgot" : "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ",
   "user_not_exists" : "ਉਪਭੋਗਤਾ ਮੌਜੂਦ ਨਹੀਂ ਹੈ",
   "change_language" : "ਭਾਸ਼ਾ ਬਦਲੋ",
-  "delete_acc" : "Delete account"
+  "delete_acc" : "ਖਾਤਾ ਮਿਟਾਓ",
+  "voting" : "ਵੋਟਿੰਗ"
 }
 
 

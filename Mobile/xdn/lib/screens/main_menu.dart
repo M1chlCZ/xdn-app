@@ -1,24 +1,18 @@
-import 'dart:io';
 
-import 'package:digitalnote/support/Dialogs.dart';
-import 'package:digitalnote/support/Utils.dart';
-import 'package:digitalnote/support/ethereum_connector.dart';
-import 'package:path/path.dart' show join, dirname;
-import 'package:digitalnote/screens/wallet.dart';
-import 'package:digitalnote/support/wallet_connector.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
+import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/LifecycleWatcherState.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
-import 'package:digitalnote/support/summary.dart';
+import 'package:digitalnote/models/summary.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
@@ -26,21 +20,12 @@ import 'package:digitalnote/widgets/balance_card.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
-import 'package:http/http.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
-import 'package:walletconnect_qrcode_modal_dart/walletconnect_qrcode_modal_dart.dart';
-import 'package:web3dart/web3dart.dart';
+
 import '../globals.dart' as globals;
 
-enum ConnectionState {
-  disconnected,
-  connecting,
-  connected,
-  connectionFailed,
-  connectionCancelled,
-}
 
 class MainMenuNew extends StatefulWidget {
   static const String route = "menu";
@@ -54,13 +39,6 @@ class MainMenuNew extends StatefulWidget {
 
 class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
-
-  WalletConnector connector = EthereumTestConnector();
-
-  static const _networks = ['Ethereum (Ropsten)', 'Algorand (Testnet)'];
-
-  ConnectionState _state = ConnectionState.disconnected;
-  String? _networkName = _networks.first;
   ComInterface cm = ComInterface();
 
   Future<Map<String, dynamic>>? _getBalance;
@@ -73,7 +51,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   SessionStatus? session;
 
-
   @override
   void initState() {
     _getLocale();
@@ -81,100 +58,18 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     refreshBalance();
     getInfo();
     getPriceData();
-    connector.registerListeners(
-      // connected
-            (session) => print('Connected: $session'),
-        // session updated
-            (response) => print('Session updated: $response'),
-        // disconnected
-            () {
-          setState(() => _state = ConnectionState.disconnected);
-          print('Disconnected');
-        });
-
-    try {
-      var abiFile = File(join(dirname(Platform.script.path), 'abi.json'));
-      print(abiFile.path);
-    } catch (e) {
-      print(e);
-    }
+    loginDao();
   }
 
-
-  String _transactionStateToString({required ConnectionState state}) {
-    switch (state) {
-      case ConnectionState.disconnected:
-        return 'Connect!';
-      case ConnectionState.connecting:
-        return 'Connecting';
-      case ConnectionState.connected:
-        return 'Session connected';
-      case ConnectionState.connectionFailed:
-        return 'Connection failed';
-      case ConnectionState.connectionCancelled:
-        return 'Connection cancelled';
-    }
+  void loginDao() async {
+   bool res = await NetInterface.daoLogin();
+   if (res) {
+      debugPrint('Dao login success');
+    } else {
+     debugPrint('Dao login failed');
+   }
   }
 
-  void _openWalletPage() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => WalletPage(connector: connector),
-      ),
-    );
-  }
-
-  VoidCallback? _transactionStateToAction(BuildContext context,
-      {required ConnectionState state}) {
-    print('State: ${_transactionStateToString(state: state)}');
-    switch (state) {
-    // Progress, action disabled
-      case ConnectionState.connecting:
-        return null;
-      case ConnectionState.connected:
-      // Open new page
-        return () => _openWalletPage();
-
-    // Initiate the connection
-      case ConnectionState.disconnected:
-      case ConnectionState.connectionCancelled:
-      case ConnectionState.connectionFailed:
-        return () async {
-          setState(() => _state = ConnectionState.connecting);
-          try {
-            final session = await connector.connect(context);
-            if (session != null) {
-              setState(() => _state = ConnectionState.connected);
-              Future.delayed(Duration.zero, () => _openWalletPage());
-            } else {
-              setState(() => _state = ConnectionState.connectionCancelled);
-            }
-          } catch (e) {
-            print('WC exception occured: $e');
-            setState(() => _state = ConnectionState.connectionFailed);
-          }
-        };
-    }
-  }
-
-  void _changeNetwork(String? network) {
-    if (network == null || _networkName == network) return;
-
-    final index = _networks.indexOf(network);
-    // update connector
-    switch (index) {
-      case 0:
-        connector = EthereumTestConnector();
-        break;
-    }
-
-    setState(
-          () {
-        _networkName = network;
-        _state = ConnectionState.disconnected;
-      },
-    );
-  }
   void getPriceData() async {
     _priceData = await NetInterface.getPriceData();
     setState(() {});
@@ -207,7 +102,11 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void gotoStakingScreen() {
-    Navigator.of(context).pushNamed(StakingScreen.route, arguments: "shit").then((value) => refreshBalance());;
+    Navigator.of(context).pushNamed(StakingScreen.route, arguments: "shit").then((value) => refreshBalance());
+  }
+
+  void gotoVotingScreen() {
+    Navigator.of(context).pushNamed(VotingScreen.route, arguments: "shit").then((value) => refreshBalance());
   }
 
   void gotoMessagesScreen() {
@@ -257,7 +156,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                       child: GestureDetector(
                         onTap: () {
                           // loginUsingMetamask(context);
-                          _transactionStateToAction(context, state: _state)?.call();
+                          gotoVotingScreen();
                           // _createConnection();
                         },
                         child: SizedBox(
@@ -271,7 +170,12 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                     ),
                   ),
                 ),
-                Align(alignment: Alignment.center,child: Text("\$${_priceData?['usd'].toString()?? "0.0"}" , style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white54),)),
+                Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      "\$${_priceData?['usd'].toString() ?? "0.0"}",
+                      style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white54),
+                    )),
                 const SizedBox(
                   height: 20,
                 ),
@@ -333,11 +237,12 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                           child: SmallMenuTile(
                         name: AppLocalizations.of(context)!.contacts,
                         goto: gotoContactScreen,
-                            iconName: "contacts",
+                        iconName: "contacts",
                       )),
-                      Expanded(child: SmallMenuTile(
-                          name: AppLocalizations.of(context)!.set_headline.capitalize(),
-                          goto: gotoSettingsScreen,
+                      Expanded(
+                          child: SmallMenuTile(
+                        name: AppLocalizations.of(context)!.set_headline.capitalize(),
+                        goto: gotoSettingsScreen,
                         iconName: "settings",
                       )),
                     ],
@@ -427,7 +332,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 10.0,),
+                              const SizedBox(
+                                height: 10.0,
+                              ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [

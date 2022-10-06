@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -336,6 +337,11 @@ func IsLower(s string) bool {
 		}
 	}
 	return true
+}
+
+func Erc20verify(address string) bool {
+	erc20 := regexp.MustCompile("^0x[a-fA-F0-9]{40}$")
+	return erc20.MatchString(address)
 }
 
 func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {

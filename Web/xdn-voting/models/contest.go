@@ -10,6 +10,7 @@ type Contest struct {
 	DateCreated   string     `json:"dateCreated" db:"dateCreated"`
 	DateEnding    null.Time  `json:"dateEnding" db:"dateEnding"`
 	AmountToReach null.Float `json:"amountToReach" db:"amountToReach"`
+	IDCreator     int        `json:"idCreator" db:"idCreator"`
 	Finished      int        `json:"finished" db:"finished"`
 }
 
@@ -18,6 +19,7 @@ type ContestEntry struct {
 	Name       string  `json:"name" db:"name"`
 	Amount     float32 `json:"amount" db:"amount"`
 	UserAmount float32 `json:"userAmount" db:"userAmount"`
+	Address    string  `json:"address" db:"address"`
 }
 
 type ContestResponse struct {

@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as fileUtil;
 import 'package:path_provider/path_provider.dart';
 
-import 'File.dart' as model;
+import '../models/File.dart' as model;
 
 typedef OnDownloadProgressCallback = void Function(int receivedBytes, int totalBytes);
 typedef OnUploadProgressCallback = void Function(int sentBytes, int totalBytes);

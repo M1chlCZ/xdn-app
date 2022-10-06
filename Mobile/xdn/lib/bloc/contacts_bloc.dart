@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:digitalnote/endpoints/get_contacts.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
-import 'package:digitalnote/support/Contact.dart';
+import 'package:digitalnote/models/Contact.dart';
 import 'package:flutter/foundation.dart';
 
 class ContactBloc {

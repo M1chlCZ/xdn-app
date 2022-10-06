@@ -9,12 +9,12 @@ import 'package:sprintf/sprintf.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../globals.dart' as globals;
-import 'Contact.dart';
-import 'DateSeparator.dart';
-import 'Message.dart';
-import 'MessageGroup.dart';
+import '../models/Contact.dart';
+import '../models/DateSeparator.dart';
+import '../models/Message.dart';
+import '../models/MessageGroup.dart';
 import 'NetInterface.dart';
-import 'TranSaction.dart';
+import '../models/TranSaction.dart';
 
 const dbVersion = 1;
 

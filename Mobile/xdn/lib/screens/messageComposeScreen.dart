@@ -9,7 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../support/AppDatabase.dart';
 import '../support/CardHeader.dart';
-import '../support/Contact.dart';
+import '../models/Contact.dart';
 import '../support/Dialogs.dart';
 import '../support/NetInterface.dart';
 import '../support/RoundButton.dart';

@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/get_info.dart';
-import 'package:digitalnote/support/summary.dart' as sum;
+import 'package:digitalnote/models/summary.dart' as sum;
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,12 +15,12 @@ import 'package:http/http.dart' as http;
 
 import '../globals.dart' as globals;
 import 'AppDatabase.dart';
-import 'Contact.dart';
+import '../models/Contact.dart';
 import 'Dialogs.dart';
 import 'Encrypt.dart';
-import 'Message.dart';
-import 'MessageGroup.dart';
-import 'TranSaction.dart';
+import '../models/Message.dart';
+import '../models/MessageGroup.dart';
+import '../models/TranSaction.dart';
 
 class NetInterface {
   static void uploadPicture(BuildContext context, String base64) async {
@@ -611,7 +612,7 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain, debug: true);
+      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain, debug: true);
 
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
@@ -649,7 +650,7 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain, debug: true);
+      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain, debug: true);
 
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
@@ -766,7 +767,7 @@ class NetInterface {
     try {
       Map<String, dynamic> m = {"param1": addr, "request": "getPrivKey"};
       ComInterface ci = ComInterface();
-      var res = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
+      var res = await ci.get("/data", request: m, type: ComInterface.typePlain);
 
       String? data = decryptAESCryptoJS(res.body, "rp9ww*jK8KX_!537e%Crmf");
       return data;
@@ -803,7 +804,7 @@ class NetInterface {
           "request": "renameUser",
         };
         ComInterface ci = ComInterface();
-        var response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
+        var response = await ci.get("/data", request: m, type: ComInterface.typePlain);
 
         // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
         // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
@@ -939,7 +940,7 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      var response = await ci.get("/data", request: m, debug: true, typeContent: ComInterface.typePlain);
+      var response = await ci.get("/data", request: m, debug: true, type: ComInterface.typePlain);
       if (response.statusCode == 200) {
         var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
         return data.toString();
@@ -989,7 +990,7 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, typeContent: ComInterface.typePlain);
+      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       //
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
@@ -1054,6 +1055,50 @@ class NetInterface {
     } catch (e) {
       if (kDebugMode) print(e.toString());
       return null;
+    }
+  }
+
+  static Future<bool> daoLogin() async {
+    try {
+      ComInterface ci = ComInterface();
+      await ci.get("/ping", debug: true, serverType: ComInterface.serverDAO, request: {});
+      return true;
+    }on UnauthorisedException catch (e) {
+      if (kDebugMode) print(e.toString());
+      var b = daoRegister();
+      debugPrint("| Dao Register success : ${b.toString().toUpperCase()} |");
+      return b;
+    } catch (e) {
+      if (kDebugMode) print(e.toString());
+      return false;
+    }
+  }
+
+  static Future<bool> daoRegister() async {
+    try {
+      String? jwt = await SecureStorage.read(key: globals.TOKEN);
+      ComInterface ci = ComInterface();
+      Map response = await ci.post("/login", debug: true, serverType: ComInterface.serverDAO, body: {"token": jwt}, request: {});
+      if(response["token"] != null) {
+        var token = response["token"];
+        debugPrint("| Dao Register success : ${token.toString()} |");
+        SecureStorage.write(key: globals.TOKEN_DAO, value: token);
+        return true;
+      }else{
+        return false;
+      }
+    } on TimeoutException catch (e) {
+      if (kDebugMode) print(e.toString());
+      return false;
+    } on SocketException catch (e) {
+      if (kDebugMode) print(e.toString());
+      return false;
+    }on UnauthorisedException catch (e) {
+      if (kDebugMode) print(e.toString());
+      return false;
+    } catch (e) {
+      if (kDebugMode) print(e.toString());
+      return false;
     }
   }
 }

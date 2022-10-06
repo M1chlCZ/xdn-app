@@ -1,6 +1,6 @@
 import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/support/TranSaction.dart';
+import 'package:digitalnote/models/TranSaction.dart';
 
 class TransactionEndpoint {
 

@@ -14,7 +14,7 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import '../globals.dart' as globals;
 import '../support/AppDatabase.dart';
 import '../support/ColorScheme.dart';
-import '../support/Contact.dart';
+import '../models/Contact.dart';
 import '../support/Dialogs.dart';
 import '../support/NetInterface.dart';
 import '../support/Utils.dart';

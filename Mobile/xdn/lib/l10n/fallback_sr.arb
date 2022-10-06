@@ -186,7 +186,8 @@
   "settings_main": "Главна подешавања",
   "settings_privacy": "Подешавања приватности",
   "password_forgot" : "Заборављена лозинка",
-  "user_not_exists" : "User does not exists",
-  "change_language" : "Vaihda kieltä",
-  "delete_acc" : "Delete account"
+  "user_not_exists" : "Корисник не постоји",
+  "change_language" : "Промените језик",
+  "delete_acc" : "Избриши налог",
+  "voting" : "Гласање"
 }

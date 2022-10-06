@@ -18,10 +18,12 @@ var JWTTOKEN JWT
 func NewJWT() {
 	pubKey, err := os.ReadFile(".cert/id_rsa.pub")
 	if err != nil {
+		WrapErrorLog("Error reading public key")
 		log.Fatalln(err)
 	}
 	prvKey, err := os.ReadFile(".cert/id_rsa")
 	if err != nil {
+		WrapErrorLog("Error reading private key")
 		log.Fatalln(err)
 	}
 	JWTTOKEN = JWT{

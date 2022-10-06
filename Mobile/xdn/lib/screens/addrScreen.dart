@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:digitalnote/bloc/contacts_bloc.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
-import 'package:digitalnote/support/MessageGroup.dart';
+import 'package:digitalnote/models/MessageGroup.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/ContactTile.dart';
@@ -15,7 +15,7 @@ import 'package:http/http.dart' as http;
 import '../globals.dart' as globals;
 import '../screens/messageComposeScreen.dart';
 import '../support/AppDatabase.dart';
-import '../support/Contact.dart';
+import '../models/Contact.dart';
 import '../support/Dialogs.dart';
 import '../support/Encrypt.dart';
 import '../support/RoundButton.dart';

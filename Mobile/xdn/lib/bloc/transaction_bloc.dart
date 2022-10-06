@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:digitalnote/endpoints/get_transactions.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
-import 'package:digitalnote/support/TranSaction.dart';
+import 'package:digitalnote/models/TranSaction.dart';
 import 'package:flutter/foundation.dart';
 
 class TransactionBloc {

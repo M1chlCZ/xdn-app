@@ -188,5 +188,7 @@
   "password_forgot": "Has olvidado tu contraseña",
   "user_not_exists": "El usuario no existe",
   "change_language": "Cambiar lenguaje",
+  "voting" : "Votación",
   "delete_acc" : "Delete account"
+
 }

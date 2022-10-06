@@ -189,5 +189,6 @@
   "password_forgot" : "Wachtwoord vergeten",
   "user_not_exists" : "Gebruiker bestaat niet",
   "change_language" : "Taal wijzigen",
-  "delete_acc" : "Delete account"
+  "delete_acc" : "Delete account",
+  "voting" : "Voting"
 }

@@ -4,7 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:digitalnote/support/Dialogs.dart';
-import 'package:digitalnote/support/MessageGroup.dart';
+import 'package:digitalnote/models/MessageGroup.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 
 import '../support/SimpleRichText.dart';

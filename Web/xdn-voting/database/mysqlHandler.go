@@ -18,7 +18,11 @@ type DB struct {
 
 var Database *DB
 
-func New(db *sqlx.DB) {
+func New() {
+	db, errDB := sqlx.Open("mysql", utils.GetENV("DB_CONN"))
+	if errDB != nil {
+		log.Fatal(errDB)
+	}
 	// Configure any package-level settings
 	Database = &DB{db}
 }

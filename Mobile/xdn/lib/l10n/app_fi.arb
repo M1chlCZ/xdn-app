@@ -189,5 +189,6 @@
   "password_forgot" : "Unohditko salasanasi",
   "user_not_exists" : "Käyttäjätunnus tai salasana on virheellinen",
   "change_language" : "Vaihda kieltä",
-  "delete_acc" : "Delete account"
+  "delete_acc" : "Poista tili",
+  "voting" : "Äänestys"
 }

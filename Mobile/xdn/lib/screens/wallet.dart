@@ -1,4 +1,4 @@
-import 'package:digitalnote/support/ethereum_connector.dart';
+import 'package:digitalnote/support/bsc_connector.dart';
 import 'package:digitalnote/support/wallet_connector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

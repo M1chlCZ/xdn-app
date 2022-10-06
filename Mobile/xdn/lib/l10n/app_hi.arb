@@ -187,6 +187,7 @@
   "password_forgot" : "पासवर्ड भूल गया",
   "user_not_exists" : "उपयोगकर्ता मौजूद नहीं है",
   "change_language" : "भाषा बदलें",
-    "delete_acc" : "Delete account"
+    "delete_acc" : "खाता हटाएं",
+    "voting" : "वोटिंग"
 
 }

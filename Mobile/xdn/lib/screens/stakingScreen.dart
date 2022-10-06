@@ -29,7 +29,7 @@ import '../widgets/DropdownMenu.dart';
 import '../support/Extensions.dart';
 import '../support/LifecycleWatcherState.dart';
 import '../support/NetInterface.dart';
-import '../support/StakeData.dart';
+import '../models/StakeData.dart';
 import '../widgets/backgroundWidget.dart';
 
 class StakingScreen extends StatefulWidget {

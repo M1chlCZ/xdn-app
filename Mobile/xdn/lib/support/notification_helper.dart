@@ -101,9 +101,7 @@ class FCM {
     // Map <String, dynamic> req = {
     //   "token" : token,
     // };
-    print("??TOKEN??");
-    print(token!);
-    NetInterface.registerFirebaseToken(token);
+    NetInterface.registerFirebaseToken(token!);
     // _interface.post('Security/UpdateFirebaseToken', req);
   }
 

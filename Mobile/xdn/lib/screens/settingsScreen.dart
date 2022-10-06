@@ -1042,7 +1042,7 @@ class _SettingsState extends State<SettingsScreen> {
       ComInterface cm = ComInterface();
       var id = await SecureStorage.read(key: globals.ID);
       var m = {"id": id!, "param1": s, "request": "twofactorRemove"};
-      http.Response response = await cm.get('/data', typeContent: ComInterface.typePlain, request: m);
+      http.Response response = await cm.get('/data', type: ComInterface.typePlain, request: m);
       if (response.statusCode == 200) {
         setState(() {
           twoFactor = false;

@@ -47,22 +47,21 @@ class WalletConnectEthereumCredentials extends CustomTransactionSender {
   }
 }
 
-class EthereumTestConnector implements WalletConnector {
+class BSCConnector implements WalletConnector {
   String? abiFile;
   final EthereumAddress contractAddr =
   EthereumAddress.fromHex('0xC14527D6E8BdFbE2c57c41Bd6014b80639cde364', enforceEip55: true);
   DeployedContract? contract;
   ContractFunction? sendFunction;
   EtherAmount? gas;
-  EthereumTestConnector() {
+  BSCConnector() {
     _connector = WalletConnectQrCodeModal(
       connector: WalletConnect(
         bridge: 'https://bridge.walletconnect.org',
         clientMeta: const PeerMeta(
-          // <-- Meta data of your app appearing in the wallet when connecting
-          name: 'QRCodeModalExampleApp',
-          description: 'WalletConnect Developer App',
-          url: 'https://walletconnect.org',
+          name: 'XDN app',
+          description: 'Digitalnote Development Voting',
+          url: 'https://digitalnote.org',
           icons: [
             'https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
           ],

@@ -18,11 +18,11 @@ import 'package:vibration/vibration.dart';
 import '../globals.dart' as globals;
 import '../screens/loginscreen.dart';
 import 'AppDatabase.dart';
-import 'Contact.dart';
+import '../models/Contact.dart';
 import 'DialogBody.dart';
 import 'NetInterface.dart';
 import 'RadioAlertWidget.dart';
-import 'TranSaction.dart';
+import '../models/TranSaction.dart';
 import 'Utils.dart';
 
 class Dialogs {

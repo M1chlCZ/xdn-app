@@ -188,5 +188,6 @@
   "password_forgot": "Забыли пароль",
   "user_not_exists": "Пользователь не существует",
   "change_language": "изменить язык",
-  "delete_acc" : "Delete account"
+  "delete_acc" : "Удалить аккаунт",
+  "voting" : "Голосование"
 }

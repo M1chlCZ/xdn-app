@@ -188,5 +188,6 @@
   "password_forgot" : "Zapomenuté heslo",
   "user_not_exists" : "Korisnik ne postoji",
   "change_language" : "Promijeniti jezik",
-  "delete_acc" : "Delete account"
+  "delete_acc" : "Izbrišite račun",
+  "voting" : "Glasanje"
 }

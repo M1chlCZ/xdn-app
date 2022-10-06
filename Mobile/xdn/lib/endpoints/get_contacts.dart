@@ -1,5 +1,5 @@
 import 'package:digitalnote/support/AppDatabase.dart';
-import 'package:digitalnote/support/Contact.dart';
+import 'package:digitalnote/models/Contact.dart';
 
 class ContactEndpoint {
 

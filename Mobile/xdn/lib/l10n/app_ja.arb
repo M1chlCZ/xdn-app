@@ -189,5 +189,6 @@
     "password_forgot": "パスワードを忘れてしまった",
     "user_not_exists": "ユーザーは存在しません",
     "change_language" : "言語の選択",
-  "delete_acc" : "Delete account"
-  }
+  "delete_acc" : "アカウントの削除",
+  "voting" : "投票"
+}

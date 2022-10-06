@@ -2,7 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 
 import '../support/ColorScheme.dart';
-import '../support/Contact.dart';
+import '../models/Contact.dart';
 import '../widgets/AvatarPicker.dart';
 
 

@@ -12,7 +12,7 @@ import '../screens/messageComposeScreen.dart';
 import '../support/AppDatabase.dart';
 import '../support/CardHeader.dart';
 import '../support/LifecycleWatcherState.dart';
-import '../support/MessageGroup.dart';
+import '../models/MessageGroup.dart';
 import '../support/NetInterface.dart';
 import '../support/RoundButton.dart';
 import '../widgets/backgroundWidget.dart';

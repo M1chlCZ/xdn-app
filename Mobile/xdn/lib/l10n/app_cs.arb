@@ -189,5 +189,6 @@
   "password_forgot" : "Passwort vergessen",
   "user_not_exists" : "Špatné přihlašovací údaje",
   "change_language" : "Změnit jazyk",
-  "delete_acc" : "Zrušit účet"
+  "delete_acc" : "Zrušit účet",
+  "voting" : "Hlasování"
 }

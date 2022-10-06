@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 
 import '../support/SimpleRichText.dart';
 import '../support/AppDatabase.dart';
-import '../support/Message.dart';
+import '../models/Message.dart';
 import '../support/NetInterface.dart';
 
 class MessageBubble extends StatefulWidget {

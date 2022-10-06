@@ -9,17 +9,20 @@ import '../support/secure_storage.dart';
 import 'app_exception.dart';
 
 class ComInterface {
-  static const int typePeatio = 0;
-  static const int typeBarong = 1;
+  static const int serverAPI = 0;
+  static const int serverDAO = 1;
   static const int typePlain = 2;
   static const int typeJson = 3;
 
+
   Future<dynamic> get(String url,
-      {required Map<String, dynamic> request, bool wholeURL = false, Map<String, dynamic>? query, dynamic body, int type = 0, int typeContent = typeJson, bool debug = false}) async {
+      {Map<String, dynamic>? request, bool wholeURL = false, int serverType = serverAPI, Map<String, dynamic>? query, dynamic body, int type = typeJson, bool debug = false}) async {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
+    String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
+    String bearer = "";
+    String payload = "";
     dynamic responseJson;
     http.Response response;
-
 
     var mUrl = "";
     if (!wholeURL) {
@@ -27,50 +30,82 @@ class ComInterface {
     } else {
       mUrl = url;
     }
+
+    if (serverType == serverAPI) {
+      mUrl = globals.SERVER_URL + url;
+      bearer = jwt ?? "";
+      payload = encryptAESCryptoJS(json.encode(request!), "rp9ww*jK8KX_!537e%Crmf");
+    } else if (serverType == serverDAO) {
+      mUrl = globals.DAO_URL + url;
+      bearer = "Bearer ${daoJWT ?? ""}";
+    }
+
     Map<String, String> mHeaders = {
-      "Authorization": jwt!,
+      "Authorization": bearer,
       "Content-Type": "application/json",
-      "payload": encryptAESCryptoJS(json.encode(request), "rp9ww*jK8KX_!537e%Crmf"),
+      "payload": payload,
     };
 
     response = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
     if (debug) {
       debugPrint(mUrl);
-      var rr = response;
-      var data = decryptAESCryptoJS(rr.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-      debugPrint(data);
+      if (serverType == serverAPI) {
+        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+        debugPrint(data);
+      } else if (serverType == serverDAO) {
+        debugPrint(response.body.toString());
+      }
       debugPrint(response.statusCode.toString());
     }
-    if (typeContent == typePlain) {
+    if (type == typePlain) {
       return response;
     }
-    responseJson = compute(_returnResponse, response);
-
+    if (serverType == serverAPI) {
+      responseJson = compute(_returnResponse, response);
+    } else if (serverType == serverDAO) {
+      responseJson = compute(_returnDaoResponse, response);
+    }
     return responseJson;
   }
 
-  Future<dynamic> post(String url, {required Map<String, dynamic> request, int type = 0, dynamic body, int typeContent = typeJson, bool debug = false, bool bandwidth = false}) async {
+  Future<dynamic> post(String url, {Map<String, dynamic>? request, int serverType = serverAPI, dynamic body, int type = typeJson, bool debug = false, bool bandwidth = false}) async {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
+    String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
+    String bearer = "";
+    String payload = "";
     dynamic responseJson;
     http.Response response;
 
     var mUrl = globals.SERVER_URL + url;
+    if (serverType == serverAPI) {
+      mUrl = globals.SERVER_URL + url;
+      bearer = jwt ?? "";
+      payload = encryptAESCryptoJS(json.encode(request!), "rp9ww*jK8KX_!537e%Crmf");
+    } else if (serverType == serverDAO) {
+      mUrl = globals.DAO_URL + url;
+      bearer = "Bearer ${daoJWT ?? ""}";
+    }
+
     Map<String, String> mHeaders = {
-      "Authorization": jwt ?? "",
+      "Authorization": bearer,
       "Content-Type": "application/json",
-      "payload": encryptAESCryptoJS(json.encode(request), "rp9ww*jK8KX_!537e%Crmf"),
+      "payload": payload,
     };
-    response = await http.post(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
+    var b = body != null ? json.encode(body) : null;
+    response = await http.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
     if (debug) {
       debugPrint(mUrl);
-      var rr = response;
-      debugPrint(rr.statusCode.toString());
-      debugPrint(rr.body);
+      debugPrint(response.statusCode.toString());
+      debugPrint(response.body);
     }
-    if (typeContent == typePlain) {
+    if (type == typePlain) {
       return response;
     }
-    responseJson = compute(_returnResponse, response);
+    if (serverType == serverAPI) {
+      responseJson = compute(_returnResponse, response);
+    } else if (serverType == serverDAO) {
+      responseJson = compute(_returnDaoResponse, response);
+    }
     return responseJson;
   }
 
@@ -104,6 +139,48 @@ class ComInterface {
       case 201:
         var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
         var responseJson = json.decode(data);
+        return responseJson;
+      case 400:
+        throw BadRequestException(response.body.toString());
+      case 401:
+        Map<String, dynamic> error = {
+          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
+          "statusCode": response.statusCode,
+          "messageBody": response.body.toString(),
+        };
+        throw UnauthorisedException(error);
+
+      case 403:
+      case 422:
+        Map<String, dynamic> error = {
+          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
+          "statusCode": response.statusCode,
+          "messageBody": response.body.toString(),
+        };
+        throw UnauthorisedException(error);
+      case 404:
+        Map<String, dynamic> error = {
+          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
+          "statusCode": response.statusCode,
+          "messageBody": response.body.toString(),
+        };
+        throw UnauthorisedException(error);
+      case 500:
+      default:
+        Map<String, dynamic> error = {
+          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
+          "statusCode": response.statusCode,
+          "messageBody": response.body.toString(),
+        };
+        throw FetchDataException(error);
+    }
+  }
+
+  dynamic _returnDaoResponse(http.Response response) {
+    switch (response.statusCode) {
+      case 200:
+      case 201:
+        var responseJson = json.decode(response.body.toString());
         return responseJson;
       case 400:
         throw BadRequestException(response.body.toString());
