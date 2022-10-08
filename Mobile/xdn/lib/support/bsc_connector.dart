@@ -10,7 +10,13 @@ import 'package:walletconnect_dart/walletconnect_dart.dart';
 import 'package:walletconnect_qrcode_modal_dart/walletconnect_qrcode_modal_dart.dart';
 import 'package:web3dart/crypto.dart';
 import 'package:web3dart/web3dart.dart';
-
+enum ConnectionState {
+  disconnected,
+  connecting,
+  connected,
+  connectionFailed,
+  connectionCancelled,
+}
 class WalletConnectEthereumCredentials extends CustomTransactionSender {
   WalletConnectEthereumCredentials({required this.provider});
 
@@ -57,13 +63,14 @@ class BSCConnector implements WalletConnector {
   BSCConnector() {
     _connector = WalletConnectQrCodeModal(
       connector: WalletConnect(
+        clientId: "XDN",
         bridge: 'https://bridge.walletconnect.org',
         clientMeta: const PeerMeta(
           name: 'XDN app',
-          description: 'Digitalnote Development Voting',
+          description: 'Digitalnote',
           url: 'https://digitalnote.org',
           icons: [
-            'https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
+            'https://github.com/DigitalNoteXDN/MediaPack/blob/master/XDN/DN2020_circle_hires.png?raw=true'
           ],
         ),
       ),
@@ -99,9 +106,12 @@ class BSCConnector implements WalletConnector {
     final sender =
     EthereumAddress.fromHex(_connector.connector.session.accounts[0]);
     final recipient = EthereumAddress.fromHex(recipientAddress, enforceEip55: true);
+    debugPrint('sender: $sender');
+    debugPrint('recipient: $recipient');
 
     final etherAmount = EtherAmount.fromUnitAndValue(
         EtherUnit.ether, amount.toInt());
+    debugPrint('etherAmount: $etherAmount');
 
     // final transaction = Transaction(
     //   to: recipient,
@@ -141,16 +151,8 @@ class BSCConnector implements WalletConnector {
   @override
   Future<void> openWalletApp() async => await _connector.openWalletApp();
 
-
-  // Future<double> getBalance() async {
-  //
-  //   final address =
-  //   EthereumAddress.fromHex(_connector.connector.session.accounts[0]);
-  //   final amount = await _ethereum.getBalance(address);
-  //   return amount.getValueInUnit(EtherUnit.ether).toDouble();
-  // }
   @override
-  Future<double> getBalance() async {
+  Future<Map<String, dynamic>?> getData() async {
     try {
       final abiCode = await rootBundle.loadString('assets/abi.json');
       // final abiCode = await abiFile!.readAsString();
@@ -159,11 +161,11 @@ class BSCConnector implements WalletConnector {
           DeployedContract(ContractAbi.fromJson(abiCode, '2XDN'), contractAddr);
       final address =
       EthereumAddress.fromHex(_connector.connector.session.accounts[0]);
-      print('${address} address');
+      // debugPrint('${address} address');
       final amount = await _ethereum.getBalance(address);
       gas = await _ethereum.getGasPrice();
       final g = gas!.getInWei / BigInt.from(pow(10, 18));
-      print('bnb amount ${amount.getInWei / BigInt.from(pow(10, 18))} gas ${Decimal.parse(g.toString()).toString()}');
+      // debugPrint('bnb amount ${amount.getInWei / BigInt.from(pow(10, 18))} gas ${Decimal.parse(g.toString()).toString()}');
       // extracting some functions and events that we'll need later
       // final transferEvent = contract.event('Transfer');
       final balanceFunction = contract!.function('balanceOf');
@@ -173,12 +175,17 @@ class BSCConnector implements WalletConnector {
           contract: contract!, function: balanceFunction, params: [address]);
       var dd = balance.first as BigInt;
       var the = EtherAmount.inWei(dd);
-      print('We have $dd MetaCoins ////////// ');
-      return the.getInEther.toDouble();
+      // debugPrint('We have $dd 2XDN ////////// ');
+      Map<String, dynamic> m = {
+        "xdn" : the.getValueInUnit(EtherUnit.ether),
+        "bnb" : amount.getInWei / BigInt.from(pow(10, 18)),
+        "gas" : Decimal.parse(g.toString()).toString()
+      };
+      return m;
     } catch (e, t) {
       print(e);
       print(t);
-      return 0.0;
+      return null;
     }
   }
 

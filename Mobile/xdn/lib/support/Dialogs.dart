@@ -937,7 +937,7 @@ class Dialogs {
                     autofocus: true,
                     controller: textController,
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9_-\s]+')),
+                      FilteringTextInputFormatter.allow(RegExp(r"^[a-zA-Z0-9_-\s]+")),
                     ],
                     style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
@@ -2135,6 +2135,52 @@ class Dialogs {
               ]),
             );
           });
+        });
+  }
+
+  static void openVotingDialogs(context, String addr, int idEntry, Function(String address, int amount, int idEntry) func) async {
+    TextEditingController textController = TextEditingController();
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return DialogBody(
+            buttonLabel: AppLocalizations.of(context)!.send,
+            oneButton: false,
+            onTap: () {
+              func(addr, textController.text.isEmpty ? 0 : int.parse(textController.text), idEntry);
+            },
+            header: "${AppLocalizations.of(context)!.amount}",
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
+                child: TextField(
+                  autofocus: true,
+                  controller: textController,
+                  keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: false) : TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                  ],
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline6!
+                      .copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.all(5.0),
+                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                    hintText: AppLocalizations.of(context)!.amount,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ),
+          );
         });
   }
 

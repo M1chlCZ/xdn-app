@@ -353,8 +353,11 @@ func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {
 		if len(c.Get("Content-Type")) != 0 {
 			value := c.Get("Content-Type")
 			if value != "application/json" {
-				msg := "Content-Type header is not application/json"
-				return ReportError(c, msg, http.StatusUnsupportedMediaType)
+				//ReportMessage("JSON content is required")
+				//	msg := "Content-Type header is not application/json"
+				//	return ReportError(c, msg, http.StatusUnsupportedMediaType)
+			} else {
+				ReportMessage("JSON content")
 			}
 		}
 

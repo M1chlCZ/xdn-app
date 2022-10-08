@@ -191,5 +191,15 @@
   "change_language" : "Change language",
   "delete_acc" : "Delete account",
   "voting" : "Voting",
-  "connect_wallet" : "Connect wallet"
+  "connect_wallet" : "Connect wallet",
+  "wallet_connected" : "Wallet connected",
+  "amount_to_reach" : "Amount to reach",
+  "amount_reached" : "Amount reached",
+  "date_ending": "Time remaining",
+  "bnb_balance" : "BNB balance",
+  "gas" : "Gas",
+  "st_less" : "Show less details",
+  "st_more" : "Show more details",
+  "vot_succ" : "Voting successful",
+    "vot_fail" : "Voting failed"
 }

@@ -22,6 +22,11 @@ class BadRequestException extends AppException {
   BadRequestException([message]) : super(message, "Invalid Request: ");
 }
 
+class ConflictDataException extends AppException {
+  ConflictDataException(String message)
+      : super(message, "");
+}
+
 class UnauthorisedException extends AppException {
   UnauthorisedException(Map message) : super(message, "Unauthorised: ");
 }

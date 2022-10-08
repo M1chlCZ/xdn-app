@@ -11,7 +11,7 @@ abstract class WalletConnector {
 
   Future<void> openWalletApp();
 
-  Future<double> getBalance();
+  Future<Map<String, dynamic>?> getData();
 
   bool validateAddress({required String address});
 

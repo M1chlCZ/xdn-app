@@ -81,6 +81,9 @@ func getCurrentContest(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, "No contest", http.StatusConflict)
 	}
+	if contest == (models.Contest{}) {
+		return utils.ReportError(c, "No contest", http.StatusConflict)
+	}
 
 	contestEntries, err := database.ReadArrayStruct[models.ContestEntry](
 		`SELECT id, name, IFNULL(amount, 0) as amount, IFNULL(userAmount, 0) as userAmount, d.addr as address
@@ -123,19 +126,17 @@ func createContest(c *fiber.Ctx) error {
 	}
 
 	//check for already existing active contest
-	activeContest, errDB := database.ReadValue[null.Int]("SELECT id FROM voting_contest WHERE finished = 0 LIMIT 1")
-	if errDB != nil {
-		return utils.ReportError(c, errDB.Error(), http.StatusInternalServerError)
-	}
+	activeContest := database.ReadValueEmpty[null.Int]("SELECT id FROM voting_contest WHERE finished = 0 LIMIT 1")
+
 	if activeContest.Valid {
 		return utils.ReportError(c, "There is already an active contest", http.StatusConflict)
 	}
 	type addr struct {
-		ID      int    `json:"id"`
-		Address string `json:"addr"`
+		ID      int    `db:"id"`
+		Address string `db:"addr"`
 	}
 	//get voting addresses
-	votingAddresses, errDB := database.ReadArrayStruct[addr]("SELECT * FROM voting_addresses")
+	votingAddresses, errDB := database.ReadArrayStruct[addr]("SELECT * FROM voting_addr")
 	if errDB != nil {
 		return utils.ReportError(c, errDB.Error(), http.StatusInternalServerError)
 	}

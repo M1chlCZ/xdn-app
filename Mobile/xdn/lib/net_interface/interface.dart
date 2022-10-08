@@ -191,7 +191,8 @@ class ComInterface {
           "messageBody": response.body.toString(),
         };
         throw UnauthorisedException(error);
-
+      case 409:
+        throw ConflictDataException(response.body.toString());
       case 403:
       case 422:
         Map<String, dynamic> error = {

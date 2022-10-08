@@ -27,6 +27,18 @@ class Utils {
     return format.format(newDate);
   }
 
+  static DateTime convertDateTime(String? d) {
+    String nullDate = "1970-00-01 00:00:01";
+    if(d == null) return DateTime.parse(nullDate);
+    DateTime dt = DateTime.now();
+    int offset = dt.timeZoneOffset.inHours;
+    var date = DateTime.parse(d).toLocal();
+    var newDate = DateTime(date.year, date.month, date.day,
+        date.hour + offset, date.minute, date.second);
+    var format = DateFormat.yMMMMd(Platform.localeName).add_jm();
+    return newDate;
+  }
+
 
   static String getMeDate(String d, BuildContext context) {
     String locale = Localizations.localeOf(context).languageCode;
@@ -58,6 +70,12 @@ class Utils {
         }
       }
     }
+  }
+
+  static String formatWallet(String s) {
+    var firstPart = s.substring(0,5);
+    var lastPart = s.substring(s.length - 3);
+    return "$firstPart...$lastPart";
   }
 
   
