@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/gofiber/fiber/v2/utils"
 	"gopkg.in/guregu/null.v4"
@@ -20,9 +21,11 @@ func main() {
 	database.New()
 	utils.NewJWT()
 	web3.New()
-	number := web3.CreateAddress()
-
-	utils.ReportMessage("Addr: " + number)
+	number, errr := web3.GetBalance("0x426cdD94138DD82737D40057f949588b3957DAb7")
+	if errr != nil {
+		log.Println(errr)
+	}
+	utils.ReportMessage(fmt.Sprintf("Addr: %v ", float64(number.Int64())/1000000000000000000))
 	app := fiber.New(fiber.Config{AppName: "XDN DAO", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
 	app.Post("dao/v1/login", login)

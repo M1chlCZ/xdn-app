@@ -54,12 +54,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
     // _messages = _getMessages();
     _getMessages();
     _getBalance();
-    timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
-      if (_running == true) {
-        _getNewMessages();
-        mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
-      }
-    });
     _switchWidget = _tipIcon();
     _textController.addListener(() {
       if (_textController.text.isEmpty) {
@@ -80,10 +74,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   }
 
   void _getNewMessages() async {
-    var addr = await SecureStorage.read(key: globals.ADR);
-    int idMax = await AppDatabase().getMessageGroupMaxID(addr, widget.mgroup.sentAddressOrignal);
-    await NetInterface.saveMessages(widget.mgroup.sentAddressOrignal!, idMax);
-    mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
+    // var addr = await SecureStorage.read(key: globals.ADR);
+    // int idMax = await AppDatabase().getMessageGroupMaxID(addr, widget.mgroup.sentAddressOrignal);
+    // await NetInterface.saveMessages(widget.mgroup.sentAddressOrignal!, idMax);
+    // mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
   }
 
   @override
@@ -103,7 +97,14 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   _getMessages() async {
     _addr = await SecureStorage.read(key: globals.ADR);
     mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
-    _getNewMessages();
+    // _getNewMessages();
+
+    timer ??= Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      if (_running == true) {
+        _getNewMessages();
+        mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+      }
+    });
   }
 
   _getBalance() async {
@@ -142,7 +143,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
         _replyMessage = null;
         _replyHeight = 0.0;
       });
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: 500), () {
         setState(() {
           _switchWidget = _tipIcon();
           _circleVisible = false;

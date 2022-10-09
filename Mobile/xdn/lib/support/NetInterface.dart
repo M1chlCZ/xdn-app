@@ -217,7 +217,7 @@ class NetInterface {
 
     try {
       ComInterface ci = ComInterface();
-      List<dynamic> rt = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      List<dynamic> rt = await ci.get("/data", request: m);
       var l = await compute(getTransactionCompute, rt);
       var i = await AppDatabase().addTransactions(l);
       return i;

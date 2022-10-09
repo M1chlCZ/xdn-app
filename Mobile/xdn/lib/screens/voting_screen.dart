@@ -429,7 +429,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                     ),
                                     width: double.infinity,
                                     height: MediaQuery.of(context).size.height * 0.2,
-                                    child:Center(child: Text(snapshot.error.toString().capitalize(), style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 24.0, color: Colors.white30),)));
+                                    child:Center(child: Text(snapshot.error.toString().capitalize(), textAlign: TextAlign.center, style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 24.0, color: Colors.white30),)));
                               }else if (snapshot.hasData) {
                                 var contest = snapshot.data;
                                 var name = contest?.contestName ?? "";

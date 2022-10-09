@@ -4,7 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/chenzhijie/go-web3"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"math/big"
 )
 
 var rpc *WB
@@ -45,4 +47,9 @@ func CreateAddress() string {
 
 	addr := crypto.PubkeyToAddress(pv.PublicKey)
 	return addr.Hex()
+}
+
+func GetBalance(address string) (*big.Int, error) {
+	addr := common.HexToAddress(address)
+	return rpc.Eth.GetBalance(addr, nil)
 }
