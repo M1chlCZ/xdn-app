@@ -160,7 +160,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
     } on ConflictDataException catch (e) {
       DaoErrors error = DaoErrors.fromJson(json.decode(e.toString()));
       if (error.errorMessage == "No contest") {
-        return Future.error("No active voting contest");
+        return Future.error(AppLocalizations.of(context)!.no_contest);
       }
       return Future.error("no contest");
     } catch (e) {
@@ -568,7 +568,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                             child: Center(
                                               child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                                 Text(
-                                                  "Live",
+                                                  AppLocalizations.of(context)!.st_live,
                                                   style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, fontWeight: FontWeight.w300, color: Colors.white70),
                                                 ),
                                                 const SizedBox(
@@ -749,7 +749,7 @@ class VotingLegend extends StatelessWidget {
                   width: 4,
                 ),
                 Text(
-                  "Amount of votes",
+                  AppLocalizations.of(context)!.amount_of_votes,
                   style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 8.0),
                 ),
               ],
@@ -768,7 +768,7 @@ class VotingLegend extends StatelessWidget {
                   width: 4,
                 ),
                 Text(
-                  "Your amount of votes",
+                  AppLocalizations.of(context)!.amount_of_votes_user,
                   style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 8.0),
                 ),
               ],

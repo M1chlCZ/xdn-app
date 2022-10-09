@@ -63,7 +63,7 @@ const String AV_VER = "aversion";
 
 const String APP_NOT = 'showMessages';
 
-const List<String> LANGUAGES = ['English', 'Bosnian', 'Croatian', 'Czech', 'Dutch', 'Finnish', 'German', 'Hindi', 'Japanese', 'Russian', 'Serbian Latin', 'Serbian Цyриллиц', 'Spanish', 'Panjabi'];
-const List<String> LANGUAGES_CODES = ['en', 'bs_BA', 'hr_HR', 'cs_CZ', 'nl_NL', 'fi_FI', 'de_DE', 'hi_IN', 'ja_JP', 'ru_RU', 'sr_Latn_RS', 'sr_Cyrl_RS', 'es_ES' 'pa_IN'];
+const List<String> LANGUAGES = ['English', 'Bosnian', 'Croatian', 'Czech', 'Dutch', 'Finnish', 'German', 'Hindi', 'Japanese', 'Ukrainian', 'Serbian Latin', 'Serbian Цyриллиц', 'Spanish', 'Panjabi'];
+const List<String> LANGUAGES_CODES = ['en', 'bs_BA', 'hr_HR', 'cs_CZ', 'nl_NL', 'fi_FI', 'de_DE', 'hi_IN', 'ja_JP', 'uk_UA', 'sr_Latn_RS', 'sr_Cyrl_RS', 'es_ES', 'pa_IN'];
 
 bool reloadData = false;

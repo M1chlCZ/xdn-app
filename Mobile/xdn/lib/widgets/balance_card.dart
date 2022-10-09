@@ -38,9 +38,9 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                 offset: const Offset(0, 5), // changes position of shadow
               ),
             ],
-            image: const DecorationImage(image:  AssetImage("images/card.png"), fit: BoxFit.fitWidth, opacity: 1),
+            image: const DecorationImage(image: AssetImage("images/card_voting.png"), fit: BoxFit.fitWidth, opacity: 0.4),
           ),
-          height: 100,
+          height: 90,
           child: Stack(
             children: [
               Center(
@@ -127,7 +127,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     }),
               ),
               Padding(
-                padding: const EdgeInsets.only(left:8.0, top: 4.0),
+                padding: const EdgeInsets.only(left:8.0, top: 4.0, bottom: 4.0),
                 child: SizedBox(
                   width: 90,
                     child: Image.asset("images/wallet_big.png")),

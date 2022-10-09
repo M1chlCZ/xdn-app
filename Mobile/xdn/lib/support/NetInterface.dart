@@ -355,7 +355,7 @@ class NetInterface {
         "request": "getMessageGroup",
       };
       ComInterface ci = ComInterface();
-      List rt = await ci.get("/data", request: m, debug: true, type: ComInterface.typePlain);
+      List rt = await ci.get("/data", request: m, debug: true);
       List<MessageGroup> list = rt.map((data) => MessageGroup.fromJson(data)).toList();
       await AppDatabase().addMessageGroup(list);
     } on TimeoutException catch (_) {

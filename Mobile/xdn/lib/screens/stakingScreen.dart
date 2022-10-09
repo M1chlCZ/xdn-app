@@ -299,7 +299,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   static List<StakeData> _getData(String response) {
     try {
       List responseList = json.decode(response);
-      responseList.removeLast();
+      responseList.removeAt(0);
       responseList.sort((a, b) => DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])));
       var amount = 0.0;
       var l = List.generate(responseList.length, (i) {
@@ -771,7 +771,14 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(AppLocalizations.of(context)!.available, style: Theme.of(context).textTheme.headline5),
+                              SizedBox(
+                                width: 150,
+                                child: AutoSizeText(
+                                    AppLocalizations.of(context)!.available,
+                                    maxLines: 1,
+                                    minFontSize: 8.0,
+                                    style: Theme.of(context).textTheme.headline5),
+                              ),
                               FutureBuilder(
                                   future: _getBalanceFuture,
                                   builder: (context, snapshot) {
@@ -983,18 +990,16 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(AppLocalizations.of(context)!.st_estimated,
-                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
-                                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                            Text(
-                                              "${_estimated.toString()} XDN",
-                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
-                                            ),
-                                            // const SizedBox(
-                                            //   width: 10,
-                                            // ),
-                                            // Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/konjicon.png'), fit: BoxFit.fitWidth))),
-                                          ])
+                                          Expanded(
+                                            child: AutoSizeText(AppLocalizations.of(context)!.st_estimated,
+                                                minFontSize: 8.0,
+                                                maxLines: 1,
+                                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                          ),
+                                          Text(
+                                            "${_estimated.toString()} XDN",
+                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -1264,14 +1269,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   String _getToolTip(int time) {
     if (_dropdownValue == 0) {
       return '${_getMeTime("0000-00-00 ${Duration(minutes: time).toHoursMinutes()}")}\n';
-      // return '${Duration(minutes: time).toHoursMinutes().toString()} \n';
     } else if (_dropdownValue == 1) {
-      // print(_date);
       List<String> dateParts = _date.toString().split("-");
       String tm = time < 10 ? "0$time" : time.toString();
       String dt = "${dateParts[0]}-${dateParts[1]}-$tm";
       return '${_getMeDate(dt)}\n';
-      // return '${_formatCountdownTime(Duration(days: time).inDays.toInt()) + "." + dateParts[1] + "." + dateParts[0]} \n';
     } else {
       return '${Duration(days: time * 31).inDays.toString()} \n';
     }

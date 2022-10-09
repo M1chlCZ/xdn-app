@@ -1,5 +1,5 @@
-
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/models/summary.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
@@ -12,20 +12,19 @@ import 'package:digitalnote/support/LifecycleWatcherState.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
-import 'package:digitalnote/models/summary.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
 import 'package:digitalnote/widgets/balance_card.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
+import 'package:digitalnote/widgets/voting_menu_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
 
 import '../globals.dart' as globals;
-
 
 class MainMenuNew extends StatefulWidget {
   static const String route = "menu";
@@ -62,12 +61,12 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void loginDao() async {
-   bool res = await NetInterface.daoLogin();
-   if (res) {
+    bool res = await NetInterface.daoLogin();
+    if (res) {
       debugPrint('Dao login success');
     } else {
-     debugPrint('Dao login failed');
-   }
+      debugPrint('Dao login failed');
+    }
   }
 
   void getPriceData() async {
@@ -145,7 +144,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(
-                  height: 50,
+                  height: 20,
                 ),
                 SizedBox(
                   width: double.infinity,
@@ -155,9 +154,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                       padding: const EdgeInsets.only(right: 0.0),
                       child: GestureDetector(
                         onTap: () {
-                          // loginUsingMetamask(context);
                           gotoVotingScreen();
-                          // _createConnection();
                         },
                         child: SizedBox(
                             width: 200.0,
@@ -223,6 +220,12 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                 ),
                 StakingMenuWidget(
                   goto: gotoStakingScreen,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                VotingMenuWidget(
+                  goto: gotoVotingScreen,
                 ),
                 const SizedBox(
                   height: 10,
@@ -394,14 +397,16 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   String _getDatetimeHeadline() {
     DateTime d = DateTime.now();
     var hour = d.hour;
-    if (hour > 0 && hour < 6) {
-      return 'Good Night';
-    } else if (hour > 6 && hour < 12) {
-      return 'Good Morning';
-    } else if (hour > 12 && hour < 18) {
-      return 'Good Afternoon';
+    if (hour >= 0 && hour < 6) {
+      return AppLocalizations.of(context)!.good_night.capitalize();
+    } else if (hour >= 6 && hour < 12) {
+      return AppLocalizations.of(context)!.good_morning.capitalize();
+    } else if (hour >= 12 && hour < 18) {
+      return AppLocalizations.of(context)!.good_afternoon.capitalize();
+    } else if (hour >= 18 && hour < 24) {
+      return AppLocalizations.of(context)!.good_evening.capitalize();
     } else {
-      return 'Good Evening';
+      return AppLocalizations.of(context)!.good_day.capitalize();
     }
   }
 }

@@ -240,9 +240,9 @@ class _SettingsState extends State<SettingsScreen> {
                                             ),
                                             SizedBox(
                                               width: MediaQuery.of(context).size.width - 100.0,
-                                              child: const AutoSizeText(
-                                                "Security", //TODO Security trans
-                                                style: TextStyle(fontSize: 20, color: Colors.white70),
+                                              child: AutoSizeText(
+                                                AppLocalizations.of(context)!.security,
+                                                style: const TextStyle(fontSize: 20, color: Colors.white70),
                                                 minFontSize: 8,
                                                 maxLines: 1,
                                                 textAlign: TextAlign.start,
@@ -297,7 +297,7 @@ class _SettingsState extends State<SettingsScreen> {
                                             SizedBox(
                                               width: MediaQuery.of(context).size.width - 100.0,
                                               child: AutoSizeText(
-                                                twoFactor ? "Remove 2FA" : "Set 2FA", //TODO set unset 2FA
+                                                twoFactor ? AppLocalizations.of(context)!.remove_2fa : AppLocalizations.of(context)!.set_2fa, //TODO set unset 2FA
                                                 style: const TextStyle(fontSize: 20, color: Colors.white70),
                                                 minFontSize: 8,
                                                 maxLines: 1,
@@ -506,9 +506,9 @@ class _SettingsState extends State<SettingsScreen> {
                                             ),
                                             SizedBox(
                                               width: MediaQuery.of(context).size.width - 100.0,
-                                              child: const AutoSizeText(
-                                                "Blockchain info", //TODO blockchain info translation
-                                                style: TextStyle(fontSize: 20, color: Colors.white70),
+                                              child:  AutoSizeText(
+                                                  AppLocalizations.of(context)!.blockchain_info,
+                                                style: const TextStyle(fontSize: 20, color: Colors.white70),
                                                 minFontSize: 8,
                                                 maxLines: 1,
                                                 textAlign: TextAlign.start,

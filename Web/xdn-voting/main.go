@@ -13,11 +13,16 @@ import (
 	"xdn-voting/errs"
 	"xdn-voting/models"
 	"xdn-voting/utils"
+	"xdn-voting/web3"
 )
 
 func main() {
 	database.New()
 	utils.NewJWT()
+	web3.New()
+	number := web3.CreateAddress()
+
+	utils.ReportMessage("Addr: " + number)
 	app := fiber.New(fiber.Config{AppName: "XDN DAO", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
 	app.Post("dao/v1/login", login)

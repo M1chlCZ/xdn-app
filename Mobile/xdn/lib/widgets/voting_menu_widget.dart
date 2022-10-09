@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class StakingMenuWidget extends StatefulWidget {
+class VotingMenuWidget extends StatefulWidget {
   final VoidCallback goto;
-  const StakingMenuWidget({Key? key, required this.goto}) : super(key: key);
+  const VotingMenuWidget({Key? key, required this.goto}) : super(key: key);
 
   @override
-  State<StakingMenuWidget> createState() => _StakingMenuWidgetState();
+  State<VotingMenuWidget> createState() => _VotingMenuWidgetState();
 }
 
-class _StakingMenuWidgetState extends State<StakingMenuWidget> {
+class _VotingMenuWidgetState extends State<VotingMenuWidget> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -22,7 +22,7 @@ class _StakingMenuWidgetState extends State<StakingMenuWidget> {
           gradient: const LinearGradient(
             colors: [Color(0xFF313C5D),
               Color(0xFF4A5EB0)
-              ],
+            ],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
           ),
@@ -33,6 +33,7 @@ class _StakingMenuWidgetState extends State<StakingMenuWidget> {
               blurRadius: 4,
               offset: const Offset(0, 5), // changes position of shadow
             ),
+
           ],
           image: const DecorationImage(image: AssetImage("images/card_voting.png"), fit: BoxFit.fitWidth, opacity: 0.4),
         ),
@@ -45,17 +46,17 @@ class _StakingMenuWidgetState extends State<StakingMenuWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        AppLocalizations.of(context)!.st_headline,
-                        style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.w300),
+                        AppLocalizations.of(context)!.voting,
+                          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.w300),
                       ),
                     ],
                   ),
                 )),
             Padding(
-              padding: const EdgeInsets.only(left:2.0, top: 4.0),
+              padding: const EdgeInsets.only(left:4.0, top: 2.0, bottom: 4.0),
               child: SizedBox(
                   width: 85,
-                  child: Image.asset("images/staking_big.png")),
+                  child: Image.asset("images/voting_big.png")),
             )
           ],
         ),

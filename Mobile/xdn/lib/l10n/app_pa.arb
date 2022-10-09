@@ -189,7 +189,31 @@
   "user_not_exists" : "ਉਪਭੋਗਤਾ ਮੌਜੂਦ ਨਹੀਂ ਹੈ",
   "change_language" : "ਭਾਸ਼ਾ ਬਦਲੋ",
   "delete_acc" : "ਖਾਤਾ ਮਿਟਾਓ",
-  "voting" : "ਵੋਟਿੰਗ"
+  "voting" : "ਵੋਟਿੰਗ",
+
+  "connect_wallet": "ਵਾਲੈਟ ਨੂੰ ਕੁਨੈਕਟ ਕਰੋ",
+  "wallet_connected": "ਵਾਲੈਟ ਕੁਨੈਕਟ ਹੋ ਗਿਆ",
+  "amount_to_reach": "ਤੁਹਾਡੇ ਵਾਲੈਟ ਵਿੱਚ ਪਹੁੰਚਣ ਲਈ ਰਕਮ",
+  "amount_reached": "ਤੁਹਾਡੇ ਵਾਲੈਟ ਵਿੱਚ ਪਹੁੰਚਿਆ ਹੈ",
+  "date_ending": "ਅੰਤ ਦੀ ਮਿਤੀ",
+  "bnb_balance": "BNB ਬੈਲੈਂਸ",
+  "gas": "Gas",
+  "st_less": "ਸ਼ੁਰੂ ਤੋਂ ਘੱਟ",
+  "st_more": "ਸ਼ੁਰੂ ਤੋਂ ਵੱਧ",
+  "vot_succ": "ਵੋਟ ਸਫਲਤਾਪੂਰਕ ਹੈ",
+  "vot_fail": "ਵੋਟ ਫੇਲ੍ਹ ਹੈ",
+  "no_contest": "ਕੋਈ ਕੰਟੈਸਟ ਨਹੀਂ",
+  "amount_of_votes": "ਵੋਟਾਂ ਦੀ ਰਕਮ",
+  "amount_of_votes_user": "ਵੋਟਾਂ ਦੀ ਰਕਮ",
+  "security": "ਸੁਰੱਖਿਆ",
+  "remove_2fa": "2FA ਨੂੰ ਹਟਾਓ",
+  "set_2fa": "2FA ਸੈੱਟ ਕਰੋ",
+  "blockchain_info": "ਬਲਾਕਚੇਨ ਜਾਣਕਾਰੀ",
+  "good_morning": "ਸਵਾਗਤ ਹੈ",
+  "good_afternoon": "ਸਵਾਗਤ ਹੈ",
+  "good_evening": "ਸਵਾਗਤ ਹੈ",
+  "good_night": "ਸਵਾਗਤ ਹੈ",
+  "good_day": "ਸਵਾਗਤ ਹੈ"
 }
 
 
