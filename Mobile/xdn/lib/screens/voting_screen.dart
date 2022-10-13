@@ -82,17 +82,16 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
         setState(() {});
       }
     } catch (_) {}
-
     connector.registerListeners(
-        // connected
-        (session) {
+      // connected
+            (session) {
           setState(() => _state = ConState.connected);
           print('Connected');
         },
         // session updated
-        (response) => print('Session updated: $response'),
+            (response) => print('Session updated: $response'),
         // disconnected
-        () {
+            () {
           setState(() => _state = ConState.disconnected);
           print('Disconnected');
         });
@@ -114,20 +113,20 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
   }
 
   void _openWalletPage() {
+    saveAddress(connector.address);
     setState(() {});
   }
 
   VoidCallback? _transactionStateToAction(BuildContext context, {required ConState state}) {
-    print('State: ${_transactionStateToString(state: state)}');
     switch (state) {
-      // Progress, action disabled
+    // Progress, action disabled
       case ConState.connecting:
         return null;
       case ConState.connected:
-        // Open new page
+      // Open new page
         return () => _openWalletPage();
 
-      // Initiate the connection
+    // Initiate the connection
       case ConState.disconnected:
       case ConState.connectionCancelled:
       case ConState.connectionFailed:
@@ -199,7 +198,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                             children: [
                               Text(
                                 AppLocalizations.of(context)!.connect_wallet,
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0),
+                                style: Theme
+                                    .of(context)
+                                    .textTheme
+                                    .bodyText1!
+                                    .copyWith(fontSize: 16.0),
                               ),
                               FlatCustomButton(
                                   width: 50,
@@ -230,11 +233,19 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                   children: [
                                     Text(
                                       AppLocalizations.of(context)!.wallet_connected,
-                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.black87),
+                                      style: Theme
+                                          .of(context)
+                                          .textTheme
+                                          .bodyText1!
+                                          .copyWith(fontSize: 14.0, color: Colors.black87),
                                     ),
                                     Text(
                                       Utils.formatWallet(connector.address),
-                                      style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 14.0, color: Colors.black87),
+                                      style: Theme
+                                          .of(context)
+                                          .textTheme
+                                          .headline1!
+                                          .copyWith(fontSize: 14.0, color: Colors.black87),
                                     ),
                                   ],
                                 ),
@@ -266,7 +277,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                 children: [
                                                   Text(
                                                     AppLocalizations.of(context)!.wl_balance,
-                                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                                    style: Theme
+                                                        .of(context)
+                                                        .textTheme
+                                                        .bodyText1!
+                                                        .copyWith(fontSize: 14.0),
                                                   ),
                                                   Row(
                                                     children: [
@@ -274,7 +289,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         NumberFormat('#,###').format(balance!['xdn']).replaceAll(",", " "),
                                                         maxLines: 1,
                                                         minFontSize: 8,
-                                                        style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 14.0),
+                                                        style: Theme
+                                                            .of(context)
+                                                            .textTheme
+                                                            .headline1!
+                                                            .copyWith(fontSize: 14.0),
                                                       ),
                                                       const SizedBox(
                                                         width: 4.0,
@@ -292,7 +311,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                 children: [
                                                   Text(
                                                     AppLocalizations.of(context)!.bnb_balance,
-                                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                                    style: Theme
+                                                        .of(context)
+                                                        .textTheme
+                                                        .bodyText1!
+                                                        .copyWith(fontSize: 14.0),
                                                   ),
                                                   Row(
                                                     children: [
@@ -300,7 +323,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         balance['bnb'].toString(),
                                                         maxLines: 1,
                                                         minFontSize: 8,
-                                                        style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 14.0),
+                                                        style: Theme
+                                                            .of(context)
+                                                            .textTheme
+                                                            .headline1!
+                                                            .copyWith(fontSize: 14.0),
                                                       ),
                                                       const SizedBox(
                                                         width: 4.0,
@@ -318,7 +345,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                 children: [
                                                   Text(
                                                     AppLocalizations.of(context)!.gas,
-                                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                                    style: Theme
+                                                        .of(context)
+                                                        .textTheme
+                                                        .bodyText1!
+                                                        .copyWith(fontSize: 14.0),
                                                   ),
                                                   Row(
                                                     children: [
@@ -326,7 +357,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         balance['gas'].toString(),
                                                         maxLines: 1,
                                                         minFontSize: 8,
-                                                        style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 14.0),
+                                                        style: Theme
+                                                            .of(context)
+                                                            .textTheme
+                                                            .headline1!
+                                                            .copyWith(fontSize: 14.0),
                                                       ),
                                                       const SizedBox(
                                                         width: 4.0,
@@ -362,7 +397,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                   Text(
                                                     detailsExtended ? AppLocalizations.of(context)!.st_less : AppLocalizations.of(context)!.st_more,
                                                     // textAlign: TextAlign.end,
-                                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 9.0, color: Colors.white70),
+                                                    style: Theme
+                                                        .of(context)
+                                                        .textTheme
+                                                        .bodyText1!
+                                                        .copyWith(fontSize: 9.0, color: Colors.white70),
                                                   ),
                                                   const SizedBox(
                                                     height: 10.0,
@@ -407,7 +446,10 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                             if (snapshot.connectionState == ConnectionState.waiting && doneLoading == false) {
                               return SizedBox(
                                 width: double.infinity,
-                                height: MediaQuery.of(context).size.height * 0.5,
+                                height: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .height * 0.5,
                                 child: const Center(
                                     child: SizedBox(
                                         width: 25,
@@ -428,16 +470,25 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                       borderRadius: BorderRadius.circular(5),
                                     ),
                                     width: double.infinity,
-                                    height: MediaQuery.of(context).size.height * 0.2,
-                                    child:Center(child: Text(snapshot.error.toString().capitalize(), textAlign: TextAlign.center, style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 24.0, color: Colors.white30),)));
-                              }else if (snapshot.hasData) {
+                                    height: MediaQuery
+                                        .of(context)
+                                        .size
+                                        .height * 0.2,
+                                    child: Center(child: Text(snapshot.error.toString().capitalize(), textAlign: TextAlign.center, style: Theme
+                                        .of(context)
+                                        .textTheme
+                                        .headline1!
+                                        .copyWith(fontSize: 24.0, color: Colors.white30),)));
+                              } else if (snapshot.hasData) {
                                 var contest = snapshot.data;
                                 var name = contest?.contestName ?? "";
                                 num amount = contest?.amountToReach ?? 0.0;
                                 DateTime date = Utils.convertDateTime(contest?.dateEnding);
                                 num total = 0;
                                 contest?.entries?.forEach((element) {
-                                  total += element.amount!;
+                                  if (element.goal == 0) {
+                                    total += element.amount!;
+                                  }
                                 });
                                 return Column(
                                   children: [
@@ -449,14 +500,18 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                         Container(
                                             width: double.infinity,
                                             padding: const EdgeInsets.symmetric(vertical: 2),
-                                            decoration: const BoxDecoration(
-                                              color: Colors.black26,
-                                              borderRadius: BorderRadius.only(topLeft: Radius.circular(5), topRight: Radius.circular(5)),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(0.2),
+                                              borderRadius: const BorderRadius.only(topLeft: Radius.circular(5), topRight: Radius.circular(5)),
                                             ),
                                             child: Text(
                                               name,
                                               textAlign: TextAlign.center,
-                                              style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0, fontWeight: FontWeight.bold),
+                                              style: Theme
+                                                  .of(context)
+                                                  .textTheme
+                                                  .bodyText1!
+                                                  .copyWith(fontSize: 16.0, fontWeight: FontWeight.bold),
                                             )),
                                         Container(
                                           color: Colors.black12,
@@ -473,7 +528,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         "${AppLocalizations.of(context)!.amount_to_reach}: ",
                                                         maxLines: 1,
                                                         minFontSize: 8,
-                                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 15.0, color: Colors.white),
+                                                        style: Theme
+                                                            .of(context)
+                                                            .textTheme
+                                                            .bodyText1!
+                                                            .copyWith(fontSize: 15.0, color: Colors.white),
                                                       ),
                                                       Row(
                                                         children: [
@@ -481,7 +540,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                             NumberFormat('#,##,000').format(amount),
                                                             maxLines: 1,
                                                             minFontSize: 8,
-                                                            style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),
+                                                            style: Theme
+                                                                .of(context)
+                                                                .textTheme
+                                                                .headline1!
+                                                                .copyWith(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),
                                                           ),
                                                           const SizedBox(width: 5),
                                                           Container(
@@ -507,7 +570,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         "${AppLocalizations.of(context)!.amount_reached}: ",
                                                         maxLines: 1,
                                                         minFontSize: 8,
-                                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 15.0, color: Colors.white),
+                                                        style: Theme
+                                                            .of(context)
+                                                            .textTheme
+                                                            .bodyText1!
+                                                            .copyWith(fontSize: 15.0, color: Colors.white),
                                                       ),
                                                       Row(
                                                         children: [
@@ -515,7 +582,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                             NumberFormat('#,##,000').format(total),
                                                             maxLines: 1,
                                                             minFontSize: 8,
-                                                            style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),
+                                                            style: Theme
+                                                                .of(context)
+                                                                .textTheme
+                                                                .headline1!
+                                                                .copyWith(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),
                                                           ),
                                                           const SizedBox(width: 5),
                                                           Container(
@@ -541,7 +612,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                 children: [
                                                   Text(
                                                     AppLocalizations.of(context)!.date_ending,
-                                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0),
+                                                    style: Theme
+                                                        .of(context)
+                                                        .textTheme
+                                                        .bodyText1!
+                                                        .copyWith(fontSize: 12.0),
                                                   ),
                                                   // Text(
                                                   //   DateFormat('dd/MM/yyyy').format(date),
@@ -569,7 +644,11 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                               child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                                 Text(
                                                   AppLocalizations.of(context)!.st_live,
-                                                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, fontWeight: FontWeight.w300, color: Colors.white70),
+                                                  style: Theme
+                                                      .of(context)
+                                                      .textTheme
+                                                      .headline5!
+                                                      .copyWith(fontSize: 12.0, fontWeight: FontWeight.w300, color: Colors.white70),
                                                 ),
                                                 const SizedBox(
                                                   width: 4.0,
@@ -604,11 +683,20 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                       shrinkWrap: true,
                                       physics: const NeverScrollableScrollPhysics(),
                                       itemBuilder: (context, index) {
-                                        var percentage = (contest!.entries![index].amount!.toDouble() / total.toDouble());
+                                        var percentage = 0.0;
+                                        var userPercent = 0.0;
+                                        var goal = contest!.entries![index].goal!.toInt();
+                                        if (goal == 0) {
+                                          percentage = (contest.entries![index].amount!.toDouble() / total.toDouble());
+                                          userPercent = contest.entries![index].userAmount!.toDouble() / contest.entries![index].amount!.toDouble();
+                                        } else {
+                                          percentage = (contest.entries![index].amount!.toDouble() / goal.toDouble());
+                                          userPercent = contest.entries![index].userAmount!.toDouble() / contest.entries![index].amount!.toDouble();
+                                        }
                                         percentage.isNaN ? percentage = 0.0 : percentage;
-                                        var userPercent = contest.entries![index].userAmount!.toDouble() / contest.entries![index].amount!.toDouble();
                                         userPercent.isNaN ? userPercent = 0.0 : userPercent;
                                         var id = contest.entries![index].id;
+
                                         return DataBar(
                                           address: contest.entries![index].address!,
                                           title: contest.entries![index].name!,
@@ -619,8 +707,13 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                           idEntry: id!.toInt(),
                                           index: index,
                                           callBack: (address, idEntry) {
-                                            Dialogs.openVotingDialogs(context, address, idEntry, _sendCoins);
+                                            if (_state == ConState.connected) {
+                                              Dialogs.openVotingDialogs(context, address, idEntry, _sendCoins);
+                                            } else {
+                                              Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.error_connect_wallet);
+                                            }
                                           },
+                                          goal: goal,
                                         );
                                       },
                                     ),
@@ -669,7 +762,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
     Future.delayed(Duration.zero, () => connector.openWalletApp());
     String? s = await connector.sendTestingAmount(recipientAddress: address, amount: amount.toDouble());
     if (s != null) {
-      setState(() { });
+      setState(() {});
       var succ = await vote(idEntry, amount);
       if (succ) {
         Future.delayed(const Duration(milliseconds: 500), () => Dialogs.openAlertBox(context, AppLocalizations.of(context)!.succ, AppLocalizations.of(context)!.vot_succ));
@@ -693,6 +786,18 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
       await interface.post("/contest/vote", debug: true, serverType: ComInterface.serverDAO, body: {
         "idEntry": idEntry,
         "amount": amount,
+      }, request: {});
+      return true;
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> saveAddress(String address) async {
+    try {
+      await interface.post("/user/address/add", debug: true, serverType: ComInterface.serverDAO, body: {
+        "address": address,
       }, request: {});
       return true;
     } catch (e) {
@@ -750,7 +855,11 @@ class VotingLegend extends StatelessWidget {
                 ),
                 Text(
                   AppLocalizations.of(context)!.amount_of_votes,
-                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 8.0),
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .bodyText1!
+                      .copyWith(fontSize: 8.0),
                 ),
               ],
             ),
@@ -769,7 +878,11 @@ class VotingLegend extends StatelessWidget {
                 ),
                 Text(
                   AppLocalizations.of(context)!.amount_of_votes_user,
-                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 8.0),
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .bodyText1!
+                      .copyWith(fontSize: 8.0),
                 ),
               ],
             ),

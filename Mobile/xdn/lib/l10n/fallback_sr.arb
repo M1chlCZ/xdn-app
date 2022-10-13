@@ -185,11 +185,11 @@
   "settings_screen": "Подешавања",
   "settings_main": "Главна подешавања",
   "settings_privacy": "Подешавања приватности",
-  "password_forgot" : "Заборављена лозинка",
-  "user_not_exists" : "User does not exists",
-  "change_language" : "Промените језик",
-  "delete_acc" : "Избриши налог",
-  "voting" : "Гласање",
+  "password_forgot": "Заборављена лозинка",
+  "user_not_exists": "User does not exists",
+  "change_language": "Промените језик",
+  "delete_acc": "Избриши налог",
+  "voting": "Гласање",
   "connect_wallet": "Повежите новчаник",
   "wallet_connected": "Новчаник је повезан",
   "amount_to_reach": "Количина за доћи до",
@@ -212,5 +212,8 @@
   "good_afternoon": "Добар дан",
   "good_evening": "Добро вече",
   "good_night": "Добро ноћ",
-  "good_day": "Добар дан"
+  "good_day": "Добар дан",
+  "funding_target": "Циљ финансирања",
+  "error_connect_wallet": "Грешка при повезивању новчаника",
+  "fully_funded": "Потпуно финансиран"
 }

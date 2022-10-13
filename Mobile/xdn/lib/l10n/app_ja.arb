@@ -212,5 +212,8 @@
   "good_afternoon": "こんにちは",
   "good_evening": "こんばんは",
   "good_night": "おやすみなさい",
-  "good_day": "こんにちは"
+  "good_day": "こんにちは",
+  "funding_target" : "目標金額",
+  "error_connect_wallet" : "ウォレットに接続できませんでした",
+  "fully_funded" : "完全に資金調達されました"
 }

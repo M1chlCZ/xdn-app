@@ -49,8 +49,8 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
-                        var balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
-                        var immature = m['immature'].toString();
+                         var balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
+                         var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
 
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
                         // var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
@@ -118,8 +118,8 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                 width: 25.0,
                                 child: CircularProgressIndicator(
                                   backgroundColor: Colors.white12,
-                                  color: Colors.blue,
-                                  strokeWidth: 2.0,
+                                  color: Colors.white54,
+                                  strokeWidth: 1.0,
                                 )),
                           ]),
                         );

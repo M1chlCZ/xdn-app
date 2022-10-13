@@ -212,5 +212,8 @@
   "good_afternoon": "Dobar dan",
   "good_evening": "Dobro veče",
   "good_night": "Laku noć",
-  "good_day": "Dobar dan"
+  "good_day": "Dobar dan",
+  "funding_target" : "Cilj finansiranja",
+  "error_connect_wallet" : "Greška prilikom povezivanja novčanika",
+  "fully_funded" : "Potpuno finansirano"
 }

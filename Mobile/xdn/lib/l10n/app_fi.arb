@@ -213,5 +213,8 @@
   "good_afternoon": "Hyvää päivää",
   "good_evening": "Hyvää iltaa",
   "good_night": "Hyvää yötä",
-  "good_day": "Hyvää päivää"
+  "good_day": "Hyvää päivää",
+  "funding_target" : "Tavoite",
+  "error_connect_wallet" : "Virhe yhdistettäessä lompakkoa",
+  "fully_funded" : "Täysin rahoitettu"
 }

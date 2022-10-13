@@ -211,5 +211,8 @@
   "good_afternoon": "शुभ दोपहर",
   "good_evening": "शुभ शाम",
   "good_night": "शुभ रात्रि",
-  "good_day": "शुभ दिन"
+  "good_day": "शुभ दिन",
+  "funding_target" : "फंडिंग टार्गेट",
+  "error_connect_wallet" : "वॉलेट कनेक्ट करने में त्रुटि",
+  "fully_funded" : "पूरी तरह से फंडेड"
 }

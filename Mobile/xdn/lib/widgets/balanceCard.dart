@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -61,7 +60,7 @@ class BalanceCardState extends State<BalanceCard> {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
                         var balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
-                        var immature = m['immature'].toString();
+                        var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
 
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
                         return Column(
@@ -109,7 +108,7 @@ class BalanceCardState extends State<BalanceCard> {
                             _priceData != null &&  _priceData!.isNotEmpty
                                 ? SizedBox(
                               width: MediaQuery.of(context).size.width * 0.8,
-                              child: AutoSizeText("${((_priceData!['usd'] * double.parse(m['balance'])) as double).toStringAsFixed(4)} USD",
+                              child: AutoSizeText("${((_priceData!['usd'] * double.parse(m['balance'].toString())) as double).toStringAsFixed(4)} USD",
                                   minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
                             )
                                 : Container(),
@@ -129,16 +128,23 @@ class BalanceCardState extends State<BalanceCard> {
                           ],
                         );
                       } else if (snapshot.hasError) {
-                        return Center(child: Text(snapshot.error.toString(), style: Theme.of(context).textTheme.headline1));
+                        return Center(child: Text(snapshot.error.toString(), style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 12.0, color: Colors.redAccent)));
                       } else {
                         return Center(
                           child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
                             SizedBox(
-                                height: 55.0,
-                                width: 55.0,
-                                child: CircularProgressIndicator(
-                                  backgroundColor: Colors.white,
-                                  strokeWidth: 2.0,
+                                height: 75.0,
+                                width: 75.0,
+                                child: Center(
+                                  child: SizedBox(
+                                    height: 25.0,
+                                    width: 25.0,
+                                    child: CircularProgressIndicator(
+                                      backgroundColor: Colors.transparent,
+                                      color: Colors.white54,
+                                      strokeWidth: 1.0,
+                                    ),
+                                  ),
                                 )),
                           ]),
                         );

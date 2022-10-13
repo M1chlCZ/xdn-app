@@ -10,7 +10,8 @@ class Entries {
       this.name, 
       this.amount, 
       this.userAmount, 
-      this.address,});
+      this.address,
+      this.goal});
 
   Entries.fromJson(dynamic json) {
     id = json['id'];
@@ -18,22 +19,26 @@ class Entries {
     amount = json['amount'];
     userAmount = json['userAmount'];
     address = json['address'];
+    goal = json['goal'];
   }
   num? id;
   String? name;
   num? amount;
   num? userAmount;
   String? address;
+  num? goal;
 Entries copyWith({  num? id,
   String? name,
   num? amount,
   num? userAmount,
   String? address,
+  num? goal,
 }) => Entries(  id: id ?? this.id,
   name: name ?? this.name,
   amount: amount ?? this.amount,
   userAmount: userAmount ?? this.userAmount,
   address: address ?? this.address,
+  goal: goal ?? this.goal,
 );
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -42,6 +47,7 @@ Entries copyWith({  num? id,
     map['amount'] = amount;
     map['userAmount'] = userAmount;
     map['address'] = address;
+    map['goal'] = goal;
     return map;
   }
 

@@ -1,9 +1,10 @@
 import 'dart:convert';
 
+import 'package:digitalnote/support/NetInterface.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import '../globals.dart' as globals;
 
+import '../globals.dart' as globals;
 import '../support/Encrypt.dart';
 import '../support/secure_storage.dart';
 import 'app_exception.dart';
@@ -13,7 +14,7 @@ class ComInterface {
   static const int serverDAO = 1;
   static const int typePlain = 2;
   static const int typeJson = 3;
-
+  static const int serverGoAPI = 4;
 
   Future<dynamic> get(String url,
       {Map<String, dynamic>? request, bool wholeURL = false, int serverType = serverAPI, Map<String, dynamic>? query, dynamic body, int type = typeJson, bool debug = false}) async {
@@ -38,32 +39,55 @@ class ComInterface {
     } else if (serverType == serverDAO) {
       mUrl = globals.DAO_URL + url;
       bearer = "Bearer ${daoJWT ?? ""}";
+    } else if (serverType == serverGoAPI) {
+      mUrl = globals.API_URL + url;
+      bearer = "Bearer ${daoJWT ?? ""}";
     }
 
-    Map<String, String> mHeaders = {
-      "Authorization": bearer,
-      "Content-Type": "application/json",
-      "payload": payload,
-    };
+    try {
+      Map<String, String> mHeaders = {
+        "Authorization": bearer,
+        "Content-Type": "application/json",
+        "payload": payload,
+      };
 
-    response = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
-    if (debug) {
-      debugPrint(mUrl);
-      if (serverType == serverAPI) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        debugPrint(data);
-      } else if (serverType == serverDAO) {
-        debugPrint(response.body.toString());
+      // print("GET: $mUrl ${json.encode(request!)}");
+
+      response = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
+      if (debug) {
+        debugPrint(mUrl);
+        if (serverType == serverAPI) {
+          var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+          debugPrint(data);
+        } else if (serverType == serverDAO || serverType == serverGoAPI) {
+          debugPrint(response.body.toString());
+        } else if (serverType == serverGoAPI) {
+          debugPrint(response.body.toString());
+        }
+        debugPrint(response.statusCode.toString());
       }
-      debugPrint(response.statusCode.toString());
-    }
-    if (type == typePlain) {
-      return response;
-    }
-    if (serverType == serverAPI) {
-      responseJson = compute(_returnResponse, response);
-    } else if (serverType == serverDAO) {
-      responseJson = compute(_returnDaoResponse, response);
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        if (serverType == serverDAO || serverType == serverGoAPI) {
+          var b = await NetInterface.daoRegister();
+          if (b) {
+            var res = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
+            responseJson = compute(_returnDaoResponse, res);
+            return responseJson;
+          } else {
+            return Future.error("unable to login");
+          }
+        }
+      }
+      if (type == typePlain) {
+        return response;
+      }
+      if (serverType == serverAPI) {
+        responseJson = compute(_returnResponse, response);
+      } else if (serverType == serverDAO || serverType == serverGoAPI) {
+        responseJson = compute(_returnDaoResponse, response);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
     }
     return responseJson;
   }
@@ -84,8 +108,11 @@ class ComInterface {
     } else if (serverType == serverDAO) {
       mUrl = globals.DAO_URL + url;
       bearer = "Bearer ${daoJWT ?? ""}";
+    } else if (serverType == serverGoAPI) {
+      mUrl = globals.API_URL + url;
+      bearer = "Bearer ${daoJWT ?? ""}";
     }
-
+    // print("POST: $mUrl");
     Map<String, String> mHeaders = {
       "Authorization": bearer,
       "Content-Type": "application/json",
@@ -98,12 +125,26 @@ class ComInterface {
       debugPrint(response.statusCode.toString());
       debugPrint(response.body);
     }
+
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      if (serverType == serverDAO || serverType == serverGoAPI) {
+        var b = await NetInterface.daoRegister();
+        if (b) {
+          var res = await http.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
+          responseJson = compute(_returnDaoResponse, res);
+          return responseJson;
+        } else {
+          return Future.error("unable to login");
+        }
+      }
+    }
+
     if (type == typePlain) {
       return response;
     }
     if (serverType == serverAPI) {
       responseJson = compute(_returnResponse, response);
-    } else if (serverType == serverDAO) {
+    } else if (serverType == serverDAO || serverType == serverGoAPI) {
       responseJson = compute(_returnDaoResponse, response);
     }
     return responseJson;

@@ -5,6 +5,7 @@ library digitalnote.globals;
 bool isLoggedIn = false;
 const String SERVER_URL = 'http://194.60.201.213:3000';
 const String DAO_URL = 'http://194.60.201.213:6800/dao/v1';
+const String API_URL = 'http://194.60.201.213:6800/api/v1';
 const String USERNAME = "username";
 const String ID = "idUser";
 const String ADR = "adr";

@@ -50,13 +50,15 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   SessionStatus? session;
 
+  bool contestActive = false;
+
+  Future<DaemonStatus>? daemonStatus;
+
   @override
   void initState() {
     _getLocale();
     super.initState();
     refreshBalance();
-    getInfo();
-    getPriceData();
     loginDao();
   }
 
@@ -64,21 +66,38 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     bool res = await NetInterface.daoLogin();
     if (res) {
       debugPrint('Dao login success');
+      bool contest = await NetInterface.checkContest();
+      if (contest) {
+        debugPrint('Contest is active');
+        // setState(() {
+          contestActive = true;
+        // });
+      } else {
+        debugPrint('Contest is not active');
+        // setState(() {
+          contestActive = false;
+        // });
+      }
     } else {
       debugPrint('Dao login failed');
     }
+    await getInfo();
+    await getPriceData();
   }
 
-  void getPriceData() async {
+  getPriceData() async {
     _priceData = await NetInterface.getPriceData();
     setState(() {});
   }
 
   getInfo() async {
     name = await SecureStorage.read(key: globals.NICKNAME);
-    await NetInterface.getAddrBook();
+    setState(()  {  });
+    daemonStatus = getDaemonStatus();
+    // var token = await SecureStorage.read(key: globals.TOKEN);
+    // print(token);
     sumry = await NetInterface.getSummary();
-    setState(() {});
+    NetInterface.getAddrBook();
   }
 
   void _getLocale() async {
@@ -86,10 +105,8 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     await SecureStorage.write(key: globals.LOCALE, value: timeZoneName);
   }
 
-  void refreshBalance() {
-    setState(() {
+   refreshBalance() {
       _getBalance = NetInterface.getBalance(details: true);
-    });
   }
 
   void gotoBalanceScreen() {
@@ -152,18 +169,13 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                     alignment: Alignment.center,
                     child: Padding(
                       padding: const EdgeInsets.only(right: 0.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          gotoVotingScreen();
-                        },
-                        child: SizedBox(
-                            width: 200.0,
-                            height: 50.0,
-                            child: Image.asset(
-                              "images/logo.png",
-                              color: Colors.white70,
-                            )),
-                      ),
+                      child: SizedBox(
+                          width: 200.0,
+                          height: 50.0,
+                          child: Image.asset(
+                            "images/logo.png",
+                            color: Colors.white70,
+                          )),
                     ),
                   ),
                 ),
@@ -226,6 +238,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                 ),
                 VotingMenuWidget(
                   goto: gotoVotingScreen,
+                  isVoting: contestActive,
                 ),
                 const SizedBox(
                   height: 10,
@@ -258,7 +271,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                       padding: const EdgeInsets.only(bottom: 10.0),
                       child: FutureBuilder<DaemonStatus>(
                           initialData: DaemonStatus(block: false, blockStake: false, stakingActive: false),
-                          future: getDaemonStatus(),
+                          future: daemonStatus,
                           builder: (ctx, snapshot) {
                             return Column(mainAxisAlignment: MainAxisAlignment.end, children: [
                               Row(

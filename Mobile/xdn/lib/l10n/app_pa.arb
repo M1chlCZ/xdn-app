@@ -213,7 +213,10 @@
   "good_afternoon": "ਸਵਾਗਤ ਹੈ",
   "good_evening": "ਸਵਾਗਤ ਹੈ",
   "good_night": "ਸਵਾਗਤ ਹੈ",
-  "good_day": "ਸਵਾਗਤ ਹੈ"
+  "good_day": "ਸਵਾਗਤ ਹੈ",
+  "funding_target" : "ਫਾਊਂਡਿੰਗ ਟਾਰਜੈਟ",
+  "error_connect_wallet" : "ਵਾਲੈਟ ਨੂੰ ਕੁਨੈਕਟ ਕਰਨ ਵਿੱਚ ਗਲਤੀ",
+  "fully_funded" : "ਪੂਰੀ ਤਰ੍ਹਾਂ ਫਾਊਂਡ ਹੋ ਗਿਆ"
 }
 
 

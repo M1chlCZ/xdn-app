@@ -212,5 +212,8 @@
   "good_afternoon": "Доброго дня",
   "good_evening": "Доброго вечора",
   "good_night": "На добраніч",
-  "good_day": "Доброго ранку"
+  "good_day": "Доброго ранку",
+  "funding_target" : "Цільове фінансування",
+  "error_connect_wallet" : "Помилка підключення гаманця",
+  "fully_funded" : "Повністю фінансовано"
 }

@@ -212,5 +212,8 @@
   "good_afternoon": "Good afternoon",
   "good_evening": "Good evening",
   "good_night": "Good night",
-  "good_day": "Good day"
+  "good_day": "Good day",
+  "funding_target" : "Funding target",
+  "error_connect_wallet" : "Please connect your wallet",
+  "fully_funded" : "Fully funded"
 }

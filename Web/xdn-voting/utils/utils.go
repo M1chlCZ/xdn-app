@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"github.com/bitly/go-simplejson"
@@ -24,15 +25,15 @@ import (
 	"time"
 	"unicode"
 	"xdn-voting/encrypt"
+	"xdn-voting/models"
 )
 
 const (
-	VERSION          = "0.0.0.1"
-	STATUS    string = "status"
-	OK        string = "OK"
-	FAIL      string = "FAIL"
-	ERROR     string = "hasError"
-	ServerUrl string = "51.195.168.17"
+	VERSION        = "0.0.0.3"
+	STATUS  string = "status"
+	OK      string = "OK"
+	FAIL    string = "FAIL"
+	ERROR   string = "hasError"
 )
 
 var colorReset = "\033[0m"
@@ -357,7 +358,7 @@ func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {
 				//	msg := "Content-Type header is not application/json"
 				//	return ReportError(c, msg, http.StatusUnsupportedMediaType)
 			} else {
-				ReportMessage("JSON content")
+				//ReportMessage("JSON content")
 			}
 		}
 
@@ -399,5 +400,21 @@ func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {
 			return ReportError(c, "Invalid Token", http.StatusUnauthorized)
 		}
 
+	}
+}
+
+func GetDaemon() *models.Daemon {
+	return &models.Daemon{
+		ID:         0,
+		WalletUser: "yourusername",
+		WalletPass: "gMFJfFGFuJpbPGVXD5FQZWoYqWBX6LXk",
+		WalletPort: 18094,
+		Folder:     "",
+		NodeID:     0,
+		CoinID:     0,
+		Conf:       "",
+		IP:         "127.0.0.1",
+		MnPort:     0,
+		PassPhrase: sql.NullString{},
 	}
 }

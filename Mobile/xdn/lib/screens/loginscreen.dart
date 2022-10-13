@@ -126,15 +126,15 @@ class _LoginState extends State<LoginPage> {
         var adminPriv = r["admin"];
         var nickname = r["nickname"];
 
-        SecureStorage.write(key: globals.USERNAME, value: username);
-        SecureStorage.write(key: globals.ADR, value: addr);
-        SecureStorage.write(key: globals.ID, value: userID.toString());
-        SecureStorage.write(key: globals.TOKEN, value: jwt);
-        SecureStorage.write(key: globals.ADMINPRIV, value: adminPriv.toString());
-        SecureStorage.write(key: globals.NICKNAME, value: nickname.toString());
+        await SecureStorage.write(key: globals.USERNAME, value: username);
+        await SecureStorage.write(key: globals.ADR, value: addr);
+        await SecureStorage.write(key: globals.ID, value: userID.toString());
+        await SecureStorage.write(key: globals.TOKEN, value: jwt);
+        await SecureStorage.write(key: globals.ADMINPRIV, value: adminPriv.toString());
+        await SecureStorage.write(key: globals.NICKNAME, value: nickname.toString());
 
         String udid = await FlutterUdid.consistentUdid;
-        SecureStorage.write(key: globals.UDID, value: udid);
+        await SecureStorage.write(key: globals.UDID, value: udid);
         if (mounted) {
           Navigator.of(context).pop();
           Navigator.of(context).pushNamedAndRemoveUntil(MainMenuNew.route, (Route<dynamic> route) => false);

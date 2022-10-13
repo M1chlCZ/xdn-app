@@ -20,6 +20,7 @@ type ContestEntry struct {
 	Amount     float32 `json:"amount" db:"amount"`
 	UserAmount float32 `json:"userAmount" db:"userAmount"`
 	Address    string  `json:"address" db:"address"`
+	Goal       int64   `json:"goal" db:"goal"`
 }
 
 type ContestResponse struct {

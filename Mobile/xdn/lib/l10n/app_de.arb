@@ -212,5 +212,8 @@
   "good_afternoon": "Guten Tag",
   "good_evening": "Guten Abend",
   "good_night": "Gute Nacht",
-  "good_day": "Guten Tag"
+  "good_day": "Guten Tag",
+  "funding_target" : "Finanzierungsziel",
+  "error_connect_wallet" : "Fehler beim Verbinden der Geldbörse",
+  "fully_funded" : "Vollständig finanziert"
 }

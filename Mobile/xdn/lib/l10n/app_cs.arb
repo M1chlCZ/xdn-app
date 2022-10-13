@@ -213,5 +213,8 @@
   "good_afternoon": "Dobré odpoledne",
   "good_evening": "Dobrý večer",
   "good_night": "Dobrou noc",
-  "good_day": "Dobrý den"
+  "good_day": "Dobrý den",
+  "funding_target" : "Cíl",
+  "error_connect_wallet" : "Pro hlasování připojte peněženku",
+  "fully_funded" : "Cíl dosažen"
 }

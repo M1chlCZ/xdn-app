@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/support/get_info.dart';
 import 'package:digitalnote/models/summary.dart' as sum;
 import 'package:digitalnote/support/secure_storage.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import '../globals.dart' as globals;
 import 'AppDatabase.dart';
@@ -239,16 +241,16 @@ class NetInterface {
   }
 
   static Future<Map<String, dynamic>>? getBalance({bool details = false}) async {
-    String? user = await SecureStorage.read(key: globals.USERNAME);
-    Map<String, dynamic> m;
-    if (details) {
-      m = {"User": user, "param1": 1, "request": "getBalance"};
-    } else {
-      m = {"User": user, "request": "getBalance"};
-    }
+    // String? user = await SecureStorage.read(key: globals.USERNAME);
+    // Map<String, dynamic> m;
+    // if (details) {
+    //   m = {"User": user, "param1": 1, "request": "getBalance"};
+    // } else {
+    //   m = {"User": user, "request": "getBalance"};
+    // }
 
     ComInterface ci = ComInterface();
-    Map<String, dynamic> rt = await ci.get("/data", request: m);
+    Map<String, dynamic> rt = await ci.get("/user/balance", serverType: ComInterface.serverGoAPI);
     return rt;
   }
 
@@ -268,7 +270,7 @@ class NetInterface {
         "request": "getAddrBook",
       };
       ComInterface ci = ComInterface();
-      List<dynamic> rt = await ci.get("/data", request: m, debug: true);
+      List<dynamic> rt = await ci.get("/data", request: m, debug: false);
       if (rt.isNotEmpty) {
         List<Contact> l = rt.map((l) => Contact.fromJson(l)).toList();
         AppDatabase().addAddrBook(l);
@@ -948,21 +950,6 @@ class NetInterface {
         Dialogs.openAlertBox(context, 'Warning', response.toString());
         return null;
       }
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
-
-      // if (response.statusCode == 200) {
-      //   var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-      //   if(kDebugMode)print(data.toString());
-      //   return data.toString();
-      // } else {
-      //   Dialogs.openAlertBox(context, 'Warning', response.toString());
-      //   return null;
-      // }
     } on TimeoutException catch (_) {
       Navigator.of(context).pop();
       Dialogs.openAlertBox(context, 'Warning', "Request timed out");
@@ -973,6 +960,22 @@ class NetInterface {
     } catch (e) {
       if (kDebugMode) print(e.toString());
       Dialogs.openAlertBox(context, 'Warning', e.toString());
+      return null;
+    }
+  }
+
+  static Future<String?> getRewardsByDayDao(BuildContext context, int type) async {
+    try {
+      ComInterface interface = ComInterface();
+      Map<String, dynamic> m = {
+        "type": type,
+        "datetime": type == 1 ? DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()) : Utils.getUTC()
+      };
+
+      String? rs = await interface.post("/staking/graph", debug: true, type: ComInterface.typePlain,
+          serverType: ComInterface.serverDAO, body: m);
+      return rs;
+    }catch(e){
       return null;
     }
   }
@@ -1068,6 +1071,20 @@ class NetInterface {
       var b = daoRegister();
       debugPrint("| Dao Register success : ${b.toString().toUpperCase()} |");
       return b;
+    } catch (e) {
+      if (kDebugMode) print(e.toString());
+      return false;
+    }
+  }
+
+  static Future<bool> checkContest() async {
+    try {
+      ComInterface ci = ComInterface();
+      await ci.get("/contest/check", debug: true, serverType: ComInterface.serverDAO, request: {});
+      return true;
+    }on UnauthorisedException catch (e) {
+      if (kDebugMode) print(e.toString());
+      return false;
     } catch (e) {
       if (kDebugMode) print(e.toString());
       return false;

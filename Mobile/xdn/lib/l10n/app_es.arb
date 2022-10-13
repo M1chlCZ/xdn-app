@@ -212,6 +212,9 @@
   "good_afternoon": "Buena tarde",
   "good_evening": "Buenas noches",
   "good_night": "Buenas noches",
-  "good_day": "Buen día"
+  "good_day": "Buen día",
+  "funding_target" : "Objetivo de financiamiento",
+  "error_connect_wallet" : "Error al conectar la billetera",
+  "fully_funded" : "Financiado completamente"
 
 }
