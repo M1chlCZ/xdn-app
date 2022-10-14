@@ -7,6 +7,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
+	"strconv"
+	"time"
+	"xdn-voting/abi"
+	"xdn-voting/utils"
 )
 
 var rpc *WB
@@ -52,4 +56,46 @@ func CreateAddress() string {
 func GetBalance(address string) (*big.Int, error) {
 	addr := common.HexToAddress(address)
 	return rpc.Eth.GetBalance(addr, nil)
+}
+
+func GetContractBalance(address string) (float64, error) {
+	name := "WXDN balanceOf"
+	start := time.Now()
+	elapsed := time.Since(start)
+	valid := utils.Erc20verify(address)
+	if !valid {
+		return 0, fmt.Errorf("invalid erc20 address")
+	}
+	addr := common.HexToAddress(address)
+	contract, err := rpc.Eth.NewContract(abi.WXDN, abi.WXDNContract)
+	if err != nil {
+		return 0, err
+	}
+
+	c, err := contract.Call("balanceOf", addr)
+	if err != nil {
+		return 0, err
+	}
+
+	//convert c to int64
+	//convert
+	bal := c.(*big.Int)
+	b := WeiToString(bal)
+
+	utils.ReportMessage(fmt.Sprintf("Balance: %f", b))
+	utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+	return b, nil
+}
+
+func WeiToString(amount *big.Int) float64 {
+	compactAmount := big.NewInt(0)
+	reminder := big.NewInt(0)
+	divisor := big.NewInt(1e18)
+	compactAmount.QuoRem(amount, divisor, reminder)
+	s := fmt.Sprintf("%v.%v", compactAmount.String(), reminder.String())
+	fl, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
+	return fl
 }

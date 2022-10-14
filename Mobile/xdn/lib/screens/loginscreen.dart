@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/support/get_info.dart';
+import 'package:digitalnote/models/get_info.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

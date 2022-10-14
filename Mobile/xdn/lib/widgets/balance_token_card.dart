@@ -1,35 +1,40 @@
+import 'dart:convert';
+
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/Dialogs.dart';
+import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class BalanceCardMainMenu extends StatefulWidget {
+class BalanceTokenCardMenu extends StatefulWidget {
   final Future<Map<String, dynamic>>? getBalanceFuture;
   final VoidCallback goto;
 
-  const BalanceCardMainMenu({Key? key, required this.getBalanceFuture, required this.goto}) : super(key: key);
+  const BalanceTokenCardMenu({Key? key, required this.getBalanceFuture, required this.goto}) : super(key: key);
 
   @override
-  State<BalanceCardMainMenu> createState() => _BalanceCardMainMenuState();
+  State<BalanceTokenCardMenu> createState() => _BalanceTokenCardMenuState();
 }
 
-class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
+class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 10.0, right: 10.0),
       child: GestureDetector(
         onTap: () {
-          widget.goto();
+          // widget.goto();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "Coming soon!");
         },
         child: Container(
           decoration:  BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(15.0)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withOpacity(0.1),
                 spreadRadius: 2,
-                blurRadius: 6,
-                offset: const Offset(2, 4), // changes position of shadow
+                blurRadius: 3,
+                offset: const Offset(0, 5), // changes position of shadow
               ),
             ],
             image: const DecorationImage(image: AssetImage("images/test_pattern.png"), fit: BoxFit.cover, opacity: 1.0),
@@ -43,8 +48,8 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
-                         var balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
-                         var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
+                        var balance = double.parse(m['balance'].toString());
+                        var immature = '0.000';
 
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
                         // var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
@@ -64,7 +69,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                         padding: const EdgeInsets.only(bottom: 2.0, left: 10.0),
                                         child: SizedBox(
                                           height: 38,
-                                          child: AutoSizeText(balance,
+                                          child: AutoSizeText(Utils.formatBalance(balance),
                                               minFontSize: 18.0,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -81,9 +86,9 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                         margin: const EdgeInsets.only(right: 10.0, bottom: 2.0),
                                         child: Center(
                                             child: Text(
-                                          "XDN",
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70,  fontSize: 24.0, fontWeight: FontWeight.w800),
-                                        ))),
+                                              "WXDN",
+                                              style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70,  fontSize: 24.0, fontWeight: FontWeight.w800),
+                                            ))),
                                     const SizedBox(
                                       width: 78.0,
                                     ),
@@ -93,17 +98,38 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                               ),
                               textImature != ''
                                   ? SizedBox(
-                                      width: MediaQuery.of(context).size.width * 0.8,
-                                      child: AutoSizeText(textImature,
-                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
-                                    )
+                                width: MediaQuery.of(context).size.width * 0.8,
+                                child: AutoSizeText(textImature,
+                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                              )
                                   : Container(),
 
                             ],
                           ),
                         );
                       } else if (snapshot.hasError) {
-                        return Center(child: Text(snapshot.error.toString(), style: Theme.of(context).textTheme.headline1));
+                        return Center(child: Container(
+                          padding: const EdgeInsets.all(5.0),
+
+                            decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 3,
+                              offset: const Offset(0, 2), // changes position of shadow
+                            ),
+                            BoxShadow(
+                              color: Color(0xFF233261).withOpacity(0.1),
+                              spreadRadius: 2,
+                              blurRadius: 3,
+                              offset: const Offset(3, 5), // changes position of shadow
+                            )
+                          ],
+                          image: const DecorationImage(image: AssetImage("images/test_pattern.png"), fit: BoxFit.cover, opacity: 1.0),
+                        ), child: Text('Connect your BSC wallet in Voting section'.capitalize(), style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0,
+                            color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.w800),)));
                       } else {
                         return Center(
                           child: Column(crossAxisAlignment: CrossAxisAlignment.center,mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
@@ -121,10 +147,10 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     }),
               ),
               Padding(
-                padding: const EdgeInsets.only(left:8.0, top: 4.0, bottom: 4.0),
+                padding: const EdgeInsets.only(left:2.0, top: 2.0, bottom: 2.0),
                 child: SizedBox(
-                  width: 90,
-                    child: Image.asset("images/wallet_big.png")),
+                    width: 90,
+                    child: Image.asset("images/wallet_bsc.png")),
               )
             ],
           ),

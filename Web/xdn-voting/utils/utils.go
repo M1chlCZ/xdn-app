@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	VERSION        = "0.0.0.3"
+	VERSION        = "0.0.0.4"
 	STATUS  string = "status"
 	OK      string = "OK"
 	FAIL    string = "FAIL"
@@ -135,7 +135,7 @@ func ReportEncError(enc string, w http.ResponseWriter, err string, statusCode in
 	logToFile("")
 
 	w.Header().Add("url", string(url))
-	encryptMessage, _ := encrypt.EncryptMessage(enc, payload)
+	encryptMessage, _ := encrypt.EncMessage(enc, payload)
 	_ = SendResponse(w, []byte(encryptMessage))
 	// json.NewEncoder(w).Encode(err)
 	return
@@ -394,6 +394,7 @@ func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {
 				return ReportError(c, "Invalid token", http.StatusUnauthorized)
 			} else {
 				c.Request().Header.Set("user_id", fmt.Sprintf("%d", id))
+				c.Request().Header.Set("user_secret", secret.(string))
 				return handler(c)
 			}
 		} else {

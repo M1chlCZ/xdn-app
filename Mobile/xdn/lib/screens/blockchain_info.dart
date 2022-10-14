@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/support/get_info.dart';
+import 'package:digitalnote/models/get_info.dart';
 import 'package:digitalnote/models/summary.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
 import 'package:digitalnote/widgets/card_header.dart';

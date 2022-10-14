@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-func EncryptMessage(key string, message []byte) (string, error) {
+func EncMessage(key string, message []byte) (string, error) {
 	byteMsg := message
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {

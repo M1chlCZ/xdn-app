@@ -10,7 +10,7 @@ import 'package:digitalnote/screens/loginscreen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/support/get_info.dart';
+import 'package:digitalnote/models/get_info.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
 import 'package:digitalnote/widgets/card_header.dart';

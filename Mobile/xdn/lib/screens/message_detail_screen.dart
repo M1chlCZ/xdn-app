@@ -109,7 +109,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   _getBalance() async {
     Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
-    _balance = (double.parse(ss?["balance"]));
+    _balance = (double.parse(ss!["balance"].toString()));
   }
 
   Future<void> notReceived({String? ev}) async {

@@ -121,6 +121,7 @@ class MyAppState extends State<MyApp> {
     precacheImage(const AssetImage('images/contacts_big.png'), context);
     precacheImage(const AssetImage('images/settings_big.png'), context);
     precacheImage(const AssetImage('images/card.png'), context);
+    precacheImage(const AssetImage('images/test_pattern.png'), context);
   }
 
   getPin() async {

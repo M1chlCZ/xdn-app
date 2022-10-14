@@ -21,23 +21,15 @@ class _VotingMenuWidgetState extends State<VotingMenuWidget> {
         margin: const EdgeInsets.only(left: 10.0, right: 10.0),
         decoration:  BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF313C5D),
-              Color(0xFF4A5EB0)
-            ],
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              spreadRadius: 3,
-              blurRadius: 4,
-              offset: const Offset(0, 5), // changes position of shadow
+              spreadRadius: 2,
+              blurRadius: 6,
+              offset: const Offset(2, 4), // changes position of shadow
             ),
-
           ],
-          image: const DecorationImage(image: AssetImage("images/card_voting.png"), fit: BoxFit.fitWidth, opacity: 0.4),
+          image: const DecorationImage(image: AssetImage("images/test_pattern.png"), fit: BoxFit.cover, opacity: 1.0),
         ),
         child: Stack(
           children: [

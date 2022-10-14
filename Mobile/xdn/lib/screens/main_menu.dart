@@ -16,6 +16,7 @@ import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
 import 'package:digitalnote/widgets/balance_card.dart';
+import 'package:digitalnote/widgets/balance_token_card.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:digitalnote/widgets/voting_menu_widget.dart';
@@ -38,9 +39,12 @@ class MainMenuNew extends StatefulWidget {
 
 class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
+  final GlobalKey<BalanceCardState> _keyTokenBal = GlobalKey();
   ComInterface cm = ComInterface();
 
   Future<Map<String, dynamic>>? _getBalance;
+
+  Future<Map<String, dynamic>>? _getTokenBalance;
 
   String? name;
 
@@ -58,13 +62,13 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   void initState() {
     _getLocale();
     super.initState();
-    refreshBalance();
     loginDao();
   }
 
   void loginDao() async {
     bool res = await NetInterface.daoLogin();
     if (res) {
+      refreshBalance();
       debugPrint('Dao login success');
       bool contest = await NetInterface.checkContest();
       if (contest) {
@@ -106,7 +110,10 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
    refreshBalance() {
+    setState(() {
       _getBalance = NetInterface.getBalance(details: true);
+      _getTokenBalance = NetInterface.getTokenBalance();
+    });
   }
 
   void gotoBalanceScreen() {
@@ -157,123 +164,151 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
             mainMenu: true,
           ),
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 0.0),
-                      child: SizedBox(
-                          width: 200.0,
-                          height: 50.0,
-                          child: Image.asset(
-                            "images/logo.png",
-                            color: Colors.white70,
-                          )),
+                Container(
+                  height: MediaQuery.of(context).size.height* 0.81,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        SizedBox(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 0.0),
+                              child: SizedBox(
+                                  width: 200.0,
+                                  height: 50.0,
+                                  child: Image.asset(
+                                    "images/logo.png",
+                                    color: Colors.white70,
+                                  )),
+                            ),
+                          ),
+                        ),
+                        Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              "\$${_priceData?['usd'].toString() ?? "0.0"}",
+                              style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white54),
+                            )),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 15, right: 15.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _getDatetimeHeadline(),
+                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
+                                    ),
+                                    Text(name ?? '', style: Theme.of(context).textTheme.headline5),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.all(0.0),
+                                decoration: BoxDecoration(borderRadius: const BorderRadius.all(Radius.circular(8.0)), color: Colors.black.withOpacity(0.1)),
+                                child: const AvatarPicker(
+                                  userID: null,
+                                  size: 100.0,
+                                  color: Colors.transparent,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 30,
+                        ),
+                        BalanceCardMainMenu(
+                          key: _keyBal,
+                          getBalanceFuture: _getBalance,
+                          goto: gotoBalanceScreen,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        BalanceTokenCardMenu(
+                          key: _keyTokenBal,
+                          getBalanceFuture: _getTokenBalance,
+                          goto: gotoBalanceScreen,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        StakingMenuWidget(
+                          goto: gotoStakingScreen,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        VotingMenuWidget(
+                          goto: gotoVotingScreen,
+                          isVoting: contestActive,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10.0, right: 10.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Expanded(child: SmallMenuTile(name: AppLocalizations.of(context)!.messages, iconName: "messages", goto: gotoMessagesScreen)),
+                              Expanded(
+                                  child: SmallMenuTile(
+                                name: AppLocalizations.of(context)!.contacts,
+                                goto: gotoContactScreen,
+                                iconName: "contacts",
+                              )),
+                              Expanded(
+                                  child: SmallMenuTile(
+                                name: AppLocalizations.of(context)!.set_headline.capitalize(),
+                                goto: gotoSettingsScreen,
+                                iconName: "settings",
+                              )),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
                 Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      "\$${_priceData?['usd'].toString() ?? "0.0"}",
-                      style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white54),
-                    )),
-                const SizedBox(
-                  height: 20,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 15, right: 15.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(
-                              _getDatetimeHeadline(),
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: FutureBuilder<DaemonStatus>(
+                        initialData: DaemonStatus(block: false, blockStake: false, stakingActive: false),
+                        future: daemonStatus,
+                        builder: (ctx, snapshot) {
+                          return Container(
+                            height: 50,
+                            decoration: const BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.all(Radius.circular(8.0)),
                             ),
-                            Text(name ?? '', style: Theme.of(context).textTheme.headline5),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(0.0),
-                        decoration: BoxDecoration(borderRadius: const BorderRadius.all(Radius.circular(8.0)), color: Colors.black.withOpacity(0.2)),
-                        child: const AvatarPicker(
-                          userID: null,
-                          size: 100.0,
-                          color: Colors.transparent,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                BalanceCardMainMenu(
-                  key: _keyBal,
-                  getBalanceFuture: _getBalance,
-                  goto: gotoBalanceScreen,
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                StakingMenuWidget(
-                  goto: gotoStakingScreen,
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                VotingMenuWidget(
-                  goto: gotoVotingScreen,
-                  isVoting: contestActive,
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 10.0, right: 10.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Expanded(child: SmallMenuTile(name: AppLocalizations.of(context)!.messages, iconName: "messages", goto: gotoMessagesScreen)),
-                      Expanded(
-                          child: SmallMenuTile(
-                        name: AppLocalizations.of(context)!.contacts,
-                        goto: gotoContactScreen,
-                        iconName: "contacts",
-                      )),
-                      Expanded(
-                          child: SmallMenuTile(
-                        name: AppLocalizations.of(context)!.set_headline.capitalize(),
-                        goto: gotoSettingsScreen,
-                        iconName: "settings",
-                      )),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 10.0),
-                      child: FutureBuilder<DaemonStatus>(
-                          initialData: DaemonStatus(block: false, blockStake: false, stakingActive: false),
-                          future: daemonStatus,
-                          builder: (ctx, snapshot) {
-                            return Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                            child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
@@ -379,9 +414,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                   )
                                 ],
                               ),
-                            ]);
-                          }),
-                    ),
+                            ]),
+                          );
+                        }),
                   ),
                 )
               ],

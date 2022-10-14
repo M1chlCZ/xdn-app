@@ -43,9 +43,7 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
   bool? useTablet;
 
   void refreshBalance() {
-    setState(() {
       _getBalance = NetInterface.getBalance(details: true);
-    });
   }
 
   void notif() {

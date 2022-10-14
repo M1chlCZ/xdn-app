@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Utils.dart';
-import 'package:digitalnote/support/get_info.dart';
+import 'package:digitalnote/models/get_info.dart';
 import 'package:digitalnote/models/summary.dart' as sum;
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -251,6 +251,12 @@ class NetInterface {
 
     ComInterface ci = ComInterface();
     Map<String, dynamic> rt = await ci.get("/user/balance", serverType: ComInterface.serverGoAPI);
+    return rt;
+  }
+
+  static Future<Map<String, dynamic>>? getTokenBalance() async {
+      ComInterface ci = ComInterface();
+    Map<String, dynamic> rt = await ci.get("/user/token/wxdn", serverType: ComInterface.serverGoAPI, debug: true);
     return rt;
   }
 

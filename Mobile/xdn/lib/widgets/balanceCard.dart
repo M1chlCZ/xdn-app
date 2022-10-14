@@ -48,7 +48,7 @@ class BalanceCardState extends State<BalanceCard> {
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
-            image: DecorationImage(image: AssetImage("images/card.png"), fit: BoxFit.fitWidth, opacity: 0.5),
+            image: DecorationImage(image: AssetImage("images/test_pattern.png"), fit: BoxFit.fill, opacity: 0.8),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Column(

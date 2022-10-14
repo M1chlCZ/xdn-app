@@ -26,7 +26,7 @@ class BackgroundWidgetState extends State<BackgroundWidget> {
         // stops: [0.1, 0.9],
         center: const Alignment(0.9, 0.0),
         colors: [
-          const  Color(0xFF6175B2).withOpacity(0.5),
+          const  Color(0xFF1C2952),
           const Color(0xFF323A57)
         ],
         radius: 1.0,

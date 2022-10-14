@@ -8,25 +8,24 @@ import (
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
 	"log"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
+	"time"
 	"xdn-voting/coind"
 	"xdn-voting/database"
 	"xdn-voting/errs"
 	"xdn-voting/models"
 	"xdn-voting/utils"
+	"xdn-voting/web3"
 )
 
 func main() {
 	database.New()
 	utils.NewJWT()
-	//web3.New()
-	//number, errr := web3.GetBalance("0x426cdD94138DD82737D40057f949588b3957DAb7")
-	//if errr != nil {
-	//	log.Println(errr)
-	//}
-	//utils.ReportMessage(fmt.Sprintf("Addr: %v ", float64(number.Int64())/1000000000000000000))
+	web3.New()
+
 	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
 	// ================== DAO ==================
@@ -42,6 +41,7 @@ func main() {
 	// ================== API ==================
 	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
 	app.Get("api/v1/user/balance", utils.Authorized(getBalance))
+	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
 
 	err := app.Listen(":6800")
 	if err != nil {
@@ -57,16 +57,33 @@ func getBalance(c *fiber.Ctx) error {
 	}
 	acc, _ := database.ReadValue[string]("SELECT username FROM users WHERE id = ?", userID)
 	addr, _ := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
-	immature, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount),0) as immature FROM transaction WHERE account = ? AND confirmation < 5 AND category = 'receive'", acc)
+	immature, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount),0) as immature FROM transaction WHERE account = ? AND confirmation < 3 AND category = 'receive'", acc)
 	daemon := utils.GetDaemon()
-	balance, err := coind.WrapDaemon(*daemon, 5, "listunspent", 1, 9999999, []string{addr})
+	unspent, err := coind.WrapDaemon(*daemon, 5, "listunspent", 1, 9999999, []string{addr})
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	type balStruct struct {
+		Amount   float64 `db:"amount"`
+		Category string  `db:"category"`
+	}
+	bal, err := database.ReadArray[balStruct](`SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 2 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send'`, acc, acc)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 
+	balance := 0.0
+	for _, b := range bal {
+		if b.Category == "send" {
+			balance -= math.Abs(b.Amount)
+		} else {
+			balance += math.Abs(b.Amount)
+		}
+	}
+
 	var ing []models.ListUnspent
 	spendable := 0.0
-	errJson := json.Unmarshal(balance, &ing)
+	errJson := json.Unmarshal(unspent, &ing)
 	if errJson != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
@@ -80,7 +97,7 @@ func getBalance(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
-		"balance":    0,
+		"balance":    fmt.Sprintf("%.2f", float32(balance)),
 		"immature":   float32(immature),
 		"spendable":  float32(spendable),
 	})
@@ -425,5 +442,29 @@ func getStakeGraph(c *fiber.Ctx) error {
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
 		"stakes":     returnArr,
+	})
+}
+
+func getTokenBalance(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	name := "Token balance request"
+	start := time.Now()
+	elapsed := time.Since(start)
+	acc, err := database.ReadValue[string]("SELECT addr FROM users_addr WHERE idUser = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	if acc == "" {
+		return utils.ReportError(c, "No address", http.StatusBadRequest)
+	}
+	balance, err := web3.GetContractBalance(acc)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":   false,
+		utils.STATUS: utils.OK,
+		"balance":    balance,
 	})
 }
