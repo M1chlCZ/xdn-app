@@ -865,7 +865,7 @@ class _SettingsState extends State<SettingsScreen> {
       if (succ) {
         if (mounted) {
           Navigator.of(context).pop();
-          Dialogs.openDeleteAccountSecondBox(context, _removeAccount);
+          Dialogs.openPasswordConfirmBox(context, _passChange);
         }
       } else {
         if (mounted) {
