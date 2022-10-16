@@ -56,16 +56,17 @@ func ReadSql(SQL string, params ...interface{}) (*sqlx.Rows, error) {
 func ReadValue[T any](SQL string, params ...interface{}) (T, error) {
 	d := make(chan T, 1)
 	e := make(chan error, 1)
-	go func(data chan T, errChan chan error) {
+	go func(data chan T, err chan error) {
 		var an T
-		err := Database.QueryRow(SQL, params...).Scan(&an)
-		if err != nil {
-			i := getZero[T]()
-			errChan <- err
-			data <- i
+		errDB := Database.QueryRow(SQL, params...).Scan(&an)
+		if errDB != nil {
+			//i := getZero[T]()
+			err <- errDB
+			//data <- i
 			//return i, err
 		} else {
 			data <- an
+			//err <- nil
 			//return an, nil
 		}
 	}(d, e)
@@ -88,13 +89,13 @@ func ReadValueEmpty[T any](SQL string, params ...interface{}) T {
 		var an T
 		errDB := Database.QueryRow(SQL, params...).Scan(&an)
 		if errDB != nil {
-			i := getZero[T]()
+			//i := getZero[T]()
 			err <- errDB
-			data <- i
+			//data <- i
 			//return i, err
 		} else {
 			data <- an
-			err <- nil
+			//err <- nil
 			//return an, nil
 		}
 	}(d, e)
@@ -116,10 +117,10 @@ func ReadStruct[T any](SQL string, params ...interface{}) (T, error) {
 	go func(data chan T, err chan error) {
 		rows, errDB := Database.Queryx(SQL, params...)
 		if errDB != nil {
-			i := getZero[T]()
+			//i := getZero[T]()
 			_ = rows.Close()
 			err <- errDB
-			data <- i
+			//data <- i
 			//return i, err
 		} else {
 			var s T
@@ -127,10 +128,11 @@ func ReadStruct[T any](SQL string, params ...interface{}) (T, error) {
 			if errDB != nil {
 				_ = rows.Close()
 				//return getZero[T](), err
+				err <- errDB
 			}
 			_ = rows.Close()
 			data <- s
-			err <- nil
+			//err <- nil
 			//return s, nil
 		}
 	}(d, e)
@@ -147,22 +149,32 @@ func ReadStruct[T any](SQL string, params ...interface{}) (T, error) {
 }
 
 func ReadStructEmpty[T any](SQL string, params ...interface{}) T {
-	rows, err := Database.Queryx(SQL, params...)
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		i := getZero[T]()
-		_ = rows.Close()
-		return i
-	} else {
-		var s T
-		s, err := ParseStruct[T](rows)
+	d := make(chan T, 1)
+	go func(data chan T) {
+		rows, err := Database.Queryx(SQL, params...)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
+			i := getZero[T]()
 			_ = rows.Close()
-			return getZero[T]()
+			data <- i
+			//return i
+		} else {
+			var s T
+			s, err := ParseStruct[T](rows)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				_ = rows.Close()
+				data <- getZero[T]()
+				//return getZero[T]()
+			}
+			_ = rows.Close()
+			data <- s
 		}
-		_ = rows.Close()
-		return s
+	}(d)
+	select {
+	case data := <-d:
+		close(d)
+		return data
 	}
 }
 
@@ -173,8 +185,8 @@ func ReadArrayStruct[T any](SQL string, params ...interface{}) ([]T, error) {
 		rows, errDB := ReadSql(SQL, params...)
 		if errDB != nil {
 			//utils.WrapErrorLog(err.Error())
-			i := getZeroArray[T]()
-			data <- i
+			//i := getZeroArray[T]()
+			//data <- i
 			err <- errDB
 		} else {
 			var s []T
@@ -207,13 +219,13 @@ func ReadArray[T any](SQL string, params ...interface{}) ([]T, error) {
 		rows, errDB := Database.Queryx(SQL, params...)
 		if errDB != nil {
 			utils.WrapErrorLog(errDB.Error())
-			data <- i
+			//data <- i
 			err <- errDB
 		} else {
 			for rows.Next() {
 				var s T
 				if errDB := rows.StructScan(&s); errDB != nil {
-					data <- i
+					//data <- i
 					err <- errDB
 				} else {
 					i = append(i, s)
