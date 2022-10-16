@@ -12,9 +12,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 import '../globals.dart' as globals;
+import '../models/Contact.dart';
 import '../support/AppDatabase.dart';
 import '../support/ColorScheme.dart';
-import '../models/Contact.dart';
 import '../support/Dialogs.dart';
 import '../support/NetInterface.dart';
 import '../support/Utils.dart';
@@ -171,14 +171,12 @@ class SendWidgetState extends State<SendWidget> {
     // sendView = true;
     Future.delayed(Duration.zero, () {
       initView();
-      if (kDebugMode){
+      if (kDebugMode) {
         setState(() {
-        _controllerAddress.text = "dcjvrzkNmPCV8f2e2C9UVB5wTroo4iELzt";
+          _controllerAddress.text = "dcjvrzkNmPCV8f2e2C9UVB5wTroo4iELzt";
         });
       }
     });
-
-
 
     // wait = false;
     // succ = false;
@@ -220,7 +218,13 @@ class SendWidgetState extends State<SendWidget> {
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
-              color: const Color(0xFF79ad66), border: Border.all(color: Colors.green), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF222D52), Color(0xFF384F91)],
+              ),
+              border: Border.all(color: Colors.green),
+              borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -244,10 +248,7 @@ class SendWidgetState extends State<SendWidget> {
           margin: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-              color: Theme.of(context).konjCardColor,
-              border: Border.all(color: Colors.transparent),
-              borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(color: Theme.of(context).konjCardColor, border: Border.all(color: Colors.transparent), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -271,8 +272,7 @@ class SendWidgetState extends State<SendWidget> {
           margin: EdgeInsets.only(top: useTablet ? padding : 10.0, left: 10.0, right: 10.0),
           padding: const EdgeInsets.all(10.0),
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-              color: const Color(0xFFF77066), border: Border.all(color: Colors.red), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
+          decoration: BoxDecoration(color: const Color(0xFFF77066), border: Border.all(color: Colors.red), borderRadius: const BorderRadius.all(Radius.circular(15.0))),
           child: Center(
               child: Center(
             child: SizedBox(
@@ -300,12 +300,19 @@ class SendWidgetState extends State<SendWidget> {
               elevation: 5,
               borderRadius: const BorderRadius.all(Radius.circular(15.0)),
               child: Container(
-                height: useTablet ? heightVal : 220.0,
+                height: useTablet ? heightVal : 225.0,
                 padding: const EdgeInsets.all(10.0),
                 width: MediaQuery.of(context).size.width,
                 decoration: const BoxDecoration(
-                    color: Color(0xFF475A9C),
-                    borderRadius: BorderRadius.all(Radius.circular(15.0))),
+                    image: DecorationImage(image: AssetImage("images/test_pattern.png"), fit: BoxFit.fill, opacity: 0.8),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                      colors: [Color(0xFF222D52), Color(0xFF384F91)],
+                    ),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
+                    )),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Column(
@@ -324,7 +331,6 @@ class SendWidgetState extends State<SendWidget> {
                                 noItemsFoundBuilder: (context) {
                                   return const SizedBox(width: 0, height: 0);
                                 },
-
                                 textFieldConfiguration: TextFieldConfiguration(
                                   maxLength: 40,
                                   maxLines: 1,
@@ -362,8 +368,8 @@ class SendWidgetState extends State<SendWidget> {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                              color: Colors.white70,
-                                            ),
+                                                  color: Colors.white70,
+                                                ),
                                           ),
                                         ),
                                         subtitle: SizedBox(
@@ -373,8 +379,8 @@ class SendWidgetState extends State<SendWidget> {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                              color: Colors.white.withOpacity(0.5),
-                                            ),
+                                                  color: Colors.white.withOpacity(0.5),
+                                                ),
                                           ),
                                         ),
                                       ),
@@ -509,7 +515,9 @@ class SendWidgetState extends State<SendWidget> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 20.0,),
+                              const SizedBox(
+                                width: 20.0,
+                              ),
                               Expanded(
                                 child: Directionality(
                                   textDirection: TextDirection.rtl,

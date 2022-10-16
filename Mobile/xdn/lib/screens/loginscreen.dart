@@ -135,6 +135,12 @@ class _LoginState extends State<LoginPage> {
 
         String udid = await FlutterUdid.consistentUdid;
         await SecureStorage.write(key: globals.UDID, value: udid);
+        bool resDao = await NetInterface.daoLogin();
+        if (resDao) {
+          debugPrint("Dao Login OK");
+        } else {
+          debugPrint('Dao login failed');
+        }
         if (mounted) {
           Navigator.of(context).pop();
           Navigator.of(context).pushNamedAndRemoveUntil(MainMenuNew.route, (Route<dynamic> route) => false);

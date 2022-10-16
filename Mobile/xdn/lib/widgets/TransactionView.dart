@@ -95,9 +95,10 @@ class TransactionView extends StatelessWidget {
               width: 280.0,
               height: 64.0,
               decoration: const BoxDecoration(
+
                 gradient: LinearGradient(
-                  colors: [Color(0xFF313C5D),
-                    Color(0xFF4E5E9F)],
+                  colors: [Color(0xFF222D52),
+                    Color(0xFF384F91)],
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),

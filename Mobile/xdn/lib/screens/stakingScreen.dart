@@ -60,6 +60,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   bool _staking = false;
   bool _paused = false;
   bool _imatureVisible = false;
+  bool _hideLoad = false;
   int _countNot = 0;
   bool _awaitingNot = false;
   double _totalCoins = 0.0;
@@ -259,25 +260,22 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     }
   }
 
-
   void _getBalance() async {
     _getBalanceFuture = NetInterface.getBalance(details: true);
+    setState(() {});
     await _checkPoolStats();
     await _checkStaking();
   }
 
   Future<void> _checkStaking() async {
     if (_locked == 0.0) {
-      setState(() {
-        _staking = false;
-      });
-      // animationStakeController!.reverse();
+      _staking = false;
     } else {
-      setState(() {
-        _staking = true;
-      });
+      _staking = true;
     }
+    _hideLoad = true;
     _lockedText = AppLocalizations.of(context)!.st_locked_coins;
+    setState(() {});
   }
 
   Future<void> _checkPoolStats() async {
@@ -504,10 +502,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                   ),
                 ),
               ),
-              Padding(
-                  padding: const EdgeInsets.only(left: 2.0, right: 2.0),
-                  child: ClipRect(
+              Stack(
+                children: [
+                  ClipRect(
                       child: Container(
+                    margin: const EdgeInsets.only(left: 2.0, right: 2.0),
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.all(Radius.circular(10.0)),
                       border: Border.all(color: Theme.of(context).konjHeaderColor),
@@ -610,139 +609,136 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                         ),
                         Column(
                           children: [
-                            Visibility(
-                              visible: _staking,
-                              child: Column(
-                                children: [
-                                  const SizedBox(
-                                    height: 10,
+                            Column(
+                              children: [
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 8.0, right: 8.0),
+                                  child: Divider(
+                                    height: 1,
+                                    color: Colors.white60,
                                   ),
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 8.0, right: 8.0),
-                                    child: Divider(
-                                      height: 1,
-                                      color: Colors.white60,
-                                    ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(_lockedText, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
+                                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                        Text(
+                                          "$_locked XDN",
+                                          style: Theme.of(context).textTheme.headline6!.copyWith(
+                                                fontSize: 12.0,
+                                              ),
+                                        )
+                                      ])
+                                    ],
                                   ),
-                                  const SizedBox(
-                                    height: 10,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(AppLocalizations.of(context)!.st_reward, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
+                                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                        Text(
+                                          "$_reward XDN",
+                                          style: Theme.of(context).textTheme.headline6!.copyWith(
+                                                fontSize: 12.0,
+                                              ),
+                                        ),
+                                      ]),
+                                    ],
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(_lockedText, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
-                                        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                          Text(
-                                            "$_locked XDN",
-                                            style: Theme.of(context).textTheme.headline6!.copyWith(
-                                                  fontSize: 12.0,
-                                                ),
-                                          )
-                                        ])
-                                      ],
-                                    ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                                  child: Divider(
+                                    height: 1,
+                                    color: Colors.white54,
                                   ),
-                                  Padding(
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Opacity(
+                                  opacity: 0.7,
+                                  child: Padding(
                                     padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(AppLocalizations.of(context)!.st_reward, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
+                                        Text(AppLocalizations.of(context)!.st_total_coins, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
                                         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                           Text(
-                                            "$_reward XDN",
-                                            style: Theme.of(context).textTheme.headline6!.copyWith(
-                                                  fontSize: 12.0,
-                                                ),
+                                            "${_totalCoins.toString()} XDN",
+                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
                                           ),
-                                        ]),
+                                          // SizedBox(width: 35, height: 14, child: Text('XDN', textAlign: TextAlign.end, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),))
+                                          // Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/logo_send.png'), fit: BoxFit.fitWidth))),
+                                        ])
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 15.0, right: 15.0),
-                                    child: Divider(
-                                      height: 1,
-                                      color: Colors.white54,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  Opacity(
-                                    opacity: 0.7,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(AppLocalizations.of(context)!.st_total_coins, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
-                                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                            Text(
-                                              "${_totalCoins.toString()} XDN",
-                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
-                                            ),
-                                            // SizedBox(width: 35, height: 14, child: Text('XDN', textAlign: TextAlign.end, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),))
-                                            // Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/logo_send.png'), fit: BoxFit.fitWidth))),
-                                          ])
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  Opacity(
-                                    opacity: 0.7,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(AppLocalizations.of(context)!.st_contribution, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
-                                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                            Text(
-                                              _contribution.toString(),
-                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
-                                            ),
-                                            const SizedBox(
-                                              width: 10,
-                                            ),
-                                            Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/perc.png'), fit: BoxFit.fitWidth))),
-                                          ])
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  Opacity(
-                                    opacity: 0.7,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: AutoSizeText(AppLocalizations.of(context)!.st_estimated,
-                                                minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
-                                          ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Opacity(
+                                  opacity: 0.7,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(AppLocalizations.of(context)!.st_contribution, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                           Text(
-                                            "${_estimated.toString()} XDN",
+                                            _contribution.toString(),
                                             style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
                                           ),
-                                        ],
-                                      ),
+                                          const SizedBox(
+                                            width: 10,
+                                          ),
+                                          Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/perc.png'), fit: BoxFit.fitWidth))),
+                                        ])
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Opacity(
+                                  opacity: 0.7,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: AutoSizeText(AppLocalizations.of(context)!.st_estimated,
+                                              minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                        ),
+                                        Text(
+                                          "${_estimated.toString()} XDN",
+                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(
                               height: 10,
@@ -916,7 +912,34 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                         ),
                       ],
                     ),
-                  ))),
+                  )),
+                  Positioned.fill(
+                      child: Visibility(
+                        visible: _hideLoad ? false : true,
+                        child: ClipRect(
+                            child: Container(
+                    margin: const EdgeInsets.only(left: 2.0, right: 2.0),
+                    decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(Radius.circular(10.0)),
+                        border: Border.all(color: Theme.of(context).konjHeaderColor),
+                        color: const Color(0xFF262C43),
+                    ),
+                    child: SizedBox(
+                        width: double.infinity,
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: const Center(
+                            child: SizedBox(
+                                width: 25,
+                                height: 25,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white54,
+                                  strokeWidth: 1.0,
+                                ))),
+                    ),
+                  )),
+                      )),
+                ],
+              ),
               const SizedBox(
                 height: 10.0,
               ),
@@ -983,7 +1006,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     ]);
   }
 
-
   String _formatCountdownTime(int? time) {
     if (time == null || time == 0) {
       return "00";
@@ -994,7 +1016,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       return time.toString();
     }
   }
-
 
   @override
   void onDetached() {}

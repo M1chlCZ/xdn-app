@@ -49,3 +49,4 @@ app.*.map.json
 google-services.json
 GoogleService-info.plist
 /android/key2.properties
+flutter_01.sksl.json

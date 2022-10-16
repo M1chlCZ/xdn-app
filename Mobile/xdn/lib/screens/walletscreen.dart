@@ -43,7 +43,7 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
   bool? useTablet;
 
   void refreshBalance() {
-      _getBalance = NetInterface.getBalance(details: true);
+    _getBalance = NetInterface.getBalance(details: true);
   }
 
   void notif() {
@@ -87,19 +87,24 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
 
   void animateButton() {
     if (_forward) {
-      _switchWidget = balanceCard();
-      _forward = false;
+      setState(() {
+        _switchWidget = balanceCard();
+        _forward = false;
+      });
     } else {
-      _switchWidget = sendWidget();
-      _forward = true;
+      setState(() {
+        _switchWidget = sendWidget();
+        _forward = true;
+      });
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _key.currentState!.initView();
+      });
     }
-    _key.currentState?.initView();
-    setState(() {});
   }
 
   void showTransactions() {
     animateButton();
-    FocusScope.of(context).unfocus();
+    // FocusScope.of(context).unfocus();
   }
 
   @override

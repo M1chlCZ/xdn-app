@@ -4,6 +4,7 @@ import 'package:digitalnote/endpoints/get_transactions.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/models/TranSaction.dart';
 import 'package:flutter/foundation.dart';
+import 'package:rxdart/rxdart.dart';
 
 class TransactionBloc {
   final TransactionEndpoint _balanceList = TransactionEndpoint();
@@ -16,7 +17,7 @@ class TransactionBloc {
   Stream<ApiResponse<List<TranSaction>>> get coinsListStream => _coinListController!.stream;
 
   TransactionBloc() {
-    _coinListController = StreamController<ApiResponse<List<TranSaction>>>();
+    _coinListController = BehaviorSubject<ApiResponse<List<TranSaction>>>();
     // fetchTransactions();
   }
 
@@ -31,7 +32,7 @@ class TransactionBloc {
       coinsListSink.add(ApiResponse.completed(_coins));
       var i = await _balanceList.fetchNetTransactions();
       if(i > 0) {
-        coinsListSink.add(ApiResponse.loading('Fetching All Coins'));
+        // coinsListSink.add(ApiResponse.loading('Fetching All Coins'));
         _coins = await _balanceList.fetchDBTransactions();
         coinsListSink.add(ApiResponse.completed(_coins));
       }

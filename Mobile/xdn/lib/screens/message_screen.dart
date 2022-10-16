@@ -101,9 +101,7 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
             mgroup: mg,
             func: _updateRead,
           );
-        }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
-          return FadeTransition(opacity: animation, child: child);
-        }))
+        }, ))
         .then((value) => _updateRead(mg.sentAddressOrignal!));
   }
 

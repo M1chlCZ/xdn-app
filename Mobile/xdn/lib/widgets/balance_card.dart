@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class BalanceCardMainMenu extends StatefulWidget {
-  final Future<Map<String, dynamic>>? getBalanceFuture;
+  final FutureOr<Map<String, dynamic>>? getBalanceFuture;
   final VoidCallback goto;
 
   const BalanceCardMainMenu({Key? key, required this.getBalanceFuture, required this.goto}) : super(key: key);
@@ -39,7 +41,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
             children: [
               Center(
                 child: FutureBuilder<Map<String, dynamic>>(
-                    future: widget.getBalanceFuture,
+                    future: Future.value(widget.getBalanceFuture),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;

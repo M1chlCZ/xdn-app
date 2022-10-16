@@ -12,6 +12,7 @@ import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
 import 'package:digitalnote/support/AppDatabase.dart';
+import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/locator.dart';
 import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/support/notification_service.dart';
@@ -93,6 +94,12 @@ class MyAppState extends State<MyApp> {
       if (jwt.length != 3) {
         return LoginPage.route;
       } else {
+        bool res = await NetInterface.daoLogin();
+        if (res) {
+         debugPrint("Dao Login OK");
+        } else {
+          debugPrint('Dao login failed');
+        }
         var payload = json.decode(ascii.decode(base64.decode(base64.normalize(jwt[1]))));
         if (DateTime.fromMillisecondsSinceEpoch(payload["exp"] * 1000).isAfter(DateTime.now())) {
           if (pinUsed) {

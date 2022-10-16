@@ -100,59 +100,68 @@ class TransactionWidgetState extends State<TransactionWidget> {
           ],
         ),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 0.0, bottom: 0.0),
+          child: Container(
+            margin: const EdgeInsets.only(left: 10.0, right: 10.0, top: 0.0, bottom: 0.0),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(15.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                  offset: const Offset(0, 0), // changes position of shadow
+                ),
+              ],
+            ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15.0),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 0.0, right: 0.0, top: 0.0, bottom: 0.0),
-                child: RefreshIndicator(
-                  onRefresh: _getShit,
-                  child: StreamBuilder<ApiResponse<List<TranSaction>>>(
-                      stream: tb.coinsListStream,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          switch (snapshot.data!.status) {
-                            case Status.completed:
-                              Future.delayed(Duration.zero, () {
-                                setState(() {
-                                  _circleVisible = false;
-                                });
+              child: RefreshIndicator(
+                onRefresh: _getShit,
+                child: StreamBuilder<ApiResponse<List<TranSaction>>>(
+                    stream: tb.coinsListStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        switch (snapshot.data!.status) {
+                          case Status.completed:
+                            Future.delayed(Duration.zero, () {
+                              setState(() {
+                                _circleVisible = false;
                               });
-                              var data = snapshot.data!.data;
-                              return ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: data!.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  return TransactionView(
-                                    key: ValueKey<String>(data[index].txid!),
-                                      customLocale: Localizations.localeOf(context).languageCode, transaction: data[index]);
-                                },
-                              );
-                            case Status.error:
-                              Future.delayed(Duration.zero, () {
-                                setState(() {
-                                  _circleVisible = false;
-                                });
+                            });
+                            var data = snapshot.data!.data;
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: data!.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return TransactionView(
+                                  key: ValueKey<String>(data[index].txid!),
+                                    customLocale: Localizations.localeOf(context).languageCode, transaction: data[index]);
+                              },
+                            );
+                          case Status.error:
+                            Future.delayed(Duration.zero, () {
+                              setState(() {
+                                _circleVisible = false;
                               });
-                              return Center(
-                                  child: Text(
-                                snapshot.error.toString(),
-                                style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 32, color: Colors.red),
-                              ));
-                            case Status.loading:
-                              Future.delayed(Duration.zero, () {
-                                setState(() {
-                                  _circleVisible = true;
-                                });
+                            });
+                            return Center(
+                                child: Text(
+                              snapshot.error.toString(),
+                              style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 32, color: Colors.red),
+                            ));
+                          case Status.loading:
+                            Future.delayed(Duration.zero, () {
+                              setState(() {
+                                _circleVisible = true;
                               });
-                              return Container();
-                          }
-                        } else {
-                          return Container();
+                            });
+                            return Container();
                         }
-                      }),
-                ),
+                      } else {
+                        return Container();
+                      }
+                    }),
               ),
             ),
           ),

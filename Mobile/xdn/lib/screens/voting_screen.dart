@@ -56,7 +56,6 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
   void initState() {
     super.initState();
     initConnector();
-
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _animation = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animationController!, curve: Curves.fastLinearToSlowEaseIn));
   }
@@ -79,7 +78,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
       Map<String, dynamic>? m = await connector.getData();
       if (m != null) {
         _state = ConState.connected;
-        setState(() {});
+
       }
     } catch (_) {}
     connector.registerListeners(
@@ -95,6 +94,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
           setState(() => _state = ConState.disconnected);
           print('Disconnected');
         });
+    setState(() {});
   }
 
   String _transactionStateToString({required ConState state}) {
@@ -174,7 +174,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
       children: [
         const BackgroundWidget(
           arc: false,
-          mainMenu: true,
+          mainMenu: false,
         ),
         Builder(
           builder: (BuildContext context) {

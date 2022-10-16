@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/models/summary.dart';
 import 'package:digitalnote/net_interface/interface.dart';
@@ -20,6 +22,7 @@ import 'package:digitalnote/widgets/balance_token_card.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:digitalnote/widgets/voting_menu_widget.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
@@ -42,7 +45,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyTokenBal = GlobalKey();
   ComInterface cm = ComInterface();
 
-  Future<Map<String, dynamic>>? _getBalance;
+  FutureOr<Map<String, dynamic>>? _getBalance;
 
   Future<Map<String, dynamic>>? _getTokenBalance;
 
@@ -66,27 +69,26 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void loginDao() async {
-    bool res = await NetInterface.daoLogin();
-    if (res) {
-      refreshBalance();
-      debugPrint('Dao login success');
+    refreshBalance();
+    getInfo();
+    getPriceData();
+    String? s = await SecureStorage.read(key: globals.TOKEN_DAO);
+    if (s != null) {
       bool contest = await NetInterface.checkContest();
       if (contest) {
         debugPrint('Contest is active');
-        // setState(() {
+        setState(() {
           contestActive = true;
-        // });
+        });
       } else {
         debugPrint('Contest is not active');
-        // setState(() {
+        setState(() {
           contestActive = false;
-        // });
+        });
       }
     } else {
-      debugPrint('Dao login failed');
+      debugPrint('Dao not logged in');
     }
-    await getInfo();
-    await getPriceData();
   }
 
   getPriceData() async {
@@ -96,7 +98,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   getInfo() async {
     name = await SecureStorage.read(key: globals.NICKNAME);
-    setState(()  {  });
+    setState(() {});
     daemonStatus = getDaemonStatus();
     // var token = await SecureStorage.read(key: globals.TOKEN);
     // print(token);
@@ -109,11 +111,10 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     await SecureStorage.write(key: globals.LOCALE, value: timeZoneName);
   }
 
-   refreshBalance() {
-    setState(() {
-      _getBalance = NetInterface.getBalance(details: true);
-      _getTokenBalance = NetInterface.getTokenBalance();
-    });
+  refreshBalance() {
+    _getBalance = NetInterface.getBalance(details: true);
+    _getTokenBalance = NetInterface.getTokenBalance();
+    setState(() {});
   }
 
   void gotoBalanceScreen() {
@@ -167,7 +168,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
             child: Stack(
               children: [
                 Container(
-                  height: MediaQuery.of(context).size.height* 0.81,
+                  height: MediaQuery.of(context).size.height,
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(20),
@@ -290,6 +291,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                             ],
                           ),
                         ),
+                        const SizedBox(
+                          height: 100,
+                        ),
                       ],
                     ),
                   ),
@@ -303,19 +307,34 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                         future: daemonStatus,
                         builder: (ctx, snapshot) {
                           return Container(
-                            height: 50,
-                            decoration: const BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                            height: 65,
+                            margin: const EdgeInsets.only(left: 4.0, right: 4.0),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF333A57),
+                              gradient: const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Color(0xFF333A57), Color(0xFF2C334E)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.18),
+                                  blurRadius: 10.0,
+                                  spreadRadius: 5.0,
+                                  offset: const Offset(1.0, 0.0), // shadow direction: bottom right
+                                )
+                              ],
+                              borderRadius: const BorderRadius.all(Radius.circular(8.0)
+                              ),
                             ),
                             child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white10),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 2.0, bottom: 2.0),
+                              Container(
+                                margin: const EdgeInsets.only(left: 2.0, right: 2.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 2.0, right: 2.0, top: 2.0, bottom: 2.0),
                                       child: Row(
                                         children: [
                                           AutoSizeText(
@@ -324,21 +343,18 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                             minFontSize: 2.0,
                                           ),
                                           const SizedBox(
-                                            width: 5.0,
+                                            width: 3.0,
                                           ),
                                           Icon(
                                             Icons.circle,
-                                            size: 10.0,
+                                            size: 7.0,
                                             color: snapshot.data!.block! ? Colors.green : Colors.red,
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                  Container(
-                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white10),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 2.0, bottom: 2.0),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 2.0, right: 2.0, top: 2.0, bottom: 2.0),
                                       child: Row(
                                         children: [
                                           AutoSizeText(
@@ -347,21 +363,18 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                             minFontSize: 2.0,
                                           ),
                                           const SizedBox(
-                                            width: 5.0,
+                                            width: 3.0,
                                           ),
                                           Icon(
                                             Icons.circle,
-                                            size: 10.0,
+                                            size: 7.0,
                                             color: snapshot.data!.blockStake! ? Colors.green : Colors.red,
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                  Container(
-                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white10),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 2.0, bottom: 2.0),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 2.0, right: 2.0, top: 2.0, bottom: 2.0),
                                       child: Row(
                                         children: [
                                           AutoSizeText(
@@ -370,18 +383,18 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                             minFontSize: 2.0,
                                           ),
                                           const SizedBox(
-                                            width: 5.0,
+                                            width: 3.0,
                                           ),
                                           Icon(
                                             Icons.circle,
-                                            size: 10.0,
+                                            size: 7.0,
                                             color: snapshot.data!.stakingActive! ? Colors.green : Colors.red,
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                               const SizedBox(
                                 height: 10.0,
@@ -392,7 +405,8 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                   Container(
                                     width: MediaQuery.of(context).size.width * 0.97,
                                     padding: const EdgeInsets.only(left: 0.0, right: 0.0, top: 5.0, bottom: 5.0),
-                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.black12),
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10.0), color: Colors.black12),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
@@ -413,6 +427,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                     ),
                                   )
                                 ],
+                              ),
+                              const SizedBox(
+                                height: 10.0,
                               ),
                             ]),
                           );

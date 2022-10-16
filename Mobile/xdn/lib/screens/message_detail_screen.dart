@@ -113,7 +113,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   }
 
   Future<void> notReceived({String? ev}) async {
-    print("notReceived: $ev");
     // mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
     if (_running) {
       Future.delayed(const Duration(milliseconds: 10), () {
@@ -295,12 +294,13 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                     );
                                   case Status.loading:
                                     return const Padding(
-                                      padding: EdgeInsets.only(bottom: 200.0),
+                                      padding:  EdgeInsets.only(bottom: 265.0),
                                       child: SizedBox(
                                           height: 50.0,
                                           width: 50.0,
                                           child: CircularProgressIndicator(
                                             color: Colors.white,
+                                            backgroundColor: Colors.white54,
                                             strokeWidth: 2.0,
                                           )),
                                     );
