@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 	"strconv"
-	"time"
 	"xdn-voting/abi"
 	"xdn-voting/utils"
 )
@@ -21,7 +20,7 @@ type WB struct {
 
 func New() {
 	var err error
-	var rpcProviderURL = "https://greatest-flashy-silence.bsc.discover.quiknode.pro/780e1c3203b78046ad73e463c8ab9ae218a743b8/"
+	var rpcProviderURL = "https://bsc-dataseed1.binance.org/"
 	wb, err := web3.NewWeb3(rpcProviderURL)
 	if err != nil {
 		panic(err)
@@ -59,32 +58,51 @@ func GetBalance(address string) (*big.Int, error) {
 }
 
 func GetContractBalance(address string) (float64, error) {
-	name := "WXDN balanceOf"
-	start := time.Now()
-	elapsed := time.Since(start)
-	valid := utils.Erc20verify(address)
-	if !valid {
-		return 0, fmt.Errorf("invalid erc20 address")
-	}
-	addr := common.HexToAddress(address)
-	contract, err := rpc.Eth.NewContract(abi.WXDN, abi.WXDNContract)
-	if err != nil {
+	//name := "WXDN balanceOf"
+	//start := time.Now()
+	d := make(chan float64, 1)
+	e := make(chan error, 1)
+	go func(data chan float64, errChan chan error) {
+
+		valid := utils.Erc20verify(address)
+		if !valid {
+			errChan <- fmt.Errorf("invalid erc20 address")
+			//return 0, fmt.Errorf("invalid erc20 address")
+		}
+		addr := common.HexToAddress(address)
+		contract, err := rpc.Eth.NewContract(abi.WXDN, abi.WXDNContract)
+		if err != nil {
+			errChan <- err
+			//return 0, err
+		}
+
+		c, err := contract.Call("balanceOf", addr)
+		if err != nil {
+			errChan <- err
+			//return 0, err
+		}
+
+		//convert c to int64
+		//convert
+		bal := c.(*big.Int)
+		b := WeiToString(bal)
+
+		data <- b
+		//return b, nil
+	}(d, e)
+	select {
+	case data := <-d:
+		//elapsed := time.Since(start)
+		//utils.ReportMessage(fmt.Sprintf("Balance: %f", b))
+		//utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+		close(d)
+		close(e)
+		return data, nil
+	case err := <-e:
+		close(d)
+		close(e)
 		return 0, err
 	}
-
-	c, err := contract.Call("balanceOf", addr)
-	if err != nil {
-		return 0, err
-	}
-
-	//convert c to int64
-	//convert
-	bal := c.(*big.Int)
-	b := WeiToString(bal)
-
-	utils.ReportMessage(fmt.Sprintf("Balance: %f", b))
-	utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
-	return b, nil
 }
 
 func WeiToString(amount *big.Int) float64 {

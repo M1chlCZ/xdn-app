@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
 	"fmt"
@@ -224,8 +225,8 @@ func WrapErrorLog(message string) {
 	}
 }
 
-func ReportMessage(message string) {
-	logToFile(message)
+func ReportMessage(message ...string) {
+	logToFile(fmt.Sprintf("%s", message))
 	logToFile("")
 }
 
@@ -402,6 +403,13 @@ func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {
 		}
 
 	}
+}
+
+// HashPass TODO FOR Login
+func HashPass(password string) string {
+	h := sha256.Sum256([]byte(password))
+	str := fmt.Sprintf("%x", h[:])
+	return str
 }
 
 func GetDaemon() *models.Daemon {

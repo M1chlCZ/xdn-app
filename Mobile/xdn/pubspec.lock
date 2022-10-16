@@ -568,7 +568,7 @@ packages:
       name: image
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.2.0"
+    version: "3.2.2"
   image_cropper:
     dependency: "direct main"
     description:
@@ -1156,7 +1156,7 @@ packages:
       name: walletconnect_qrcode_modal_dart
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.5"
+    version: "0.0.6"
   web3dart:
     dependency: "direct main"
     description:

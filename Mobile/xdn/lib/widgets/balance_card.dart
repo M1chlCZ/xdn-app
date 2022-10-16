@@ -103,7 +103,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                           ),
                         );
                       } else if (snapshot.hasError) {
-                        return Center(child: Text(snapshot.error.toString(), style: Theme.of(context).textTheme.headline1));
+                        return Center(child: Text("There was an error retrieving you balance", style: Theme.of(context).textTheme.headline1!.copyWith(color: Colors.white, fontSize: 14)));
                       } else {
                         return Center(
                           child: Column(crossAxisAlignment: CrossAxisAlignment.center,mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[

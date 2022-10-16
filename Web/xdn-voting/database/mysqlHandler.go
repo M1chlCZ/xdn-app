@@ -28,52 +28,121 @@ func New() {
 }
 
 func ReadSql(SQL string, params ...interface{}) (*sqlx.Rows, error) {
-	results, errRow := Database.Queryx(SQL, params...)
-	if errRow != nil {
-		fmt.Println(errRow.Error())
-		return nil, errRow
-	} else {
-		return results, nil
+	d := make(chan *sqlx.Rows, 1)
+	e := make(chan error, 1)
+	go func(data chan *sqlx.Rows, errChan chan error) {
+		results, errRow := Database.Queryx(SQL, params...)
+		if errRow != nil {
+			fmt.Println(errRow.Error())
+			errChan <- errRow
+			//return nil, errRow
+		} else {
+			data <- results
+			//return results, nil
+		}
+	}(d, e)
+	select {
+	case data := <-d:
+		close(d)
+		close(e)
+		return data, nil
+	case err := <-e:
+		close(d)
+		close(e)
+		return nil, err
 	}
 }
 
 func ReadValue[T any](SQL string, params ...interface{}) (T, error) {
-	var an T
-	err := Database.QueryRow(SQL, params...).Scan(&an)
-	if err != nil {
-		i := getZero[T]()
-		return i, err
-	} else {
-		return an, nil
+	d := make(chan T, 1)
+	e := make(chan error, 1)
+	go func(data chan T, errChan chan error) {
+		var an T
+		err := Database.QueryRow(SQL, params...).Scan(&an)
+		if err != nil {
+			i := getZero[T]()
+			errChan <- err
+			data <- i
+			//return i, err
+		} else {
+			data <- an
+			//return an, nil
+		}
+	}(d, e)
+	select {
+	case data := <-d:
+		close(d)
+		close(e)
+		return data, nil
+	case err := <-e:
+		close(d)
+		close(e)
+		return getZero[T](), err
 	}
 }
 
 func ReadValueEmpty[T any](SQL string, params ...interface{}) T {
-	var an T
-	err := Database.QueryRow(SQL, params...).Scan(&an)
-	if err != nil {
-		i := getZero[T]()
-		return i
-	} else {
-		return an
+	d := make(chan T, 1)
+	e := make(chan error, 1)
+	go func(data chan T, err chan error) {
+		var an T
+		errDB := Database.QueryRow(SQL, params...).Scan(&an)
+		if errDB != nil {
+			i := getZero[T]()
+			err <- errDB
+			data <- i
+			//return i, err
+		} else {
+			data <- an
+			err <- nil
+			//return an, nil
+		}
+	}(d, e)
+	select {
+	case data := <-d:
+		close(d)
+		close(e)
+		return data
+	case _ = <-e:
+		close(d)
+		close(e)
+		return getZero[T]()
 	}
 }
 
 func ReadStruct[T any](SQL string, params ...interface{}) (T, error) {
-	rows, err := Database.Queryx(SQL, params...)
-	if err != nil {
-		i := getZero[T]()
-		_ = rows.Close()
-		return i, err
-	} else {
-		var s T
-		s, err := ParseStruct[T](rows)
-		if err != nil {
+	d := make(chan T, 1)
+	e := make(chan error, 1)
+	go func(data chan T, err chan error) {
+		rows, errDB := Database.Queryx(SQL, params...)
+		if errDB != nil {
+			i := getZero[T]()
 			_ = rows.Close()
-			return getZero[T](), err
+			err <- errDB
+			data <- i
+			//return i, err
+		} else {
+			var s T
+			s, errDB := ParseStruct[T](rows)
+			if errDB != nil {
+				_ = rows.Close()
+				//return getZero[T](), err
+			}
+			_ = rows.Close()
+			data <- s
+			err <- nil
+			//return s, nil
 		}
-		_ = rows.Close()
-		return s, nil
+	}(d, e)
+	select {
+	case data := <-d:
+		close(d)
+		close(e)
+		return data, nil
+	case err := <-e:
+		close(d)
+		close(e)
+		return getZero[T](), err
 	}
 }
 
@@ -98,75 +167,133 @@ func ReadStructEmpty[T any](SQL string, params ...interface{}) T {
 }
 
 func ReadArrayStruct[T any](SQL string, params ...interface{}) ([]T, error) {
-	rows, err := ReadSql(SQL, params...)
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		i := getZeroArray[T]()
-		return i, err
-	} else {
-		var s []T
-		s = ParseArrayStruct[T](rows)
-		if err != nil {
-			utils.WrapErrorLog(err.Error())
+	d := make(chan []T, 1)
+	e := make(chan error, 1)
+	go func(data chan []T, err chan error) {
+		rows, errDB := ReadSql(SQL, params...)
+		if errDB != nil {
+			//utils.WrapErrorLog(err.Error())
+			i := getZeroArray[T]()
+			data <- i
+			err <- errDB
+		} else {
+			var s []T
+			s = ParseArrayStruct[T](rows)
+			if errDB != nil {
+				_ = rows.Close()
+				err <- errDB
+			}
 			_ = rows.Close()
-			return getZeroArray[T](), err
+			data <- s
 		}
-		_ = rows.Close()
-		return s, nil
+	}(d, e)
+	select {
+	case data := <-d:
+		close(d)
+		close(e)
+		return data, nil
+	case err := <-e:
+		close(d)
+		close(e)
+		return getZeroArray[T](), err
 	}
 }
 
 func ReadArray[T any](SQL string, params ...interface{}) ([]T, error) {
-	i := make([]T, 0)
-	rows, err := Database.Queryx(SQL, params...)
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		return i, err
-	} else {
-		for rows.Next() {
-			var s T
-			if err := rows.StructScan(&s); err != nil {
-				utils.WrapErrorLog(err.Error())
-				return i, err
-			} else {
-				i = append(i, s)
+	d := make(chan []T, 1)
+	e := make(chan error, 1)
+	go func(data chan []T, err chan error) {
+		i := make([]T, 0)
+		rows, errDB := Database.Queryx(SQL, params...)
+		if errDB != nil {
+			utils.WrapErrorLog(errDB.Error())
+			data <- i
+			err <- errDB
+		} else {
+			for rows.Next() {
+				var s T
+				if errDB := rows.StructScan(&s); errDB != nil {
+					data <- i
+					err <- errDB
+				} else {
+					i = append(i, s)
+				}
 			}
+			_ = rows.Close()
+			data <- i
 		}
-		_ = rows.Close()
-		return i, nil
+	}(d, e)
+	select {
+	case data := <-d:
+		close(d)
+		close(e)
+		return data, nil
+	case err := <-e:
+		close(d)
+		close(e)
+		return getZeroArray[T](), err
 	}
 }
 
 func ParseArrayStruct[T any](rows *sqlx.Rows) []T {
-	var stk T
-	stakeArray := make([]T, 0)
-
-	count := 0
-	for rows.Next() {
-		count++
-		if err := rows.StructScan(&stk); err != nil {
-			utils.WrapErrorLog(err.Error())
-			log.Printf("err: %v\n", err)
-			return nil
-		} else {
-			stakeArray = append(stakeArray, stk)
+	d := make(chan []T, 1)
+	e := make(chan error, 1)
+	go func(data chan []T, errChan chan error) {
+		var stk T
+		stakeArray := make([]T, 0)
+		count := 0
+		for rows.Next() {
+			count++
+			if err := rows.StructScan(&stk); err != nil {
+				utils.WrapErrorLog(err.Error())
+				log.Printf("err: %v\n", err)
+				errChan <- err
+				//return nil
+			} else {
+				stakeArray = append(stakeArray, stk)
+			}
 		}
+		_ = rows.Close()
+		data <- stakeArray
+		//return stakeArray
+	}(d, e)
+	select {
+	case data := <-d:
+		close(d)
+		close(e)
+		return data
+	case _ = <-e:
+		close(d)
+		close(e)
+		return nil
 	}
-	_ = rows.Close()
-	return stakeArray
 }
 
 func ParseStruct[T any](rows *sqlx.Rows) (T, error) {
-	var stk T
-	for rows.Next() {
-		if err := rows.StructScan(&stk); err != nil {
-			_ = rows.Close()
-			log.Printf("err: %v\n", err)
-			return stk, err
+	d := make(chan T, 1)
+	e := make(chan error, 1)
+	go func(data chan T, errChan chan error) {
+		var stk T
+		for rows.Next() {
+			if err := rows.StructScan(&stk); err != nil {
+				_ = rows.Close()
+				log.Printf("err: %v\n", err)
+				errChan <- err
+			}
 		}
+		_ = rows.Close()
+		data <- stk
+	}(d, e)
+	select {
+	case data := <-d:
+		close(d)
+		close(e)
+		return data, nil
+	case err := <-e:
+		close(d)
+		close(e)
+		return getZero[T](), err
 	}
-	_ = rows.Close()
-	return stk, nil
 }
 
 func getZero[T any]() T {

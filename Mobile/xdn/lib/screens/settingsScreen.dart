@@ -161,18 +161,6 @@ class _SettingsState extends State<SettingsScreen> {
   void _authCallback(bool? b) {
     if (b == null || b == false) return;
     Navigator.of(context).pushNamed(SecurityScreen.route);
-    // Navigator.of(context)
-    //     .push(PageRouteBuilder(pageBuilder:
-    //     (BuildContext context, _, __) {
-    //   return const SecurityScreen();
-    // }, transitionsBuilder: (_,
-    //     Animation<double> animation,
-    //     __,
-    //     Widget child) {
-    //   return FadeTransition(
-    //       opacity: animation,
-    //       child: child);
-    // }));
   }
 
   void _initPackageInfo() async {

@@ -21,10 +21,15 @@ import (
 	"xdn-voting/web3"
 )
 
+var debugTime = false
+
 func main() {
 	database.New()
 	utils.NewJWT()
 	web3.New()
+
+	//debug time
+	debugTime = false
 
 	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
@@ -51,6 +56,8 @@ func main() {
 }
 
 func getBalance(c *fiber.Ctx) error {
+	name := "XDN balance request"
+	start := time.Now()
 	userID, er := strconv.Atoi(c.Get("User_id"))
 	if er != nil {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
@@ -93,7 +100,10 @@ func getBalance(c *fiber.Ctx) error {
 			spendable += v.Amount
 		}
 	}
-
+	elapsed := time.Since(start)
+	if debugTime {
+		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+	}
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
@@ -104,15 +114,15 @@ func getBalance(c *fiber.Ctx) error {
 }
 
 func checkContest(c *fiber.Ctx) error {
-	userID, er := strconv.Atoi(c.Get("User_id"))
-	if er != nil {
-		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
-	}
+	//userID, er := strconv.Atoi(c.Get("User_id"))
+	//if er != nil {
+	//	return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	//}
 
 	// TODO CHANGE!!!
-	if userID != 1 && userID != 4 {
-		return utils.ReportError(c, "No contest", http.StatusConflict)
-	}
+	//if userID != 1 && userID != 4 && userID != 49 && userID != 2 && userID != 3 && userID != 5 {
+	//	return utils.ReportError(c, "No contest", http.StatusConflict)
+	//}
 
 	contest, err := database.ReadStruct[models.Contest]("SELECT * FROM voting_contest WHERE finished = 0")
 	if err != nil {
@@ -207,9 +217,9 @@ func getCurrentContest(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
 	}
 	// TODO CHANGE!!!
-	if userID != 1 && userID != 4 {
-		return utils.ReportError(c, "No contest", http.StatusConflict)
-	}
+	//if userID != 1 && userID != 4 && userID != 49 && userID != 2 && userID != 3 && userID != 5 {
+	//	return utils.ReportError(c, "No contest", http.StatusConflict)
+	//}
 
 	contest, err := database.ReadStruct[models.Contest]("SELECT * FROM voting_contest WHERE finished = 0")
 	if err != nil {
@@ -352,7 +362,7 @@ func castVote(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
-	utils.ReportMessage(fmt.Sprint("User ", userID, " voted ", payload.Amount, " for entry ", payload.IDEntry))
+	utils.ReportMessage(fmt.Sprint("===== User ", userID, " voted ", payload.Amount, " for entry ", payload.IDEntry, " ====="))
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"hasError":   false,
@@ -389,6 +399,12 @@ func addAddress(c *fiber.Ctx) error {
 }
 
 func ping(c *fiber.Ctx) error {
+	name := "Ping"
+	start := time.Now()
+	elapsed := time.Since(start)
+	if debugTime {
+		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+	}
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"hasError":   false,
 		utils.STATUS: utils.OK,
@@ -397,6 +413,8 @@ func ping(c *fiber.Ctx) error {
 }
 
 func getStakeGraph(c *fiber.Ctx) error {
+	name := "Get stake graph request"
+	start := time.Now()
 	userID, _ := strconv.Atoi(c.Get("User_id"))
 	var stakeReq models.GetStakeStruct
 	if err := c.BodyParser(&stakeReq); err != nil {
@@ -437,7 +455,10 @@ func getStakeGraph(c *fiber.Ctx) error {
 	} else {
 		returnArr = database.ParseArrayStruct[models.StakeWeeklyGraph](s)
 	}
-
+	elapsed := time.Since(start)
+	if debugTime {
+		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+	}
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
@@ -447,12 +468,20 @@ func getStakeGraph(c *fiber.Ctx) error {
 
 func getTokenBalance(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
+	if debugTime {
+		utils.ReportMessage(fmt.Sprint("===== Get Token Balance for user ", userID, " ====="))
+	}
 	name := "Token balance request"
 	start := time.Now()
-	elapsed := time.Since(start)
+
+	//make database call below in goroutine
 	acc, err := database.ReadValue[string]("SELECT addr FROM users_addr WHERE idUser = ?", userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	elapsed := time.Since(start)
+	if debugTime {
+		utils.ReportMessage(fmt.Sprintf("%s took %s", "DB Query", elapsed))
 	}
 	if acc == "" {
 		return utils.ReportError(c, "No address", http.StatusBadRequest)
@@ -461,7 +490,13 @@ func getTokenBalance(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+
+	elapsed = time.Since(start)
+	if debugTime {
+		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+		utils.ReportMessage(fmt.Sprint("=====////====="))
+	}
+
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"hasError":   false,
 		utils.STATUS: utils.OK,
