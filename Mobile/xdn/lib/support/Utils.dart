@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3dart/web3dart.dart';
 
 
 class Utils {
@@ -105,6 +106,15 @@ class Utils {
       return '${nf.format(number / 1000000)}m';
     } else {
       return number.toString();
+    }
+  }
+
+  static bool checkAddress (String address) {
+    try {
+      EthereumAddress.fromHex(address);
+      return true;
+    } catch (_) {
+      return false;
     }
   }
   

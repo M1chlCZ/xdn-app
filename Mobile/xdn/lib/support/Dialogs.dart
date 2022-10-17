@@ -930,7 +930,7 @@ class Dialogs {
                     autofocus: true,
                     controller: textController,
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp(r"^[a-zA-Z0-9_-\s]+")),
+                      FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+')),
                     ],
                     style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
@@ -2228,7 +2228,7 @@ class Dialogs {
                   controller: textController,
                   keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: false) : TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                    FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+')),
                   ],
                   style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                   decoration: InputDecoration(
@@ -2265,9 +2265,22 @@ class Dialogs {
               buttonLabel: AppLocalizations.of(context)!.send,
               oneButton: false,
               onTap: () {
+                if (textControllerAddr.text.isEmpty || textController.text.isEmpty) {
+                  Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.address} ${AppLocalizations.of(context)!.invalid}");
+                  return;
+                }
+                if (textController.text.isEmpty || textController.text.isEmpty) {
+                  Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.amount_empty);
+                  return;
+                }
+                if (!addrLegit) {
+                  Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.address} ${AppLocalizations.of(context)!.invalid}");
+                  return;
+                }
+                func(textControllerAddr.text, textController.text.isEmpty ? 0 : int.parse(textController.text));
                 // func(addr, textController.text.isEmpty ? 0 : int.parse(textController.text), idEntry);
               },
-              header: "${AppLocalizations.of(context)!.amount}",
+              header: AppLocalizations.of(context)!.send,
               child: Padding(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
                 child: Container(
@@ -2276,21 +2289,68 @@ class Dialogs {
                     color: Colors.black12,
                   ),
                   padding: const EdgeInsets.all(5.0),
-                  width: 500,
-                  child: TextField(
-                    autofocus: true,
-                    controller: textController,
-                    keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: false) : TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                  width: 600,
+                  child: Column(
+                    children: [
+                      AutoSizeTextField(
+                        autofocus: true,
+                        maxLines: 1,
+                        minFontSize: 8,
+                        controller: textController,
+                        keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: false) : TextInputType.number,
+                        inputFormatters: <TextInputFormatter>[
+                          FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+')),
+                        ],
+                        style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white.withOpacity(0.8)),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.all(5.0),
+                          hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white54),
+                          hintText: AppLocalizations.of(context)!.amount,
+                          border: InputBorder.none,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 5.0,
+                      ),
+                      const Divider(
+                        color: Colors.white24,
+                        thickness: 1.0,
+                      ),
+                      const SizedBox(
+                        height: 5.0,
+                      ),
+                      AutoSizeTextField(
+                        autofocus: true,
+                        maxLines: 1,
+                        minFontSize: 8,
+                        controller: textControllerAddr,
+                        keyboardType: TextInputType.text,
+                        inputFormatters: <TextInputFormatter>[
+                          FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+')),
+                        ],
+                        style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white.withOpacity(0.8)),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.all(5.0),
+                          hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white54),
+                          hintText: "${AppLocalizations.of(context)!.address} (ERC-20)",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 5.0,
+                      ),
+                      const Divider(
+                        color: Colors.white12,
+                        thickness: 1.0,
+                      ),
+                      Text(
+                        addrLegit ? "${AppLocalizations.of(context)!.address} OK" : "${AppLocalizations.of(context)!.address} ${AppLocalizations.of(context)!.invalid}",
+                        style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 16.0, color: addrLegit ? Colors.green : Colors.red),
+                      ),
+                      const SizedBox(
+                        height: 5.0,
+                      ),
                     ],
-                    style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(5.0),
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
-                      hintText: AppLocalizations.of(context)!.amount,
-                      border: InputBorder.none,
-                    ),
                   ),
                 ),
               ),

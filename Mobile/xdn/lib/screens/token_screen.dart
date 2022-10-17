@@ -10,6 +10,7 @@ import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/token_balance_card.dart';
+import 'package:digitalnote/widgets/token_tx_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get_it/get_it.dart';
@@ -205,13 +206,24 @@ class _TokenScreenState extends State<TokenScreen> {
                                 ListView.builder(
                                     shrinkWrap: true,
                                     itemCount: snapshot.data?.data?.tx?.length ?? 0,
+                                    physics: const NeverScrollableScrollPhysics(),
                                     itemBuilder: (context, index) {
-                                      return Container();
+                                      return TokenTxView(address: snapshot.data?.data?.addr ?? "null", transaction: snapshot.data?.data?.tx?[index]);
                                     }),
                               ],
                             );
                           case Status.loading:
-                            return Container();
+                            return SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.6,
+                              width: MediaQuery.of(context).size.width * 1,
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                                  backgroundColor: Colors.white24,
+                                  strokeWidth: 1.0,
+                                ),
+                              ),
+                            );
                           case Status.error:
                             return Container();
                         }

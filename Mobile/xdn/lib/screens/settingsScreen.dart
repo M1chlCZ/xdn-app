@@ -186,7 +186,9 @@ class _SettingsState extends State<SettingsScreen> {
             color: Colors.black54,
             fontWeight: FontWeight.w300,
           ),
-        )),
+
+        )
+        ),
         child: Scaffold(
             backgroundColor: Colors.transparent,
             body: Builder(
@@ -200,11 +202,12 @@ class _SettingsState extends State<SettingsScreen> {
                                 height: 60,
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
+                                  color: Colors.transparent,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -253,10 +256,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -309,10 +313,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -362,10 +367,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -414,10 +420,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -466,10 +473,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -519,10 +527,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -571,10 +580,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -623,10 +633,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
@@ -723,10 +734,11 @@ class _SettingsState extends State<SettingsScreen> {
                                 width: MediaQuery.of(context).size.width - 20.0,
                                 child: Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Theme.of(context).canvasColor.withOpacity(0.8),
+                                  color: Colors.transparent,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(5.0),
                                     child: Material(
+                                      color: Colors.black12,
                                       child: InkWell(
                                         splashColor: Colors.white54,
                                         // splash color
