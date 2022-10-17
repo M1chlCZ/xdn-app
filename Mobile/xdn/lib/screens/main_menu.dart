@@ -7,6 +7,7 @@ import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
+import 'package:digitalnote/screens/token_screen.dart';
 import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
@@ -137,6 +138,10 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     Navigator.of(context).pushNamed(MessageScreen.route, arguments: "shit");
   }
 
+  void gotoTokenScreen() {
+    Navigator.of(context).pushNamed(TokenScreen.route, arguments: "nothing");
+  }
+
   void gotoSettingsScreen() {
     Navigator.of(context).pushNamed(SettingsScreen.route, arguments: "shit");
     // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
@@ -252,7 +257,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                         BalanceTokenCardMenu(
                           key: _keyTokenBal,
                           getBalanceFuture: _getTokenBalance,
-                          goto: gotoBalanceScreen,
+                          goto: gotoTokenScreen,
                         ),
                         const SizedBox(
                           height: 10,
@@ -314,14 +319,15 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                               gradient: const LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [Color(0xFF333A57), Color(0xFF2C334E)],
+                                colors: [Color(0xFF333A57),
+                                  Color(0xFF2C334E)],
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.18),
+                                  color: Colors.black.withOpacity(0.25),
                                   blurRadius: 10.0,
-                                  spreadRadius: 5.0,
-                                  offset: const Offset(1.0, 0.0), // shadow direction: bottom right
+                                  spreadRadius: 6.0,
+                                  offset: const Offset(0.0, 0.0), // shadow direction: bottom right
                                 )
                               ],
                               borderRadius: const BorderRadius.all(Radius.circular(8.0)

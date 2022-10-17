@@ -17,14 +17,16 @@ class BalanceTokenCardMenu extends StatefulWidget {
 }
 
 class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
+  bool _tokenConnected = false;
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 10.0, right: 10.0),
       child: GestureDetector(
         onTap: () {
-          // widget.goto();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "Coming soon!");
+          if (_tokenConnected) {
+            widget.goto();
+          }
         },
         child: Container(
           decoration:  BoxDecoration(
@@ -50,9 +52,8 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
                         Map<String, dynamic> m = snapshot.data!;
                         var balance = double.parse(m['balance'].toString());
                         var immature = '0.000';
-
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
-                        // var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
+                        _tokenConnected = true;
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -108,6 +109,7 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
                           ),
                         );
                       } else if (snapshot.hasError) {
+                        _tokenConnected = false;
                         return Center(child: Container(
                           padding: const EdgeInsets.all(5.0),
 

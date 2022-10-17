@@ -2,6 +2,8 @@ package web3
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/chenzhijie/go-web3"
 	"github.com/ethereum/go-ethereum/common"
@@ -9,6 +11,8 @@ import (
 	"math/big"
 	"strconv"
 	"xdn-voting/abi"
+	"xdn-voting/errs"
+	"xdn-voting/models"
 	"xdn-voting/utils"
 )
 
@@ -116,4 +120,24 @@ func WeiToString(amount *big.Int) float64 {
 		return 0
 	}
 	return fl
+}
+
+func GetTokenTx(address string) (models.BSCTokenTX, error) {
+	resp, getError := utils.POSTReq(fmt.Sprintf("https://api.bscscan.com/api?module=account&action=tokentx&address=%s&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=XYWQ68CD5T5PTZEIG65ECMMAVGZD3TDQ5S", address), nil)
+	if getError != nil {
+		utils.WrapErrorLog(getError.ErrorMessage())
+		return models.BSCTokenTX{}, errors.New(getError.ErrorMessage())
+	}
+	decGet := json.NewDecoder(resp.Body)
+	decGet.DisallowUnknownFields()
+
+	var respBody models.BSCTokenTX
+	errJson := decGet.Decode(&respBody)
+	errorJson, errorMessage := errs.ValidateJson(errJson)
+	if errorJson == true {
+		utils.WrapErrorLog(errorMessage)
+		return models.BSCTokenTX{}, errors.New(errorMessage)
+	}
+
+	return respBody, nil
 }

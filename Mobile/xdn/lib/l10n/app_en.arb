@@ -190,7 +190,7 @@
   "change_language": "Change language",
   "delete_acc": "Delete account",
   "voting": "Voting",
-  "connect_wallet": "Connect wallet",
+  "connect_wallet": "Connect BSC wallet",
   "wallet_connected": "Wallet connected",
   "amount_to_reach": "Amount to reach",
   "amount_reached": "Amount reached",
@@ -216,4 +216,5 @@
   "funding_target" : "Funding target",
   "error_connect_wallet" : "Please connect your wallet",
   "fully_funded" : "Fully funded"
+
 }

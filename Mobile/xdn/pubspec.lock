@@ -1144,7 +1144,7 @@ packages:
     source: hosted
     version: "1.7.6"
   walletconnect_dart:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: walletconnect_dart
       url: "https://pub.dartlang.org"

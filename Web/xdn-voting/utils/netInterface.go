@@ -26,7 +26,7 @@ func GetReq(url string, token string) (*http.Response, *GetError) {
 	var jsonStr = []byte("{}")
 	req, err := http.NewRequest("GET", urlGet, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	req.Header.Set("User-agent", "XDN Service v"+VERSION)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -55,7 +55,7 @@ func GETAny(url string) (*http.Response, *GetError) {
 	urlGet := url
 	var jsonStr = []byte("{}")
 	req, err := http.NewRequest("GET", urlGet, bytes.NewBuffer(jsonStr))
-	req.Header.Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	req.Header.Set("User-agent", "XDN Service v"+VERSION)
 	req.Header.Set("Content-Type", "plain/text")
 	req.Header.Set("Connection", "close")
 
@@ -85,7 +85,7 @@ func POSTReq(url string, body map[string]string) (*http.Response, *GetError) {
 	urlGet := url
 	var jsonStr, _ = json.Marshal(body)
 	req, err := http.NewRequest("POST", urlGet, bytes.NewBuffer(jsonStr))
-	req.Header.Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	req.Header.Set("User-agent", "XDN Service v"+VERSION)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Connection", "close")
 
@@ -119,7 +119,7 @@ func ContactServer(url string, endpoint string, json []byte) (*http.Response, *G
 	if err != nil {
 		return nil, &GetError{message: err.Error(), statusCode: http.StatusInternalServerError}
 	}
-	req.Header.Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	req.Header.Set("User-agent", "XDN Service v"+VERSION)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Connection", "close")
 
@@ -154,7 +154,7 @@ func ContactServerRetry(url string, endpoint string, json []byte) error {
 		return errors.New(err.Error())
 		//return &GetError{message: err.Error(), statusCode: http.StatusInternalServerError}
 	}
-	req.Header.Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	req.Header.Set("User-agent", "XDN Service v"+VERSION)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Connection", "close")
 
@@ -188,7 +188,7 @@ func ContactServerEncrypt(url string, endpoint string, json []byte, urlSc string
 		return nil, errors.New(err.Error())
 		//return &GetError{message: err.Error(), statusCode: http.StatusInternalServerError}
 	}
-	req.Header.Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	req.Header.Set("User-agent", "XDN Service v"+VERSION)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("url", urlSc)
 
@@ -226,7 +226,7 @@ func ContactClient(url string, endpoint string, token string, json []byte, param
 		_ = req.Body.Close()
 		return nil, &GetError{message: err.Error(), statusCode: http.StatusInternalServerError}
 	}
-	req.Header.Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	req.Header.Set("User-agent", "XDN Service v"+VERSION)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 

@@ -18,3 +18,9 @@ type Users struct {
 	TwoKey    *string `json:"twoKey" db:"twoKey"`
 	TwoActive int     `json:"twoActive" db:"twoActive"`
 }
+
+type UsersTokenAddr struct {
+	Id     int    `json:"id" db:"id"`
+	Addr   string `json:"addr" db:"addr"`
+	IdUser int    `json:"idUser" db:"idUser"`
+}

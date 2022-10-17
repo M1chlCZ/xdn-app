@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	VERSION        = "0.0.0.4"
+	VERSION        = "0.0.0.5"
 	STATUS  string = "status"
 	OK      string = "OK"
 	FAIL    string = "FAIL"
@@ -184,7 +184,7 @@ func GenerateSecureToken(length int) string {
 }
 
 func SendResponse(w http.ResponseWriter, payload []byte) error {
-	w.Header().Set("User-agent", "RocketBot PoS Service/Go_"+VERSION)
+	w.Header().Set("User-agent", "XDN Service v"+VERSION)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	_, err := w.Write(payload)

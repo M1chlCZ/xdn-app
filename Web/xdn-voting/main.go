@@ -47,6 +47,9 @@ func main() {
 	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
 	app.Get("api/v1/user/balance", utils.Authorized(getBalance))
 	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
+	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
+
+	utils.ScheduleFunc(saveTokenTX, time.Minute*10)
 
 	err := app.Listen(":6800")
 	if err != nil {
@@ -502,4 +505,65 @@ func getTokenBalance(c *fiber.Ctx) error {
 		utils.STATUS: utils.OK,
 		"balance":    balance,
 	})
+}
+
+func getTokenTX(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	var txReq models.GetTokenTxReq
+	if err := c.BodyParser(&txReq); err != nil {
+		return err
+	}
+
+	db, err := database.ReadArrayStruct[models.TokenTX]("SELECT * FROM bsc_tx WHERE idUser = ? AND timestampTX > ? AND tokenSymbol = 'WXDN' ORDER BY timestampTX DESC", userID, txReq.Timestamp)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	addr, err := database.ReadValue[null.String]("SELECT addr FROM users_addr WHERE idUser = ?", userID)
+	if !addr.Valid {
+		return utils.ReportError(c, "No user addresses in the db", http.StatusBadRequest)
+	}
+
+	balance, err := web3.GetContractBalance(addr.String)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"addr":       addr,
+		"bal":        balance,
+		"tx":         db,
+	})
+}
+
+func saveTokenTX() {
+	users, err := database.ReadArrayStruct[models.UsersTokenAddr]("SELECT * FROM users_addr WHERE 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	for _, u := range users {
+		userID := u.IdUser
+		//utils.ReportMessage(fmt.Sprintf("Saving token tx, user %d", userID))
+		tx, err := web3.GetTokenTx(u.Addr)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+
+		if len(tx.Result) != 0 {
+			for _, res := range tx.Result {
+				_, err := database.InsertSQl(`INSERT INTO bsc_tx (hash, blocknumber, timestampTX, blockhash, fromAddr, toAddr, contractAddr, contractDecimal, amount, tokenName, tokenSymbol, gas, gasPrice, gasUsed, confirmations, idUser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
+			ON DUPLICATE KEY UPDATE confirmations = ?`, res.Hash, res.BlockNumber, res.TimeStamp, res.BlockHash, res.From, res.To, res.ContractAddress, res.TokenDecimal, res.Value, res.TokenName, res.TokenSymbol, res.Gas, res.GasPrice, res.GasUsed, res.Confirmations, userID, res.Confirmations)
+				if err != nil {
+					utils.WrapErrorLog(err.Error())
+					break
+				}
+			}
+		}
+		time.Sleep(time.Millisecond * 200)
+	}
+	//utils.ReportMessage("Saved token tx")
 }

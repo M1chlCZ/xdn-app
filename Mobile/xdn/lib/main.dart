@@ -9,6 +9,7 @@ import 'package:digitalnote/screens/registerscreen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
+import 'package:digitalnote/screens/token_screen.dart';
 import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
 import 'package:digitalnote/support/AppDatabase.dart';
@@ -347,6 +348,8 @@ class MyAppState extends State<MyApp> {
         return MaterialPageRoute(builder: (_) => const SecurityScreen());
       case VotingScreen.route:
         return MaterialPageRoute(builder: (_) => const VotingScreen());
+      case TokenScreen.route:
+        return MaterialPageRoute(builder: (_) => const TokenScreen());
       case AuthScreen.route:
         Object? args = settings.arguments;
         if (args != null) {

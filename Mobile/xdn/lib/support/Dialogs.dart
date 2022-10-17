@@ -16,13 +16,13 @@ import 'package:share/share.dart';
 import 'package:vibration/vibration.dart';
 
 import '../globals.dart' as globals;
+import '../models/Contact.dart';
+import '../models/TranSaction.dart';
 import '../screens/loginscreen.dart';
 import 'AppDatabase.dart';
-import '../models/Contact.dart';
 import 'DialogBody.dart';
 import 'NetInterface.dart';
 import 'RadioAlertWidget.dart';
-import '../models/TranSaction.dart';
 import 'Utils.dart';
 
 class Dialogs {
@@ -54,10 +54,7 @@ class Dialogs {
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                     ],
-                    style: Theme.of(context)
-                        .textTheme
-                        .headline6!
-                        .copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                    style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                     decoration: InputDecoration(
                       hintStyle: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.amount,
@@ -98,10 +95,7 @@ class Dialogs {
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                   ],
-                  style: Theme.of(context)
-                      .textTheme
-                      .headline6!
-                      .copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.all(5.0),
                     hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
@@ -199,8 +193,7 @@ class Dialogs {
         });
   }
 
-  static void openSendContactConfirmBox(
-      context, String name, String addr, String amount, Function(String amount, String name, String addr) func) async {
+  static void openSendContactConfirmBox(context, String name, String addr, String amount, Function(String amount, String name, String addr) func) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -1216,8 +1209,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.txid,
-                              style:
-                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1242,8 +1234,7 @@ class Dialogs {
                               tx.txid!,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
-                              style:
-                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1268,8 +1259,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.amount,
-                              style:
-                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1284,8 +1274,7 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style:
-                                Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1309,8 +1298,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.date,
-                              style:
-                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1325,8 +1313,7 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style:
-                                Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1350,8 +1337,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.confirmations.capitalize(),
-                              style:
-                                  Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1366,8 +1352,7 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style:
-                                Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1416,8 +1401,7 @@ class Dialogs {
                       controller: textController,
                       style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 22),
                       decoration: InputDecoration(
-                        hintStyle:
-                            Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
+                        hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
                         hintText: AppLocalizations.of(context)!.dl_new_enter_pass,
                         border: InputBorder.none,
                       ),
@@ -1535,6 +1519,93 @@ class Dialogs {
         });
   }
 
+  static void openUserQRToken(context, String address) async {
+    var qr = address;
+    showDialog(
+        context: context,
+        builder: (context) {
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
+            child: Dialog(
+              backgroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(side: BorderSide(color: Color(0xFF9F9FA4)), borderRadius: BorderRadius.all(Radius.circular(20.0))),
+              child: Wrap(children: [
+                Container(
+                  width: 400.0,
+                  padding: const EdgeInsets.all(15.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
+                          child: SizedBox(
+                            width: 380,
+                            child: AutoSizeText(
+                              AppLocalizations.of(context)!.dl_konj_addr,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              minFontSize: 8.0,
+                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.black87),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Center(
+                          child: Text(
+                        '(${AppLocalizations.of(context)!.dl_share})',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.black54),
+                      )),
+                      const SizedBox(
+                        height: 5.0,
+                      ),
+                      const Divider(
+                        color: Colors.grey,
+                        height: 4.0,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: qr));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(AppLocalizations.of(context)!.dl_qr_copy),
+                              duration: const Duration(seconds: 3),
+                              backgroundColor: Colors.green,
+                              behavior: SnackBarBehavior.fixed,
+                              elevation: 5.0,
+                            ));
+                            Navigator.pop(context);
+                          },
+                          onLongPress: () {
+                            Vibration.vibrate(duration: 200);
+                            Share.share(qr);
+                            Navigator.pop(context);
+                          },
+                          child: QrImage(
+                            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
+                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
+                            errorCorrectionLevel: QrErrorCorrectLevel.H,
+                            data: qr.toString(),
+                            foregroundColor: Colors.black87,
+                            version: QrVersions.auto,
+                            // size: 250,
+                            gapless: false,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ]),
+            ),
+          );
+        });
+  }
+
   static void openPrivKeyQR(context, String privKey) async {
     var qr = privKey;
     showDialog(
@@ -1544,8 +1615,7 @@ class Dialogs {
             filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
             child: Dialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.grey.withOpacity(0.5)), borderRadius: const BorderRadius.all(Radius.circular(20.0))),
+              shape: RoundedRectangleBorder(side: BorderSide(color: Colors.grey.withOpacity(0.5)), borderRadius: const BorderRadius.all(Radius.circular(20.0))),
               child: Wrap(children: [
                 Container(
                   width: 400.0,
@@ -1919,8 +1989,7 @@ class Dialogs {
     return Colors.transparent;
   }
 
-  static Future<void> openGenericAlertBox(context,
-      {String? header, required String message, Function()? onTap, Function()? onCancel, bool? oneButton}) async {
+  static Future<void> openGenericAlertBox(context, {String? header, required String message, Function()? onTap, Function()? onCancel, bool? oneButton}) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -2030,10 +2099,8 @@ class Dialogs {
                             Icons.person,
                             color: Colors.white70,
                           ),
-                          focusedBorder: const OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                          enabledBorder: const OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                          enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
                         ),
                       ),
                       const SizedBox(
@@ -2063,12 +2130,8 @@ class Dialogs {
                                     Icons.person,
                                     color: Colors.white70,
                                   ),
-                                  focusedBorder: const OutlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.white10, width: 2.0),
-                                      borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                                  enabledBorder: const OutlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.black12, width: 2.0),
-                                      borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                                  focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                                  enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
                                 ),
                               ),
                             ),
@@ -2114,8 +2177,8 @@ class Dialogs {
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),
-                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                     onPressed: () {
                                       _saveUsers(controller.text, controllerAddr.text);
                                     },
@@ -2165,12 +2228,9 @@ class Dialogs {
                   controller: textController,
                   keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: false) : TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
                   ],
-                  style: Theme.of(context)
-                      .textTheme
-                      .headline6!
-                      .copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.all(5.0),
                     hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
@@ -2181,6 +2241,61 @@ class Dialogs {
               ),
             ),
           );
+        });
+  }
+
+  static void openTokenSendingDialogs(context, Function(String address, int amount) func) async {
+    TextEditingController textController = TextEditingController();
+    TextEditingController textControllerAddr = TextEditingController();
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          var addrLegit = false;
+          return StatefulBuilder(builder: (context, sState) {
+            textControllerAddr.addListener(() {
+              if (Utils.checkAddress(textControllerAddr.text)) {
+                addrLegit = true;
+              } else {
+                addrLegit = false;
+              }
+              sState(() {});
+            });
+            return DialogBody(
+              buttonLabel: AppLocalizations.of(context)!.send,
+              oneButton: false,
+              onTap: () {
+                // func(addr, textController.text.isEmpty ? 0 : int.parse(textController.text), idEntry);
+              },
+              header: "${AppLocalizations.of(context)!.amount}",
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    color: Colors.black12,
+                  ),
+                  padding: const EdgeInsets.all(5.0),
+                  width: 500,
+                  child: TextField(
+                    autofocus: true,
+                    controller: textController,
+                    keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: false) : TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                    ],
+                    style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(5.0),
+                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintText: AppLocalizations.of(context)!.amount,
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          });
         });
   }
 
