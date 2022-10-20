@@ -123,7 +123,7 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
                               offset: const Offset(0, 2), // changes position of shadow
                             ),
                             BoxShadow(
-                              color: Color(0xFF233261).withOpacity(0.1),
+                              color: const Color(0xFF233261).withOpacity(0.1),
                               spreadRadius: 2,
                               blurRadius: 3,
                               offset: const Offset(3, 5), // changes position of shadow

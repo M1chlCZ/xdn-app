@@ -25,6 +25,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,7 +48,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -89,10 +91,12 @@ class MyAppState extends State<MyApp> {
     await getPin();
     var mJWT = await SecureStorage.read(key: globals.TOKEN);
     if (mJWT == null) {
+      FlutterNativeSplash.remove();
       return LoginPage.route;
     } else {
       var jwt = mJWT.split(".");
       if (jwt.length != 3) {
+        FlutterNativeSplash.remove();
         return LoginPage.route;
       } else {
         bool res = await NetInterface.daoLogin();
@@ -101,6 +105,7 @@ class MyAppState extends State<MyApp> {
         } else {
           debugPrint('Dao login failed');
         }
+        FlutterNativeSplash.remove();
         var payload = json.decode(ascii.decode(base64.decode(base64.normalize(jwt[1]))));
         if (DateTime.fromMillisecondsSinceEpoch(payload["exp"] * 1000).isAfter(DateTime.now())) {
           if (pinUsed) {
@@ -109,6 +114,7 @@ class MyAppState extends State<MyApp> {
             return MainMenuNew.route;
           }
         } else {
+          FlutterNativeSplash.remove();
           return LoginPage.route;
         }
       }

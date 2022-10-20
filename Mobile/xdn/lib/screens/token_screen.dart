@@ -158,7 +158,7 @@ class _TokenScreenState extends State<TokenScreen> {
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.black12,
+                            color: Colors.lime,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Column(

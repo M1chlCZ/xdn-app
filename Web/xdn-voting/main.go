@@ -219,10 +219,6 @@ func getCurrentContest(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
 	}
-	// TODO CHANGE!!!
-	//if userID != 1 && userID != 4 && userID != 49 && userID != 2 && userID != 3 && userID != 5 {
-	//	return utils.ReportError(c, "No contest", http.StatusConflict)
-	//}
 
 	contest, err := database.ReadStruct[models.Contest]("SELECT * FROM voting_contest WHERE finished = 0")
 	if err != nil {

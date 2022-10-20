@@ -74,11 +74,11 @@ class _TokenBalanceCardState extends State<TokenBalanceCard> {
               ],
             ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 25),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(width: 40),
+              const SizedBox(width: 30),
               FlatCustomButton(
                 height: 40,
                   width: 100,
@@ -92,8 +92,8 @@ class _TokenBalanceCardState extends State<TokenBalanceCard> {
                   child: AutoSizeText(AppLocalizations.of(context)!.receive,
                       maxLines: 1,
                       minFontSize: 8,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white))),
-             Spacer(),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white))),
+             const Spacer(),
               FlatCustomButton(
                   height: 40,
                   width: 100,
@@ -105,8 +105,8 @@ class _TokenBalanceCardState extends State<TokenBalanceCard> {
                   child: AutoSizeText(AppLocalizations.of(context)!.send,
                       maxLines: 1,
                       minFontSize: 8,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white))),
-              const SizedBox(width: 40),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white))),
+              const SizedBox(width: 30),
             ],
           ),
         ],

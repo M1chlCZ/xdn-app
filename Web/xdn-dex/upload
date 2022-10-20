@@ -1,0 +1,5 @@
+#!/bin/bash
+
+/bin/bash ./compile.sh
+sftp -i ~/.ssh/xdn XDNService@194.60.201.213:/home/XDNService/apiDex/ <<< $'put api apiu'
+ssh -i ~/.ssh/xdn XDNService@194.60.201.213 "/home/XDNService/apiDex/update"
