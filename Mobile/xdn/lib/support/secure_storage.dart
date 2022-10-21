@@ -8,6 +8,7 @@ class SecureStorage {
       const FlutterSecureStorage mstorage = FlutterSecureStorage();
       const optionsApple = IOSOptions(accessibility: KeychainAccessibility.first_unlock);
       const optionsAndroid = AndroidOptions(encryptedSharedPreferences: true);
+      const webOptions = WebOptions(dbName: "CNliCGCAgu", publicKey: "6i81ge6Fc3bqgxbtc1Wl");
       return  mstorage.read(key: key, iOptions: optionsApple, aOptions: optionsAndroid);
     } catch (e) {
       print(e);

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/dgryski/dgoogauth"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/gofiber/fiber/v2/utils"
 	"github.com/jmoiron/sqlx"
@@ -44,18 +46,91 @@ func main() {
 	app.Post("dao/v1/user/address/add", utils.Authorized(addUserAddress))
 
 	// ================== API ==================
+	app.Post("api/v1/login", loginAPI)
+	app.Post("api/v1/register", registerAPI)
 	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
 	app.Get("api/v1/user/balance", utils.Authorized(getBalance))
 	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
 	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusBadGateway).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	})
 
 	utils.ScheduleFunc(saveTokenTX, time.Minute*10)
 
-	err := app.Listen(":6800")
+	// Create tls certificate
+	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	config := &tls.Config{Certificates: []tls.Certificate{cer}}
+
+	// Create custom listener
+	ln, err := tls.Listen("tcp", ":6800", config)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
-		log.Panic(err)
+		panic(err)
 	}
+
+	// Start server with https/ssl enabled on http://localhost:443
+	log.Fatal(app.Listener(ln))
+}
+
+func registerAPI(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":   false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func stakeSet(c *fiber.Ctx) {
+
+}
+
+func loginAPI(c *fiber.Ctx) error {
+	var req models.UserLogin
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if req.Username == "" || req.Password == "" {
+		return utils.ReportError(c, "Missing username or password", http.StatusBadRequest)
+	}
+	password := utils.HashPass(req.Password)
+	user, err := database.ReadStruct[models.User]("SELECT * FROM users WHERE username = ? OR email= ?", req.Username, req.Username)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	if user.Username == "" {
+		return utils.ReportError(c, "User not found", http.StatusNotFound)
+	}
+	if user.Password != password {
+		return utils.ReportError(c, "Wrong password", http.StatusUnauthorized)
+	}
+
+	if user.TwoActive == 1 {
+		if req.TwoFactor == 0 {
+			return utils.ReportError(c, "Two factor is required", http.StatusConflict)
+		}
+		twoRes := dgoogauth.ComputeCode(*user.TwoKey, req.TwoFactor)
+		if twoRes != -1 {
+			return utils.ReportError(c, "Two factor is invalid", http.StatusUnauthorized)
+		}
+	}
+	token, errToken := utils.CreateKeyToken(uint64(user.Id))
+	if errToken != nil {
+		log.Printf("err: %v\n", errToken)
+		return utils.ReportError(c, errToken.Error(), http.StatusInternalServerError)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":   false,
+		utils.STATUS: utils.OK,
+		"token":      token,
+	})
 }
 
 func getBalance(c *fiber.Ctx) error {
@@ -474,7 +549,7 @@ func getTokenBalance(c *fiber.Ctx) error {
 	start := time.Now()
 
 	//make database call below in goroutine
-	acc, err := database.ReadValue[string]("SELECT addr FROM users_addr WHERE idUser = ?", userID)
+	acc, err := database.ReadArrayStruct[models.UsersTokenAddr]("SELECT * FROM users_addr WHERE idUser = ? AND addr IS NOT NULL", userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
@@ -482,14 +557,19 @@ func getTokenBalance(c *fiber.Ctx) error {
 	if debugTime {
 		utils.ReportMessage(fmt.Sprintf("%s took %s", "DB Query", elapsed))
 	}
-	if acc == "" {
-		return utils.ReportError(c, "No address", http.StatusBadRequest)
+	blc := 0.0
+	for _, v := range acc {
+		if string(v.Addr) == "" {
+			//return utils.ReportError(c, "No address", http.StatusBadRequest)
+			continue
+		}
+		balance, err := web3.GetContractBalance(string(v.Addr))
+		if err != nil {
+			//return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+			continue
+		}
+		blc += balance
 	}
-	balance, err := web3.GetContractBalance(acc)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
-	}
-
 	elapsed = time.Since(start)
 	if debugTime {
 		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
@@ -499,7 +579,7 @@ func getTokenBalance(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"hasError":   false,
 		utils.STATUS: utils.OK,
-		"balance":    balance,
+		"balance":    blc,
 	})
 }
 
@@ -515,21 +595,35 @@ func getTokenTX(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 
-	addr, err := database.ReadValue[null.String]("SELECT addr FROM users_addr WHERE idUser = ?", userID)
-	if !addr.Valid {
-		return utils.ReportError(c, "No user addresses in the db", http.StatusBadRequest)
-	}
-
-	balance, err := web3.GetContractBalance(addr.String)
+	addr, err := database.ReadArrayStruct[models.UsersTokenAddr]("SELECT addr FROM users_addr WHERE idUser = ?", userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	blc := 0.0
+	asdf := ""
+	if len(addr) > 0 {
+		for _, v := range addr {
+			address := string(v.Addr)
+			if len(address) == 0 {
+				continue
+			}
+
+			balance, err := web3.GetContractBalance(address)
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+			}
+			blc += balance
+			asdf = address
+		}
+	} else {
+		return utils.ReportError(c, "No user addresses in the db", http.StatusConflict)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
-		"addr":       addr,
-		"bal":        balance,
+		"addr":       asdf,
+		"bal":        blc,
 		"tx":         db,
 	})
 }
@@ -543,7 +637,7 @@ func saveTokenTX() {
 	for _, u := range users {
 		userID := u.IdUser
 		//utils.ReportMessage(fmt.Sprintf("Saving token tx, user %d", userID))
-		tx, err := web3.GetTokenTx(u.Addr)
+		tx, err := web3.GetTokenTx(string(u.Addr))
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			return

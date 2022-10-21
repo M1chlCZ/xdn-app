@@ -1,9 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
 	"github.com/gofiber/fiber/v2"
 	"log"
-	"xdn-dex/utils"
 )
 
 func main() {
@@ -11,13 +11,24 @@ func main() {
 	app := fiber.New()
 
 	// Routes
-	app.Get("/api", func(c *fiber.Ctx) error {
+	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("XDN DEX") // => https
 	})
 
-	err := app.Listen(":6500")
+	// Create tls certificate
+	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
 	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		log.Panic(err)
+		log.Fatal(err)
 	}
+
+	config := &tls.Config{Certificates: []tls.Certificate{cer}}
+
+	// Create custom listener
+	ln, err := tls.Listen("tcp", ":6500", config)
+	if err != nil {
+		panic(err)
+	}
+
+	// Start server with https/ssl enabled on http://localhost:443
+	log.Fatal(app.Listener(ln))
 }

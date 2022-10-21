@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
@@ -29,6 +30,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/io_client.dart';
 
 import 'firebase_options.dart';
 import 'globals.dart' as globals;
@@ -61,6 +63,29 @@ void main() async {
       DeviceOrientation.portraitDown,
     ],
   );
+
+  // final context = SecurityContext.defaultContext;
+  // // modify context as needed
+  // var cert = await rootBundle.loadString("assets/cert.pem");
+  // context.setTrustedCertificates(cert);
+  // final httpClient = HttpClient(context: context);
+  // final client = IOClient(httpClient);
+  //
+  // await client.get(Uri.parse('https://somewhere.io'));
+
+  // try {
+  //   SecurityContext(withTrustedRoots: false);
+  //   ByteData data = await rootBundle.load("assets/cert.pem");
+  //   SecurityContext context = SecurityContext.defaultContext;
+  //   context.setTrustedCertificatesBytes(data.buffer.asUint8List());
+  //   final httpClient = HttpClient(context: context);
+  //   final client = IOClient(httpClient);
+  //   await client.get(Uri.parse('https://dex.digitalnote.org/api/api/v1/user/balance'));
+  //   print("SECURITY CONTEXT SET");
+  // } catch (e) {
+  //   print("SECURITY CONTEXT ERROR: $e");
+  // }
+
   await NotificationService().init();
   FCM().setNotifications();
   setupLocator();

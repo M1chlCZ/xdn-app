@@ -19,6 +19,7 @@ class HomePage extends StatelessWidget {
           children: [
             TextButton(
               onPressed: () {
+                authService.login("lojza", "something"); //TODO
                 authService.logOut();
               },
               child: const Text(

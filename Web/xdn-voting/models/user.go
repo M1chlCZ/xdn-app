@@ -1,6 +1,6 @@
 package models
 
-type Users struct {
+type User struct {
 	Id        int     `json:"id" db:"id"`
 	Username  string  `json:"username" db:"username"`
 	Password  string  `json:"password" db:"password"`
@@ -23,4 +23,10 @@ type UsersTokenAddr struct {
 	Id     int    `json:"id" db:"id"`
 	Addr   string `json:"addr" db:"addr"`
 	IdUser int    `json:"idUser" db:"idUser"`
+}
+
+type UserLogin struct {
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	TwoFactor int64  `json:"twoFactor"`
 }

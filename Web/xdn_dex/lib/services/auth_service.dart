@@ -5,7 +5,7 @@ class AuthService {
 
   Stream<bool> get onAuthStateChange => _onAuthStateChange.stream;
 
-  Future<bool> login() async {
+  Future<bool> login(String name, String password) async {
 
     // This is just to demonstrate the login process time.
     // In real-life applications, it is not recommended to interrupt the user experience by doing such things.

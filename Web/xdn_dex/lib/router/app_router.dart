@@ -35,7 +35,7 @@ class AppRouter {
       GoRoute(
         path: APP_PAGE.onBoarding.toPath,
         name: APP_PAGE.onBoarding.toName,
-        builder: (context, state) => const OnboardingPage(),
+        builder: (context, state) =>  const OnBoardingPage(),
       ),
       GoRoute(
         path: APP_PAGE.error.toPath,
@@ -45,6 +45,7 @@ class AppRouter {
     ],
     errorBuilder: (context, state) => ErrorPage(error: state.error.toString()),
     redirect: (context, state) {
+      print("Redirecting to ${state.location}");
       final loginLocation = state.namedLocation(APP_PAGE.login.toName);
       final homeLocation = state.namedLocation(APP_PAGE.home.toName);
       final splashLocation = state.namedLocation(APP_PAGE.splash.toName);

@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xdn_dex/router/app_router.dart';
 import 'package:xdn_dex/services/app_services.dart';
 import 'package:xdn_dex/services/auth_service.dart';
@@ -12,12 +12,15 @@ import 'package:xdn_dex/services/auth_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
-  final SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-  runApp(MyApp(sharedPreferences: sharedPreferences,));
+  const FlutterSecureStorage fs = FlutterSecureStorage(webOptions: WebOptions(
+    dbName: "CNliCGCAgu",
+    publicKey: "6i81ge6Fc3bqgxbtc1Wl",
+  ));
+  runApp(const MyApp(sharedPreferences: fs,));
 }
 
 class MyApp extends StatefulWidget {
-  final SharedPreferences sharedPreferences;
+  final FlutterSecureStorage sharedPreferences;
   const MyApp({super.key, required this.sharedPreferences});
 
   @override
@@ -59,7 +62,18 @@ class _MyAppState extends State<MyApp> {
         builder: (context) {
           final GoRouter goRouter = Provider.of<AppRouter>(context, listen: false).router;
           return MaterialApp.router(
-            title: "Router App",
+            title: "XDN DEX",
+            theme: ThemeData(
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: ZoomPageTransitionsBuilder(),
+                  TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+                  TargetPlatform.macOS: ZoomPageTransitionsBuilder(),
+                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                },
+              ),
+            ),
+            routeInformationProvider: goRouter.routeInformationProvider,
             routeInformationParser: goRouter.routeInformationParser,
             routerDelegate: goRouter.routerDelegate,
           );

@@ -15,9 +15,9 @@ class SplashPageState extends State<SplashPage> {
 
   @override
   void initState() {
+    super.initState();
     _appService = Provider.of<AppService>(context, listen: false);
     onStartUp();
-    super.initState();
   }
 
   void onStartUp() async {

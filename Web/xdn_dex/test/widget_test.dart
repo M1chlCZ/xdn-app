@@ -5,15 +5,17 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xdn_dex/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    final SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    await tester.pumpWidget(MyApp(sharedPreferences: sharedPreferences,));
+   const FlutterSecureStorage fs = FlutterSecureStorage(webOptions: WebOptions(
+      dbName: "CNliCGCAgu",
+      publicKey: "6i81ge6Fc3bqgxbtc1Wl",
+    ));
+    await tester.pumpWidget(const MyApp(sharedPreferences: fs,));
   });
 }

@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:xdn_dex/support/extensions.dart';
 
 String LOGIN_KEY = "5FD6G46SDF4GD64F1VG9SD68";
 String ONBOARD_KEY = "GD2G82CG9G82VDFGVD22DVG";
 
 class AppService with ChangeNotifier {
-  late final SharedPreferences sharedPreferences;
+  late final FlutterSecureStorage sharedPreferences;
   final StreamController<bool> _loginStateChange = StreamController<bool>.broadcast();
   bool _loginState = false;
   bool _initialized = false;
@@ -21,7 +22,7 @@ class AppService with ChangeNotifier {
   Stream<bool> get loginStateChange => _loginStateChange.stream;
 
   set loginState(bool state) {
-    sharedPreferences.setBool(LOGIN_KEY, state);
+    sharedPreferences.write(key: LOGIN_KEY, value: state.toString());
     _loginState = state;
     _loginStateChange.add(state);
     notifyListeners();
@@ -33,18 +34,23 @@ class AppService with ChangeNotifier {
   }
 
   set onboarding(bool value) {
-    sharedPreferences.setBool(ONBOARD_KEY, value);
+    sharedPreferences.write(key: ONBOARD_KEY, value: value.toString());
     _onboarding = value;
     notifyListeners();
   }
 
   Future<void> onAppStart() async {
-    _onboarding = sharedPreferences.getBool(ONBOARD_KEY) ?? false;
-    _loginState = sharedPreferences.getBool(LOGIN_KEY) ?? false;
+    String? onBoard = await sharedPreferences.read(key: ONBOARD_KEY);
+    String? loginKey = await sharedPreferences.read(key: LOGIN_KEY);
+    _onboarding = onBoard.parseBool() ?? false;
+    _loginState = loginKey.parseBool() ?? false;
+
+    print("onboarding: $_onboarding");
+    print("loginState: $_loginState");
 
     // This is just to demonstrate the splash screen is working.
     // In real-life applications, it is not recommended to interrupt the user experience by doing such things.
-    await Future.delayed(const Duration(seconds: 2));
+    // await Future.delayed(const Duration(seconds: 2));
 
     _initialized = true;
     notifyListeners();

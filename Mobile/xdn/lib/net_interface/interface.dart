@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 
 import '../globals.dart' as globals;
 import '../support/Encrypt.dart';
@@ -20,6 +23,7 @@ class ComInterface {
       {Map<String, dynamic>? request, bool wholeURL = false, int serverType = serverAPI, Map<String, dynamic>? query, dynamic body, int type = typeJson, bool debug = false}) async {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
+    var ioClient = await GetIt.I.getAsync<IOClient>();
     String bearer = "";
     String payload = "";
     dynamic responseJson;
@@ -53,7 +57,7 @@ class ComInterface {
 
       // print("GET: $mUrl ${json.encode(request!)}");
 
-      response = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
+      response = await ioClient.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
       if (debug) {
         debugPrint(mUrl);
         if (serverType == serverAPI) {
@@ -95,6 +99,7 @@ class ComInterface {
   Future<dynamic> post(String url, {Map<String, dynamic>? request, int serverType = serverAPI, dynamic body, int type = typeJson, bool debug = false, bool bandwidth = false}) async {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
+    var ioClient = await GetIt.I.getAsync<IOClient>();
     String bearer = "";
     String payload = "";
     dynamic responseJson;
@@ -119,7 +124,7 @@ class ComInterface {
       "payload": payload,
     };
     var b = body != null ? json.encode(body) : null;
-    response = await http.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
+    response = await ioClient.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
     if (debug) {
       debugPrint(mUrl);
       debugPrint(response.statusCode.toString());

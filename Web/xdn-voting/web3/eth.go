@@ -62,8 +62,6 @@ func GetBalance(address string) (*big.Int, error) {
 }
 
 func GetContractBalance(address string) (float64, error) {
-	//name := "WXDN balanceOf"
-	//start := time.Now()
 	d := make(chan float64, 1)
 	e := make(chan error, 1)
 	go func(data chan float64, errChan chan error) {
@@ -71,34 +69,25 @@ func GetContractBalance(address string) (float64, error) {
 		valid := utils.Erc20verify(address)
 		if !valid {
 			errChan <- fmt.Errorf("invalid erc20 address")
-			//return 0, fmt.Errorf("invalid erc20 address")
 		}
 		addr := common.HexToAddress(address)
 		contract, err := rpc.Eth.NewContract(abi.WXDN, abi.WXDNContract)
 		if err != nil {
 			errChan <- err
-			//return 0, err
 		}
 
 		c, err := contract.Call("balanceOf", addr)
 		if err != nil {
 			errChan <- err
-			//return 0, err
 		}
 
-		//convert c to int64
-		//convert
 		bal := c.(*big.Int)
 		b := WeiToString(bal)
 
 		data <- b
-		//return b, nil
 	}(d, e)
 	select {
 	case data := <-d:
-		//elapsed := time.Since(start)
-		//utils.ReportMessage(fmt.Sprintf("Balance: %f", b))
-		//utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
 		close(d)
 		close(e)
 		return data, nil
