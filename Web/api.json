@@ -1,0 +1,49 @@
+{
+    "apps": [
+        {
+            "script": "app.js",
+            "watch": true,
+            "ignore_watch": [
+                "avatars",
+                "node_modules",
+                "sendApi.log"
+            ],
+            "instances": 4,
+            "exec_mode": "cluster",
+            "watch_options": {
+                "followSymlinks": false
+            },
+            "name": "XDN API"
+        },
+        {
+            "script": "notifyStake.js",
+            "watch": true,
+            "ignore_watch": [
+                "avatars",
+                "node_modules",
+                "sendApi.log"
+            ],
+            "instances": 1,
+            "exec_mode": "fork",
+            "watch_options": {
+                "followSymlinks": false
+            },
+            "name": "STAKE WATCH"
+        },
+        {
+            "script": "privkeyBackup.js",
+            "watch": true,
+            "ignore_watch": [
+                "avatars",
+                "node_modules",
+                "sendApi.log"
+            ],
+            "instances": 1,
+            "exec_mode": "fork",
+            "watch_options": {
+                "followSymlinks": false
+            },
+            "name": "ACCOUNTS BACKUP"
+        }
+    ]
+}
