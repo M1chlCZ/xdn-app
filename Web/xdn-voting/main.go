@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/dgryski/dgoogauth"
@@ -10,7 +11,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
 	"log"
-	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -49,6 +49,9 @@ func main() {
 	app.Post("api/v1/login", loginAPI)
 	app.Post("api/v1/register", registerAPI)
 	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
+	app.Post("api/v1/staking/set", utils.Authorized(setStake))
+	app.Post("api/v1/staking/unset", utils.Authorized(unstake))
+	app.Get("api/v1/staking/info", utils.Authorized(getStakeInfo))
 	app.Get("api/v1/user/balance", utils.Authorized(getBalance))
 	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
 	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
@@ -85,10 +88,6 @@ func registerAPI(c *fiber.Ctx) error {
 		"hasError":   false,
 		utils.STATUS: utils.OK,
 	})
-}
-
-func stakeSet(c *fiber.Ctx) {
-
 }
 
 func loginAPI(c *fiber.Ctx) error {
@@ -148,22 +147,10 @@ func getBalance(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
-	type balStruct struct {
-		Amount   float64 `db:"amount"`
-		Category string  `db:"category"`
-	}
-	bal, err := database.ReadArray[balStruct](`SELECT amount, category FROM transaction WHERE account = ? AND confirmation > 2 AND category = 'receive' UNION ALL SELECT amount, category FROM  transaction WHERE account = ? AND category = 'send'`, acc, acc)
+
+	bal, err := database.ReadValue[float64](`SELECT SUM(amount) as amount FROM transaction WHERE account = ?`, acc)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-	}
-
-	balance := 0.0
-	for _, b := range bal {
-		if b.Category == "send" {
-			balance -= math.Abs(b.Amount)
-		} else {
-			balance += math.Abs(b.Amount)
-		}
 	}
 
 	var ing []models.ListUnspent
@@ -178,6 +165,7 @@ func getBalance(c *fiber.Ctx) error {
 			spendable += v.Amount
 		}
 	}
+	pending := bal - spendable
 	elapsed := time.Since(start)
 	if debugTime {
 		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
@@ -185,22 +173,13 @@ func getBalance(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
-		"balance":    fmt.Sprintf("%.2f", float32(balance)),
+		"balance":    fmt.Sprintf("%.2f", float32(pending)),
 		"immature":   float32(immature),
 		"spendable":  float32(spendable),
 	})
 }
 
 func checkContest(c *fiber.Ctx) error {
-	//userID, er := strconv.Atoi(c.Get("User_id"))
-	//if er != nil {
-	//	return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
-	//}
-
-	// TODO CHANGE!!!
-	//if userID != 1 && userID != 4 && userID != 49 && userID != 2 && userID != 3 && userID != 5 {
-	//	return utils.ReportError(c, "No contest", http.StatusConflict)
-	//}
 
 	contest, err := database.ReadStruct[models.Contest]("SELECT * FROM voting_contest WHERE finished = 0")
 	if err != nil {
@@ -483,6 +462,159 @@ func ping(c *fiber.Ctx) error {
 		"hasError":   false,
 		utils.STATUS: utils.OK,
 		"message":    "pong",
+	})
+}
+
+func setStake(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	type req struct {
+		Amount float64 `json:"amount"`
+	}
+	var r req
+	err := c.BodyParser(&r)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	user, err := database.ReadStruct[models.StakeUsers]("SELECT * FROM users_stake WHERE idUser = ? AND active = ?", userID, 1)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+	userAddr, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	if user.Active != 0 {
+		utils.ReportMessage("UPDATING STAKE")
+		balance := r.Amount + user.Amount
+		tx, err := coind.SendCoins(server, userAddr, r.Amount, false)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusConflict)
+		}
+		_, _ = database.InsertSQl("UPDATE users_stake SET amount = ? WHERE idUser = ? AND active = ?", balance, userID, 1)
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Staking", tx, "send")
+		time.Sleep(time.Second * 1)
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			"hasError":   false,
+			utils.STATUS: utils.OK,
+		})
+	} else {
+		utils.ReportMessage("INSERTING STAKE")
+		smax, err := database.ReadValue[float64]("SELECT IFNULL(MAX(session), 0) as smax FROM users_stake WHERE idUser = ?", userID)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		tx, err := coind.SendCoins(server, userAddr, r.Amount, false)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusConflict)
+		}
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Staking", tx, "send")
+		if smax == 0 {
+			_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", userID, r.Amount, 1, 1)
+		} else {
+			_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", userID, r.Amount, 1, smax+1)
+		}
+		time.Sleep(time.Second * 1)
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			"hasError":   false,
+			utils.STATUS: utils.OK,
+		})
+	}
+}
+
+func unstake(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	type req struct {
+		Type int `json:"type"`
+	}
+	var r req
+	err := c.BodyParser(&r)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	user, err := database.ReadStruct[models.StakeUsers]("SELECT * FROM users_stake WHERE idUser = ? AND active = ?", userID, 1)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	amountToSend := 0.0
+	userStake, err := database.ReadValue[float64]("SELECT IFNULL(amount, 0) FROM users_stake WHERE idUser = ? AND active = ?", userID, 1)
+	payouts, err := database.ReadValue[float64]("SELECT IFNULL(SUM(amount),0) FROM payouts_stake WHERE idUser = ? AND credited = 0 AND session = ?", userID, user.Session)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	if r.Type == 1 {
+		amountToSend += payouts
+	} else {
+		dateChanged := user.DateStart.Time.UTC().UnixMilli()
+		dateNow := time.Now().UnixMilli()
+		dateDiff := dateNow - dateChanged
+		if dateDiff > 86400000 {
+			amountToSend += userStake
+			amountToSend += payouts
+		} else {
+			return utils.ReportError(c, "You can only unstake after 24 hours", http.StatusConflict)
+		}
+	}
+	utils.ReportMessage(fmt.Sprintf("Amount to send: %f, user to send %d", amountToSend, user.IdUser))
+	server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+	userAddr, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	if user.Active != 0 {
+		utils.ReportMessage("UNSTAKING")
+		tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusConflict)
+		}
+		if r.Type == 1 {
+			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND session = ? AND id <> 0", 1, userID, user.Session)
+		} else {
+			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND session = ? AND id <> 0", 1, userID, user.Session)
+			_, _ = database.InsertSQl("UPDATE users_stake SET active = ? WHERE idUser = ?", 0, userID)
+		}
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", tx, "receive")
+		time.Sleep(time.Second * 1)
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			"hasError":   false,
+			utils.STATUS: utils.OK,
+		})
+	} else {
+		return utils.ReportError(c, "You don't have any active stake", http.StatusConflict)
+	}
+}
+func getStakeInfo(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	var emptyStruct models.CheckStakeDBStruct
+	refDB := database.ReadStructEmpty[models.CheckStakeDBStruct]("SELECT amount, session FROM users_stake WHERE idUser = ? AND active = 1", userID)
+
+	count := 0
+	if refDB != emptyStruct {
+		count = 1
+	}
+
+	rql, errSelect := database.ReadValue[sql.NullFloat64]("SELECT COALESCE(SUM(amount), 0) as amount FROM payouts_stake WHERE idUser = ? AND session = ? AND credited = 0 ", userID, refDB.Session)
+	if errSelect != nil {
+		return utils.ReportError(c, errSelect.Error(), http.StatusInternalServerError)
+
+	}
+	stakesAmount := utils.InlineIF(rql.Valid, rql.Float64, 0.0)
+
+	totalCoins, _ := database.ReadValue[float64]("SELECT COALESCE(SUM(amount), 0) as amount FROM transaction_stake WHERE datetime >= now() - INTERVAL 1 DAY")
+	inPoolTotal, _ := database.ReadValue[float64]("SELECT COALESCE(SUM(amount), 0) as amount FROM users_stake WHERE active = 1")
+
+	percentage := refDB.Amount / inPoolTotal
+	estimated := totalCoins * percentage
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.STATUS:   utils.OK,
+		"hasError":     false,
+		"amount":       refDB.Amount,
+		"active":       count,
+		"stakesAmount": stakesAmount,
+		"contribution": percentage * 100,
+		"estimated":    estimated,
+		"poolAmount":   inPoolTotal,
 	})
 }
 

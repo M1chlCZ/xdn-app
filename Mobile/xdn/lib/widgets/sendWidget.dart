@@ -169,14 +169,14 @@ class SendWidgetState extends State<SendWidget> {
     // fail = false;
     // succ = false;
     // sendView = true;
-    Future.delayed(Duration.zero, () {
-      initView();
+    // Future.delayed(Duration.zero, () {
+    //   initView();
       if (kDebugMode) {
         setState(() {
           _controllerAddress.text = "dcjvrzkNmPCV8f2e2C9UVB5wTroo4iELzt";
         });
       }
-    });
+    // });
 
     // wait = false;
     // succ = false;
@@ -187,7 +187,7 @@ class SendWidgetState extends State<SendWidget> {
   void _getCurrentBalance() async {
     var result = await widget.balance;
     setState(() {
-      _balance = double.parse(result['balance'].toString());
+      _balance = double.parse(result['spendable'].toString());
     });
   }
 
@@ -474,7 +474,7 @@ class SendWidgetState extends State<SendWidget> {
                                         RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                 onPressed: () async {
                                   Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
-                                  _balance = double.parse(ss?["balance"]);
+                                  _balance = double.parse(ss?["spendable"]);
                                   double max = _balance! - 0.001;
                                   _controllerAmount.text = max.toString();
                                   _controllerAmount.selection = TextSelection.fromPosition(TextPosition(offset: _controllerAmount.text.length));

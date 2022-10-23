@@ -647,18 +647,22 @@ class NetInterface {
 
   static Future<int> sendStakeCoins(String amount) async {
     try {
-      String? id = await SecureStorage.read(key: globals.ID);
-      String? user = await SecureStorage.read(key: globals.USERNAME);
+      // String? id = await SecureStorage.read(key: globals.ID);
+      // String? user = await SecureStorage.read(key: globals.USERNAME);
+      //
+      // Map<String, dynamic> m = {
+      //   "User": user,
+      //   "id": id,
+      //   "request": "setStake",
+      //   "param1": amount,
+      // };
 
       Map<String, dynamic> m = {
-        "User": user,
-        "id": id,
-        "request": "setStake",
-        "param1": amount,
+        "amount": double.parse(amount),
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain, debug: true);
+      Response response = await ci.post("/staking/set", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: true);
 
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
@@ -689,15 +693,18 @@ class NetInterface {
 
   static Future<int> unstakeCoins(int type) async {
     try {
-      String? id = await SecureStorage.read(key: globals.ID);
+      // String? id = await SecureStorage.read(key: globals.ID);
 
+      // Map<String, dynamic> m = {
+      //   "id": id,
+      //   "param1": type,
+      //   "request": "unstake",
+      // };
       Map<String, dynamic> m = {
-        "id": id,
-        "param1": type,
-        "request": "unstake",
+        "type": type,
       };
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      Response response = await ci.post("/staking/unset", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: true);
 
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       //

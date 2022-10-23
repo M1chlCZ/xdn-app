@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -45,27 +46,31 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
-                         var balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
+                         var balance = Utils.formatBalance(double.parse(m['spendable'].toString()));
                          var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
-
-                        var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
-                        // var textPending = spendable == balance ? '' : "Pending ${double.parse(spendable) - double.parse(balance)} XDN";
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 5.0),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(bottom: 2.0, left: 10.0),
-                                        child: SizedBox(
-                                          height: 38,
+                         var pending = double.parse(m['balance'].toString()).toStringAsFixed(3);
+                        var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: ${Utils.formatBalance(double.parse(immature))} XDN";
+                        var textPending = double.parse(pending).toInt() == 0 ? '' : "Pending ${Utils.formatBalance(double.parse(pending))} XDN";
+                        if (textImature != '' && textPending != '') {
+                          textPending ='';
+                        }
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 6.0),
+                                child: Center(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Flexible(
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(bottom: 2.0, left: 10.0),
                                           child: AutoSizeText(balance,
                                               minFontSize: 18.0,
                                               maxLines: 1,
@@ -74,35 +79,43 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                               style: Theme.of(context).textTheme.headline5!.copyWith(fontWeight: FontWeight.w200, fontSize: 28.0)),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(
-                                      width: 10.0,
-                                    ),
-                                    Container(
-                                        height: 38,
-                                        margin: const EdgeInsets.only(right: 10.0, bottom: 2.0),
-                                        child: Center(
-                                            child: Text(
-                                          "XDN",
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70,  fontSize: 24.0, fontWeight: FontWeight.w800),
-                                        ))),
-                                    const SizedBox(
-                                      width: 78.0,
-                                    ),
-                                  ],
+                                      const SizedBox(
+                                        width: 10.0,
+                                      ),
+                                      Container(
+                                          height: 38,
+                                          margin: const EdgeInsets.only(right: 10.0, bottom: 2.0),
+                                          child: Center(
+                                              child: Text(
+                                            "XDN",
+                                            textAlign: TextAlign.right,
+                                            style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70,  fontSize: 24.0, fontWeight: FontWeight.w800),
+                                          ))),
+                                      const SizedBox(
+                                        width: 0.0,
+                                      ),
+                                    ],
 
+                                  ),
                                 ),
                               ),
-                              textImature != ''
-                                  ? SizedBox(
-                                      width: MediaQuery.of(context).size.width * 0.8,
-                                      child: AutoSizeText(textImature,
-                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
-                                    )
-                                  : Container(),
-
-                            ],
-                          ),
+                            ),
+                            textImature != ''
+                                ? SizedBox(
+                                    width: MediaQuery.of(context).size.width * 0.8,
+                                    child: AutoSizeText(textImature,
+                                        minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                                  )
+                                : Container(),
+                            textPending != ''
+                                ? SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.8,
+                              child: AutoSizeText(textPending,
+                                  minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                            )
+                                : Container(),
+                            const SizedBox(height: 10.0,),
+                          ],
                         );
                       } else if (snapshot.hasError) {
                         return Center(child: Text("There was an error retrieving you balance", style: Theme.of(context).textTheme.headline1!.copyWith(color: Colors.white, fontSize: 14)));

@@ -4,9 +4,13 @@ import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:decimal/decimal.dart';
 import 'package:digitalnote/bloc/stake_graph_bloc.dart';
+import 'package:digitalnote/models/StakeCheck.dart';
 import 'package:digitalnote/models/staking_data.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
+import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/card_header.dart';
@@ -57,9 +61,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
 
   String _balance = "";
   String _imature = "";
+  String _pending = "";
   bool _staking = false;
   bool _paused = false;
   bool _imatureVisible = false;
+  bool _pendingVisible = false;
   bool _hideLoad = false;
   int _countNot = 0;
   bool _awaitingNot = false;
@@ -263,35 +269,60 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   void _getBalance() async {
     _getBalanceFuture = NetInterface.getBalance(details: true);
     setState(() {});
-    await _checkPoolStats();
-    await _checkStaking();
+    await _getStakingDetails();
   }
 
-  Future<void> _checkStaking() async {
-    if (_locked == 0.0) {
+  Future<void> _getStakingDetails() async {
+    ComInterface interface = ComInterface();
+    var res = await interface.get("/staking/info", debug: true, serverType: ComInterface.serverGoAPI, request: {});
+    StakeCheck? sc = StakeCheck.fromJson(res);
+    if (sc.hasError == true) return;
+    if (sc.active == 0) {
       _staking = false;
+      _totalCoins = sc.inPoolTotal ?? 0.0;
+      _hideLoad = true;
+      // ignore: use_build_context_synchronously
+      _lockedText = AppLocalizations.of(context)!.st_locked_coins;
+      setState(() {});
     } else {
+      _estimated = sc.estimated ?? 0.0;
+      _contribution = sc.contribution ?? 0.0;
+      _totalCoins = sc.inPoolTotal ?? 0.0;
+      _locked = sc.amount ?? 0.0;
+      _stakeAmount = sc.amount ?? 0.0;
+      _reward = Decimal.parse(sc.stakesAmount!.toString()).toDouble();
+      // ignore: use_build_context_synchronously
+      _lockedText = AppLocalizations.of(context)!.st_locked_coins;
       _staking = true;
+      _hideLoad = true;
+      setState(() {});
     }
-    _hideLoad = true;
-    _lockedText = AppLocalizations.of(context)!.st_locked_coins;
-    setState(() {});
   }
 
-  Future<void> _checkPoolStats() async {
-    var s = await NetInterface.getPoolStats(context);
-    if (s == null) {
-      return;
-    }
-    setState(() {
-      _totalCoins = double.parse(s["total"].toString());
-      _contribution = _dp(double.parse(s["contribution"].toString()), 2);
-      _estimated = double.parse(s["estimated"].toString());
-      _locked = _dp(double.parse(s["locked"].toString()), 2);
-      _reward = _dp(double.parse(s["reward"].toString()), 2);
-      _stakeAmount = _dp(double.parse(s["amount"].toString()), 2);
-    });
-  }
+  // Future<void> _checkStaking() async {
+  //   if (_locked == 0.0) {
+  //     _staking = false;
+  //   } else {
+  //     _staking = true;
+  //   }
+  //   _hideLoad = true;
+  //   setState(() {});
+  // }
+  //
+  // Future<void> _checkPoolStats() async {
+  //   var s = await NetInterface.getPoolStats(context);
+  //   if (s == null) {
+  //     return;
+  //   }
+  //   setState(() {
+  //     _totalCoins = double.parse(s["total"].toString());
+  //     _contribution = _dp(double.parse(s["contribution"].toString()), 2);
+  //     _estimated = double.parse(s["estimated"].toString());
+  //     _locked = _dp(double.parse(s["locked"].toString()), 2);
+  //     _reward = _dp(double.parse(s["reward"].toString()), 2);
+  //     _stakeAmount = _dp(double.parse(s["amount"].toString()), 2);
+  //   });
+  // }
 
   double _dp(double val, int places) {
     num mod = pow(10.0, places);
@@ -531,9 +562,14 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       Map m = snapshot.data as Map<String, dynamic>;
                                       _balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
                                       _imature = double.parse(m['immature'].toString()).toStringAsFixed(3);
+                                      _pending = double.parse(m['balance'].toString()).toStringAsFixed(3);
                                       t = Timer(const Duration(milliseconds: 100), () {
                                         setState(() {
                                           _imatureVisible = _imature == "0.000" ? false : true;
+                                          _pendingVisible = double.parse(m['balance'].toString()).toInt() == 0 ? false : true;
+                                          if (_imatureVisible && _pendingVisible) {
+                                            _pendingVisible = false;
+                                          }
                                           t!.cancel();
                                         });
                                       });
@@ -587,6 +623,23 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                             ]),
                           ),
                         ),
+                        Visibility(
+                          visible: _pendingVisible,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 5, left: 17.0, right: 25.0),
+                            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                              Text(AppLocalizations.of(context)!.immature, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                              Expanded(
+                                child: AutoSizeText("$_pending XDN",
+                                    minFontSize: 8.0,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.fade,
+                                    textAlign: TextAlign.right,
+                                    style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                              )
+                            ]),
+                          ),
+                        ),
                         Padding(
                           padding: const EdgeInsets.only(top: 5, left: 17.0, right: 25.0),
                           child: Row(
@@ -596,7 +649,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                               Text(AppLocalizations.of(context)!.st_headline, style: Theme.of(context).textTheme.headline5),
                               Expanded(
                                 child: AutoSizeText(
-                                  "$_stakeAmount XDN",
+                                  "${Utils.formatBalance(_stakeAmount)} XDN",
                                   minFontSize: 8.0,
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
@@ -632,7 +685,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       Text(_lockedText, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
                                       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                         Text(
-                                          "$_locked XDN",
+                                          "${Utils.formatBalance(_locked)} XDN",
                                           style: Theme.of(context).textTheme.headline6!.copyWith(
                                                 fontSize: 12.0,
                                               ),
@@ -649,7 +702,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                       Text(AppLocalizations.of(context)!.st_reward, style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0)),
                                       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                         Text(
-                                          "$_reward XDN",
+                                          "${Utils.formatBalance(_reward)} XDN",
                                           style: Theme.of(context).textTheme.headline6!.copyWith(
                                                 fontSize: 12.0,
                                               ),
@@ -681,7 +734,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                         Text(AppLocalizations.of(context)!.st_total_coins, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
                                         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                           Text(
-                                            "${_totalCoins.toString()} XDN",
+                                            "${Utils.formatBalance(_totalCoins).toString()} XDN",
                                             style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
                                           ),
                                           // SizedBox(width: 35, height: 14, child: Text('XDN', textAlign: TextAlign.end, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),))
@@ -704,7 +757,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                         Text(AppLocalizations.of(context)!.st_contribution, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
                                         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                           Text(
-                                            _contribution.toString(),
+                                            Utils.formatBalance(_contribution).toString(),
                                             style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
                                           ),
                                           const SizedBox(
@@ -731,7 +784,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                               minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
                                         ),
                                         Text(
-                                          "${_estimated.toString()} XDN",
+                                          "${Utils.formatBalance(_estimated)} XDN",
                                           style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
                                         ),
                                       ],

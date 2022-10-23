@@ -99,7 +99,7 @@ class Utils {
  static String formatBalance(double number) {
     NumberFormat nf = NumberFormat("##.###");
     if (number < 1000) {
-      return number.toString();
+      return nf.format(number).toString();
     } else if ((number / 1000) > 1 && (number / 1000) < 1000) {
       return '${nf.format(number / 1000)}k';
     } else if ((number / 1000000) > 1 && (number / 1000000) < 1000) {

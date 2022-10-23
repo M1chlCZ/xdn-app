@@ -65,18 +65,15 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Expanded(
+                                    Flexible(
                                       child: Padding(
                                         padding: const EdgeInsets.only(bottom: 2.0, left: 10.0),
-                                        child: SizedBox(
-                                          height: 38,
-                                          child: AutoSizeText(Utils.formatBalance(balance),
-                                              minFontSize: 18.0,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.right,
-                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontWeight: FontWeight.w200, fontSize: 28.0)),
-                                        ),
+                                        child: AutoSizeText(Utils.formatBalance(balance),
+                                            minFontSize: 18.0,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.right,
+                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontWeight: FontWeight.w200, fontSize: 28.0)),
                                       ),
                                     ),
                                     const SizedBox(
@@ -90,11 +87,7 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
                                               "WXDN",
                                               style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70,  fontSize: 24.0, fontWeight: FontWeight.w800),
                                             ))),
-                                    const SizedBox(
-                                      width: 78.0,
-                                    ),
                                   ],
-
                                 ),
                               ),
                               textImature != ''

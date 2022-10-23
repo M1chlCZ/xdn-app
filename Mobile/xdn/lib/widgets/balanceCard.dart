@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/support/NetInterface.dart';
+import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -69,10 +70,16 @@ class BalanceCardState extends State<BalanceCard> {
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
                           Map<String, dynamic> m = snapshot.data!;
-                          var balance = double.parse(m['spendable'].toString()).toStringAsFixed(3);
+                          var balance = Utils.formatBalance(double.parse(m['spendable'].toString()));
                           var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
-
-                          var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
+                          var pending = double.parse(m['balance'].toString()).toStringAsFixed(3);
+                          var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: ${Utils.formatBalance(double.parse(immature))} XDN";
+                          var textPending = double.parse(pending).toInt() == 0 ? '' : "Pending ${Utils.formatBalance(double.parse(pending))} XDN";
+                          if (textImature != '' && textPending != '') {
+                            textPending ='';
+                          }
+                          var priceData = _priceData?['usd'] ?? 0.0;
+                          double price = priceData * double.parse(m['spendable'].toString());
                           return Column(
                             children: [
                               Padding(
@@ -115,10 +122,10 @@ class BalanceCardState extends State<BalanceCard> {
                               const SizedBox(
                                 height: 2,
                               ),
-                              _priceData != null &&  _priceData!.isNotEmpty && textImature == ''
+                              _priceData != null &&  _priceData!.isNotEmpty && textImature == '' && textPending == ''
                                   ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
-                                child: AutoSizeText("${((_priceData?['usd'] ?? 0.0 * double.parse(m['balance'].toString())) as double).toStringAsFixed(4)} \$",
+                                child: AutoSizeText("${price.toStringAsFixed(2)} \$",
                                     minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
                               )
                                   : Container(),
@@ -129,6 +136,13 @@ class BalanceCardState extends State<BalanceCard> {
                                   ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
                                 child: AutoSizeText(textImature,
+                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                              )
+                                  : Container(),
+                              textPending != ''
+                                  ? SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.8,
+                                child: AutoSizeText(textPending,
                                     minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
                               )
                                   : Container(),
