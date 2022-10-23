@@ -59,6 +59,7 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 				continue
 			}
 		}
+		//utils.ReportMessage(fmt.Sprintf("Calling %s %s %s", daemon.Folder, command, params))
 		p, er := client.Call(command, params)
 
 		if er != nil {
@@ -78,13 +79,10 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 				return
 			}
 		} else {
-			if command == "importprivkey" {
-				if tries > 3 {
-					utils.ReportMessage(fmt.Sprintf("imported key"))
-					//utils.ReportMessage("success")
-					c <- []byte("ok")
-					return
-				}
+			if command == "walletpassphrase" || command == "walletlock" || command == "importkey" {
+				//utils.ReportMessage("success")
+				c <- []byte("ok")
+				return
 			}
 		}
 

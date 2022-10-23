@@ -135,6 +135,9 @@ func (c *rpcClient) call(method string, params any) (rr rpcResponse, err error) 
 		_ = req.Body.Close()
 		return
 	}
+	//utils.ReportMessage("RPC response: %s", string(data))
+	//utils.ReportMessage(fmt.Sprintf("RPC response: %d", resp.StatusCode))
+
 	_ = resp.Body.Close()
 	_ = req.Body.Close()
 	err = json.Unmarshal(data, &rr)
