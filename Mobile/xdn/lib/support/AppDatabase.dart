@@ -193,7 +193,7 @@ class AppDatabase {
 
   Future<List<Contact>> searchContact(String searchQuery) async {
     var d = await db;
-    var res = await d.rawQuery("SELECT * FROM ${globals.TABLE_ADDR} WHERE name LIKE '$searchQuery%'");
+    var res = await d.rawQuery("SELECT * FROM ${globals.TABLE_ADDR} WHERE name LIKE '$searchQuery%' COLLATE NOCASE");
     return List.generate(res.length, (i) {
       return Contact(
         id: res[i]['id'] as int,
