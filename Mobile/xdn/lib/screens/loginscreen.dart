@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/models/get_info.dart';
@@ -18,6 +19,7 @@ import 'package:digitalnote/globals.dart' as globals;
 import 'package:digitalnote/screens/registerscreen.dart';
 import 'package:digitalnote/support/Encrypt.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
+import 'package:http/http.dart';
 
 import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
@@ -100,12 +102,15 @@ class _LoginState extends State<LoginPage> {
       if (pin != null) {
         m['twoFactor'] = pin;
       }
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
+      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
 
-      var res = await http.post(Uri.parse("$serverIP/login"), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      ComInterface ci = ComInterface();
+      Response res = await ci.post("/login", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+
+      // var res = await http.post(Uri.parse("$serverIP/login"), headers: {
+      //   "Content-Type": "application/json",
+      //   "payload": s,
+      // }).timeout(const Duration(seconds: 10));
 
       if (res.contentLength == 0) {
         if (mounted) {
@@ -116,8 +121,8 @@ class _LoginState extends State<LoginPage> {
       }
 
       if (res.statusCode == 200) {
-        var data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        Map<String, dynamic> r = json.decode(data);
+        // var data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+        Map<String, dynamic> r = json.decode(res.body.toString());
 
         var username = r["username"];
         var addr = r["addr"];
@@ -125,6 +130,7 @@ class _LoginState extends State<LoginPage> {
         var userID = r["userid"];
         var adminPriv = r["admin"];
         var nickname = r["nickname"];
+        var tokenDao = r["token"];
 
         await SecureStorage.write(key: globals.USERNAME, value: username);
         await SecureStorage.write(key: globals.ADR, value: addr);
@@ -132,15 +138,16 @@ class _LoginState extends State<LoginPage> {
         await SecureStorage.write(key: globals.TOKEN, value: jwt);
         await SecureStorage.write(key: globals.ADMINPRIV, value: adminPriv.toString());
         await SecureStorage.write(key: globals.NICKNAME, value: nickname.toString());
+        await SecureStorage.write(key: globals.TOKEN_DAO, value: tokenDao.toString());
 
         String udid = await FlutterUdid.consistentUdid;
         await SecureStorage.write(key: globals.UDID, value: udid);
-        bool resDao = await NetInterface.daoLogin();
-        if (resDao) {
-          debugPrint("Dao Login OK");
-        } else {
-          debugPrint('Dao login failed');
-        }
+        // bool resDao = await NetInterface.daoLogin();
+        // if (resDao) {
+        //   debugPrint("Dao Login OK");
+        // } else {
+        //   debugPrint('Dao login failed');
+        // }
         if (mounted) {
           Navigator.of(context).pop();
           Navigator.of(context).pushNamedAndRemoveUntil(MainMenuNew.route, (Route<dynamic> route) => false);

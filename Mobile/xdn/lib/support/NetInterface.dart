@@ -131,7 +131,7 @@ class NetInterface {
     try {
       ComInterface interface = ComInterface();
       Response response = await interface.post("/avatar",
-          body: {"address": addr}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain);
+          body: {"address": addr}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
       if (response.statusCode == 200) {
         var s = json.decode(response.body);
         return s['avatar'];
@@ -237,17 +237,12 @@ class NetInterface {
   }
 
   static Future<int> saveContact(String name, String addr, BuildContext context) async {
-
     if (name.isEmpty) {
       Dialogs.openAlertBox(context, "Error", "Name cannot be empty");
       return 0;
     }
-
     try {
-      String? id = await SecureStorage.read(key: globals.ID);
-
       Map<String, dynamic> m = {
-        "id": id,
         "name": name,
         "addr": addr,
       };
@@ -323,23 +318,7 @@ class NetInterface {
     }
   }
 
-  static Future<sum.Sumry?> getSummary() async {
-    try {
-      http.Response rt = await http.get(Uri.parse("https://xdn-explorer.com/ext/summary"));
-      var js = jsonDecode(rt.body);
-      var gi = sum.Sumry.fromJson(js);
-      return gi;
-    } on TimeoutException catch (_) {
-      if (kDebugMode) print('Service unreachable');
-      return null;
-    } on SocketException catch (_) {
-      if (kDebugMode) print('No internet');
-      return null;
-    } catch (e) {
-      if (kDebugMode) print(e.toString());
-      return null;
-    }
-  }
+
 
   // static List<MessageGroup>? parseMessagesGroup(String body) {
   //   try {

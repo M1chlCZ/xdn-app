@@ -7,6 +7,7 @@ import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -2031,6 +2032,9 @@ class Dialogs {
           TextEditingController controller = TextEditingController();
           TextEditingController controllerAddr = TextEditingController();
           return StatefulBuilder(builder: (context, setState) {
+            if (kDebugMode) {
+              controllerAddr.text = "dTLBddTWKviRuWEiPfVy7kUKeq1pbN15a2";
+            }
             void _openQRScanner() async {
               FocusScope.of(context).unfocus();
               Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {

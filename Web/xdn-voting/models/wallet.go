@@ -63,3 +63,55 @@ type GetTransaction struct {
 		Fee      float64 `json:"fee"`
 	} `json:"details"`
 }
+
+type ListTransactions []struct {
+	Account         string        `json:"account"`
+	Address         string        `json:"address"`
+	Category        string        `json:"category"`
+	Amount          float64       `json:"amount"`
+	Confirmations   int           `json:"confirmations"`
+	Bcconfirmations int           `json:"bcconfirmations"`
+	Blockhash       string        `json:"blockhash,omitempty"`
+	Blockindex      int           `json:"blockindex,omitempty"`
+	Blocktime       int           `json:"blocktime,omitempty"`
+	Txid            string        `json:"txid"`
+	Walletconflicts []interface{} `json:"walletconflicts"`
+	Time            int           `json:"time"`
+	Timereceived    int           `json:"timereceived"`
+}
+
+type ListStakeRewards []struct {
+	Account         string  `json:"account"`
+	Address         string  `json:"address"`
+	Category        string  `json:"category"`
+	Amount          float64 `json:"amount"`
+	Confirmations   int     `json:"confirmations"`
+	Bcconfirmations int     `json:"bcconfirmations"`
+	Blockhash       string  `json:"blockhash"`
+	Txid            string  `json:"txid"`
+	Time            int     `json:"time"`
+	Timereceived    int     `json:"timereceived"`
+}
+
+type DaemonStatus struct {
+	Block           bool `json:"block"`
+	BlockStake      bool `json:"blockStake"`
+	WalletStake     bool `json:"stakingActive"`
+	BlockCount      int  `json:"blockCount"`
+	MasternodeCount int  `json:"masternodeCount"`
+}
+
+type StakingInfo struct {
+	Enabled          bool    `json:"enabled"`
+	Staking          bool    `json:"staking"`
+	Errors           string  `json:"errors"`
+	Currentblocksize int     `json:"currentblocksize"`
+	Currentblocktx   int     `json:"currentblocktx"`
+	Pooledtx         int     `json:"pooledtx"`
+	Difficulty       float64 `json:"difficulty"`
+	SearchInterval   int     `json:"search-interval"`
+	Weight           int64   `json:"weight"`
+	Netstakeweight   int64   `json:"netstakeweight"`
+	Expectedtime     int     `json:"expectedtime"`
+	Stakethreshold   int     `json:"stakethreshold"`
+}

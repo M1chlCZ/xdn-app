@@ -41,7 +41,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 	for _, unspent := range ing {
 		if unspent.Address == addressSend {
 			if unspent.Spendable == true {
-				utils.ReportMessage(fmt.Sprintf("Found unspent input: %f", unspent.Amount))
+				//utils.ReportMessage(fmt.Sprintf("Found unspent input: %f", unspent.Amount))
 				totalCoins += unspent.Amount
 				myUnspent = append(myUnspent, unspent)
 			}
@@ -129,6 +129,9 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 			utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", addressReceive, errInsert.Error()))
 			return "", errInsert
 		}
+	} else {
+		call, err = WrapDaemon(wallet, 1, "walletpassphrase", wallet.PassPhrase.String, 99999999, true)
+		utils.ReportMessage("UNLOCKED STAKE WALLET")
 	}
 	userReceive, _ := database.ReadValue[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressReceive)
 	if userReceive.Valid {

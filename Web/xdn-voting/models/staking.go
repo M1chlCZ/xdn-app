@@ -32,6 +32,6 @@ type StakeUsers struct {
 }
 
 type CheckStakeDBStruct struct {
-	Amount  float64 `db:"amount"`
-	Session int     `db:"session"`
+	Amount  sql.NullFloat64 `db:"amount"`
+	Session int             `db:"session"`
 }

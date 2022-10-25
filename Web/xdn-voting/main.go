@@ -16,7 +16,9 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"xdn-voting/apiWallet"
 	"xdn-voting/coind"
+	"xdn-voting/daemons"
 	"xdn-voting/database"
 	"xdn-voting/errs"
 	"xdn-voting/models"
@@ -34,6 +36,9 @@ func main() {
 	//debug time
 	debugTime = false
 
+	// ============== API Wallet ===============
+	go apiWallet.Handler()
+
 	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
 	// ================== DAO ==================
@@ -49,27 +54,36 @@ func main() {
 	// ================== API ==================
 	app.Post("api/v1/login", loginAPI)
 	app.Post("api/v1/register", registerAPI)
+
 	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
 	app.Post("api/v1/staking/set", utils.Authorized(setStake))
 	app.Post("api/v1/staking/unset", utils.Authorized(unstake))
 	app.Get("api/v1/staking/info", utils.Authorized(getStakeInfo))
+
 	app.Post("api/v1/avatar/upload", utils.Authorized(uploadAvatar))
 	app.Post("api/v1/avatar", utils.Authorized(getAvatar))
 	app.Post("api/v1/avatar/version", utils.Authorized(getAvatarVersion))
+
 	app.Get("api/v1/user/balance", utils.Authorized(getBalance))
 	app.Get("api/v1/user/transactions", utils.Authorized(getTransactions))
+
 	app.Get("api/v1/user/addressbook", utils.Authorized(getAddressBook))
 	app.Post("api/v1/user/addressbook/save", utils.Authorized(saveToAddressBook))
+
 	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
 	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
+
+	app.Get("api/v1/status", utils.Authorized(getStatus))
+
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadGateway).JSON(&fiber.Map{
 			utils.ERROR:  true,
 			utils.STATUS: utils.ERROR,
 		})
 	})
-
-	utils.ScheduleFunc(saveTokenTX, time.Minute*10)
+	daemons.DaemonStatus()
+	utils.ScheduleFunc(daemons.SaveTokenTX, time.Minute*10)
+	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
 
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
@@ -88,6 +102,15 @@ func main() {
 
 	// Start server with https/ssl enabled on http://localhost:443
 	log.Fatal(app.Listener(ln))
+
+}
+
+func getStatus(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":   false,
+		utils.STATUS: utils.OK,
+		"data":       daemons.GetDaemonStatus(),
+	})
 }
 
 func registerAPI(c *fiber.Ctx) error {
@@ -132,9 +155,20 @@ func loginAPI(c *fiber.Ctx) error {
 		log.Printf("err: %v\n", errToken)
 		return utils.ReportError(c, errToken.Error(), http.StatusInternalServerError)
 	}
+	tokenDepr, errToken := utils.CreateToken(uint64(user.Id))
+	if errToken != nil {
+		log.Printf("err: %v\n", errToken)
+		return utils.ReportError(c, errToken.Error(), http.StatusInternalServerError)
+	}
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"hasError":   false,
 		utils.STATUS: utils.OK,
+		"userid":     user.Id,
+		"username":   user.Username,
+		"nickname":   user.Nickname,
+		"addr":       user.Addr,
+		"admin":      user.Admin,
+		"jwt":        tokenDepr,
 		"token":      token,
 	})
 }
@@ -624,13 +658,13 @@ func getStakeInfo(c *fiber.Ctx) error {
 	totalCoins, _ := database.ReadValue[float64]("SELECT COALESCE(SUM(amount), 0) as amount FROM transaction_stake WHERE datetime >= now() - INTERVAL 1 DAY")
 	inPoolTotal, _ := database.ReadValue[float64]("SELECT COALESCE(SUM(amount), 0) as amount FROM users_stake WHERE active = 1")
 
-	percentage := refDB.Amount / inPoolTotal
+	percentage := refDB.Amount.Float64 / inPoolTotal
 	estimated := totalCoins * percentage
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.STATUS:   utils.OK,
 		"hasError":     false,
-		"amount":       refDB.Amount,
+		"amount":       refDB.Amount.Float64,
 		"active":       count,
 		"stakesAmount": stakesAmount,
 		"contribution": percentage * 100,
@@ -654,6 +688,14 @@ func getStakeGraph(c *fiber.Ctx) error {
 	createdFormat := "2006-01-02 15:04:05"
 	timez := stakeReq.Datetime.Format(createdFormat)
 	year, month, _ := stakeReq.Datetime.Date()
+
+	//staking, err := database.ReadValue[sql.NullBool]("SELECT active FROM users_stakes WHERE idUser = ?", userID)
+	//if err != nil {
+	//	return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	//}
+	//if !staking.Valid {
+	//	return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	//}
 
 	if stakeReq.Type == 0 {
 		sqlQuery = `SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN ? AND date_add(?, INTERVAL 24 HOUR) AND idUser = ? AND credited = 0 GROUP BY hour, day ORDER BY hour`
@@ -781,36 +823,6 @@ func getTokenTX(c *fiber.Ctx) error {
 	})
 }
 
-func saveTokenTX() {
-	users, err := database.ReadArrayStruct[models.UsersTokenAddr]("SELECT * FROM users_addr WHERE 1")
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		return
-	}
-	for _, u := range users {
-		userID := u.IdUser
-		//utils.ReportMessage(fmt.Sprintf("Saving token tx, user %d", userID))
-		tx, err := web3.GetTokenTx(string(u.Addr))
-		if err != nil {
-			utils.WrapErrorLog(err.Error())
-			return
-		}
-
-		if len(tx.Result) != 0 {
-			for _, res := range tx.Result {
-				_, err := database.InsertSQl(`INSERT INTO bsc_tx (hash, blocknumber, timestampTX, blockhash, fromAddr, toAddr, contractAddr, contractDecimal, amount, tokenName, tokenSymbol, gas, gasPrice, gasUsed, confirmations, idUser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
-			ON DUPLICATE KEY UPDATE confirmations = ?`, res.Hash, res.BlockNumber, res.TimeStamp, res.BlockHash, res.From, res.To, res.ContractAddress, res.TokenDecimal, res.Value, res.TokenName, res.TokenSymbol, res.Gas, res.GasPrice, res.GasUsed, res.Confirmations, userID, res.Confirmations)
-				if err != nil {
-					utils.WrapErrorLog(err.Error())
-					break
-				}
-			}
-		}
-		time.Sleep(time.Millisecond * 200)
-	}
-	//utils.ReportMessage("Saved token tx")
-}
-
 func getAvatarVersion(c *fiber.Ctx) error {
 	type Req struct {
 		Address string `json:"address"`
@@ -848,6 +860,8 @@ func getAvatar(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
+
+	utils.ReportMessage(fmt.Sprintf("Get avatar, user %v", r))
 
 	if len(r.Address) == 0 {
 		//by id
@@ -895,8 +909,8 @@ func getAvatar(c *fiber.Ctx) error {
 			})
 		} else {
 			return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
-				"hasError":   true,
-				utils.STATUS: utils.FAIL,
+				"hasError":   false,
+				utils.STATUS: utils.OK,
 			})
 		}
 	}
@@ -956,11 +970,11 @@ func saveToAddressBook(c *fiber.Ctx) error {
 	var req Req
 	err := c.BodyParser(&req)
 	if err != nil {
-		return utils.ReportError(c, "Invalid request", http.StatusBadRequest)
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	value, err := database.ReadValue[int64]("SELECT COUNT(id) FROM addressbook WHERE idUser = ? AND addr = ?", userID, req.Addr)
 	if err != nil {
-		return utils.ReportError(c, "Invalid request", http.StatusBadRequest)
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	if value == 0 {
 		_, err = database.InsertSQl("INSERT INTO addressbook (idUser, name, addr) VALUES (?,?,?)", userID, req.Name, req.Addr)

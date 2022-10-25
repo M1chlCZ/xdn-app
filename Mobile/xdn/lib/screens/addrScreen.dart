@@ -335,7 +335,7 @@ class AddressScreenState extends State<AddressScreen> {
                         width: 50,
                         color: const Color(0xFF4B9B4C).withOpacity(0.8),
                         onTap: () {
-                          Dialogs.openUserAddBox(context).then((value) => cb.fetchContacts());
+                          Dialogs.openUserAddBox(context).then((value) => Future.delayed(const Duration(milliseconds: 200), (){cb.fetchContacts();}));
                           // Navigator.of(context)
                           //     .push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
                           //       return const AddressAddScreen();

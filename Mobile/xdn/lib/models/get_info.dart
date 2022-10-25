@@ -1,23 +1,3 @@
-/// version : "v2.0.0.5-XDN-DigitalNote-Core"
-/// protocolversion : 62053
-/// walletversion : 60000
-/// balance : 7108.78560000
-/// newmint : 0.00000000
-/// stake : 0.00000000
-/// blocks : 546347
-/// timeoffset : 0
-/// moneysupply : 9163873648.83898735
-/// connections : 113
-/// proxy : ""
-/// ip : "194.60.201.213"
-/// difficulty : {"proof-of-work":1643.83178107,"proof-of-stake":242763079.73235494}
-/// testnet : false
-/// keypoololdest : 1652781157
-/// keypoolsize : 1001
-/// paytxfee : 0.00010000
-/// mininput : 0.00000000
-/// unlocked_until : 0
-/// errors : ""
 
 class GetInfo {
   GetInfo({
