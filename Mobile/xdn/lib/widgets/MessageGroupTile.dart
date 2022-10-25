@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/models/MessageGroup.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 
 import '../support/SimpleRichText.dart';
 
@@ -107,21 +109,11 @@ class MessageGroupTileState extends State<MessageGroupTile> {
                                   width: MediaQuery.of(context).size.width * 0.64,
                                   height: 20,
                                   child: SimpleRichText(
-                                    widget.mgroup.text!,
+                                    widget.mgroup.text!.replaceAll("&TIP#", AppLocalizations.of(context)!.message_tipped.capitalize()),
                                     maxLines: 1,
                                     textOverflow: TextOverflow.ellipsis,
                                     style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                                   )
-                                  // child: AutoSizeText(
-                                  //   widget.mgroup.text,
-                                  //   maxLines: 1,
-                                  //   overflow: TextOverflow.ellipsis,
-                                  //   minFontSize: 14.0,
-                                  //   style: TextStyle(
-                                  //       color: Colors.white70,
-                                  //       fontWeight: FontWeight.normal,
-                                  //       fontSize: 14.0),
-                                  // ),
                                   ),
                               Opacity(
                                 // opacity: widget.mgroup.unread! > 0 ? 1.0 : 0.0,

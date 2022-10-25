@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"crypto/rand"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"github.com/bitly/go-simplejson"
@@ -319,6 +318,10 @@ func ReadFile(fileName string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+func ReadAvatar(filename string) ([]byte, error) {
+	return os.ReadFile(filename)
+}
+
 func InTimeSpan(start, end, check time.Time) bool {
 	return check.After(start) && check.Before(end)
 }
@@ -413,17 +416,5 @@ func HashPass(password string) string {
 }
 
 func GetDaemon() *models.Daemon {
-	return &models.Daemon{
-		ID:         0,
-		WalletUser: "yourusername",
-		WalletPass: "gMFJfFGFuJpbPGVXD5FQZWoYqWBX6LXk",
-		WalletPort: 18094,
-		Folder:     "",
-		NodeID:     0,
-		CoinID:     0,
-		Conf:       "",
-		IP:         "127.0.0.1",
-		MnPort:     0,
-		PassPhrase: sql.NullString{},
-	}
+	return &DaemonWallet
 }

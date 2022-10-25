@@ -12,6 +12,7 @@ import (
 	"gopkg.in/guregu/null.v4"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -52,7 +53,13 @@ func main() {
 	app.Post("api/v1/staking/set", utils.Authorized(setStake))
 	app.Post("api/v1/staking/unset", utils.Authorized(unstake))
 	app.Get("api/v1/staking/info", utils.Authorized(getStakeInfo))
+	app.Post("api/v1/avatar/upload", utils.Authorized(uploadAvatar))
+	app.Post("api/v1/avatar", utils.Authorized(getAvatar))
+	app.Post("api/v1/avatar/version", utils.Authorized(getAvatarVersion))
 	app.Get("api/v1/user/balance", utils.Authorized(getBalance))
+	app.Get("api/v1/user/transactions", utils.Authorized(getTransactions))
+	app.Get("api/v1/user/addressbook", utils.Authorized(getAddressBook))
+	app.Post("api/v1/user/addressbook/save", utils.Authorized(saveToAddressBook))
 	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
 	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -176,6 +183,20 @@ func getBalance(c *fiber.Ctx) error {
 		"balance":    fmt.Sprintf("%.2f", float32(pending)),
 		"immature":   float32(immature),
 		"spendable":  float32(spendable),
+	})
+}
+
+func getTransactions(c *fiber.Ctx) error {
+	userID, er := strconv.Atoi(c.Get("User_id"))
+	if er != nil {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	acc, _ := database.ReadValue[string]("SELECT username FROM users WHERE id = ?", userID)
+	transactions, _ := database.ReadArrayStruct[models.Transaction]("SELECT * FROM transaction WHERE account = ?", acc)
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":   false,
+		utils.STATUS: utils.OK,
+		"data":       transactions,
 	})
 }
 
@@ -788,4 +809,193 @@ func saveTokenTX() {
 		time.Sleep(time.Millisecond * 200)
 	}
 	//utils.ReportMessage("Saved token tx")
+}
+
+func getAvatarVersion(c *fiber.Ctx) error {
+	type Req struct {
+		Address string `json:"address"`
+	}
+	var r Req
+	err := c.BodyParser(&r)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if r.Address == "" {
+		return utils.ReportError(c, "Address is empty", http.StatusBadRequest)
+	}
+	avatarVersion, err := database.ReadValue[int64]("SELECT av FROM users WHERE addr = ?", r.Address)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":   false,
+		utils.STATUS: utils.OK,
+		"version":    avatarVersion,
+	})
+}
+
+func getAvatar(c *fiber.Ctx) error {
+	userID, er := strconv.Atoi(c.Get("User_id"))
+	if er != nil {
+		return utils.ReportError(c, "Unknown user", http.StatusBadRequest)
+	}
+	type Req struct {
+		ID      int64  `json:"id"`
+		Address string `json:"address"`
+	}
+	var r Req
+	err := c.BodyParser(&r)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if len(r.Address) == 0 {
+		//by id
+		id := 0
+		if r.ID != 0 {
+			id = int(r.ID)
+		} else {
+			id = userID
+		}
+		avatar, err := database.ReadValue[sql.NullString]("SELECT avatar FROM users WHERE id = ?", id)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		if avatar.Valid {
+			av, err := os.ReadFile(fmt.Sprintf(utils.GetHomeDir() + "/api/avatars/" + avatar.String + ".xdf"))
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+			}
+			return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+				"hasError":   false,
+				utils.STATUS: utils.OK,
+				"avatar":     string(av),
+			})
+		} else {
+			return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+				"hasError":   true,
+				utils.STATUS: utils.FAIL,
+			})
+		}
+	} else {
+		//by address
+		avatar, err := database.ReadValue[sql.NullString]("SELECT avatar FROM users WHERE addr = ?", r.Address)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		if avatar.Valid {
+			av, err := os.ReadFile(fmt.Sprintf(utils.GetHomeDir() + "/api/avatars/" + avatar.String + ".xdf"))
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+			}
+			return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+				"hasError":   false,
+				utils.STATUS: utils.OK,
+				"avatar":     string(av),
+			})
+		} else {
+			return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+				"hasError":   true,
+				utils.STATUS: utils.FAIL,
+			})
+		}
+	}
+}
+
+func uploadAvatar(c *fiber.Ctx) error {
+	userID, er := strconv.Atoi(c.Get("User_id"))
+	if er != nil {
+		return utils.ReportError(c, "Unknown user", http.StatusBadRequest)
+	}
+	type Req struct {
+		File string `json:"file"`
+	}
+	var r Req
+	err := c.BodyParser(&r)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	avatar, err := database.ReadValue[sql.NullString]("SELECT avatar FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	if avatar.Valid {
+		//already has avatar
+		err = os.WriteFile(fmt.Sprintf(utils.GetHomeDir()+"/api/avatars/"+avatar.String+".xdf"), []byte(r.File), 0644)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		_, _ = database.InsertSQl("UPDATE users SET av = av + 1 WHERE id = ?", userID)
+	} else {
+		//don't have avatar
+		filename := utils.GenerateSecureToken(10)
+		err = os.WriteFile(fmt.Sprintf(utils.GetHomeDir()+"/api/avatars/"+filename+".xdf"), []byte(r.File), 0644)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		_, _ = database.InsertSQl("UPDATE users SET avatar = ? WHERE id = ?", filename, userID)
+		_, _ = database.InsertSQl("UPDATE users SET av = av + 1 WHERE id = ?", userID)
+	}
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+
+}
+
+func saveToAddressBook(c *fiber.Ctx) error {
+	userID, er := strconv.Atoi(c.Get("User_id"))
+	if er != nil {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	type Req struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+		Addr string `json:"addr"`
+	}
+	var req Req
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, "Invalid request", http.StatusBadRequest)
+	}
+	value, err := database.ReadValue[int64]("SELECT COUNT(id) FROM addressbook WHERE idUser = ? AND addr = ?", userID, req.Addr)
+	if err != nil {
+		return utils.ReportError(c, "Invalid request", http.StatusBadRequest)
+	}
+	if value == 0 {
+		_, err = database.InsertSQl("INSERT INTO addressbook (idUser, name, addr) VALUES (?,?,?)", userID, req.Name, req.Addr)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+	}
+	arrayStruct, err := database.ReadArrayStruct[Req]("SELECT id, name, addr FROM addressbook  WHERE idUser = ? ORDER BY id DESC", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":   false,
+		utils.STATUS: utils.OK,
+		"data":       arrayStruct,
+	})
+}
+
+func getAddressBook(c *fiber.Ctx) error {
+	userID, er := strconv.Atoi(c.Get("User_id"))
+	if er != nil {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	type AddressBook struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+		Addr string `json:"addr"`
+	}
+	arrayStruct, err := database.ReadArrayStruct[AddressBook]("SELECT id, name, addr FROM addressbook  WHERE idUser = ? ORDER BY id DESC", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":   false,
+		utils.STATUS: utils.OK,
+		"data":       arrayStruct,
+	})
 }

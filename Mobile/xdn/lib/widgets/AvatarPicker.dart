@@ -111,7 +111,7 @@ class AvatarPickerState extends State<AvatarPicker> {
     if (i == 1) {
       String? base64 = await NetInterface.dowloadPictureByAddr(addr);
       if (base64 != null && base64 != "ok") {
-        await File(savePath).writeAsBytes(base64Decode(base64));
+        await File(savePath).writeAsBytes(base64Decode(base64.replaceAll(RegExp(r'\s+'), '')));
         setState(() {
           _imageFile = File.fromUri(Uri.parse(savePath));
         });
@@ -124,7 +124,7 @@ class AvatarPickerState extends State<AvatarPicker> {
       } else {
         String? base64 = await NetInterface.dowloadPictureByAddr(addr);
         if (base64 != null && base64 != "ok") {
-          await File(savePath).writeAsBytes(base64Decode(base64));
+          await File(savePath).writeAsBytes(base64Decode(base64.replaceAll(RegExp(r'\s+'), '')));
           setState(() {
             _imageFile = File.fromUri(Uri.parse(savePath));
           });
@@ -258,7 +258,7 @@ class AvatarPickerState extends State<AvatarPicker> {
     String savePath = '$dir/$fileName';
     String? base64 = await NetInterface.dowloadPicture(context, id);
     if (base64 != null && base64 != "ok") {
-      await File(savePath).writeAsBytes(base64Decode(base64));
+      await File(savePath).writeAsBytes(base64Decode(base64.replaceAll(RegExp(r'\s+'), '')));
       setState(() {
         _imageFile = File.fromUri(Uri.parse(savePath));
       });

@@ -242,7 +242,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     Dialogs.openWaitBox(context);
     var i = await NetInterface.unstakeCoins(type);
     _awaitingNot = true;
-    Future.delayed(const Duration(milliseconds: 4000), () {
+    Future.delayed(const Duration(milliseconds: 1000), () {
       if (_awaitingNot) {
         setState(() {
           _awaitingNot = false;
@@ -281,8 +281,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       _staking = false;
       _totalCoins = sc.inPoolTotal ?? 0.0;
       _hideLoad = true;
-      // ignore: use_build_context_synchronously
-      _lockedText = AppLocalizations.of(context)!.st_locked_coins;
       setState(() {});
     } else {
       _estimated = sc.estimated ?? 0.0;
@@ -291,38 +289,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       _locked = sc.amount ?? 0.0;
       _stakeAmount = sc.amount ?? 0.0;
       _reward = Decimal.parse(sc.stakesAmount!.toString()).toDouble();
-      // ignore: use_build_context_synchronously
-      _lockedText = AppLocalizations.of(context)!.st_locked_coins;
       _staking = true;
       _hideLoad = true;
       setState(() {});
     }
   }
-
-  // Future<void> _checkStaking() async {
-  //   if (_locked == 0.0) {
-  //     _staking = false;
-  //   } else {
-  //     _staking = true;
-  //   }
-  //   _hideLoad = true;
-  //   setState(() {});
-  // }
-  //
-  // Future<void> _checkPoolStats() async {
-  //   var s = await NetInterface.getPoolStats(context);
-  //   if (s == null) {
-  //     return;
-  //   }
-  //   setState(() {
-  //     _totalCoins = double.parse(s["total"].toString());
-  //     _contribution = _dp(double.parse(s["contribution"].toString()), 2);
-  //     _estimated = double.parse(s["estimated"].toString());
-  //     _locked = _dp(double.parse(s["locked"].toString()), 2);
-  //     _reward = _dp(double.parse(s["reward"].toString()), 2);
-  //     _stakeAmount = _dp(double.parse(s["amount"].toString()), 2);
-  //   });
-  // }
 
   double _dp(double val, int places) {
     num mod = pow(10.0, places);
@@ -336,6 +307,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       int countTime = int.parse(countDown);
       if (nowDate < countTime) {
         setState(() {
+          _lockedText = AppLocalizations.of(context)!.st_locked_coins;
           endTime = int.parse(countDown);
         });
       } else {
@@ -950,7 +922,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     return SizedBox(
                                       width: MediaQuery.of(context).size.width,
                                       child: Center(
-                                        child: Text('${_formatCountdownTime(time.hours!)}:${_formatCountdownTime(time.min!)}:${_formatCountdownTime(time.sec!)}',
+                                        child: Text('${_formatCountdownTime(time.hours ?? 0)}:${_formatCountdownTime(time.min?? 0)}:${_formatCountdownTime(time.sec ?? 0)}',
                                             style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 13.0, color: Colors.white70)),
                                       ),
                                     );

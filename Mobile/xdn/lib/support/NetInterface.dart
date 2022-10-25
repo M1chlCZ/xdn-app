@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
@@ -102,30 +101,13 @@ class NetInterface {
 
   static Future<String?> dowloadPicture(BuildContext context, int? userID) async {
     try {
-      String? jwt = await SecureStorage.read(key: globals.TOKEN);
-      String? id = await SecureStorage.read(key: globals.ID);
-      Map<String, dynamic> m = {
-        "id": id,
-        "param1": userID ?? 0,
-        "param2": "download",
-      };
-
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http
-          .post(
-            Uri.parse('${globals.SERVER_URL}/apiAvatar'),
-            body: {
-              "Content-Type": "application/json",
-              "payload": s,
-            },
-            headers: {"Content-Type": "application/x-www-form-urlencoded", "Authorization": jwt!},
-            encoding: Encoding.getByName('utf-8'),
-          )
-          .timeout(const Duration(seconds: 10));
+      ComInterface interface = ComInterface();
+      Response response = await interface.post("/avatar",
+          body: {"id": userID ?? 0}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain);
 
       if (response.statusCode == 200) {
-        return response.body;
+        var s = json.decode(response.body);
+        return s['avatar'];
       } else {
         // Dialogs.openAlertBox(context, 'Warning', response.toString());
         return null;
@@ -147,30 +129,12 @@ class NetInterface {
 
   static Future<String?> dowloadPictureByAddr(String addr) async {
     try {
-      String? jwt = await SecureStorage.read(key: globals.TOKEN);
-      String? id = await SecureStorage.read(key: globals.ID);
-      Map<String, dynamic> m = {
-        "id": id,
-        "param1": addr,
-        "param2": "download",
-      };
-
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http
-          .post(
-            Uri.parse('${globals.SERVER_URL}/apiAvatar'),
-            body: {
-              "Content-Type": "application/json",
-              "payload": s,
-            },
-            headers: {"Content-Type": "application/x-www-form-urlencoded", "Authorization": jwt!},
-            encoding: Encoding.getByName('utf-8'),
-          )
-          .timeout(const Duration(seconds: 10));
-
+      ComInterface interface = ComInterface();
+      Response response = await interface.post("/avatar",
+          body: {"address": addr}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain);
       if (response.statusCode == 200) {
-        return response.body;
+        var s = json.decode(response.body);
+        return s['avatar'];
       } else {
         if (kDebugMode) print("sucks");
         // Dialogs.openAlertBox(context, 'Warning', response.toString());
@@ -190,15 +154,6 @@ class NetInterface {
     ComInterface ci = ComInterface();
     try {
       await ci.get("/data", request: m, debug: false);
-
-      // final response = await http.get(Uri.parse(globals.SERVER_URL + '/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
-      // }).timeout(const Duration(seconds: 10));
-      //
-      // if (response.statusCode == 200) {
-      //   // if(kDebugMode)print("shit saved");
-      // }
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
@@ -209,17 +164,10 @@ class NetInterface {
   }
 
   static Future<int> getTranData() async {
-    String? user = await SecureStorage.read(key: globals.USERNAME);
-    String? locale = await SecureStorage.read(key: globals.LOCALE);
-    Map<String, dynamic> m = {
-      "User": user,
-      "param1": locale,
-      "request": "getTransaction",
-    };
-
     try {
       ComInterface ci = ComInterface();
-      List<dynamic> rt = await ci.get("/data", request: m);
+      Map<String, dynamic>? res = await ci.get("/user/transactions", serverType: ComInterface.serverGoAPI);
+      List<dynamic> rt = res!['data'];
       var l = await compute(getTransactionCompute, rt);
       var i = await AppDatabase().addTransactions(l);
       return i;
@@ -241,15 +189,7 @@ class NetInterface {
   }
 
   static Future<Map<String, dynamic>>? getBalance({bool details = false}) async {
-    // String? user = await SecureStorage.read(key: globals.USERNAME);
-    // Map<String, dynamic> m;
-    // if (details) {
-    //   m = {"User": user, "param1": 1, "request": "getBalance"};
-    // } else {
-    //   m = {"User": user, "request": "getBalance"};
-    // }
-
-    ComInterface ci = ComInterface();
+       ComInterface ci = ComInterface();
     Map<String, dynamic> rt = await ci.get("/user/balance", serverType: ComInterface.serverGoAPI);
     return rt;
   }
@@ -260,7 +200,7 @@ class NetInterface {
     return rt;
   }
 
-  static Future<Map<String, dynamic>>? getPriceData({bool details = false}) async {;
+  static Future<Map<String, dynamic>>? getPriceData({bool details = false}) async {
     Map<String, dynamic> m = {"request": "priceData"};
 
     ComInterface ci = ComInterface();
@@ -270,15 +210,16 @@ class NetInterface {
 
   static Future<int> getAddrBook() async {
     try {
-      String? id = await SecureStorage.read(key: globals.ID);
-      Map<String, dynamic> m = {
-        "id": id,
-        "request": "getAddrBook",
-      };
+      // String? id = await SecureStorage.read(key: globals.ID);
+      // Map<String, dynamic> m = {
+      //   "id": id,
+      //   "request": "getAddrBook",
+      // };
       ComInterface ci = ComInterface();
-      List<dynamic> rt = await ci.get("/data", request: m, debug: false);
-      if (rt.isNotEmpty) {
-        List<Contact> l = rt.map((l) => Contact.fromJson(l)).toList();
+      Map<String, dynamic> rt = await ci.get("/user/addressbook", request: {}, serverType: ComInterface.serverGoAPI);
+      List<dynamic> lst = rt['data'];
+      if (lst.isNotEmpty) {
+        List<Contact> l = lst.map((l) => Contact.fromJson(l)).toList();
         AppDatabase().addAddrBook(l);
         return 1;
       }
@@ -296,10 +237,6 @@ class NetInterface {
   }
 
   static Future<int> saveContact(String name, String addr, BuildContext context) async {
-    if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
-      Dialogs.openAlertBox(context, "Error", "Invalid XDN address");
-      return 0;
-    }
 
     if (name.isEmpty) {
       Dialogs.openAlertBox(context, "Error", "Name cannot be empty");
@@ -311,31 +248,16 @@ class NetInterface {
 
       Map<String, dynamic> m = {
         "id": id,
-        "request": "saveAdrrBook",
-        "param1": name,
-        "param2": addr,
+        "name": name,
+        "addr": addr,
       };
 
-      // ComInterface ci = ComInterface();
-      // List responseList = await ci.get("/data", request: m, debug: true);
-      // responseList.forEach((element) {if(kDebugMode)print(element);});
-      // List<Contact> l = responseList.map((data) => Contact.fromJson(data)).toList();
-      // var db = await AppDatabase().addAddrBook(l);
-      // if (db == 1) {
-      //   return 1;
-      // }
-      // return 0;
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      var jwt = await SecureStorage.read(key: globals.TOKEN);
-      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-        "Authorization": jwt!,
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
-
+      ComInterface ci = ComInterface();
+      Response response = await ci.post("/user/addressbook/save", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain);
       if (response.statusCode == 200) {
-        List responseList = json.decode(response.body);
-        List<Contact> l = responseList.map((data) => Contact.fromJson(data)).toList();
+        Map<String, dynamic > responseList = json.decode(response.body);
+        List<dynamic> lst = responseList['data'];
+        List<Contact> l = lst.map((data) => Contact.fromJson(data)).toList();
         var db = await AppDatabase().addAddrBook(l);
         if (db == 1) {
           return 1;
@@ -908,27 +830,9 @@ class NetInterface {
 
   static Future<int> getAvatarVersion(String? addr) async {
     try {
-      Map<String, dynamic> m = {
-        "param1": addr,
-        "request": "avatarVersion",
-      };
-
       ComInterface ci = ComInterface();
-      dynamic response = await ci.get("/data", request: m);
-      return AppDatabase().insertUpdateAvatar(response['addr'], response['version']);
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
-
-      // if (response.statusCode == 200) {
-      //   var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-      //   Map reponseMap = json.decode(data);
-      //
-      // }
-      // return 0;
+      Map<String, dynamic> response = await ci.post("/avatar/version", body: {"address" : addr!}, serverType: ComInterface.serverGoAPI);
+      return AppDatabase().insertUpdateAvatar(addr, response['version']);
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
       return 0;

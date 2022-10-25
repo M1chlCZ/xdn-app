@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 /bin/bash ./compile.sh
 sftp -i ~/.ssh/xdn XDNService@194.60.201.213:/home/XDNService/apiVoting/ <<< $'put api apiu'
 ssh -i ~/.ssh/xdn XDNService@194.60.201.213 "/home/XDNService/apiVoting/update"

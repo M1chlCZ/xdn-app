@@ -2045,25 +2045,43 @@ class Dialogs {
             }
 
             void _saveUsers(String name, String addr) async {
-              Dialogs.openWaitBox(context);
-              await NetInterface.saveContact(name, addr, context);
-              await NetInterface.getAddrBook();
-              await AppDatabase().getContacts();
-              Future.delayed(const Duration(milliseconds: 100), () {
-                Navigator.of(context).pop();
-              });
-              Future.delayed(const Duration(milliseconds: 100), () {
-                Navigator.of(context).pop();
-              });
+              try {
+                if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    Navigator.of(context).pop();
+                  });
+                  Dialogs.openAlertBox(context, "Error", "Invalid XDN address");
+                  return;
+                }
+                Dialogs.openWaitBox(context);
+                await NetInterface.saveContact(name, addr, context);
+                await NetInterface.getAddrBook();
+                await AppDatabase().getContacts();
+                Future.delayed(const Duration(milliseconds: 100), () {
+                                Navigator.of(context).pop();
+                              });
+                Future.delayed(const Duration(milliseconds: 100), () {
+                                Navigator.of(context).pop();
+                              });
+                setState(() {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(AppLocalizations.of(context)!.contact_added),
+                                  backgroundColor: const Color(0xFF63C9F3),
+                                  behavior: SnackBarBehavior.fixed,
+                                  elevation: 5.0,
+                                ));
+                              });
+              } catch (e) {
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  Navigator.of(context).pop();
+                });
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  Navigator.of(context).pop();
+                });
+                Dialogs.openAlertBox(context, "ERROR", "INVALID ADDRESS");
+                print(e);
+              }
 
-              setState(() {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(AppLocalizations.of(context)!.contact_added),
-                  backgroundColor: const Color(0xFF63C9F3),
-                  behavior: SnackBarBehavior.fixed,
-                  elevation: 5.0,
-                ));
-              });
             }
 
             return DialogBody(
