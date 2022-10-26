@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/support/NetInterface.dart';
@@ -121,7 +122,6 @@ class _LoginState extends State<LoginPage> {
       }
 
       if (res.statusCode == 200) {
-        // var data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
         Map<String, dynamic> r = json.decode(res.body.toString());
 
         var username = r["username"];
@@ -142,16 +142,9 @@ class _LoginState extends State<LoginPage> {
 
         String udid = await FlutterUdid.consistentUdid;
         await SecureStorage.write(key: globals.UDID, value: udid);
-        // bool resDao = await NetInterface.daoLogin();
-        // if (resDao) {
-        //   debugPrint("Dao Login OK");
-        // } else {
-        //   debugPrint('Dao login failed');
-        // }
         if (mounted) {
           Navigator.of(context).pop();
           Navigator.of(context).pushNamedAndRemoveUntil(MainMenuNew.route, (Route<dynamic> route) => false);
-          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainMenuScreen()));
         } else {
           if (mounted) {
             Navigator.of(context).pop();
@@ -159,7 +152,22 @@ class _LoginState extends State<LoginPage> {
           }
         }
       } else if (res.statusCode == 409) {
-        if (mounted) Dialogs.open2FABox(context, _auth2FA);
+        if (pin != null) {
+          if (mounted) {
+            Navigator.of(context).pop();
+            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, "Invalid 2FA code");
+          }
+          return;
+        } else {
+          Navigator.of(context).pop();
+          if (mounted) Dialogs.open2FABox(context, _auth2FA);
+        }
+      }else if (res.statusCode == 404) {
+        var err = json.decode(res.body.toString());
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, err['errorMessage']);
+        }
       } else {
         if (mounted) {
           var data = decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
@@ -174,35 +182,9 @@ class _LoginState extends State<LoginPage> {
         }
         return;
       }
-    } on TimeoutException catch (_) {
-      // Map<String, dynamic> m = {
-      //   "error": true,
-      //   "message": "No response from server",
-      // };
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, "No response from server");
-      return;
-    } on SocketException catch (_) {
-      // Map<String, dynamic> m = {
-      //   "error": true,
-      //   "message": "No response from server",
-      // };
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, "No response from server");
-      return;
     } catch (e) {
-      var error = '';
-      if (e.toString().trim() == 'Bad login details/2FA code') {
-        error = AppLocalizations.of(context)!.user_not_exists;
-      } else {
-        error = e.toString();
-      }
-      // Map<String, dynamic> m = {
-      //   "error": true,
-      //   "message": error,
-      // };
       Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, error);
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error_occur, e.toString());
       return;
     }
   }
@@ -210,7 +192,9 @@ class _LoginState extends State<LoginPage> {
   _auth2FA(String? s) async {
     if (!rr) {
       rr = true;
+      Navigator.of(context).pop();
       attemptLogIn(context, login!, pass!, pin: s!);
+      rr = false;
     }
   }
 

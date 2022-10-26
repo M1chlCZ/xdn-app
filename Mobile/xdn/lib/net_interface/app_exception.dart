@@ -28,7 +28,7 @@ class ConflictDataException extends AppException {
 }
 
 class UnauthorisedException extends AppException {
-  UnauthorisedException(Map message) : super(message, "Unauthorised: ");
+  UnauthorisedException(Map message) : super(message, "");
 }
 
 class InvalidInputException extends AppException {

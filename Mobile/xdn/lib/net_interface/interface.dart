@@ -70,16 +70,17 @@ class ComInterface {
         }
         debugPrint(response.statusCode.toString());
       }
-      if (response.statusCode == 401 || response.statusCode == 403) {
+      if (response.statusCode == 401) {
         if (serverType == serverDAO || serverType == serverGoAPI) {
-          var b = await NetInterface.daoRegister();
-          if (b) {
-            var res = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
-            responseJson = compute(_returnDaoResponse, res);
-            return responseJson;
-          } else {
-            return Future.error("unable to login");
-          }
+          throw UnauthorisedException({"status": "Cannot authenticate"});
+          // var b = await NetInterface.daoRegister();
+          // if (b) {
+          //   var res = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
+          //   responseJson = compute(_returnDaoResponse, res);
+          //   return responseJson;
+          // } else {
+          //   return Future.error("unable to login");
+          // }
         }
       }
       if (type == typePlain) {
@@ -131,16 +132,17 @@ class ComInterface {
       debugPrint(response.body);
     }
 
-    if (response.statusCode == 401 || response.statusCode == 403) {
+    if (response.statusCode == 401) {
       if (serverType == serverDAO || serverType == serverGoAPI) {
-        var b = await NetInterface.daoRegister();
-        if (b) {
-          var res = await http.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
-          responseJson = compute(_returnDaoResponse, res);
-          return responseJson;
-        } else {
-          return Future.error("unable to login");
-        }
+        throw UnauthorisedException({"status": "Cannot authenticate"});
+        // var b = await NetInterface.daoRegister();
+        // if (b) {
+        //   var res = await http.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
+        //   responseJson = compute(_returnDaoResponse, res);
+        //   return responseJson;
+        // } else {
+        //   return Future.error("unable to login");
+        // }
       }
     }
 

@@ -28,7 +28,6 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
 
   getInfoGet() async {
     getInfo = await NetInterface.getInfo();
-    sumry = await NetInterface.getSummary();
     setState(() {});
   }
 

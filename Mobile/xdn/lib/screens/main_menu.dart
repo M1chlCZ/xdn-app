@@ -52,8 +52,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   String? name;
 
-  Sumry? sumry;
-
   Map<String, dynamic>? _priceData;
 
   SessionStatus? session;
@@ -103,7 +101,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     daemonStatus = getDaemonStatus();
     // var token = await SecureStorage.read(key: globals.TOKEN);
     // print(token);
-    sumry = await NetInterface.getSummary();
     NetInterface.getAddrBook();
   }
 
@@ -149,14 +146,15 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   Future<DaemonStatus> getDaemonStatus() async {
     try {
-      Map<String, dynamic> m = {
-        "request": "getDaemonStatus",
-      };
+      // Map<String, dynamic> m = {
+      //   "request": "getDaemonStatus",
+      // };
 
-      var req = await cm.get("/data", request: m);
-      DaemonStatus dm = DaemonStatus.fromJson(req);
+      Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug:true);
+      DaemonStatus dm = DaemonStatus.fromJson(req['data']);
       return dm;
     } catch (e) {
+      debugPrint(e.toString());
       return DaemonStatus(block: false, blockStake: false, stakingActive: false);
     }
   }
@@ -308,7 +306,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),
                     child: FutureBuilder<DaemonStatus>(
-                        initialData: DaemonStatus(block: false, blockStake: false, stakingActive: false),
+                        initialData: DaemonStatus(block: false, blockStake: false, stakingActive: false, blockCount: 0, masternodeCount: 0),
                         future: daemonStatus,
                         builder: (ctx, snapshot) {
                           return Container(
@@ -417,7 +415,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         AutoSizeText(
-                                          "Blockcount: ${sumry?.data?[0].blockcount ?? ''}",
+                                          "Blockcount: ${snapshot.data?.blockCount ?? 0}",
                                           style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                           minFontSize: 2.0,
                                         ),
@@ -425,7 +423,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                           width: 5.0,
                                         ),
                                         AutoSizeText(
-                                          "| Masternode count: ${sumry?.data?[0].masternodecount ?? ''}",
+                                          "| Masternode count: ${snapshot.data?.masternodeCount ?? 0}",
                                           style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                           minFontSize: 2.0,
                                         ),

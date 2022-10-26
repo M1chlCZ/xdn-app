@@ -27,13 +27,8 @@ type GetTransaction struct {
 	Time     int    `json:"time"`
 	Locktime int    `json:"locktime"`
 	Vin      []struct {
-		Txid      string `json:"txid"`
-		Vout      int    `json:"vout"`
-		ScriptSig struct {
-			Asm string `json:"asm"`
-			Hex string `json:"hex"`
-		} `json:"scriptSig"`
-		Sequence int64 `json:"sequence"`
+		Coinbase string `json:"coinbase"`
+		Sequence int    `json:"sequence"`
 	} `json:"vin"`
 	Vout []struct {
 		Value        float64 `json:"value"`
@@ -47,9 +42,9 @@ type GetTransaction struct {
 		} `json:"scriptPubKey"`
 	} `json:"vout"`
 	Amount          float64       `json:"amount"`
-	Fee             float64       `json:"fee"`
 	Confirmations   int           `json:"confirmations"`
 	Bcconfirmations int           `json:"bcconfirmations"`
+	Generated       bool          `json:"generated"`
 	Blockhash       string        `json:"blockhash"`
 	Blockindex      int           `json:"blockindex"`
 	Blocktime       int           `json:"blocktime"`
@@ -60,7 +55,6 @@ type GetTransaction struct {
 		Address  string  `json:"address"`
 		Category string  `json:"category"`
 		Amount   float64 `json:"amount"`
-		Fee      float64 `json:"fee"`
 	} `json:"details"`
 }
 

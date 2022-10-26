@@ -38,49 +38,50 @@ func unlockStakeWallet() {
 }
 
 func submitStakeTransaction(c *fiber.Ctx) error {
+	utils.ReportMessage("Stake endpoint called")
 	txid := c.Get("txid")
 	if txid == "" {
 		return utils.ReportError(c, "No txid", http.StatusBadRequest)
 	}
-	tx, err := coind.WrapDaemon(utils.DaemonStakeWallet, 5, "liststakerewards", 10)
+	tx, err := coind.WrapDaemon(utils.DaemonStakeWallet, 5, "gettransaction", txid)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	var txinfo models.ListStakeRewards
-	err = json.Unmarshal(tx, &txinfo)
+	var txID models.GetTransaction
+	err = json.Unmarshal(tx, &txID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	for _, txID := range txinfo {
-		if txID.Txid == txid {
-			utils.ReportMessage("Transaction is stake")
-			_, err = database.InsertSQl("INSERT INTO transaction_stake(txid, amount) VALUES (?, ?)", txID.Txid, txID.Amount)
-			if err != nil {
-				utils.ReportMessage(err.Error())
-				break
-			}
-			utils.ReportMessage(fmt.Sprintf("Stake transaction added %s", txID.Txid))
-			total, err := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM users_stake WHERE active = 1")
-			if err != nil {
-				utils.ReportMessage(err.Error())
-				break
-			}
-			type Stake struct {
-				IDuser  int64   `db:"idUser" json:"idUser"`
-				Amount  float64 `db:"amount" json:"amount"`
-				Session int64   `db:"session" json:"session"`
-			}
-			users, err := database.ReadArrayStruct[Stake]("SELECT idUser, amount, session FROM users_stake WHERE active = 1")
-			for _, user := range users {
-				percentage := user.Amount / total
-				credit := txID.Amount * percentage
-				_, err = database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
-			}
-			_, _ = database.InsertSQl("UPDATE transaction_stake SET credited = 1 WHERE txid = ?", txID.Txid)
-			utils.ReportMessage(fmt.Sprintf("Stake transaction credited %s", txID.Txid))
-			break
+
+	if txID.Generated == true {
+		utils.ReportMessage("Transaction is stake")
+		_, err = database.InsertSQl("INSERT INTO transaction_stake(txid, amount) VALUES (?, ?)", txID.Txid, 100)
+		if err != nil {
+			utils.ReportMessage(err.Error())
+			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
 		}
+		utils.ReportMessage(fmt.Sprintf("Stake transaction added %s", txID.Txid))
+		total, err := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM users_stake WHERE active = 1")
+		if err != nil {
+			utils.ReportMessage(err.Error())
+			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
+		}
+		type Stake struct {
+			IDuser  int64   `db:"idUser" json:"idUser"`
+			Amount  float64 `db:"amount" json:"amount"`
+			Session int64   `db:"session" json:"session"`
+		}
+		users, err := database.ReadArrayStruct[Stake]("SELECT idUser, amount, session FROM users_stake WHERE active = 1")
+		for _, user := range users {
+			percentage := user.Amount / total
+			credit := 100 * percentage
+			_, err = database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
+		}
+		_, _ = database.InsertSQl("UPDATE transaction_stake SET credited = 1 WHERE txid = ?", txID.Txid)
+		utils.ReportMessage(fmt.Sprintf("Stake transaction credited %s", txID.Txid))
+
 	}
+
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,

@@ -315,6 +315,10 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
           _lockedText = AppLocalizations.of(context)!.st_coins_staked;
         });
       }
+    }else{
+      setState(() {
+        _lockedText = AppLocalizations.of(context)!.st_coins_staked;
+      });
     }
   }
 

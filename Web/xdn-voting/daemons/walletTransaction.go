@@ -9,7 +9,7 @@ import (
 )
 
 func SaveTransactions() {
-	utils.ReportMessage("Saving transactions")
+	//utils.ReportMessage("Saving transactions")
 	tx, err := coind.WrapDaemon(utils.DaemonWallet, 5, "listtransactions", "*", 100)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
@@ -24,6 +24,9 @@ func SaveTransactions() {
 
 	for _, txinfo := range list {
 		//account := txinfo.Account
+		if txinfo.Amount < 0 && txinfo.Category == "receive" {
+			continue
+		}
 		address := txinfo.Address
 		var empty models.Transaction
 		txPrev := database.ReadStructEmpty[models.Transaction]("SELECT * FROM transaction WHERE txid = ?", txinfo.Txid)
@@ -68,6 +71,11 @@ func SaveAllTransactions() {
 
 	for _, txinfo := range list {
 		//account := txinfo.Account
+
+		if txinfo.Amount < 0 && txinfo.Category == "receive" {
+			continue
+		}
+
 		address := txinfo.Address
 		var empty models.Transaction
 		txPrev := database.ReadStructEmpty[models.Transaction]("SELECT * FROM transaction WHERE txid = ?", txinfo.Txid)

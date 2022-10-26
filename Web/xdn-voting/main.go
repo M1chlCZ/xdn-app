@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/dgryski/dgoogauth"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/gofiber/fiber/v2/utils"
 	"github.com/jmoiron/sqlx"
+	"github.com/pquerna/otp/totp"
 	"gopkg.in/guregu/null.v4"
 	"log"
 	"net/http"
@@ -54,6 +54,9 @@ func main() {
 	// ================== API ==================
 	app.Post("api/v1/login", loginAPI)
 	app.Post("api/v1/register", registerAPI)
+
+	app.Post("api/v1/twofactor", utils.Authorized(twofactor))
+	app.Post("api/v1/twofactor/activate", utils.Authorized(twofactorVerify))
 
 	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
 	app.Post("api/v1/staking/set", utils.Authorized(setStake))
@@ -105,6 +108,62 @@ func main() {
 
 }
 
+func twofactorVerify(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	type Req struct {
+		Code string `json:"code"`
+	}
+	var req Req
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	twoKey, err := database.ReadValue[string]("SELECT twoKey FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	good := totp.Validate(req.Code, twoKey)
+	if !good {
+		return utils.ReportError(c, "Invalid code", http.StatusForbidden)
+	}
+	_, _ = database.InsertSQl("UPDATE users SET twoActive = 1 WHERE id = ?", userID)
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func twofactor(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	check, err := database.ReadValue[bool]("SELECT twoActive FROM users WHERE id = ?", userID)
+	name, err := database.ReadValue[string]("SELECT username FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	if check {
+		return utils.ReportError(c, "Two factor already activated", http.StatusConflict)
+	}
+	code, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "XDN APP",
+		AccountName: name,
+	})
+	if err != nil {
+		return utils.ReportError(c, "Code cannot be generated", http.StatusInternalServerError)
+	}
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"code":       code.Secret(),
+	})
+}
+
 func getStatus(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"hasError":   false,
@@ -127,7 +186,7 @@ func loginAPI(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	if req.Username == "" || req.Password == "" {
-		return utils.ReportError(c, "Missing username or password", http.StatusBadRequest)
+		return utils.ReportError(c, "Missing username or password", http.StatusNotFound)
 	}
 	password := utils.HashPass(req.Password)
 	user, err := database.ReadStruct[models.User]("SELECT * FROM users WHERE username = ? OR email= ?", req.Username, req.Username)
@@ -138,16 +197,16 @@ func loginAPI(c *fiber.Ctx) error {
 		return utils.ReportError(c, "User not found", http.StatusNotFound)
 	}
 	if user.Password != password {
-		return utils.ReportError(c, "Wrong password", http.StatusUnauthorized)
+		return utils.ReportError(c, "Wrong password", http.StatusNotFound)
 	}
 
 	if user.TwoActive == 1 {
-		if req.TwoFactor == 0 {
+		if len(req.TwoFactor) == 0 {
 			return utils.ReportError(c, "Two factor is required", http.StatusConflict)
 		}
-		twoRes := dgoogauth.ComputeCode(*user.TwoKey, req.TwoFactor)
-		if twoRes != -1 {
-			return utils.ReportError(c, "Two factor is invalid", http.StatusUnauthorized)
+		twoRes := totp.Validate(req.TwoFactor, user.TwoKey)
+		if twoRes != true {
+			return utils.ReportError(c, "Two factor is invalid", http.StatusConflict)
 		}
 	}
 	token, errToken := utils.CreateKeyToken(uint64(user.Id))
