@@ -15,6 +15,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 	"xdn-voting/apiWallet"
 	"xdn-voting/coind"
@@ -54,6 +55,7 @@ func main() {
 	// ================== API ==================
 	app.Post("api/v1/login", loginAPI)
 	app.Post("api/v1/register", registerAPI)
+	app.Post("api/v1/login/refresh", refreshToken)
 
 	app.Post("api/v1/twofactor", utils.Authorized(twofactor))
 	app.Post("api/v1/twofactor/activate", utils.Authorized(twofactorVerify))
@@ -173,7 +175,37 @@ func getStatus(c *fiber.Ctx) error {
 }
 
 func registerAPI(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+	var req models.RegisterUserStruct
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if req.Username == "" || req.Password == "" || req.Email == "" || req.RealName == "" || req.Udid == "" {
+		return utils.ReportError(c, "Missing register details", http.StatusNotFound)
+	}
+	userExists, err := database.ReadValue[bool]("SELECT EXISTS(SELECT * FROM users WHERE username = ? OR email= ?)", req.Username, req.Password)
+	if userExists {
+		return utils.ReportError(c, "User already exists", http.StatusConflict)
+	}
+	address, err := coind.WrapDaemon(utils.DaemonWallet, 2, "getnewaddress", req.Username)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	addr := strings.Trim(string(address), "\"")
+	_, err = coind.WrapDaemon(utils.DaemonWallet, 2, "walletpassphrase", utils.DaemonWallet.PassPhrase.String, 100)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	time.Sleep(time.Millisecond * 100)
+	pKey, err := coind.WrapDaemon(utils.DaemonWallet, 2, "dumpprivkey", addr)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	privKey := strings.Trim(string(pKey), "\"")
+	_, _ = coind.WrapDaemon(utils.DaemonWallet, 2, "walletlock")
+	_, err = database.InsertSQl("INSERT INTO users(username, password, email, addr, nickname, realname, UDID, privkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", req.Username, req.Password, req.Email, addr, req.Username, req.RealName, req.Udid, privKey)
+
+	return c.Status(fiber.StatusCreated).JSON(&fiber.Map{
 		"hasError":   false,
 		utils.STATUS: utils.OK,
 	})
@@ -219,17 +251,77 @@ func loginAPI(c *fiber.Ctx) error {
 		log.Printf("err: %v\n", errToken)
 		return utils.ReportError(c, errToken.Error(), http.StatusInternalServerError)
 	}
+
+	refToken := utils.GenerateSecureToken(32)
+	refTokenExist := database.ReadStructEmpty[models.RefreshTokenStruct]("SELECT * FROM refresh_token WHERE idUser = ? AND used = 0", user.Id)
+	if refTokenExist.Id == 0 {
+		_, errInsertToken := database.InsertSQl("INSERT INTO refresh_token(idUser, refreshToken) VALUES(?, ?)", user.Id, refToken)
+		if errInsertToken != nil {
+			return utils.ReportError(c, errInsertToken.Error(), http.StatusInternalServerError)
+
+		}
+	} else {
+		refToken = refTokenExist.RefToken
+	}
+
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-		"hasError":   false,
-		utils.STATUS: utils.OK,
-		"userid":     user.Id,
-		"username":   user.Username,
-		"nickname":   user.Nickname,
-		"addr":       user.Addr,
-		"admin":      user.Admin,
-		"jwt":        tokenDepr,
-		"token":      token,
+		"hasError":      false,
+		utils.STATUS:    utils.OK,
+		"userid":        user.Id,
+		"username":      user.Username,
+		"nickname":      user.Nickname,
+		"addr":          user.Addr,
+		"admin":         user.Admin,
+		"jwt":           tokenDepr,
+		"token":         token,
+		"refresh_token": refToken,
 	})
+}
+
+func refreshToken(c *fiber.Ctx) error {
+	var userAuth models.RefreshToken
+	errJson := c.BodyParser(&userAuth)
+	if errJson != nil {
+		return utils.ReportError(c, errJson.Error(), http.StatusBadRequest)
+	}
+
+	readSql, errSelect := database.ReadStruct[models.RefreshTokenStruct]("SELECT * FROM refresh_token WHERE refreshToken = ?", userAuth.Token)
+	if errSelect != nil {
+		return utils.ReportErrorSilent(c, "Invalid refresh token", http.StatusUnauthorized)
+	}
+
+	if len(readSql.RefToken) != 0 && readSql.Used == 0 {
+		_, errUpdate := database.InsertSQl("UPDATE refresh_token SET used = 1 WHERE refreshToken = ?", userAuth.Token)
+		if errUpdate != nil {
+			return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+
+		}
+		token, errToken := utils.CreateKeyToken(uint64(readSql.IdUser))
+		if errToken != nil {
+			log.Printf("err: %v\n", errToken)
+			return utils.ReportError(c, errToken.Error(), http.StatusInternalServerError)
+		}
+
+		rf := utils.GenerateSecureToken(32)
+		_, errInsertToken := database.InsertSQl("INSERT INTO refresh_token(idUser, refreshToken) VALUES(?, ?)", readSql.IdUser, rf)
+		if errInsertToken != nil {
+			return utils.ReportError(c, errInsertToken.Error(), http.StatusInternalServerError)
+
+		}
+
+		var dat models.DataRefreshToken
+		dat.RefreshToken = rf
+		dat.Token = token
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			"hasError":   false,
+			utils.STATUS: utils.OK,
+			"data":       dat,
+		})
+
+	} else {
+		return utils.ReportErrorSilent(c, "Invalid refresh token", http.StatusUnauthorized)
+
+	}
 }
 
 func getBalance(c *fiber.Ctx) error {
@@ -566,12 +658,6 @@ func addAddress(c *fiber.Ctx) error {
 }
 
 func ping(c *fiber.Ctx) error {
-	name := "Ping"
-	start := time.Now()
-	elapsed := time.Since(start)
-	if debugTime {
-		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
-	}
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"hasError":   false,
 		utils.STATUS: utils.OK,

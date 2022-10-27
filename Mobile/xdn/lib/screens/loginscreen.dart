@@ -25,7 +25,7 @@ import 'package:http/http.dart';
 import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
 
-const serverIP = globals.SERVER_URL;
+// const serverIP = globals.SERVER_URL;
 
 class LoginPage extends StatefulWidget {
   static const String route = "/login";
@@ -123,7 +123,6 @@ class _LoginState extends State<LoginPage> {
 
       if (res.statusCode == 200) {
         Map<String, dynamic> r = json.decode(res.body.toString());
-
         var username = r["username"];
         var addr = r["addr"];
         var jwt = r["jwt"];
@@ -131,6 +130,7 @@ class _LoginState extends State<LoginPage> {
         var adminPriv = r["admin"];
         var nickname = r["nickname"];
         var tokenDao = r["token"];
+        var refreshToken = r['refresh_token'];
 
         await SecureStorage.write(key: globals.USERNAME, value: username);
         await SecureStorage.write(key: globals.ADR, value: addr);
@@ -139,6 +139,7 @@ class _LoginState extends State<LoginPage> {
         await SecureStorage.write(key: globals.ADMINPRIV, value: adminPriv.toString());
         await SecureStorage.write(key: globals.NICKNAME, value: nickname.toString());
         await SecureStorage.write(key: globals.TOKEN_DAO, value: tokenDao.toString());
+        await SecureStorage.write(key: globals.TOKEN_REFRESH, value: refreshToken.toString());
 
         String udid = await FlutterUdid.consistentUdid;
         await SecureStorage.write(key: globals.UDID, value: udid);
@@ -159,8 +160,10 @@ class _LoginState extends State<LoginPage> {
           }
           return;
         } else {
-          Navigator.of(context).pop();
-          if (mounted) Dialogs.open2FABox(context, _auth2FA);
+          if (mounted) {
+            Navigator.of(context).pop();
+            Dialogs.open2FABox(context, _auth2FA);
+          }
         }
       }else if (res.statusCode == 404) {
         var err = json.decode(res.body.toString());

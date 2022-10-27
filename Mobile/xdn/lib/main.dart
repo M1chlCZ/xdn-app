@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
@@ -102,11 +101,14 @@ class MyAppState extends State<MyApp> {
         FlutterNativeSplash.remove();
         return LoginPage.route;
       } else {
+        await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
         bool res = await NetInterface.daoLogin();
         if (res) {
          debugPrint("Dao Login OK");
         } else {
-          debugPrint('Dao login failed');
+          debugPrint("Dao Login FUCKED");
+          FlutterNativeSplash.remove();
+          return LoginPage.route;
         }
         FlutterNativeSplash.remove();
         var payload = json.decode(ascii.decode(base64.decode(base64.normalize(jwt[1]))));

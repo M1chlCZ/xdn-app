@@ -1,7 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:digitalnote/support/NetInterface.dart';
+import 'package:digitalnote/models/RefreshToken.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
@@ -72,15 +71,25 @@ class ComInterface {
       }
       if (response.statusCode == 401) {
         if (serverType == serverDAO || serverType == serverGoAPI) {
-          throw UnauthorisedException({"status": "Cannot authenticate"});
-          // var b = await NetInterface.daoRegister();
-          // if (b) {
-          //   var res = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
-          //   responseJson = compute(_returnDaoResponse, res);
-          //   return responseJson;
-          // } else {
-          //   return Future.error("unable to login");
-          // }
+          try {
+            await refreshToken();
+            String? dJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
+            var b = "Bearer ${dJWT ?? ""}";
+            Map<String, String> rHeaders = {
+              "Authorization": b,
+              "Content-Type": "application/json",
+              "payload": payload,
+            };
+            var resRefresh = await ioClient.get(Uri.parse(mUrl), headers: rHeaders).timeout(const Duration(seconds: 20));
+            if (type == typePlain) {
+              return resRefresh;
+            } else {
+              var responseJson = compute(_returnDaoResponse, resRefresh);
+              return responseJson;
+            }
+          } catch (e) {
+            responseJson = compute(_returnDaoResponse, response);
+          }
         }
       }
       if (type == typePlain) {
@@ -134,15 +143,21 @@ class ComInterface {
 
     if (response.statusCode == 401) {
       if (serverType == serverDAO || serverType == serverGoAPI) {
-        throw UnauthorisedException({"status": "Cannot authenticate"});
-        // var b = await NetInterface.daoRegister();
-        // if (b) {
-        //   var res = await http.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
-        //   responseJson = compute(_returnDaoResponse, res);
-        //   return responseJson;
-        // } else {
-        //   return Future.error("unable to login");
-        // }
+        await refreshToken();
+        String? dJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
+        var b = "Bearer ${dJWT ?? ""}";
+        Map<String, String> rHeaders = {
+          "Authorization": b,
+          "Content-Type": "application/json",
+          "payload": payload,
+        };
+        var resRefresh = await ioClient.post(Uri.parse(mUrl), headers: rHeaders, body: b).timeout(const Duration(seconds: 20));
+        if (type == typePlain) {
+          return resRefresh;
+        } else {
+          var responseJson = compute(_returnDaoResponse, resRefresh);
+          return responseJson;
+        }
       }
     }
 
@@ -157,29 +172,43 @@ class ComInterface {
     return responseJson;
   }
 
-  // Future<dynamic> delete(String url, {Map<String, dynamic>? query, int type = 0, dynamic body, int typeContent = typeJson, bool debug = false}) async {
-  //   dynamic responseJson;
-  //   dynamic response;
-  //   try {
-  //
-  //     var _url = type == typePeatio ? _baseUrl + url : _barongUrl + url;
-  //     response = await Requests.delete(_url, verify: false, headers: csfrToken == null ? null : {"Accept": "application/json", "content-type": "application/json", "x-csrf-token":csfrToken}, json: body, queryParameters: query);
-  //     if (debug) {
-  //       debugPrint(_url);
-  //       var rr = response as Response;
-  //       debugPrint(rr.content());
-  //     }
-  //     responseJson = _returnResponse(response, type: type);
-  //   } on SocketException {
-  //     Map <String, dynamic> error = {
-  //       "info" : 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
-  //       "statusCode" : response.statusCode,
-  //       "messageBody" : response.content().toString(),
-  //     };
-  //     throw FetchDataException(error);
-  //   }
-  //   return responseJson;
-  // }
+  static var _refreshingToken = false;
+
+  static Future<void> refreshToken() async {
+    debugPrint("/// RefreshToken ///");
+    try {
+      if (_refreshingToken) {
+        return;
+      }
+      _refreshingToken = true;
+
+      await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
+      String? enc = await SecureStorage.read(key: globals.TOKEN_REFRESH);
+      Map request = {
+        "token": enc,
+      };
+      final resp = await http
+          .post(Uri.parse("${globals.API_URL}/login/refresh"), body: json.encode(request), headers: {"accept": "application/json", "content-type": "application/json", "Auth-Type": "rsa"}).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          return http.Response('ErrorTimeOut', 500); // Request Timeout response status code
+        },
+      );
+
+      TokenRefresh? res = TokenRefresh.fromJson(json.decode(resp.body));
+      if (res.data!.token != null) {
+        await SecureStorage.write(key: globals.TOKEN_DAO, value: res.data!.token!);
+        await SecureStorage.write(key: globals.TOKEN_REFRESH, value: res.data!.refreshToken!);
+        _refreshingToken = false;
+      }
+      _refreshingToken = false;
+    } catch (e) {
+      await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
+      await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);
+      _refreshingToken = false;
+      debugPrint(e.toString());
+    }
+  }
 
   dynamic _returnResponse(http.Response response) {
     switch (response.statusCode) {

@@ -960,8 +960,12 @@ class NetInterface {
   static Future<bool> daoLogin() async {
     try {
       ComInterface ci = ComInterface();
-      await ci.get("/ping", debug: true, serverType: ComInterface.serverDAO, request: {});
+    Response r =  await ci.get("/ping", debug: true, serverType: ComInterface.serverDAO, type: ComInterface.typePlain, request: {});
+    if (r.statusCode == 200) {
       return true;
+    }else{
+      return false;
+    }
     }on UnauthorisedException catch (e) {
       if (kDebugMode) print(e.toString());
       var b = daoRegister();

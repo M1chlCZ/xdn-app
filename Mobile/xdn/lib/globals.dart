@@ -15,6 +15,7 @@ const String LEVEL = "level";
 const String UDID = "udid";
 const String TOKEN = "jwt";
 const String TOKEN_DAO = "jwtDao";
+const String TOKEN_REFRESH = "jwtRefresh";
 const String PIN = "pin";
 const String ADMINPRIV = "admin";
 const String FIRETOKEN = "firetoken";
