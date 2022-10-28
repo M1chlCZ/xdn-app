@@ -201,11 +201,9 @@ class NetInterface {
   }
 
   static Future<Map<String, dynamic>>? getPriceData({bool details = false}) async {
-    Map<String, dynamic> m = {"request": "priceData"};
-
     ComInterface ci = ComInterface();
-    Map<String, dynamic> rt = await ci.get("/data", request: m);
-    return rt;
+    Map<String, dynamic> res = await ci.get("/price/data", request: {}, serverType: ComInterface.serverGoAPI, debug: true);
+    return res['data'];
   }
 
   static Future<int> getAddrBook() async {
@@ -642,22 +640,16 @@ class NetInterface {
   static Future<dynamic> checkPassword(String password, {String? pin}) async {
     String? username = await SecureStorage.read(key: globals.USERNAME);
     try {
-      Map<String, dynamic> m = {
-        "username": username,
-        "password": password,
-      };
-      if (pin != null) {
-        m['twoFactor'] = pin;
-      }
+        Map<String, dynamic> m = {
+          "username": username,
+          "password": password,
+        };
+        if (pin != null) {
+          m['twoFactor'] = pin;
+        }
 
-      // ComInterface ci = ComInterface();
-      // Response res = await ci.post("/login", request: m, type: ComInterface.typePlain, debug: true);
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      var res = await http.post(Uri.parse("${globals.SERVER_URL}/login"), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+        ComInterface ci = ComInterface();
+        Response res = await ci.post("/login", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
 
       if (res.statusCode == 200) {
         return true;
@@ -722,11 +714,6 @@ class NetInterface {
         ComInterface ci = ComInterface();
         var response = await ci.get("/data", request: m, type: ComInterface.typePlain);
 
-        // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-        // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-        //   "Content-Type": "application/json",
-        //   "payload": s,
-        // }).timeout(const Duration(seconds: 10));
 
         if (response.statusCode == 200) {
           globals.reloadData = true;
@@ -763,23 +750,13 @@ class NetInterface {
     Navigator.of(context).pop();
     Dialogs.openWaitBox(context);
     try {
-      String? id = await SecureStorage.read(key: globals.ID);
-      String? jwt = await SecureStorage.read(key: globals.TOKEN);
-
       Map<String, dynamic> m = {
-        "id": id,
-        "param1": pass,
-        "request": "changePassword",
+        "password": pass,
       };
-      // ComInterface ci = ComInterface();
-      // Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-        "Authorization": jwt!,
-      }).timeout(const Duration(seconds: 10));
+      ComInterface ci = ComInterface();
+      Response response = await ci.post("/password/change", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+
 
       if (response.statusCode == 200) {
         if (context.owner != null) {

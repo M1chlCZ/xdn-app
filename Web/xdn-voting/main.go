@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/go-gomail/gomail"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/gofiber/fiber/v2/utils"
 	"github.com/jmoiron/sqlx"
@@ -22,6 +23,7 @@ import (
 	"xdn-voting/daemons"
 	"xdn-voting/database"
 	"xdn-voting/errs"
+	"xdn-voting/html"
 	"xdn-voting/models"
 	"xdn-voting/utils"
 	"xdn-voting/web3"
@@ -36,6 +38,9 @@ func main() {
 
 	//debug time
 	debugTime = false
+
+	// ============= Price Data  ===============
+	go daemons.PriceData()
 
 	// ============== API Wallet ===============
 	go apiWallet.Handler()
@@ -56,6 +61,9 @@ func main() {
 	app.Post("api/v1/login", loginAPI)
 	app.Post("api/v1/register", registerAPI)
 	app.Post("api/v1/login/refresh", refreshToken)
+	app.Post("api/v1/login/forgot", forgotPassword)
+
+	app.Post("api/v1/password/change", utils.Authorized(changePassword))
 
 	app.Post("api/v1/twofactor", utils.Authorized(twofactor))
 	app.Post("api/v1/twofactor/activate", utils.Authorized(twofactorVerify))
@@ -64,6 +72,8 @@ func main() {
 	app.Post("api/v1/staking/set", utils.Authorized(setStake))
 	app.Post("api/v1/staking/unset", utils.Authorized(unstake))
 	app.Get("api/v1/staking/info", utils.Authorized(getStakeInfo))
+
+	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
 	app.Post("api/v1/avatar/upload", utils.Authorized(uploadAvatar))
 	app.Post("api/v1/avatar", utils.Authorized(getAvatar))
@@ -89,6 +99,7 @@ func main() {
 	daemons.DaemonStatus()
 	utils.ScheduleFunc(daemons.SaveTokenTX, time.Minute*10)
 	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
+	utils.ScheduleFunc(daemons.PriceData, time.Minute*5)
 
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
@@ -108,6 +119,74 @@ func main() {
 	// Start server with https/ssl enabled on http://localhost:443
 	log.Fatal(app.Listener(ln))
 
+}
+
+func getPriceData(c *fiber.Ctx) error {
+	if daemons.PriceDat == nil {
+		return utils.ReportError(c, "Price data not found", fiber.StatusNotFound)
+	}
+	return c.JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"data":       daemons.PriceDat,
+	})
+}
+
+func changePassword(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	var req models.ChangePassword
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	hash := utils.HashPass(req.Pass)
+	_, err = database.InsertSQl("UPDATE users SET password = ? WHERE id = ? ", hash, userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	return c.JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func forgotPassword(c *fiber.Ctx) error {
+	utils.ReportMessage("1")
+	var data models.ForgotPassword
+	if err := c.BodyParser(&data); err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+	usr, err := database.ReadStruct[models.User]("SELECT * FROM users WHERE email = ?", data.Email)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+	if usr.Id == 0 {
+		return utils.ReportError(c, "User not found", fiber.StatusConflict)
+	}
+	passUser := utils.GenerateNewPassword(6)
+	pass := utils.HashPass(passUser)
+	_, _ = database.InsertSQl("UPDATE users SET password = ? WHERE id = ?", pass, usr.Id)
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", "DigitalNote robot <no-reply@digitalnote.org>")
+	m.SetHeader("To", usr.Email)
+	m.SetHeader("Subject", "XDN Forgot Password")
+	m.SetBody("text/html", html.GetEmail(passUser))
+
+	d := gomail.NewDialer(utils.MailSettings.Host, 465, utils.MailSettings.Username, utils.MailSettings.Password)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	if err := d.DialAndSend(m); err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+	utils.ReportMessage(fmt.Sprintf("Forgot email sent to user %s succes!", usr.Username))
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
 }
 
 func twofactorVerify(c *fiber.Ctx) error {
@@ -306,8 +385,9 @@ func refreshToken(c *fiber.Ctx) error {
 		_, errInsertToken := database.InsertSQl("INSERT INTO refresh_token(idUser, refreshToken) VALUES(?, ?)", readSql.IdUser, rf)
 		if errInsertToken != nil {
 			return utils.ReportError(c, errInsertToken.Error(), http.StatusInternalServerError)
-
 		}
+
+		_, errInsertToken = database.InsertSQl("DELETE FROM refresh_token WHERE used = 1")
 
 		var dat models.DataRefreshToken
 		dat.RefreshToken = rf

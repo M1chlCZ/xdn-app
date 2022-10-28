@@ -27,6 +27,10 @@ func SaveTransactions() {
 		if txinfo.Amount < 0 && txinfo.Category == "receive" {
 			continue
 		}
+		if len(txinfo.Account) == 0 {
+			continue
+		}
+
 		address := txinfo.Address
 		var empty models.Transaction
 		txPrev := database.ReadStructEmpty[models.Transaction]("SELECT * FROM transaction WHERE txid = ?", txinfo.Txid)
@@ -73,6 +77,10 @@ func SaveAllTransactions() {
 		//account := txinfo.Account
 
 		if txinfo.Amount < 0 && txinfo.Category == "receive" {
+			continue
+		}
+
+		if len(txinfo.Account) == 0 {
 			continue
 		}
 

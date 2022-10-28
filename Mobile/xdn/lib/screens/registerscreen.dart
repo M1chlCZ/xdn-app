@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:digitalnote/globals.dart' as globals;
+import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/loginscreen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
-import 'package:digitalnote/support/Encrypt.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:flutter/foundation.dart';
@@ -13,9 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_udid/flutter_udid.dart';
-import 'package:http/http.dart' as http;
 
-const serverIP = globals.SERVER_URL;
 
 class RegisterScreen extends StatefulWidget {
   static const String route = "/register";
@@ -52,12 +48,8 @@ class _RegisterState extends State<RegisterScreen> {
         "udid": udid,
       };
 
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.post(Uri.parse('${globals.SERVER_URL}/signup'), headers: {
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      ComInterface ci = ComInterface();
+      var response = await ci.post("/register", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: true);
 
       return response.statusCode;
     } on TimeoutException catch (_) {
@@ -128,8 +120,7 @@ class _RegisterState extends State<RegisterScreen> {
             builder: (context) => SingleChildScrollView(
                 reverse: true,
                 child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minHeight: MediaQuery.of(context).size.height - (MediaQuery.of(context).padding.top + kToolbarHeight)),
+                    constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - (MediaQuery.of(context).padding.top + kToolbarHeight)),
                     child: IntrinsicHeight(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 250.0, left: 15, right: 15),
@@ -154,12 +145,9 @@ class _RegisterState extends State<RegisterScreen> {
                                     hintText: AppLocalizations.of(context)!.username,
                                     hintStyle: Theme.of(context).textTheme.subtitle1,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                    border: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                    focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                    enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                    border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
                                   style: Theme.of(context).textTheme.bodyText2,
                                 ),
@@ -177,12 +165,9 @@ class _RegisterState extends State<RegisterScreen> {
                                     hintText: AppLocalizations.of(context)!.first_last_name,
                                     hintStyle: Theme.of(context).textTheme.subtitle1,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                    border: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                    focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                    enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                    border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
                                   style: Theme.of(context).textTheme.bodyText2,
                                 ),
@@ -197,12 +182,9 @@ class _RegisterState extends State<RegisterScreen> {
                                     hintText: AppLocalizations.of(context)!.email,
                                     hintStyle: Theme.of(context).textTheme.subtitle1,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                    border: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                    focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                    enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                    border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
                                   style: Theme.of(context).textTheme.bodyText2,
                                 ),
@@ -218,12 +200,9 @@ class _RegisterState extends State<RegisterScreen> {
                                     hintText: AppLocalizations.of(context)!.password,
                                     hintStyle: Theme.of(context).textTheme.subtitle1,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                    border: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                    focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                    enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                    border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
                                   style: Theme.of(context).textTheme.bodyText2,
                                 ),
@@ -239,12 +218,9 @@ class _RegisterState extends State<RegisterScreen> {
                                     hintText: AppLocalizations.of(context)!.conf_password,
                                     hintStyle: Theme.of(context).textTheme.subtitle1,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                    border: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                    focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                    enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                    border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
                                   style: Theme.of(context).textTheme.bodyText2,
                                 ),
@@ -266,37 +242,28 @@ class _RegisterState extends State<RegisterScreen> {
                                           var password = _passwordController.text;
                                           var passwordConfirm = _passwordConfirmController.text;
                                           var email = _emailController.text;
-                                          bool emailValid =
-                                              RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(email);
+                                          bool emailValid = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(email);
 
                                           if (username.length < 4) {
-                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.username_invalid,
-                                                AppLocalizations.of(context)!.username_invalid_message);
+                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.username_invalid, AppLocalizations.of(context)!.username_invalid_message);
                                           } else if (password.length < 4) {
-                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.password_invalid,
-                                                AppLocalizations.of(context)!.password_invalid_message);
+                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.password_invalid, AppLocalizations.of(context)!.password_invalid_message);
                                           } else if (!emailValid) {
-                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.email_invalid,
-                                                AppLocalizations.of(context)!.email_invalid_message);
+                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.email_invalid, AppLocalizations.of(context)!.email_invalid_message);
                                           } else if (realname.length < 6) {
-                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.name_invalid,
-                                                AppLocalizations.of(context)!.name_invalid_message);
+                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.name_invalid, AppLocalizations.of(context)!.name_invalid_message);
                                           } else if (password != passwordConfirm) {
-                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.password_mismatch,
-                                                AppLocalizations.of(context)!.password_mismatch_message);
+                                            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.password_mismatch, AppLocalizations.of(context)!.password_mismatch_message);
                                           } else {
                                             var res = await attemptSignUp(username, password, email, realname);
                                             if (res == 201) {
                                               if (mounted) {
-                                                await Dialogs.openAlertBox(context, AppLocalizations.of(context)!.succ,
-                                                        "${AppLocalizations.of(context)!.reg_succ_message}!")
-                                                    .then((value) => Navigator.of(context)
-                                                        .pushNamedAndRemoveUntil(LoginPage.route, (Route<dynamic> route) => false));
+                                                await Dialogs.openAlertBox(context, AppLocalizations.of(context)!.succ, "${AppLocalizations.of(context)!.reg_succ_message}!")
+                                                    .then((value) => Navigator.of(context).pushNamedAndRemoveUntil(LoginPage.route, (Route<dynamic> route) => false));
                                               }
                                             } else if (res == 409) {
                                               if (mounted) {
-                                                Dialogs.openAlertBox(context, AppLocalizations.of(context)!.usr_exists_err,
-                                                    AppLocalizations.of(context)!.usr_exists_err_message);
+                                                Dialogs.openAlertBox(context, AppLocalizations.of(context)!.usr_exists_err, AppLocalizations.of(context)!.usr_exists_err_message);
                                               }
                                             } else {
                                               if (mounted) {

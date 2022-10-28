@@ -60,32 +60,35 @@ class _LoginState extends State<LoginPage> {
 
   _getInfoGet() async {
     getInfo = await NetInterface.getInfo();
-    setState((){});
+    setState(() {});
   }
 
   Future<String?> _attemptResetPass(String nickname) async {
-    var res = await http.post(Uri.parse("$serverIP/forgotPass"), headers: {
-      "username": nickname,
-    }).timeout(const Duration(seconds: 10));
+    ComInterface ci = ComInterface();
+    try {
+      Map<String, dynamic> m = {
+        "email": nickname,
+      };
 
-    if (res.contentLength == 0) {
+      Response res = await ci.post("/login/forgot", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+      if (res.statusCode == 200) {
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, "Success!", "Your new password has been sent to your e-mail");
+        }
+        return res.body;
+      } else {
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.openAlertBox(context, "Failure!", "There are no matching credentials in DigitalNote database");
+        }
+        return null;
+      }
+    } catch (e) {
+      print(e.toString());
       if (mounted) {
         Navigator.of(context).pop();
         Dialogs.openAlertBox(context, "Failure!", "There is an issue with service, please try again later");
-      }
-      return null;
-    }
-
-    if (res.statusCode == 200) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, "Success!", "Your new password has been sent to your e-mail");
-      }
-      return res.body;
-    } else {
-      if (mounted) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, "Failure!", "There are no matching credentials in DigitalNote database");
       }
       return null;
     }
@@ -165,7 +168,7 @@ class _LoginState extends State<LoginPage> {
             Dialogs.open2FABox(context, _auth2FA);
           }
         }
-      }else if (res.statusCode == 404) {
+      } else if (res.statusCode == 404) {
         var err = json.decode(res.body.toString());
         if (mounted) {
           Navigator.of(context).pop();
@@ -284,12 +287,9 @@ class _LoginState extends State<LoginPage> {
                                 hintText: "${AppLocalizations.of(context)!.username} | ${AppLocalizations.of(context)!.email}",
                                 hintStyle: Theme.of(context).textTheme.subtitle1,
                                 contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                focusedBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                enabledBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                border: OutlineInputBorder(
-                                    borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                               ),
                               style: Theme.of(context).textTheme.bodyText2,
                               onEditingComplete: () {},
@@ -308,12 +308,9 @@ class _LoginState extends State<LoginPage> {
                                 hintText: AppLocalizations.of(context)!.password,
                                 hintStyle: Theme.of(context).textTheme.subtitle1,
                                 contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                                focusedBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
-                                enabledBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
-                                border: OutlineInputBorder(
-                                    borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
+                                focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
+                                enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
+                                border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                               ),
                               style: Theme.of(context).textTheme.bodyText2,
                             ),
@@ -329,8 +326,7 @@ class _LoginState extends State<LoginPage> {
                               child: ClipRRect(
                                 borderRadius: const BorderRadius.all(Radius.circular(15.0)),
                                 child: Material(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
                                   color: Colors.white,
                                   child: InkWell(
                                       splashColor: Theme.of(context).konjCardColor,
@@ -338,17 +334,14 @@ class _LoginState extends State<LoginPage> {
                                         var username = _usernameController.text;
                                         var password = _passwordController.text;
                                         if (username.isEmpty || password.isEmpty) {
-                                          Dialogs.openAlertBox(
-                                              context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.fields_cant_empty);
+                                          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.fields_cant_empty);
                                           return;
                                         }
                                         attemptLogIn(context, username, password);
                                       },
                                       child: Padding(
                                           padding: const EdgeInsets.only(top: 0.0),
-                                          child: Text(AppLocalizations.of(context)!.log_in,
-                                              textAlign: TextAlign.center,
-                                              style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black)))),
+                                          child: Text(AppLocalizations.of(context)!.log_in, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black)))),
                                 ),
                               ),
                             ),
@@ -363,8 +356,7 @@ class _LoginState extends State<LoginPage> {
                                 child: ClipRRect(
                                     borderRadius: const BorderRadius.all(Radius.circular(15.0)),
                                     child: Material(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)),
                                         color: Colors.black26,
                                         child: InkWell(
                                             splashColor: Theme.of(context).konjCardColor,
@@ -374,9 +366,7 @@ class _LoginState extends State<LoginPage> {
                                             child: Padding(
                                                 padding: const EdgeInsets.all(10.0),
                                                 child: Text(AppLocalizations.of(context)!.sign_up,
-                                                    textAlign: TextAlign.center,
-                                                    style:
-                                                        Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70, fontSize: 14.0)))))),
+                                                    textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70, fontSize: 14.0)))))),
                               )),
                           Container(
                             width: 85,
@@ -402,7 +392,9 @@ class _LoginState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10.0,)
+                          const SizedBox(
+                            height: 10.0,
+                          )
                         ],
                       ),
                     ),

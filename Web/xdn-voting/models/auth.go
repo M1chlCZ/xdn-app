@@ -29,3 +29,11 @@ type RegisterUserStruct struct {
 	RealName string `json:"realname"`
 	Udid     string `json:"udid"`
 }
+
+type ForgotPassword struct {
+	Email string `json:"email"`
+}
+
+type ChangePassword struct {
+	Pass string `json:"password"`
+}

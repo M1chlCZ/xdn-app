@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	VERSION        = "0.0.0.5"
+	VERSION        = "0.0.0.6"
 	STATUS  string = "status"
 	OK      string = "OK"
 	FAIL    string = "FAIL"
@@ -282,8 +282,8 @@ func ArrContains(s []string, e string) bool {
 	return false
 }
 
-func GenerateInviteCode(length int) string {
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$&")
+func GenerateNewPassword(length int) string {
+	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]rune, length)
 	for i := range b {
 		if i%8 == 0 && i != 0 {
