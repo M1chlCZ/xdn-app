@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -109,7 +110,7 @@ class MessageGroupTileState extends State<MessageGroupTile> {
                                   width: MediaQuery.of(context).size.width * 0.64,
                                   height: 20,
                                   child: SimpleRichText(
-                                    widget.mgroup.text!.replaceAll("&TIP#", AppLocalizations.of(context)!.message_tipped.capitalize()),
+                                    utf8convert(widget.mgroup.text!.replaceAll("&TIP#", AppLocalizations.of(context)!.message_tipped.capitalize())),
                                     maxLines: 1,
                                     textOverflow: TextOverflow.ellipsis,
                                     style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
@@ -156,6 +157,11 @@ class MessageGroupTileState extends State<MessageGroupTile> {
       ),
     );
   }
+}
+
+String utf8convert(String text) {
+  List<int> bytes = text.toString().codeUnits;
+  return utf8.decode(bytes);
 }
 
 String getDate(String dateTime) {

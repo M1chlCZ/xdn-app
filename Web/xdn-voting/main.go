@@ -90,6 +90,11 @@ func main() {
 
 	app.Get("api/v1/user/xls", utils.Authorized(getTxXLS))
 
+	app.Get("api/v1/user/messages/group", utils.Authorized(getMessageGroup))
+	app.Post("api/v1/user/messages", utils.Authorized(getMessages))
+	app.Post("api/v1/user/messages/likes", utils.Authorized(getMessagesLikes))
+	app.Post("api/v1/user/messages/send", utils.Authorized(sendMessage))
+
 	app.Get("api/v1/user/addressbook", utils.Authorized(getAddressBook))
 	app.Post("api/v1/user/addressbook/save", utils.Authorized(saveToAddressBook))
 	app.Post("api/v1/user/addressbook/delete", utils.Authorized(deleteFromAddressBook))
@@ -128,6 +133,188 @@ func main() {
 	// Start server with https/ssl enabled on http://localhost:443
 	log.Fatal(app.Listener(ln))
 
+}
+
+func sendMessage(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	var data struct {
+		AddrTo  string `json:"addr"`
+		Text    string `json:"text"`
+		IDReply int    `json:"idReply"`
+	}
+	err := c.BodyParser(&data)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	addrFrom, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	//now := time.Now().UTC().Unix()
+	//convert to sql timestamp
+	//timestamp := time.Unix(now, 0).Format("2006-01-02 15:04:05")
+	_, err = database.InsertSQl("INSERT INTO messages (sentAddr, receiveAddr, text, direction, idReply) VALUES (?, ?, ?, ?, ?)", addrFrom, data.AddrTo, data.Text, "out", data.IDReply)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func getMessagesLikes(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+
+	var req struct {
+		MessageID int    `json:"id"`
+		Addr      string `json:"addr"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	exist := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM messages WHERE id = ? AND receiveAddr = ?", req.MessageID, req.Addr)
+	//if err != nil {
+	//	return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	//}
+	if exist.Valid {
+		m, err := database.ReadValue[int64]("SELECT likeSent as lk FROM messages WHERE id = ?", req.MessageID)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		if m == 1 {
+			_, _ = database.InsertSQl("UPDATE messages SET likeSent = 0 WHERE id = ?", req.MessageID)
+		} else {
+			_, _ = database.InsertSQl("UPDATE messages SET likeSent = 1 WHERE id = ?", req.MessageID)
+		}
+	} else {
+		m, err := database.ReadValue[int64]("SELECT likeReceive as lk FROM messages WHERE id = ?", req.MessageID)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		if m == 1 {
+			_, _ = database.InsertSQl("UPDATE messages SET likeReceive = 0 WHERE id = ?", req.MessageID)
+		} else {
+			_, _ = database.InsertSQl("UPDATE messages SET likeReceive = 1 WHERE id = ?", req.MessageID)
+		}
+	}
+
+	lk, err := database.ReadValue[int64]("SELECT (SUM(likeSent) + SUM(likeReceive)) as likes FROM messages WHERE id = ?", req.MessageID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"likes":      lk,
+	})
+}
+
+func getMessages(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	var data struct {
+		SendAddress string `json:"addr"`
+		LastSync    string `json:"last_sync"`
+	}
+	err := c.BodyParser(&data)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	addrReceive, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	type Message struct {
+		ID          int64     `json:"id" db:"id"`
+		IdReply     int64     `json:"idReply" db:"idReply"`
+		Likes       int64     `json:"likes" db:"likes"`
+		LastChange  time.Time `json:"lastChange" db:"lastChange"`
+		SentAddr    string    `json:"sentAddr" db:"sentAddr"`
+		ReceiveAddr string    `json:"receiveAddr" db:"receiveAddr"`
+		Unread      int       `json:"unread" db:"unread"`
+		LastMessage string    `json:"lastMessage" db:"lastMessage"`
+		Text        string    `json:"text" db:"text"`
+	}
+	messages, err := database.ReadArrayStruct[Message]("SELECT  id, idReply, likes, lastChange, sentAddr, receiveAddr, unread, lastMessage, text FROM (SELECT id, idReply, (SUM(likeSent) + SUM(likeReceive)) as likes, lastChange, sentAddr, receiveAddr, unread, receiveTime as lastMessage, text FROM messages WHERE receiveAddr = ? AND sentAddr = ? OR receiveAddr = ? AND sentAddr = ? GROUP BY id ORDER BY id) as a WHERE lastChange > ?", addrReceive, data.SendAddress, data.SendAddress, addrReceive, data.LastSync)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	type result = struct {
+		ID          int64  `json:"id" db:"id"`
+		IdReply     int64  `json:"idReply" db:"idReply"`
+		Likes       int64  `json:"likes" db:"likes"`
+		LastChange  int64  `json:"lastChange" db:"lastChange"`
+		SentAddr    string `json:"sentAddr" db:"sentAddr"`
+		ReceiveAddr string `json:"receiveAddr" db:"receiveAddr"`
+		Unread      int    `json:"unread" db:"unread"`
+		LastMessage string `json:"lastMessage" db:"lastMessage"`
+		Text        string `json:"text" db:"text"`
+	}
+
+	res := make([]result, 0)
+	for _, message := range messages {
+		res = append(res, result{
+			ID:          message.ID,
+			IdReply:     message.IdReply,
+			Likes:       message.Likes,
+			LastChange:  message.LastChange.Unix(),
+			SentAddr:    message.SentAddr,
+			ReceiveAddr: message.ReceiveAddr,
+			Unread:      message.Unread,
+			LastMessage: message.LastMessage,
+			Text:        message.Text,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"data":       res,
+	})
+}
+
+func getMessageGroup(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	addr, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	type MessageGroup struct {
+		ReceiveAddr string    `json:"receiveAddr" db:"receiveAddr"`
+		SentAddr    string    `json:"sentAddr" db:"sentAddr"`
+		Unread      int       `json:"unread" db:"unread"`
+		LastMessage time.Time `json:"lastMessage" db:"lastMessage"`
+		Text        string    `json:"text" db:"text"`
+	}
+
+	arrayStruct, err := database.ReadArrayStruct[MessageGroup](`SELECT finally.user as receiveAddr, finally.otherParticipant as sentAddr, finally.unread as unread, finally.lastMessage as lastMessage, finally.text as text FROM (SELECT myMessages.user, myMessages.otherParticipant, groupList.unread, groupList.lastMessage, myMessages.text FROM (SELECT  IF(sentAddr = ?, sentAddr, receiveAddr) as user, IF(receiveAddr = ?, sentAddr, receiveAddr) as otherParticipant, receiveTime,  messages.text,  messages.unread FROM  messages) myMessages INNER JOIN (SELECT otherParticipant, COUNT(IF(myMessages2.unread = 0, 1, NULL)) as unread, max(receiveTime) as lastMessage FROM (SELECT IF(receiveAddr = ?, sentAddr, receiveAddr) as otherParticipant, receiveTime,  messages.unread FROM  messages  WHERE sentAddr = ? or receiveAddr = ?) as myMessages2 GROUP BY otherParticipant) groupList ON myMessages.otherParticipant = groupList.otherParticipant AND myMessages.receiveTime = groupList.lastMessage) as finally`, addr, addr, addr, addr, addr)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	for _, s := range arrayStruct {
+		utils.ReportMessage(s.LastMessage.String())
+	}
+
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"data":       arrayStruct,
+	})
 }
 
 func twofactorCheck(c *fiber.Ctx) error {
@@ -451,15 +638,9 @@ func loginAPI(c *fiber.Ctx) error {
 	}
 
 	refToken := utils.GenerateSecureToken(32)
-	refTokenExist := database.ReadStructEmpty[models.RefreshTokenStruct]("SELECT * FROM refresh_token WHERE idUser = ? AND used = 0", user.Id)
-	if refTokenExist.Id == 0 {
-		_, errInsertToken := database.InsertSQl("INSERT INTO refresh_token(idUser, refreshToken) VALUES(?, ?)", user.Id, refToken)
-		if errInsertToken != nil {
-			return utils.ReportError(c, errInsertToken.Error(), http.StatusInternalServerError)
-
-		}
-	} else {
-		refToken = refTokenExist.RefToken
+	_, errInsertToken := database.InsertSQl("INSERT INTO refresh_token(idUser, refreshToken) VALUES(?, ?)", user.Id, refToken)
+	if errInsertToken != nil {
+		return utils.ReportError(c, errInsertToken.Error(), http.StatusInternalServerError)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -883,9 +1064,14 @@ func setStake(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
+	balance := 0.0
 	if user.Active != 0 {
 		utils.ReportMessage("UPDATING STAKE")
-		balance := r.Amount + user.Amount
+		if user.Amount.Valid {
+			balance = r.Amount + user.Amount.Float64
+		} else {
+			balance = r.Amount
+		}
 		tx, err := coind.SendCoins(server, userAddr, r.Amount, false)
 		if err != nil {
 			return utils.ReportError(c, err.Error(), http.StatusConflict)

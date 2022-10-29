@@ -761,11 +761,9 @@ packages:
   open_file:
     dependency: "direct main"
     description:
-      path: "."
-      ref: gradle-update
-      resolved-ref: ea41d0ae8cd5329e9b5ceb2d1e5760f69ce37008
-      url: "https://github.com/MathiasCochet/open_file.git"
-    source: git
+      name: open_file
+      url: "https://pub.dartlang.org"
+    source: hosted
     version: "3.2.1"
   package_info:
     dependency: "direct main"

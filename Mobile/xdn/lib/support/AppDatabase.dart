@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io' show Platform;
 import "dart:io" as io;
 
+import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
@@ -317,7 +319,7 @@ class AppDatabase {
         sentAddr: res[i]['sentAddr'].toString(),
         unread: res[i]['unread'] as int,
         lastMessage: res[i]['lastMessage'].toString(),
-        text: res[i]['text'].toString(),
+        text: utfEncode(res[i]['text'].toString()),
         idReply: res[i]['idReply'] as int,
         likes: res[i]['likes'] as int,
       );
@@ -343,6 +345,12 @@ class AppDatabase {
       }
     }
     return myList;
+  }
+
+  utfEncode(String s) {
+      List<int> bytes = s.toString().codeUnits;
+      return utf8.decode(bytes);
+
   }
 
   Future<int> getMessageGroupMaxID(String? receiveAddr, String? sentAddr) async {

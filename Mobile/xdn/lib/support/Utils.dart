@@ -40,6 +40,17 @@ class Utils {
     return newDate;
   }
 
+  static String convertDateTimeMessage(String? d) {
+    String nullDate = "1970-00-01 00:00:01";
+    if(d == null) return DateTime.parse(nullDate).toIso8601String();
+    DateTime dt = DateTime.now();
+    int offset = dt.timeZoneOffset.inHours * -1;
+    var date = DateTime.parse(d).toLocal();
+    var newDate = DateTime(date.year, date.month, date.day,
+        date.hour + offset, date.minute, date.second);
+    return newDate.toIso8601String();
+  }
+
 
   static String getMeDate(String d, BuildContext context) {
     String locale = Localizations.localeOf(context).languageCode;

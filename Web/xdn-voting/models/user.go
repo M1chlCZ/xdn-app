@@ -13,7 +13,7 @@ type User struct {
 	Nickname  string         `json:"nickname" db:"nickname"`
 	Banned    int            `json:"banned" db:"banned"`
 	Realname  string         `json:"realname" db:"realname"`
-	Avatar    string         `json:"avatar" db:"avatar"`
+	Avatar    sql.NullString `json:"avatar" db:"avatar"`
 	Av        int            `json:"av" db:"av"`
 	UDID      string         `json:"UDID" db:"UDID"`
 	Privkey   string         `json:"privkey" db:"privkey"`

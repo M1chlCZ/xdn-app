@@ -11,6 +11,7 @@ import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/models/get_info.dart';
+import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
 import 'package:digitalnote/widgets/card_header.dart';
@@ -65,11 +66,11 @@ class _SettingsState extends State<SettingsScreen> {
   _getTwoFactor() async {
     try {
       ComInterface ci = ComInterface();
-      String? id = await SecureStorage.read(key: globals.ID);
-      Map<String, dynamic> m = await ci.get("/data", request: {"id": id!, "request": "twofactorCheck"});
+      Map<String, dynamic> m = await ci.get("/twofactor/check",
+          request: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
       Future.delayed(Duration.zero, () {
         setState(() {
-          twoFactor = m['twoFactor'] == 1 ? true : false;
+          twoFactor = m['twoFactor'];
         });
       });
     } catch (e) {
@@ -106,7 +107,7 @@ class _SettingsState extends State<SettingsScreen> {
     try {
       String filePath;
       Uint8List? data = await NetInterface.downloadCSV(context);
-      String name = "transactionsXDN${_getNow(DateTime.now())}.csv";
+      String name = "transactionsXDN${_getNow(DateTime.now())}.xlsx";
 
       if (Platform.isIOS) {
         Directory tempDir = await getApplicationDocumentsDirectory();
@@ -989,12 +990,12 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   _get2FACode() async {
-    ComInterface cm = ComInterface();
     try {
-      var id = await SecureStorage.read(key: globals.ID);
-      Map<String, dynamic> m = {"request": "twofactor", "id": id};
-      var req = await cm.get("/data", request: m);
-      _set2FA(req['secret']);
+      ComInterface interface = ComInterface();
+      Map<String, dynamic> m = await interface.post("/twofactor",
+          body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+
+      _set2FA(m['code']);
     } catch (e) {
       Dialogs.openAlertBox(context, "Error", "2FA already turned on");
       if (kDebugMode) {
@@ -1009,13 +1010,12 @@ class _SettingsState extends State<SettingsScreen> {
 
   _confirm2FA(String? s) async {
     if (!run) {
-      ComInterface cm = ComInterface();
       run = true;
       try {
-        var id = await SecureStorage.read(key: globals.ID);
-        Map<String, dynamic> m = {"request": "twofactorValidate", "id": id, "param1": s!};
-        var req = await cm.get("/data", request: m);
-        if (req['status'] == 'ok') {
+        ComInterface interface = ComInterface();
+        http.Response res = await interface.post("/twofactor/activate",
+            body: {"code": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+        if (res.statusCode == 200) {
           if (mounted) Navigator.of(context).pop();
           setState(() {
             twoFactor = true;
@@ -1026,6 +1026,7 @@ class _SettingsState extends State<SettingsScreen> {
         if (kDebugMode) {
           print(e);
         }
+
       }
     }
     run = false;

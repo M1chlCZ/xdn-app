@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Message {
   final String? sentAddr;
   final String? receiveAddr;
@@ -30,7 +32,7 @@ class Message {
       'id': id,
       'sentAddr': sentAddr,
       'unread': unread,
-      'lastMessage': lastMessage,
+      'lastMessage': utf8convert(lastMessage),
       'text': text,
       'receiveAddr': receiveAddr,
       'idReply': idReply,
@@ -44,5 +46,13 @@ class Message {
   }
   void setLike(int t) {
     likes = t;
+  }
+
+  String utf8convert(String? text) {
+    if (text == null) {
+      return "";
+    }
+    List<int> bytes = text.toString().codeUnits;
+    return utf8.decode(bytes);
   }
 }

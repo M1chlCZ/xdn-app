@@ -178,11 +178,6 @@ class NetInterface {
 
   static Future<int> getAddrBook() async {
     try {
-      // String? id = await SecureStorage.read(key: globals.ID);
-      // Map<String, dynamic> m = {
-      //   "id": id,
-      //   "request": "getAddrBook",
-      // };
       ComInterface ci = ComInterface();
       Map<String, dynamic> rt = await ci.get("/user/addressbook", request: {}, serverType: ComInterface.serverGoAPI);
       List<dynamic> lst = rt['data'];
@@ -240,15 +235,9 @@ class NetInterface {
 
   static Future<void> saveMessageGroup() async {
     try {
-      String? addr = await SecureStorage.read(key: globals.ADR);
-      String? timez = await SecureStorage.read(key: globals.LOCALE);
-      Map<String, dynamic> m = {
-        "param1": addr,
-        "param2": timez,
-        "request": "getMessageGroup",
-      };
       ComInterface ci = ComInterface();
-      List rt = await ci.get("/data", request: m, debug: true);
+      Map <String, dynamic> res = await ci.get("/user/messages/group", request: {}, serverType: ComInterface.serverGoAPI, debug: false);
+      List rt = res['data'];
       List<MessageGroup> list = rt.map((data) => MessageGroup.fromJson(data)).toList();
       await AppDatabase().addMessageGroup(list);
     } on TimeoutException catch (_) {
@@ -262,8 +251,6 @@ class NetInterface {
 
   static Future<GetInfo?> getInfo() async {
     try {
-      // ComInterface ci = ComInterface();
-      // Map<String, dynamic> rt = await ci.get("/getinfo", request: {}, debug: true);
       final response = await http.get(
         Uri.parse('${globals.SERVER_URL}/getinfo'),
         headers: {"Content-Type": "application/json"},
@@ -287,34 +274,17 @@ class NetInterface {
   }
 
 
-
-  // static List<MessageGroup>? parseMessagesGroup(String body) {
-  //   try {
-  //     var data = decryptAESCryptoJS(body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-  //     List responseList = json.decode(data);
-  //
-  //     return l;
-  //   } catch (e) {
-  //     if(kDebugMode)print(e);
-  //     return null;
-  //   }
-  // }
-
   static Future<int> saveMessages(String address, int idMax) async {
     try {
-      String? addr = await SecureStorage.read(key: globals.LOCALE);
-      String? addr2 = await SecureStorage.read(key: globals.ADR);
-
+      var d = DateTime.fromMillisecondsSinceEpoch(idMax * 1000).toUtc();
       Map<String, dynamic> m = {
-        "id": idMax,
-        "param1": address,
-        "param2": addr,
-        "param3": addr2,
-        "request": "getMessages",
+        "addr": address,
+        "last_sync": d.toIso8601String(),
       };
-
       ComInterface ci = ComInterface();
-      List<dynamic> response = await ci.get("/data", request: m);
+      Map<String, dynamic> res = await ci.post("/user/messages",
+          body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+      List<dynamic> response = res["data"];
       List<Message> l = response.map((data) => Message.fromJson(data)).toList();
       int i = await AppDatabase().addMessages(l);
       return i;
@@ -379,23 +349,14 @@ class NetInterface {
 
       Map<String, dynamic> m = {
         "id": id,
-        "param": addr,
-        "request": "updateLikes",
+        "addr": addr,
       };
 
       ComInterface ci = ComInterface();
-      Map<dynamic, dynamic> response = await ci.get("/data", request: m);
+      Map<String, dynamic> res = await ci.post("/user/messages/likes",
+          body:m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
 
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
-
-      // var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-      // Map m = json.decode(data);
-      int i = int.parse(response['likes'].toString().trim());
+      int i = int.parse(res['likes'].toString().trim());
       await AppDatabase().updateMessageLikes(id, i);
       return i;
     } on TimeoutException catch (_) {
@@ -443,28 +404,16 @@ class NetInterface {
 
   static Future<void> sendMessage(String address, String text, int idReply) async {
     try {
-      // String? jwt = await storage.read(key: "jwt");
       String? addr = await SecureStorage.read(key: globals.ADR);
-
       Map<String, dynamic> m = {
-        "id": idReply,
-        "param1": addr,
-        "param2": address,
-        "param3": text,
-        "request": "sendMessage",
+        "idReply": idReply,
+        "addr": address,
+        "text": text,
       };
       ComInterface ci = ComInterface();
-      await ci.get("/data", request: m, type: ComInterface.typePlain);
+      await ci.post("/user/messages/send", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
       await AppDatabase().updateMessageGroupRead(addr!, address);
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
-      // if (response.statusCode == 200) {
-      //
-      // }
+
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {

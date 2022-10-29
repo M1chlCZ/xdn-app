@@ -157,10 +157,6 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
                     ),
                   ),
                 ),
-                // CardHeader(
-                //   title: AppLocalizations.of(context)!.messages,
-                //   backArrow: true,
-                // ),
                 Container(
                   margin: const EdgeInsets.only(left: 5.0, right: 5.0),
                   padding: const EdgeInsets.only(top: 5.0, left: 5.0, bottom: 5.0),

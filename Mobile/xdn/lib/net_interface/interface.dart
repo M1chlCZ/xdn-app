@@ -18,6 +18,8 @@ class ComInterface {
   static const int typeJson = 3;
   static const int serverGoAPI = 4;
 
+  static var _refreshingToken = false;
+
   Future<dynamic> get(String url,
       {Map<String, dynamic>? request, bool wholeURL = false, int serverType = serverAPI, Map<String, dynamic>? query, dynamic body, int type = typeJson, bool debug = false}) async {
     String? jwt = await SecureStorage.read(key: globals.TOKEN);
@@ -70,8 +72,15 @@ class ComInterface {
         debugPrint(response.statusCode.toString());
       }
       if (response.statusCode == 401) {
+        var timeLapsed = 0;
         if (serverType == serverDAO || serverType == serverGoAPI) {
           try {
+            while (_refreshingToken == true && timeLapsed < 30) {
+              debugPrint("Waiting for token refresh");
+              timeLapsed++;
+              await Future.delayed(const Duration(seconds: 1));
+            }
+            timeLapsed = 0;
             await refreshToken();
             String? dJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
             var b = "Bearer ${dJWT ?? ""}";
@@ -142,16 +151,24 @@ class ComInterface {
     }
 
     if (response.statusCode == 401) {
+      var timeLapsed = 0;
       if (serverType == serverDAO || serverType == serverGoAPI) {
+        while (_refreshingToken == true && timeLapsed < 30) {
+          debugPrint("Waiting for token refresh");
+          timeLapsed++;
+          await Future.delayed(const Duration(seconds: 1));
+        }
+        timeLapsed = 0;
         await refreshToken();
         String? dJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
+        var bod = body != null ? json.encode(body) : null;
         var b = "Bearer ${dJWT ?? ""}";
         Map<String, String> rHeaders = {
           "Authorization": b,
           "Content-Type": "application/json",
           "payload": payload,
         };
-        var resRefresh = await ioClient.post(Uri.parse(mUrl), headers: rHeaders, body: b).timeout(const Duration(seconds: 20));
+        var resRefresh = await ioClient.post(Uri.parse(mUrl), headers: rHeaders, body: bod).timeout(const Duration(seconds: 20));
         if (type == typePlain) {
           return resRefresh;
         } else {
@@ -172,8 +189,6 @@ class ComInterface {
     return responseJson;
   }
 
-  static var _refreshingToken = false;
-
   static Future<void> refreshToken() async {
     debugPrint("/// RefreshToken ///");
     try {
@@ -189,7 +204,7 @@ class ComInterface {
       };
       final resp = await http
           .post(Uri.parse("${globals.API_URL}/login/refresh"), body: json.encode(request), headers: {"accept": "application/json", "content-type": "application/json", "Auth-Type": "rsa"}).timeout(
-        const Duration(seconds: 15),
+        const Duration(seconds: 20),
         onTimeout: () {
           return http.Response('ErrorTimeOut', 500); // Request Timeout response status code
         },

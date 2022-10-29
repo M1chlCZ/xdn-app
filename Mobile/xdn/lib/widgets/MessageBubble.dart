@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:bubble/bubble.dart';
@@ -39,7 +40,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
 
     var dateTime = DateTime.now();
     var dateObject = DateTime.parse(d);
-    var offset = dateTime.timeZoneOffset;
+    var offset = dateTime.timeZoneOffset * -1;
     DateTime? date;
     if (!offset.isNegative) {
       date = dateObject.add(Duration(hours: offset.inHours));
@@ -101,6 +102,11 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
     } else {
       _rb = false;
     }
+  }
+
+  String utf8convert(String text) {
+    List<int> bytes = text.toString().codeUnits;
+    return utf8.decode(bytes);
   }
 
   @override

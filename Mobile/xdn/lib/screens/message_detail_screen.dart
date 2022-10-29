@@ -12,7 +12,6 @@ import 'package:digitalnote/models/Message.dart';
 import 'package:get_it/get_it.dart';
 
 import '../globals.dart' as globals;
-import '../support/AppDatabase.dart';
 import '../support/CardHeader.dart';
 import '../models/DateSeparator.dart';
 import '../support/Dialogs.dart';
@@ -97,7 +96,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   _getMessages() async {
     _addr = await SecureStorage.read(key: globals.ADR);
     mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
-    // _getNewMessages();
 
     timer ??= Timer.periodic(const Duration(seconds: 5), (Timer t) {
       if (_running == true) {
