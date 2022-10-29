@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:digitalnote/bloc/contacts_bloc.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/models/MessageGroup.dart';
+import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/ContactTile.dart';
@@ -11,6 +12,7 @@ import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 
 import '../globals.dart' as globals;
 import '../screens/messageComposeScreen.dart';
@@ -133,7 +135,7 @@ class AddressScreenState extends State<AddressScreen> {
 
   void _sendBoxCallback(String amount, String name, String addr) async {
     Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
-    double balance = (double.parse(ss?["balance"]));
+    double balance = ss?["spendable"];
     if (mounted) Navigator.of(context).pop();
     if (double.parse(amount) > balance) {
       if (mounted)  Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
@@ -151,30 +153,14 @@ class AddressScreenState extends State<AddressScreen> {
         ));
         }
       } else {
-        String? jwt = await SecureStorage.read(key: globals.TOKEN);
-        String? id = await SecureStorage.read(key: globals.ID);
-        String? user = await SecureStorage.read(key: globals.USERNAME);
-
         if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
           if (mounted) Dialogs.displayDialog(context, "Error", "Invalid XDN address");
           return;
         }
 
-        Map<String, dynamic> m = {
-          "User": user,
-          "id": id,
-          "request": "sendContactTransaction",
-          "param1": addr,
-          "param2": amount,
-          "param3": name,
-        };
-
-        var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-        final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-          "Authorization": jwt!,
-          "Content-Type": "application/json",
-          "payload": s,
-        }).timeout(const Duration(seconds: 10));
+        ComInterface interface = ComInterface();
+        Response response = await interface.post("/user/send/contact",
+            body: {"address": addr, "contact": name, "amount": double.parse(amount)}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
 
         if (response.statusCode == 200) {
           globals.reloadData = true;
@@ -211,27 +197,13 @@ class AddressScreenState extends State<AddressScreen> {
 
   void _deleteContact(int contactID) async {
     try {
-      String? jwt = await SecureStorage.read(key: "jwt");
-      String? id = await SecureStorage.read(key: globals.ID);
-
       List<Contact> details = await AppDatabase().getContact(contactID);
       String? addr = details[0].addr;
       String? name = details[0].name;
 
-      Map<String, dynamic> m = {
-        "id": id,
-        "request": "deleteContact",
-        "param1": name,
-        "param2": addr,
-      };
-
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-        "Authorization": jwt!,
-        "Content-Type": "application/json",
-        "payload": s,
-      }).timeout(const Duration(seconds: 10));
+      ComInterface interface = ComInterface();
+      Response response = await interface.post("/user/addressbook/delete",
+          body: {"address": addr, "name": name}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
 
       if (response.statusCode == 200) {
         AppDatabase().deleteContact(contactID);
@@ -252,9 +224,6 @@ class AddressScreenState extends State<AddressScreen> {
     }
   }
 
-  // _refreshContacts() async {
-  //   cb.fetchContacts();
-  // }
 
   _searchUsers(String text) async {
     cb.searchContacts(text);

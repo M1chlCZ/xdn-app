@@ -6,7 +6,6 @@ import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/models/get_info.dart';
-import 'package:digitalnote/models/summary.dart' as sum;
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -26,31 +25,9 @@ import '../models/TranSaction.dart';
 class NetInterface {
   static void uploadPicture(BuildContext context, String base64) async {
     try {
-      String? jwt = await SecureStorage.read(key: globals.TOKEN);
-      String? id = await SecureStorage.read(key: globals.ID);
-
-      Map<String, dynamic> m = {
-        "id": id,
-        "param1": base64,
-        "param2": "upload",
-      };
-
-      var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-
-      Response response = await http
-          .post(
-            Uri.parse('${globals.SERVER_URL}/apiAvatar'),
-            body: {
-              "Content-Type": "application/json",
-              "payload": s,
-            },
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              "Authorization": jwt!,
-            },
-            encoding: Encoding.getByName('utf-8'),
-          )
-          .timeout(const Duration(seconds: 10));
+      ComInterface interface = ComInterface();
+      Response response = await interface.post("/avatar/upload",
+          body: {"file": base64}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
 
       if (response.statusCode == 200) {
       } else {
@@ -68,20 +45,13 @@ class NetInterface {
 
   static Future<Uint8List?> downloadCSV(BuildContext context) async {
     try {
-      String? jwt = await SecureStorage.read(key: globals.TOKEN);
-      String? id = await SecureStorage.read(key: globals.USERNAME);
-
-      Map<String, dynamic> m = {"User": id, "request": "getcsv"};
-
-      final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-        "Content-Type": "application/json",
-        "Authorization": jwt!,
-        "payload": encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf"),
-      }).timeout(const Duration(seconds: 10));
+      ComInterface interface = ComInterface();
+      Response response = await interface.get("/user/xls",
+          body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
 
       if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        return base64.decode(data);
+        var data = json.decode(response.body);
+        return base64.decode(data['data']);
       } else {
         Dialogs.openAlertBox(context, 'Error', response.toString());
         return null;
@@ -196,13 +166,13 @@ class NetInterface {
 
   static Future<Map<String, dynamic>>? getTokenBalance() async {
       ComInterface ci = ComInterface();
-    Map<String, dynamic> rt = await ci.get("/user/token/wxdn", serverType: ComInterface.serverGoAPI, debug: true);
+    Map<String, dynamic> rt = await ci.get("/user/token/wxdn", serverType: ComInterface.serverGoAPI, debug: false);
     return rt;
   }
 
   static Future<Map<String, dynamic>>? getPriceData({bool details = false}) async {
     ComInterface ci = ComInterface();
-    Map<String, dynamic> res = await ci.get("/price/data", request: {}, serverType: ComInterface.serverGoAPI, debug: true);
+    Map<String, dynamic> res = await ci.get("/price/data", request: {}, serverType: ComInterface.serverGoAPI, debug: false);
     return res['data'];
   }
 

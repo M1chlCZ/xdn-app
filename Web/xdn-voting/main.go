@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"crypto/tls"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/go-gomail/gomail"
@@ -11,6 +13,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pquerna/otp/totp"
 	"gopkg.in/guregu/null.v4"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -67,6 +70,7 @@ func main() {
 
 	app.Post("api/v1/twofactor", utils.Authorized(twofactor))
 	app.Post("api/v1/twofactor/activate", utils.Authorized(twofactorVerify))
+	app.Get("api/v1/twofactor/check", utils.Authorized(twofactorCheck))
 
 	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
 	app.Post("api/v1/staking/set", utils.Authorized(setStake))
@@ -82,8 +86,13 @@ func main() {
 	app.Get("api/v1/user/balance", utils.Authorized(getBalance))
 	app.Get("api/v1/user/transactions", utils.Authorized(getTransactions))
 
+	app.Post("api/v1/user/send/contact", utils.Authorized(sendContactTransaction))
+
+	app.Get("api/v1/user/xls", utils.Authorized(getTxXLS))
+
 	app.Get("api/v1/user/addressbook", utils.Authorized(getAddressBook))
 	app.Post("api/v1/user/addressbook/save", utils.Authorized(saveToAddressBook))
+	app.Post("api/v1/user/addressbook/delete", utils.Authorized(deleteFromAddressBook))
 
 	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
 	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
@@ -119,6 +128,114 @@ func main() {
 	// Start server with https/ssl enabled on http://localhost:443
 	log.Fatal(app.Listener(ln))
 
+}
+
+func twofactorCheck(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	two, err := database.ReadValue[bool]("SELECT twoActive FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"twoFactor":  two,
+	})
+}
+
+func getTxXLS(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	usr, err := database.ReadValue[string]("SELECT username FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	readSql, err := database.ReadSql("SELECT * FROM transaction WHERE account = ? ORDER BY id DESC", usr)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	err = utils.GenerateXLSXFromRows(readSql, usr+".xlsx")
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	open, err := os.Open("./" + usr + ".xlsx")
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	// Read entire file into byte slice.
+	reader := bufio.NewReader(open)
+	content, _ := io.ReadAll(reader)
+
+	// Encode as base64.
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+	// Remove file
+	_ = os.Remove("./" + usr + ".xlsx")
+	return c.JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"data":       encoded,
+	})
+}
+
+func sendContactTransaction(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	var data struct {
+		Address string  `json:"address"`
+		Amount  float64 `json:"amount"`
+		Contact string  `json:"contact"`
+	}
+	if err := c.BodyParser(&data); err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+
+	if data.Address == "" || data.Amount == 0 || data.Contact == "" {
+		return utils.ReportError(c, "All fields has to be populated", fiber.StatusBadRequest)
+	}
+
+	addrSend, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+
+	tx, err := coind.SendCoins(data.Address, addrSend, data.Amount, false)
+	if err != nil {
+		return err
+	}
+	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", data.Contact, tx, "send")
+	return c.JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func deleteFromAddressBook(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	type req struct {
+		Address string `json:"address"`
+		Name    string `json:"name"`
+	}
+	var r req
+	err := c.BodyParser(&r)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if len(r.Address) == 0 || len(r.Name) == 0 {
+		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+	_, _ = database.InsertSQl("DELETE FROM addressbook  WHERE idUser = ? AND name = ? AND addr = ?", userID, r.Name, r.Address)
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
 }
 
 func getPriceData(c *fiber.Ctx) error {
@@ -207,6 +324,7 @@ func twofactorVerify(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
+	utils.ReportMessage(fmt.Sprintf("Code: %s, twoKey: %s", req.Code, twoKey))
 	good := totp.Validate(req.Code, twoKey)
 	if !good {
 		return utils.ReportError(c, "Invalid code", http.StatusForbidden)
@@ -238,6 +356,7 @@ func twofactor(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, "Code cannot be generated", http.StatusInternalServerError)
 	}
+	_, _ = database.InsertSQl("UPDATE users SET twoKey = ? WHERE id = ?", code.Secret(), userID)
 	return c.Status(http.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
@@ -311,11 +430,11 @@ func loginAPI(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Wrong password", http.StatusNotFound)
 	}
 
-	if user.TwoActive == 1 {
+	if user.TwoActive == 1 && user.TwoKey.Valid {
 		if len(req.TwoFactor) == 0 {
 			return utils.ReportError(c, "Two factor is required", http.StatusConflict)
 		}
-		twoRes := totp.Validate(req.TwoFactor, user.TwoKey)
+		twoRes := totp.Validate(req.TwoFactor, user.TwoKey.String)
 		if twoRes != true {
 			return utils.ReportError(c, "Two factor is invalid", http.StatusConflict)
 		}

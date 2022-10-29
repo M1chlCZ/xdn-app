@@ -91,6 +91,12 @@ class MyAppState extends State<MyApp> {
   Future<String> get jwtOrEmpty async {
     precache();
     await getPin();
+
+    String? refToken = await SecureStorage.read(key: globals.TOKEN_REFRESH);
+    if (refToken == null) {
+      FlutterNativeSplash.remove();
+      return LoginPage.route;
+    }
     var mJWT = await SecureStorage.read(key: globals.TOKEN);
     if (mJWT == null) {
       FlutterNativeSplash.remove();
@@ -101,7 +107,6 @@ class MyAppState extends State<MyApp> {
         FlutterNativeSplash.remove();
         return LoginPage.route;
       } else {
-        await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
         bool res = await NetInterface.daoLogin();
         if (res) {
          debugPrint("Dao Login OK");

@@ -3,7 +3,7 @@ description: DigitalNote App Wallet
 
 publish_to: 'none'
 
-version: 1.0.61+61
+version: 1.0.62+62
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -57,10 +57,7 @@ dependencies:
   decimal: any
   jwt_decode: ^0.3.1
   rxdart: ^0.27.5
-  open_file:
-    git:
-      url: https://github.com/MathiasCochet/open_file.git
-      ref: gradle-update
+  open_file: ^3.2.1
   external_path: ^1.0.3
   path: any
   avatar_glow: any
