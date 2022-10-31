@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -145,7 +146,7 @@ class TransactionView extends StatelessWidget {
                       child: SizedBox(
                         width: 125,
                         child: AutoSizeText(
-                          transaction!.category == "receive" ? "+ ${transaction!.amount!} XDN" : "- ${transaction!.amount!.replaceFirst('-', '')} XDN",
+                          transaction!.category == "receive" ? "+ ${Utils.formatAmount(transaction!.amount!)} XDN" : "- ${transaction!.amount!.replaceFirst('-', '')} XDN",
                           style: GoogleFonts.montserrat(fontWeight: FontWeight.w300, fontSize: 16, color: transaction!.category! == "receive" ? Colors.white70 : Colors.white30),
                           minFontSize: 8,
                           maxLines: 1,

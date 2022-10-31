@@ -120,6 +120,20 @@ class Utils {
     }
   }
 
+  static String formatAmount(String amount) {
+    NumberFormat nf = NumberFormat("##.###");
+    var number = double.parse(amount);
+    if (number < 1000) {
+      return nf.format(number).toString();
+    } else if ((number / 1000) > 1 && (number / 1000) < 1000) {
+      return '${nf.format(number / 1000)}k';
+    } else if ((number / 1000000) > 1 && (number / 1000000) < 1000) {
+      return '${nf.format(number / 1000000)}m';
+    } else {
+      return number.toString();
+    }
+  }
+
   static bool checkAddress (String address) {
     try {
       EthereumAddress.fromHex(address);

@@ -54,10 +54,7 @@ class SendWidgetState extends State<SendWidget> {
   void _sendCoins() async {
     Navigator.of(context).pop();
     try {
-      String? jwt = await SecureStorage.read(key: globals.TOKEN);
-      String? user = await SecureStorage.read(key: globals.USERNAME);
-      String? id = await SecureStorage.read(key: globals.ID);
-
+      String method = "/user/send";
       String addr = _controllerAddress.text;
       String amnt = _controllerAmount.text;
       Map<String, dynamic>? m;
@@ -88,25 +85,21 @@ class SendWidgetState extends State<SendWidget> {
 
       if (_recipient == null) {
         m = {
-          "Authorization": jwt,
-          "User": user,
-          "request": "sendRawTransaction",
-          "param1": addr,
-          "param2": amnt,
+          "address": addr,
+          "amount": double.parse(amnt),
         };
       } else {
+        method = "/user/send/contact";
         m = {
-          "Authorization": jwt,
-          "User": user,
-          "id": id,
-          "request": "sendContactTransaction",
-          "param1": addr,
-          "param2": amnt,
-          "param3": _recipient!.name,
+          "address": addr,
+          "amount": double.parse(amnt),
+          "contact": _recipient!.name,
         };
       }
-      ComInterface ci = ComInterface();
-      await ci.get("/data", request: m, debug: true);
+
+      ComInterface interface = ComInterface();
+      await interface.post(method,
+          body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
       setState(() {
         wait = false;
         succ = true;
@@ -166,22 +159,13 @@ class SendWidgetState extends State<SendWidget> {
   void initState() {
     super.initState();
     _getCurrentBalance();
-    // fail = false;
-    // succ = false;
-    // sendView = true;
-    // Future.delayed(Duration.zero, () {
-    //   initView();
+
       if (kDebugMode) {
         setState(() {
           _controllerAddress.text = "dcjvrzkNmPCV8f2e2C9UVB5wTroo4iELzt";
         });
       }
-    // });
 
-    // wait = false;
-    // succ = false;
-    // fail = false;
-    // sendView = false;
   }
 
   void _getCurrentBalance() async {

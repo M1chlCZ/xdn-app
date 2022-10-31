@@ -385,8 +385,8 @@ func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {
 				if err != nil {
 					return ReportErrorSilent(c, "Invalid Token", http.StatusUnauthorized)
 				} else {
-					lenght := len(decodeString)
-					if lenght != 32 {
+					length := len(decodeString)
+					if length != 32 {
 						return ReportErrorSilent(c, "Invalid Token", http.StatusUnauthorized)
 					}
 				}

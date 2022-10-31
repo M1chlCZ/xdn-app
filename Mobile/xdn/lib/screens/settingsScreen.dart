@@ -1040,11 +1040,10 @@ class _SettingsState extends State<SettingsScreen> {
     }
     Navigator.of(context).pop();
     try {
-      ComInterface cm = ComInterface();
-      var id = await SecureStorage.read(key: globals.ID);
-      var m = {"id": id!, "param1": s, "request": "twofactorRemove"};
-      http.Response response = await cm.get('/data', type: ComInterface.typePlain, request: m);
-      if (response.statusCode == 200) {
+      ComInterface interface = ComInterface();
+      http.Response res = await interface.post("/twofactor/remove",
+          body: {"token": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+      if (res.statusCode == 200) {
         setState(() {
           twoFactor = false;
         });

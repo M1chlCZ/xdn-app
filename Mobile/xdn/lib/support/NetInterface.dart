@@ -118,12 +118,10 @@ class NetInterface {
   }
 
   static Future<void> registerFirebaseToken(String token) async {
-    String? id = await SecureStorage.read(key: globals.ID);
-    Map<String, dynamic> m = {"id": id, "param1": token, "param2": Platform.isAndroid ? "A" : "I", "request": "registerFirebaseToken"};
-
-    ComInterface ci = ComInterface();
+    ComInterface interface = ComInterface();
     try {
-      await ci.get("/data", request: m, debug: false);
+    await interface.post("/firebase",
+        body: {"token": token, "platform": Platform.isAndroid ? "A" : "I"}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
@@ -317,20 +315,11 @@ class NetInterface {
       String? addr = await SecureStorage.read(key: globals.ADR);
 
       Map<String, dynamic> m = {
-        "param1": address,
-        "param2": addr,
-        "request": "updateRead",
+        "addr": address,
+        "addrUsr": addr,
       };
-
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
-
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
+      Response response = await ci.get("/messages/read", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain);
       if (response.statusCode == 200) {
         await AppDatabase().updateMessageGroupRead(addr!, address);
       }
@@ -374,25 +363,16 @@ class NetInterface {
   static Future<void> updateContact(String name, String id) async {
     try {
       Map<String, dynamic> m = {
-        "param1": id,
-        "param2": name,
-        "request": "updateContact",
+        "id": id,
+        "name": name,
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
+      Response response = await ci.get("/addressbook/update", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain);
       if (response.statusCode == 200) {
         // AppDatabase().updateMessageGroupRead(addr, address);
       }
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
-      // if (response.statusCode == 200) {
-      //   // AppDatabase().updateMessageGroupRead(addr, address);
-      // }
+
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
@@ -425,26 +405,10 @@ class NetInterface {
 
   static Future<int> sendContactCoins(String amount, String name, String addr) async {
     try {
-      String? id = await SecureStorage.read(key: globals.ID);
-      String? user = await SecureStorage.read(key: globals.USERNAME);
 
-      Map<String, dynamic> m = {
-        "User": user,
-        "id": id,
-        "request": "sendContactTransaction",
-        "param1": addr,
-        "param2": amount,
-        "param3": name,
-      };
-
-      ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain, debug: true);
-
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
+      ComInterface interface = ComInterface();
+      Response response = await interface.post("/user/send/contact",
+          body: {"address": addr, "contact": name, "amount": double.parse(amount)}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
 
       if (response.statusCode == 200) {
         return 1;
@@ -548,13 +512,6 @@ class NetInterface {
     }
   }
 
-  static Future<Map<String, dynamic>?> getAdminNickname() async {
-    String? id = await SecureStorage.read(key: globals.ID);
-    Map<String, dynamic> m = {"id": id, "request": "getAdminNickname"};
-    ComInterface ci = ComInterface();
-    Map<String, dynamic> rt = await ci.get("/data", request: m, debug: true);
-    return rt;
-  }
 
   static Future<dynamic> checkPassword(String password, {String? pin}) async {
     String? username = await SecureStorage.read(key: globals.USERNAME);
@@ -590,14 +547,10 @@ class NetInterface {
   }
 
   static Future<String?> getPrivKey() async {
-    String? addr = await SecureStorage.read(key: globals.ADR);
     try {
-      Map<String, dynamic> m = {"param1": addr, "request": "getPrivKey"};
       ComInterface ci = ComInterface();
-      var res = await ci.get("/data", request: m, type: ComInterface.typePlain);
-
-      String? data = decryptAESCryptoJS(res.body, "rp9ww*jK8KX_!537e%Crmf");
-      return data;
+      var res = await ci.get("/misc/privkey", request: {}, type: ComInterface.typeJson, serverType: ComInterface.serverGoAPI, debug: false);
+      return res['privkey'];
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
       return null;
@@ -623,17 +576,11 @@ class NetInterface {
         ));
         Navigator.of(context).pop();
       } else {
-        String? id = await SecureStorage.read(key: globals.ID);
-
         Map<String, dynamic> m = {
-          "id": id,
-          "param1": nickname,
-          "request": "renameUser",
+          "name": nickname,
         };
         ComInterface ci = ComInterface();
-        var response = await ci.get("/data", request: m, type: ComInterface.typePlain);
-
-
+        var response = await ci.post("/user/rename", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: true);
         if (response.statusCode == 200) {
           globals.reloadData = true;
 
@@ -645,9 +592,7 @@ class NetInterface {
             elevation: 5.0,
           ));
 
-          var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-          Map<String, dynamic> map = json.decode(data);
-          await SecureStorage.write(key: globals.NICKNAME, value: map['nick']);
+          await SecureStorage.write(key: globals.NICKNAME, value: nickname);
         } else {
           Navigator.of(context).pop();
           Dialogs.openAlertBox(context, 'Warning', 'Server error');
@@ -720,41 +665,6 @@ class NetInterface {
     }
   }
 
-  static Future<String?> getRewardsByDay(BuildContext context, String date, int type) async {
-    try {
-      String? id = await SecureStorage.read(key: globals.ID);
-      String? tz = await SecureStorage.read(key: globals.LOCALE);
-
-      Map<String, dynamic> m = {
-        "id": id,
-        "param1": date,
-        "param2": type,
-        "param3": tz,
-        "request": "getRewards",
-      };
-
-      ComInterface ci = ComInterface();
-      var response = await ci.get("/data", request: m, debug: true, type: ComInterface.typePlain);
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        return data.toString();
-      } else {
-        Dialogs.openAlertBox(context, 'Warning', response.toString());
-        return null;
-      }
-    } on TimeoutException catch (_) {
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, 'Warning', "Request timed out");
-      return null;
-    } on SocketException catch (_) {
-      Dialogs.openAlertBox(context, 'Warning', "Service is not available");
-      return null;
-    } catch (e) {
-      if (kDebugMode) print(e.toString());
-      Dialogs.openAlertBox(context, 'Warning', e.toString());
-      return null;
-    }
-  }
 
   static Future<String?> getRewardsByDayDao(BuildContext context, int type) async {
     try {
@@ -772,80 +682,15 @@ class NetInterface {
     }
   }
 
-  static Future<String?> getRewardsByMonth(BuildContext context, String year, String month, int type) async {
-    try {
-      String? id = await SecureStorage.read(key: globals.ID);
 
-      Map<String, dynamic> m = {
-        "id": id,
-        "param1": year,
-        "param2": type,
-        "param3": month,
-        "request": "getRewards",
-      };
-
-      ComInterface ci = ComInterface();
-      Response response = await ci.get("/data", request: m, type: ComInterface.typePlain);
-      // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
-      //
-      // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
-      //   "Content-Type": "application/json",
-      //   "payload": s,
-      // }).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        return data.toString();
-      } else {
-        Dialogs.openAlertBox(context, 'Warning', response.toString());
-        return null;
-      }
-    } on TimeoutException catch (_) {
-      Dialogs.openAlertBox(context, 'Warning', "Request timed out");
-      return null;
-    } on SocketException catch (_) {
-      Dialogs.openAlertBox(context, 'Warning', "Service is not available");
-      return null;
-    } catch (e) {
-      if (kDebugMode) print(e.toString());
-      Dialogs.openAlertBox(context, 'Warning', e.toString());
-      return null;
-    }
-  }
-
-  static Future<Map?> getPoolStats(BuildContext context) async {
-    try {
-      String? id = await SecureStorage.read(key: globals.ID);
-
-      Map<String, dynamic> m = {"id": id, "request": "getPoolStats"};
-
-      ComInterface ci = ComInterface();
-      Map response = await ci.get("/data", request: m);
-      return response;
-
-    } on TimeoutException catch (_) {
-
-      return null;
-    } on SocketException catch (_) {
-
-      return null;
-    } catch (e) {
-      if (kDebugMode) print(e.toString());
-      return null;
-    }
-  }
   static Future<Map?> deleteAccount() async {
     try {
-      String? id = await SecureStorage.read(key: globals.ID);
-      Map<String, dynamic> m = {"id": id, "request": "deleteAccount"};
       ComInterface ci = ComInterface();
-      Map response = await ci.get("/data", request: m, debug: true);
-      return response;
+      await ci.post("/user/delete", body: {}, type: ComInterface.typeJson, serverType: ComInterface.serverGoAPI, debug: true);
+      return {"status": "ok"};
     } on TimeoutException catch (_) {
-
       return null;
     } on SocketException catch (_) {
-
       return null;
     } catch (e) {
       if (kDebugMode) print(e.toString());

@@ -65,12 +65,15 @@ func main() {
 	app.Post("api/v1/register", registerAPI)
 	app.Post("api/v1/login/refresh", refreshToken)
 	app.Post("api/v1/login/forgot", forgotPassword)
-
+	app.Post("api/v1/firebase", utils.Authorized(firebaseToken))
 	app.Post("api/v1/password/change", utils.Authorized(changePassword))
+
+	app.Get("api/v1/misc/privkey", utils.Authorized(getPrivKey))
 
 	app.Post("api/v1/twofactor", utils.Authorized(twofactor))
 	app.Post("api/v1/twofactor/activate", utils.Authorized(twofactorVerify))
 	app.Get("api/v1/twofactor/check", utils.Authorized(twofactorCheck))
+	app.Post("api/v1/twofactor/remove", utils.Authorized(twoFactorRemove))
 
 	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
 	app.Post("api/v1/staking/set", utils.Authorized(setStake))
@@ -87,6 +90,7 @@ func main() {
 	app.Get("api/v1/user/transactions", utils.Authorized(getTransactions))
 
 	app.Post("api/v1/user/send/contact", utils.Authorized(sendContactTransaction))
+	app.Post("api/v1/user/send", utils.Authorized(sendTransaction))
 
 	app.Get("api/v1/user/xls", utils.Authorized(getTxXLS))
 
@@ -94,10 +98,15 @@ func main() {
 	app.Post("api/v1/user/messages", utils.Authorized(getMessages))
 	app.Post("api/v1/user/messages/likes", utils.Authorized(getMessagesLikes))
 	app.Post("api/v1/user/messages/send", utils.Authorized(sendMessage))
+	app.Post("api/v1/user/messages/read", utils.Authorized(readMessages))
 
 	app.Get("api/v1/user/addressbook", utils.Authorized(getAddressBook))
 	app.Post("api/v1/user/addressbook/save", utils.Authorized(saveToAddressBook))
 	app.Post("api/v1/user/addressbook/delete", utils.Authorized(deleteFromAddressBook))
+	app.Post("api/v1/user/addressbook/update", utils.Authorized(updateAddressBook))
+
+	app.Post("api/v1/user/rename", utils.Authorized(renameUser))
+	app.Post("api/v1/user/delete", utils.Authorized(deleteUser))
 
 	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
 	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
@@ -132,6 +141,164 @@ func main() {
 
 	// Start server with https/ssl enabled on http://localhost:443
 	log.Fatal(app.Listener(ln))
+
+}
+
+func deleteUser(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	user, err := database.ReadStruct[models.User]("SELECT * FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+	_, _ = database.InsertSQl("DELETE FROM users_stake WHERE idUser = ?", userID)
+	_, _ = database.InsertSQl("DELETE FROM devices WHERE idUser = ?", userID)
+	_, _ = database.InsertSQl("DELETE FROM transaction WHERE account = ?", user.Username)
+	_, _ = database.InsertSQl("DELETE FROM payouts_stake WHERE idUser = ?", userID)
+	_, _ = database.InsertSQl("UPDATE addressbook SET name = ? WHERE addr = ?", "Deleted User", user.Addr)
+	_, _ = database.InsertSQl("DELETE FROM users WHERE id = ?", userID)
+	return c.JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+
+}
+
+func renameUser(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	var Req struct {
+		NewName string `json:"name"`
+	}
+	err := c.BodyParser(&Req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+	if len(Req.NewName) < 3 {
+		return utils.ReportError(c, "Name is too short", fiber.StatusBadRequest)
+	}
+	if len(Req.NewName) > 45 {
+		return utils.ReportError(c, "Name is too long", fiber.StatusBadRequest)
+	}
+	_, _ = database.InsertSQl("UPDATE users SET nickname = ? WHERE id = ?", Req.NewName, userID)
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func getPrivKey(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+
+	addr, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+
+	_, err = coind.WrapDaemon(utils.DaemonWallet, 2, "walletpassphrase", utils.DaemonWallet.PassPhrase.String, 100)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	time.Sleep(time.Millisecond * 100)
+	pKey, err := coind.WrapDaemon(utils.DaemonWallet, 2, "dumpprivkey", addr)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	privKey := strings.Trim(string(pKey), "\"")
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"privkey":    privKey,
+	})
+}
+
+func updateAddressBook(c *fiber.Ctx) error {
+	var Req struct {
+		IDContact int    `json:"id"`
+		Name      string `json:"name"`
+	}
+
+	err := c.BodyParser(&Req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+	_, _ = database.InsertSQl("UPDATE addressbook SET name = ? WHERE id = ?", Req.Name, Req.IDContact)
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func readMessages(c *fiber.Ctx) error {
+	var Req struct {
+		Address      string `json:"addr"`
+		UsersAddress string `json:"addrUsr"`
+	}
+
+	err := c.BodyParser(&Req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+
+	_, _ = database.InsertSQl("UPDATE messages SET messages.unread = 1 WHERE (receiveAddr = ? AND sentAddr = ? ) OR (receiveAddr = ? AND sentAddr = ?)", Req.Address, Req.UsersAddress, Req.UsersAddress, Req.Address)
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func firebaseToken(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+
+	var Req struct {
+		Token    string `json:"token"`
+		Platform string `json:"platform"`
+	}
+
+	err := c.BodyParser(&Req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+
+	exist, err := database.ReadValue[sql.NullInt64]("SELECT id FROM devices WHERE token = ?", Req.Token)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+	}
+	if !exist.Valid {
+		_, _ = database.InsertSQl("INSERT INTO devices(idUser, token, device_type) VALUES (?, ?, ?)", userID, Req.Token, Req.Platform)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func twoFactorRemove(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+
+	var Req struct {
+		Token string `json:"token"`
+	}
+
+	err := c.BodyParser(&Req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+
+	twoKey, err := database.ReadValue[string]("SELECT twoKey FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+	}
+
+	twoRes := totp.Validate(Req.Token, twoKey)
+	if !twoRes {
+		return utils.ReportError(c, "Invalid token", fiber.StatusConflict)
+	}
+	_, _ = database.InsertSQl("UPDATE users SET twoActive = 0 WHERE id = ?", userID)
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
 
 }
 
@@ -306,9 +473,6 @@ func getMessageGroup(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	for _, s := range arrayStruct {
-		utils.ReportMessage(s.LastMessage.String())
-	}
 
 	return c.Status(http.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
@@ -392,9 +556,38 @@ func sendContactTransaction(c *fiber.Ctx) error {
 
 	tx, err := coind.SendCoins(data.Address, addrSend, data.Amount, false)
 	if err != nil {
-		return err
+		return utils.ReportError(c, "Wallet problem, try again later", fiber.StatusConflict)
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", data.Contact, tx, "send")
+	return c.JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func sendTransaction(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	var data struct {
+		Address string  `json:"address"`
+		Amount  float64 `json:"amount"`
+	}
+	if err := c.BodyParser(&data); err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+
+	if data.Address == "" || data.Amount == 0 {
+		return utils.ReportError(c, "All fields has to be populated", fiber.StatusBadRequest)
+	}
+
+	addrSend, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+
+	_, err = coind.SendCoins(data.Address, addrSend, data.Amount, false)
+	if err != nil {
+		return utils.ReportError(c, "Wallet problem, try again later", fiber.StatusConflict)
+	}
 	return c.JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
@@ -463,6 +656,7 @@ func forgotPassword(c *fiber.Ctx) error {
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
 	}
+	utils.ReportMessage(data.Email)
 	usr, err := database.ReadStruct[models.User]("SELECT * FROM users WHERE email = ?", data.Email)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
@@ -713,7 +907,7 @@ func getBalance(c *fiber.Ctx) error {
 	}
 	acc, _ := database.ReadValue[string]("SELECT username FROM users WHERE id = ?", userID)
 	addr, _ := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
-	immature, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount),0) as immature FROM transaction WHERE account = ? AND confirmation < 3 AND category = 'receive'", acc)
+	immature, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount),0) as immature FROM transaction WHERE account = ? AND confirmation < 2 AND category = 'receive'", acc)
 	daemon := utils.GetDaemon()
 	unspent, err := coind.WrapDaemon(*daemon, 5, "listunspent", 1, 9999999, []string{addr})
 	if err != nil {
