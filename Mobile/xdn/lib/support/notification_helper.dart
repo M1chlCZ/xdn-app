@@ -7,7 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 Future<void> onBackgroundMessage(RemoteMessage message) async {
   await Firebase.initializeApp();
-
+  print(message);
   if (message.data.containsKey('data')) {
     final data = message.data['data'];
   }

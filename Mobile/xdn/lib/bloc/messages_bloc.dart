@@ -28,12 +28,22 @@ class MessagesBloc {
     try {
       if(first) {
         coinsListSink.add(ApiResponse.loading('Fetching All Messages'));
-        first = false;
+
       }
       _messages = await _messageList.getMessages(addr);
+      if (first) {
+        if (_messages != null && _messages!.isNotEmpty) {
+          coinsListSink.add(ApiResponse.completed(_messages));
+        }
+        await _messageList.refreshMessages(addr);
+        _messages = await _messageList.getMessages(addr);
+        coinsListSink.add(ApiResponse.completed(_messages));
+        first = false;
+      }
       if(_messages == null || _messages!.isEmpty) {
         await _messageList.refreshMessages(addr);
         _messages = await _messageList.getMessages(addr);
+        coinsListSink.add(ApiResponse.completed(_messages));
       }
       coinsListSink.add(ApiResponse.completed(_messages));
     } catch (e) {

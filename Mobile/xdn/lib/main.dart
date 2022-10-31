@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:digitalnote/models/MessageGroup.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
 import 'package:digitalnote/screens/main_menu.dart';
+import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
@@ -68,7 +70,7 @@ void main() async {
 
   runApp(
     Phoenix(
-      child: const MyApp(),
+      child: const MaterialApp(home: MyApp(),),
     ),
   );
 }
@@ -377,6 +379,17 @@ class MyAppState extends State<MyApp> {
                   ));
         } else {
           return MaterialPageRoute(builder: (_) => const AuthScreen(type: 0));
+        }
+      case MessageDetailScreen.route:
+        Object? args = settings.arguments;
+        if (args != null) {
+         MessageGroup m = args as MessageGroup;
+          return MaterialPageRoute(
+              builder: (_) => MessageDetailScreen(
+               mgroup: m,
+              ));
+        } else {
+          return MaterialPageRoute(builder: (_) => const MessageScreen());
         }
       case BlockInfoScreen.route:
         return MaterialPageRoute(builder: (_) => const BlockInfoScreen());

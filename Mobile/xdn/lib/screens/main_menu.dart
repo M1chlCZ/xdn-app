@@ -4,12 +4,14 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/models/summary.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
+import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/token_screen.dart';
 import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/LifecycleWatcherState.dart';
 import 'package:digitalnote/support/NetInterface.dart';
@@ -23,13 +25,16 @@ import 'package:digitalnote/widgets/balance_token_card.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:digitalnote/widgets/voting_menu_widget.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:get_it/get_it.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
 
 import '../globals.dart' as globals;
+import '../models/MessageGroup.dart';
 
 class MainMenuNew extends StatefulWidget {
   static const String route = "menu";
@@ -60,11 +65,14 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   Future<DaemonStatus>? daemonStatus;
 
+  AppDatabase db = GetIt.I.get<AppDatabase>();
+
   @override
   void initState() {
     _getLocale();
     super.initState();
     loginDao();
+    getNotification();
   }
 
   void loginDao() async {
@@ -88,6 +96,17 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     } else {
       debugPrint('Dao not logged in');
     }
+  }
+
+  getNotification() {
+    FirebaseMessaging.onMessageOpenedApp.listen((message) async {
+      if (message.data['func'] == "sendMessage") {
+        String sentAddr = message.data['fr'];
+        String? contact = await db.getContactNameByAddr(sentAddr);
+        MessageGroup m = MessageGroup(sentAddr: contact ?? sentAddr, sentAddressOrignal: sentAddr);
+        if(mounted) Navigator.pushNamed(context, MessageDetailScreen.route, arguments: m);
+      }
+    });
   }
 
   getPriceData() async {

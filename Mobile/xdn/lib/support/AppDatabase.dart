@@ -176,6 +176,21 @@ class AppDatabase {
     }
   }
 
+  Future<String?> getContactNameByAddr(String addr) async {
+    final dbClient = await db;
+    var res = await dbClient.query(globals.TABLE_ADDR, columns: ['name'], where: "addr = ?", whereArgs: [addr], limit: 1);
+    var l = List.generate(res.length, (i) {
+      return Contact(
+        name: res[i]['name'] as String,
+      );
+    });
+    if (l.isEmpty) {
+      return null;
+    } else {
+      return l[0].name.toString();
+    }
+  }
+
   Future<String> getContactByNameAddr(String name, String addr) async {
     final dbClient = await db;
     var res = await dbClient.query(globals.TABLE_ADDR, columns: ['id'], where: "name = ? AND addr = ?", whereArgs: [name, addr], limit: 1);

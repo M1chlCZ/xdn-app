@@ -121,7 +121,7 @@ class NetInterface {
     ComInterface interface = ComInterface();
     try {
     await interface.post("/firebase",
-        body: {"token": token, "platform": Platform.isAndroid ? "A" : "I"}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+        body: {"token": token, "platform": Platform.isAndroid ? "A" : "I"}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
@@ -295,7 +295,7 @@ class NetInterface {
         "addrUsr": addr,
       };
       ComInterface ci = ComInterface();
-      Response response = await ci.get("/messages/read", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain);
+      Response response = await ci.post("/user/messages/read", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
       if (response.statusCode == 200) {
         await AppDatabase().updateMessageGroupRead(addr!, address);
       }

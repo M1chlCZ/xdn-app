@@ -1,11 +1,7 @@
 
 
 class MessageGroup {
-  final String? sentAddr;
-  final int? unread;
-  final String? lastReceivedMessage;
-  String? text;
-  final String? sentAddressOrignal;
+
 
 
   MessageGroup({this.sentAddr, this.unread, this.lastReceivedMessage, this.text, this.sentAddressOrignal});
@@ -18,6 +14,17 @@ class MessageGroup {
       text: json['text'],
       sentAddressOrignal: json['sentAddr']
     );
+  }
+
+  String? sentAddr;
+  int? unread;
+  String? lastReceivedMessage;
+  String? text;
+  String? sentAddressOrignal;
+
+  set setSentAddr(String? sentAddr) {
+    sentAddr = sentAddr;
+    sentAddressOrignal = sentAddr;
   }
 
   Map<String, dynamic> toMap() {

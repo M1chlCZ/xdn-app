@@ -2,37 +2,41 @@ import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/bloc/messages_bloc.dart';
+import 'package:digitalnote/models/Message.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/support/secure_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:digitalnote/models/Message.dart';
 import 'package:get_it/get_it.dart';
 
 import '../globals.dart' as globals;
-import '../support/CardHeader.dart';
 import '../models/DateSeparator.dart';
+import '../models/MessageGroup.dart';
+import '../support/CardHeader.dart';
 import '../support/Dialogs.dart';
 import '../support/LifecycleWatcherState.dart';
-import '../widgets/MessageBubble.dart';
-import '../models/MessageGroup.dart';
 import '../support/NetInterface.dart';
 import '../widgets/AvatarPicker.dart';
+import '../widgets/MessageBubble.dart';
 import '../widgets/backgroundWidget.dart';
 
 class MessageDetailScreen extends StatefulWidget {
+  static const String route = "menu/messages/detail";
   final MessageGroup mgroup;
   final Function(String addr)? func;
 
-  const MessageDetailScreen({Key? key, required this.mgroup, this.func}) : super(key: key);
+  const MessageDetailScreen({Key? key, required this.mgroup, this.func})
+      : super(key: key);
 
   @override
   MessageDetailScreenState createState() => MessageDetailScreenState();
 }
 
-class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen> {
+class MessageDetailScreenState
+    extends LifecycleWatcherState<MessageDetailScreen> {
   FCM fmc = GetIt.I.get<FCM>();
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
@@ -66,9 +70,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       }
     });
 
-    fmc.setNotifications();
-    fmc.bodyCtlr.stream.listen((event) {
-      notReceived(ev: event);
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _getMessages();
     });
   }
 
@@ -96,7 +99,6 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   _getMessages() async {
     _addr = await SecureStorage.read(key: globals.ADR);
     mBlock.fetchMessages(widget.mgroup.sentAddressOrignal!);
-
     timer ??= Timer.periodic(const Duration(seconds: 5), (Timer t) {
       if (_running == true) {
         _getNewMessages();
@@ -111,7 +113,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
   }
 
   Future<void> notReceived({String? ev}) async {
-    // mBlock.refreshMessages(widget.mgroup.sentAddressOrignal!);
+    print("shit");
     if (_running) {
       Future.delayed(const Duration(milliseconds: 10), () {
         _getNewMessages();
@@ -126,14 +128,16 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
 
   Future<void> _sendMessage() async {
     if (_textController.text.isEmpty) {
-      Dialogs.openMessageTipBox(context, widget.mgroup.sentAddr!, widget.mgroup.sentAddressOrignal!, _sendBoxCallback);
+      Dialogs.openMessageTipBox(context, widget.mgroup.sentAddr!,
+          widget.mgroup.sentAddressOrignal!, _sendBoxCallback);
     } else {
       setState(() {
         _switchWidget = _sendWait();
         _circleVisible = true;
       });
 
-      await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, _textController.text.trimRight(), _replyid);
+      await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!,
+          _textController.text.trimRight(), _replyid);
       _textController.text = '';
       setState(() {
         _replyid = 0;
@@ -172,10 +176,14 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       ));
       return;
     } else if (double.parse(amount) > _balance) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "${AppLocalizations.of(context)!.st_insufficient}!");
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
+          "${AppLocalizations.of(context)!.st_insufficient}!");
       return;
-    } else if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
+    } else if (addr.length != 34 ||
+        !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) ||
+        addr[0] != 'd') {
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
+          AppLocalizations.of(context)!.konj_addr_invalid);
       return;
     } else {
       setState(() {
@@ -185,7 +193,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       int i = await NetInterface.sendContactCoins(amount, name, addr);
       if (i == 1) {
         var text = "&TIP# $amount XDN!";
-        await NetInterface.sendMessage(widget.mgroup.sentAddressOrignal!, text, _replyid);
+        await NetInterface.sendMessage(
+            widget.mgroup.sentAddressOrignal!, text, _replyid);
         setState(() {
           _switchWidget = _sendWait();
           _circleVisible = true;
@@ -225,7 +234,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
           children: [
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(top: 78.0, bottom: 0.0, left: 5.0, right: 5.0),
+                padding: const EdgeInsets.only(
+                    top: 78.0, bottom: 0.0, left: 5.0, right: 5.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.transparent,
@@ -242,36 +252,61 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                               if (snapshot.hasData) {
                                 switch (snapshot.data!.status) {
                                   case Status.completed:
-                                    var mData = snapshot.data!.data as List<dynamic>;
+                                    var mData =
+                                        snapshot.data!.data as List<dynamic>;
                                     return Flexible(
                                       child: Padding(
-                                        padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                                        padding: const EdgeInsets.only(
+                                            left: 5.0, right: 5.0),
                                         child: ClipRRect(
-                                          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                                          borderRadius: const BorderRadius.all(
+                                              Radius.circular(15.0)),
                                           child: ListView.builder(
                                               reverse: true,
                                               controller: _scrollController,
                                               shrinkWrap: true,
                                               itemCount: mData.length,
-                                              itemBuilder: (BuildContext context, int index) {
+                                              itemBuilder:
+                                                  (BuildContext context,
+                                                      int index) {
                                                 dynamic mNode = mData[index];
                                                 if (mNode is DateSeparator) {
                                                   return Row(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
                                                     children: [
                                                       Container(
-                                                        margin: const EdgeInsets.only(top: 30.0, bottom: 10.0),
+                                                        margin: const EdgeInsets
+                                                                .only(
+                                                            top: 30.0,
+                                                            bottom: 10.0),
                                                         decoration: const BoxDecoration(
-                                                            color: Color.fromRGBO(44, 44, 53, 1.0),
-                                                            borderRadius: BorderRadius.all(Radius.circular(32.0))),
+                                                            color:
+                                                                Color.fromRGBO(
+                                                                    44,
+                                                                    44,
+                                                                    53,
+                                                                    1.0),
+                                                            borderRadius:
+                                                                BorderRadius.all(
+                                                                    Radius.circular(
+                                                                        32.0))),
                                                         child: Padding(
-                                                          padding: const EdgeInsets.all(15.0),
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(15.0),
                                                           child: Text(
                                                             mNode.lastMessage!,
-                                                            style: Theme.of(context)
+                                                            style: Theme.of(
+                                                                    context)
                                                                 .textTheme
                                                                 .bodyText2!
-                                                                .copyWith(color: Colors.white70, fontSize: 14.0),
+                                                                .copyWith(
+                                                                    color: Colors
+                                                                        .white70,
+                                                                    fontSize:
+                                                                        14.0),
                                                           ),
                                                         ),
                                                       ),
@@ -279,9 +314,15 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                                   );
                                                 } else {
                                                   return MessageBubble(
-                                                    key: Key((mNode as Message).id.toString()),
+                                                    key: Key((mNode as Message)
+                                                        .id
+                                                        .toString()),
                                                     messages: mData[index],
-                                                    userMessage: mData[index].sentAddr == _addr ? true : false,
+                                                    userMessage:
+                                                        mData[index].sentAddr ==
+                                                                _addr
+                                                            ? true
+                                                            : false,
                                                     replyCallback: _reply,
                                                     // func3: _refreshUsers,
                                                   );
@@ -292,7 +333,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                     );
                                   case Status.loading:
                                     return const Padding(
-                                      padding:  EdgeInsets.only(bottom: 265.0),
+                                      padding: EdgeInsets.only(bottom: 265.0),
                                       child: SizedBox(
                                           height: 50.0,
                                           width: 50.0,
@@ -314,7 +355,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                           Container(
                             decoration: const BoxDecoration(
                               color: Color(0xFF29303F),
-                              borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15.0)),
                             ),
                             child: Column(
                               children: [
@@ -325,14 +367,17 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                   height: _replyHeight,
                                   decoration: const BoxDecoration(
                                     color: Color(0xFF1F222F),
-                                    borderRadius: BorderRadius.only(topLeft: Radius.circular(5.0), topRight: Radius.circular(5.0)),
+                                    borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(5.0),
+                                        topRight: Radius.circular(5.0)),
                                   ),
                                   child: Center(
                                     child: SingleChildScrollView(
                                       child: SizedBox(
                                         height: _replyHeight,
                                         child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
                                           children: [
                                             const SizedBox(
                                               width: 15.0,
@@ -340,7 +385,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             Expanded(
                                               child: AutoSizeText(
                                                 '${AppLocalizations.of(context)!.message_reply_to}: ${_replyMessage == null ? '' : _replyMessage!}',
-                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyText1!
+                                                    .copyWith(fontSize: 14.0),
                                                 maxLines: 1,
                                                 minFontSize: 12.0,
                                                 overflow: TextOverflow.ellipsis,
@@ -367,11 +415,20 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                               width: 40.0,
                                               decoration: const BoxDecoration(
                                                 color: Color(0xffa43131),
-                                                borderRadius: BorderRadius.only(topRight: Radius.circular(5.0)),
+                                                borderRadius: BorderRadius.only(
+                                                    topRight:
+                                                        Radius.circular(5.0)),
                                               ),
                                               child: InkWell(
-                                                borderRadius: const BorderRadius.only(topRight: Radius.circular(5.0)),
-                                                splashColor: const Color(0xFFc74d4d).withOpacity(0.5), // splash color
+                                                borderRadius:
+                                                    const BorderRadius.only(
+                                                        topRight:
+                                                            Radius.circular(
+                                                                5.0)),
+                                                splashColor: const Color(
+                                                        0xFFc74d4d)
+                                                    .withOpacity(
+                                                        0.5), // splash color
                                                 onTap: () {
                                                   setState(() {
                                                     _replyid = 0;
@@ -382,7 +439,13 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                                 child: SizedBox(
                                                   height: _replyHeight,
                                                   child: Center(
-                                                    child: Text('x', style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 20.0)),
+                                                    child: Text('x',
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodyText2!
+                                                            .copyWith(
+                                                                fontSize:
+                                                                    20.0)),
                                                   ),
                                                 ),
                                               ),
@@ -394,31 +457,40 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 15.0, right: 5.0, bottom: 5.0),
+                                  padding: const EdgeInsets.only(
+                                      left: 15.0, right: 5.0, bottom: 5.0),
                                   child: Row(
                                     children: <Widget>[
                                       Expanded(
                                         child: TextField(
                                           autofocus: false,
-                                          textCapitalization: TextCapitalization.sentences,
+                                          textCapitalization:
+                                              TextCapitalization.sentences,
                                           controller: _textController,
                                           keyboardType: TextInputType.multiline,
                                           inputFormatters: <TextInputFormatter>[
-                                            LengthLimitingTextInputFormatter(720),
+                                            LengthLimitingTextInputFormatter(
+                                                720),
                                           ],
                                           textAlign: TextAlign.left,
                                           cursorColor: Colors.white70,
                                           style: Theme.of(context)
                                               .textTheme
                                               .headline5!
-                                              .copyWith(fontSize: 16.0, fontWeight: FontWeight.w600, color: Colors.white),
+                                              .copyWith(
+                                                  fontSize: 16.0,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white),
                                           decoration: const InputDecoration(
-                                            contentPadding: EdgeInsets.all(15.0),
+                                            contentPadding:
+                                                EdgeInsets.all(15.0),
                                             enabledBorder: UnderlineInputBorder(
-                                              borderSide: BorderSide(color: Colors.white30),
+                                              borderSide: BorderSide(
+                                                  color: Colors.white30),
                                             ),
                                             focusedBorder: UnderlineInputBorder(
-                                              borderSide: BorderSide(color: Colors.white),
+                                              borderSide: BorderSide(
+                                                  color: Colors.white),
                                             ),
                                           ),
                                           maxLines: null,
@@ -428,7 +500,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                       Align(
                                         alignment: Alignment.bottomCenter,
                                         child: Padding(
-                                          padding: const EdgeInsets.only(left: 5.0, top: 5.0),
+                                          padding: const EdgeInsets.only(
+                                              left: 5.0, top: 5.0),
                                           child: SizedBox(
                                             width: 55,
                                             height: 55,
@@ -439,9 +512,15 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                                 }
                                               },
                                               child: AnimatedSwitcher(
-                                                duration: const Duration(milliseconds: 200),
-                                                transitionBuilder: (Widget child, Animation<double> animation) {
-                                                  return ScaleTransition(scale: animation, child: child);
+                                                duration: const Duration(
+                                                    milliseconds: 200),
+                                                transitionBuilder:
+                                                    (Widget child,
+                                                        Animation<double>
+                                                            animation) {
+                                                  return ScaleTransition(
+                                                      scale: animation,
+                                                      child: child);
                                                 },
                                                 child: _switchWidget,
                                               ),
@@ -473,7 +552,8 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                         margin: const EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 20.0),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.15),
-                          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(15.0)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
@@ -494,7 +574,10 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                   overflow: TextOverflow.ellipsis,
                                   minFontSize: 16.0,
                                   textAlign: TextAlign.start,
-                                  style: Theme.of(context).textTheme.headline1!.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headline1!
+                                      .copyWith(
                                         fontSize: 24.0,
                                         color: Colors.white.withOpacity(0.85),
                                       )),
@@ -571,7 +654,9 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
       height: 50,
       child: Container(
         padding: const EdgeInsets.all(5.0),
-        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(5.0)), color: Colors.white10),
+        decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(5.0)),
+            color: Colors.white10),
         child: Image.asset(
           "images/logo_send.png",
           color: Colors.white70,

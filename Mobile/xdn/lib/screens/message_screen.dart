@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/widgets/MessageGroupTile.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get_it/get_it.dart';
@@ -56,6 +57,10 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
       setState(() {
         _messageGroup = AppDatabase().searchMessages(_controller.text);
       });
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _getMessages();
     });
   }
 
