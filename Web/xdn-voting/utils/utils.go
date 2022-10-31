@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/appleboy/go-fcm"
 	"github.com/bitly/go-simplejson"
 	"github.com/dgrijalva/jwt-go"
 	_ "github.com/go-sql-driver/mysql"
@@ -408,7 +409,6 @@ func Authorized(handler func(*fiber.Ctx) error) fiber.Handler {
 	}
 }
 
-// HashPass TODO FOR Login
 func HashPass(password string) string {
 	h := sha256.Sum256([]byte(password))
 	str := fmt.Sprintf("%x", h[:])
@@ -417,4 +417,33 @@ func HashPass(password string) string {
 
 func GetDaemon() *models.Daemon {
 	return &DaemonWallet
+}
+
+func SendMessage(token string, title string, body string) {
+	msg := &fcm.Message{
+		To:               token,
+		Priority:         "high",
+		ContentAvailable: true,
+		Data: map[string]interface{}{
+			"foo":    "bar",
+			"cringe": "cringe",
+		},
+		Notification: &fcm.Notification{
+			ChannelID: "xdn2",
+			Title:     title,
+			Body:      body,
+			Icon:      "@drawable/ic_notification",
+			Badge:     "1",
+		},
+	}
+
+	client, err := fcm.NewClient("AAAAHEj7Gkg:APA91bFW6pn_-elk4GquSDd11Vp5dDYiclZHiTrpr5um9_H-JiiKSt4oXCy7yP1MqxX2QgpwyyWdG-8AJZVakHuNv8PS6siZMZjoS59IMADrbfjQdTG5R4iZhIXhWP-5wjcTUIoJ78X3")
+	if err != nil {
+		ReportMessage(err.Error())
+	}
+
+	_, err = client.Send(msg)
+	if err != nil {
+		ReportMessage(err.Error())
+	}
 }

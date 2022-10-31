@@ -93,6 +93,20 @@ func DaemonStatus() {
 		return
 	}
 	daemonStatus.MasternodeCount = sum.Data[0].Masternodecount
+	daemonStatus.Difficulty = sum.Data[0].Difficulty
+	daemonStatus.HashRate = sum.Data[0].Hashrate
+	daemonStatus.CoinSupply = sum.Data[0].Supply
+
+	info, errBlock := coind.WrapDaemon(utils.DaemonWallet, 1, "getinfo")
+	if errBlock != nil {
+		utils.WrapErrorLog(errBlock.Error())
+		return
+	}
+
+	var inf models.GetInfo
+
+	err = json.Unmarshal(info, &inf)
+	daemonStatus.Version = inf.Version
 }
 
 func GetDaemonStatus() models.DaemonStatus {

@@ -88,11 +88,15 @@ type ListStakeRewards []struct {
 }
 
 type DaemonStatus struct {
-	Block           bool `json:"block"`
-	BlockStake      bool `json:"blockStake"`
-	WalletStake     bool `json:"stakingActive"`
-	BlockCount      int  `json:"blockCount"`
-	MasternodeCount int  `json:"masternodeCount"`
+	Block           bool    `json:"block"`
+	BlockStake      bool    `json:"blockStake"`
+	WalletStake     bool    `json:"stakingActive"`
+	BlockCount      int     `json:"blockCount"`
+	MasternodeCount int     `json:"masternodeCount"`
+	Difficulty      float64 `json:"difficulty"`
+	HashRate        string  `json:"hashRate"`
+	CoinSupply      float64 `json:"coinSupply"`
+	Version         string  `json:"version"`
 }
 
 type StakingInfo struct {
@@ -108,4 +112,29 @@ type StakingInfo struct {
 	Netstakeweight   int64   `json:"netstakeweight"`
 	Expectedtime     int     `json:"expectedtime"`
 	Stakethreshold   int     `json:"stakethreshold"`
+}
+
+type GetInfo struct {
+	Version         string  `json:"version"`
+	Protocolversion int     `json:"protocolversion"`
+	Walletversion   int     `json:"walletversion"`
+	Balance         float64 `json:"balance"`
+	Newmint         float64 `json:"newmint"`
+	Stake           float64 `json:"stake"`
+	Blocks          int     `json:"blocks"`
+	Timeoffset      int     `json:"timeoffset"`
+	Moneysupply     float64 `json:"moneysupply"`
+	Connections     int     `json:"connections"`
+	Proxy           string  `json:"proxy"`
+	IP              string  `json:"ip"`
+	Difficulty      struct {
+		ProofOfWork  float64 `json:"proof-of-work"`
+		ProofOfStake float64 `json:"proof-of-stake"`
+	} `json:"difficulty"`
+	Testnet       bool    `json:"testnet"`
+	Keypoololdest int     `json:"keypoololdest"`
+	Keypoolsize   int     `json:"keypoolsize"`
+	Paytxfee      float64 `json:"paytxfee"`
+	Mininput      float64 `json:"mininput"`
+	Errors        string  `json:"errors"`
 }

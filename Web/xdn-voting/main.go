@@ -314,11 +314,12 @@ func sendMessage(c *fiber.Ctx) error {
 	if len(userID) == 0 {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
 	}
-	var data struct {
+	type dataReq struct {
 		AddrTo  string `json:"addr"`
 		Text    string `json:"text"`
 		IDReply int    `json:"idReply"`
 	}
+	var data dataReq
 	err := c.BodyParser(&data)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
@@ -327,13 +328,40 @@ func sendMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	//now := time.Now().UTC().Unix()
-	//convert to sql timestamp
-	//timestamp := time.Unix(now, 0).Format("2006-01-02 15:04:05")
 	_, err = database.InsertSQl("INSERT INTO messages (sentAddr, receiveAddr, text, direction, idReply) VALUES (?, ?, ?, ?, ?)", addrFrom, data.AddrTo, data.Text, "out", data.IDReply)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
+	go func(data dataReq, usedID string) {
+		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.AddrTo)
+		if userTo.Valid {
+			nameFrom, err := database.ReadValue[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, addrFrom)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			userTo := database.ReadValueEmpty[int64]("SELECT id FROM users WHERE addr = ?", data.AddrTo)
+			type Token struct {
+				Token string `json:"token"`
+			}
+			tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", userTo)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			if nameFrom.Valid {
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Message from %s", nameFrom.String), data.Text)
+					}
+				}
+			} else {
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Incoming message from %s", addrFrom), data.Text)
+					}
+				}
+			}
+		}
+	}(data, userID)
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
@@ -546,11 +574,12 @@ func sendContactTransaction(c *fiber.Ctx) error {
 	if len(userID) == 0 {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
 	}
-	var data struct {
+	type dataReq struct {
 		Address string  `json:"address"`
 		Amount  float64 `json:"amount"`
 		Contact string  `json:"contact"`
 	}
+	var data dataReq
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
 	}
@@ -566,6 +595,37 @@ func sendContactTransaction(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Wallet problem, try again later", fiber.StatusConflict)
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", data.Contact, tx, "send")
+
+	go func(data dataReq, addrSend string) {
+		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.Address)
+		if userTo.Valid {
+			nameFrom, err := database.ReadValue[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, addrSend)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			userTo := database.ReadValueEmpty[int64]("SELECT id FROM users WHERE addr = ?", data.Address)
+			type Token struct {
+				Token string `json:"token"`
+			}
+			tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", userTo)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			if nameFrom.Valid {
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Transaction from %s", nameFrom.String), fmt.Sprintf("%3f XDN", data.Amount))
+					}
+				}
+			} else {
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Incoming transaction from %s", addrSend), fmt.Sprintf("%3f XDN", data.Amount))
+					}
+				}
+			}
+		}
+	}(data, addrSend)
 	return c.JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
@@ -577,10 +637,11 @@ func sendTransaction(c *fiber.Ctx) error {
 	if len(userID) == 0 {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
 	}
-	var data struct {
+	type dataReq struct {
 		Address string  `json:"address"`
 		Amount  float64 `json:"amount"`
 	}
+	var data dataReq
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
 	}
@@ -595,6 +656,36 @@ func sendTransaction(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, "Wallet problem, try again later", fiber.StatusConflict)
 	}
+	go func(data dataReq, addrSend string) {
+		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.Address)
+		if userTo.Valid {
+			nameFrom, err := database.ReadValue[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, addrSend)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			userTo := database.ReadValueEmpty[int64]("SELECT id FROM users WHERE addr = ?", data.Address)
+			type Token struct {
+				Token string `json:"token"`
+			}
+			tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", userTo)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			if nameFrom.Valid {
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Transaction from %s", nameFrom.String), fmt.Sprintf("%.3f XDN", data.Amount))
+					}
+				}
+			} else {
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Incoming transaction from %s", addrSend), fmt.Sprintf("%3f XDN", data.Amount))
+					}
+				}
+			}
+		}
+	}(data, addrSend)
 	return c.JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
