@@ -16,6 +16,7 @@ require (
 	github.com/joho/sqltocsv v0.0.0-20210428211105-a6d6801d59df
 	github.com/pquerna/otp v1.3.0
 	github.com/simplereach/timeutils v1.2.0
+	github.com/tealeg/xlsx v1.0.5
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 
@@ -33,7 +34,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
-	github.com/tealeg/xlsx v1.0.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.41.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect

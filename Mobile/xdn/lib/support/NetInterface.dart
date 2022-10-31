@@ -247,30 +247,6 @@ class NetInterface {
     }
   }
 
-  static Future<GetInfo?> getInfo() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${globals.SERVER_URL}/getinfo'),
-        headers: {"Content-Type": "application/json"},
-      ).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        var gi = GetInfo.fromJson(jsonDecode(response.body));
-        return gi;
-      } else {
-        return null;
-      }
-    } on TimeoutException catch (_) {
-      if (kDebugMode) print('Service unreachable');
-      return null;
-    } on SocketException catch (_) {
-      if (kDebugMode) print('No internet');
-      return null;
-    } catch (e) {
-      if (kDebugMode) print(e.toString());
-      return null;
-    }
-  }
-
 
   static Future<int> saveMessages(String address, int idMax) async {
     try {

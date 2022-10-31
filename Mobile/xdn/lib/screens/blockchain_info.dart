@@ -1,7 +1,10 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/models/get_info.dart';
 import 'package:digitalnote/models/summary.dart';
+import 'package:digitalnote/support/Utils.dart';
+import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +20,7 @@ class BlockInfoScreen extends StatefulWidget {
 }
 
 class _BlockInfoScreenState extends State<BlockInfoScreen> {
-  GetInfo? getInfo;
-  Sumry? sumry;
+  DaemonStatus? dm;
 
   @override
   void initState() {
@@ -26,8 +28,20 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
     getInfoGet();
   }
 
+  Future<DaemonStatus> getDaemonStatus() async {
+    try {
+      ComInterface cm = ComInterface();
+      Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug:true);
+      DaemonStatus dm = DaemonStatus.fromJson(req['data']);
+      return dm;
+    } catch (e) {
+      debugPrint(e.toString());
+      return DaemonStatus(block: false, blockStake: false, stakingActive: false);
+    }
+  }
+
   getInfoGet() async {
-    getInfo = await NetInterface.getInfo();
+    dm = await getDaemonStatus();
     setState(() {});
   }
 
@@ -79,7 +93,7 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                               Align(
                                 alignment: Alignment.center,
                                 child: AutoSizeText(
-                                  getInfo?.version.toString() ?? '',
+                                  dm?.version ?? '',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
                                 ),
@@ -96,7 +110,7 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                               Align(
                                 alignment: Alignment.center,
                                 child: AutoSizeText(
-                                  getInfo?.blocks.toString() ?? '',
+                                  dm?.blockCount.toString() ?? '',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
                                 ),
@@ -113,7 +127,7 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                               Align(
                                 alignment: Alignment.center,
                                 child: AutoSizeText(
-                                  sumry?.data?[0].masternodecount.toString() ?? '',
+                                  dm?.masternodeCount.toString() ?? '',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
                                 ),
@@ -130,7 +144,7 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                               Align(
                                 alignment: Alignment.center,
                                 child: AutoSizeText(
-                                  sumry?.data?[0].difficulty.toString() ?? '',
+                                  dm?.difficulty.toString() ?? '',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
                                 ),
@@ -147,7 +161,7 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                               Align(
                                 alignment: Alignment.center,
                                 child: AutoSizeText(
-                                  "${sumry?.data?[0].hashrate} GH/s",
+                                  "${dm?.hashrate} GH/s",
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
                                 ),
@@ -163,7 +177,7 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                               Align(
                                 alignment: Alignment.center,
                                 child: AutoSizeText(
-                                  "${sumry?.data?[0].supply} XDN",
+                                  "${Utils.formatBalance(dm?.coinSupply ?? 0)} XDN",
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
                                 ),

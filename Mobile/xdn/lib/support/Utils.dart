@@ -115,6 +115,8 @@ class Utils {
       return '${nf.format(number / 1000)}k';
     } else if ((number / 1000000) > 1 && (number / 1000000) < 1000) {
       return '${nf.format(number / 1000000)}m';
+    } else if ((number / 1000000000) > 1 && (number / 1000000000) < 1000) {
+      return '${nf.format(number / 1000000)}b';
     } else {
       return number.toString();
     }

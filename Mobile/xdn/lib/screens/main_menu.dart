@@ -146,10 +146,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   Future<DaemonStatus> getDaemonStatus() async {
     try {
-      // Map<String, dynamic> m = {
-      //   "request": "getDaemonStatus",
-      // };
-
       Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug:true);
       DaemonStatus dm = DaemonStatus.fromJson(req['data']);
       return dm;

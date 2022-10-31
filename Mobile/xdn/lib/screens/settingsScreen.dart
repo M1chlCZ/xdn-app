@@ -12,6 +12,7 @@ import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/models/get_info.dart';
 import 'package:digitalnote/support/Utils.dart';
+import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
 import 'package:digitalnote/widgets/card_header.dart';
@@ -52,7 +53,7 @@ class _SettingsState extends State<SettingsScreen> {
   var twoFactor = false;
   var settingUP = false;
   var run = false;
-  GetInfo? getInfo;
+  DaemonStatus? getInfo;
   String? tempPass;
 
   @override
@@ -81,8 +82,17 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   _getInfoGet() async {
-    getInfo = await NetInterface.getInfo();
-    setState(() {});
+    try {
+      ComInterface cm = ComInterface();
+      Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug:true);
+      DaemonStatus dm = DaemonStatus.fromJson(req['data']);
+      setState(() {
+        getInfo = dm;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+return null;
+    }
   }
 
   void _saveFile() async {

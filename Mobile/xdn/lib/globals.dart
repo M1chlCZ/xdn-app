@@ -3,7 +3,6 @@
 library digitalnote.globals;
 
 bool isLoggedIn = false;
-const String SERVER_URL = 'http://194.60.201.213:3000';
 const String DAO_URL = 'https://dex.digitalnote.org/api/dao/v1';
 const String API_URL = 'https://dex.digitalnote.org/api/api/v1';
 const String USERNAME = "username";

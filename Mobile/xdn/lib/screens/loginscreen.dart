@@ -44,7 +44,7 @@ class _LoginState extends State<LoginPage> {
   String? login;
   String? pass;
   var rr = false;
-  GetInfo? getInfo;
+  bool online =false;
 
   void _checkSendEmail(String nickname) {
     Navigator.of(context).pop();
@@ -59,8 +59,15 @@ class _LoginState extends State<LoginPage> {
   }
 
   _getInfoGet() async {
-    getInfo = await NetInterface.getInfo();
-    setState(() {});
+    ComInterface cm = ComInterface();
+    try {
+      await cm.get("/ping", serverType: ComInterface.serverGoAPI);
+      setState(() {
+        online = true;
+      });
+    }catch(e){
+      print(e);
+    }
   }
 
   Future<String?> _attemptResetPass(String nickname) async {
@@ -386,7 +393,7 @@ class _LoginState extends State<LoginPage> {
                                   Icon(
                                     Icons.circle,
                                     size: 10.0,
-                                    color: getInfo != null ? Colors.green : Colors.red,
+                                    color: online ? Colors.green : Colors.red,
                                   ),
                                 ],
                               ),

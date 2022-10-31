@@ -113,6 +113,13 @@ func main() {
 
 	app.Get("api/v1/status", utils.Authorized(getStatus))
 
+	app.Get("api/v1/ping", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	})
+
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadGateway).JSON(&fiber.Map{
 			utils.ERROR:  true,
@@ -1423,9 +1430,6 @@ func getStakeGraph(c *fiber.Ctx) error {
 
 	if stakeReq.Type == 0 {
 		sqlQuery = `SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN ? AND date_add(?, INTERVAL 24 HOUR) AND idUser = ? AND credited = 0 GROUP BY hour, day ORDER BY hour`
-		//sqlDebugQuery := fmt.Sprintf(`SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake2 WHERE datetime BETWEEN %s AND date_add(%s, INTERVAL 24 HOUR) AND idCoin = %d AND idUser = %s AND credited = 0 GROUP BY hour, day "+
-		//	"ORDER BY hour", timez, timez, stakeReq.IdCoin, userID)
-		//utils.ReportMessage(sqlDebugQuery)
 		s, errDB = database.ReadSql(sqlQuery, timez, timez, userID)
 	} else if stakeReq.Type == 1 {
 		sqlQuery = "SELECT date(datetime) as day, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN  date_sub(?, INTERVAL 1 WEEK) AND ? AND idUser = ? GROUP BY day"
@@ -1482,7 +1486,7 @@ func getTokenBalance(c *fiber.Ctx) error {
 			//return utils.ReportError(c, "No address", http.StatusBadRequest)
 			continue
 		}
-		balance, err := web3.GetContractBalance(string(v.Addr))
+		balance, err := web3.GetContractBalance(v.Addr)
 		if err != nil {
 			//return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 			continue
@@ -1519,10 +1523,10 @@ func getTokenTX(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	blc := 0.0
-	asdf := ""
+	add := ""
 	if len(addr) > 0 {
 		for _, v := range addr {
-			address := string(v.Addr)
+			address := v.Addr
 			if len(address) == 0 {
 				continue
 			}
@@ -1532,7 +1536,7 @@ func getTokenTX(c *fiber.Ctx) error {
 				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 			}
 			blc += balance
-			asdf = address
+			add = address
 		}
 	} else {
 		return utils.ReportError(c, "No user addresses in the db", http.StatusConflict)
@@ -1541,7 +1545,7 @@ func getTokenTX(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
-		"addr":       asdf,
+		"addr":       add,
 		"bal":        blc,
 		"tx":         db,
 	})

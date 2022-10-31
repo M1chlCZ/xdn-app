@@ -32,13 +32,13 @@ class ComInterface {
 
     var mUrl = "";
     if (!wholeURL) {
-      mUrl = globals.SERVER_URL + url;
+      mUrl = globals.API_URL + url;
     } else {
       mUrl = url;
     }
 
     if (serverType == serverAPI) {
-      mUrl = globals.SERVER_URL + url;
+      mUrl = globals.API_URL + url;
       bearer = jwt ?? "";
       payload = encryptAESCryptoJS(json.encode(request!), "rp9ww*jK8KX_!537e%Crmf");
     } else if (serverType == serverDAO) {
@@ -124,9 +124,9 @@ class ComInterface {
     dynamic responseJson;
     http.Response response;
 
-    var mUrl = globals.SERVER_URL + url;
+    var mUrl = globals.API_URL + url;
     if (serverType == serverAPI) {
-      mUrl = globals.SERVER_URL + url;
+      mUrl = globals.DAO_URL + url;
       bearer = jwt ?? "";
       payload = encryptAESCryptoJS(json.encode(request!), "rp9ww*jK8KX_!537e%Crmf");
     } else if (serverType == serverDAO) {
