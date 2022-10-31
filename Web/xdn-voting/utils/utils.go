@@ -419,15 +419,12 @@ func GetDaemon() *models.Daemon {
 	return &DaemonWallet
 }
 
-func SendMessage(token string, title string, body string) {
+func SendMessage(token string, title string, body string, data map[string]interface{}) {
 	msg := &fcm.Message{
 		To:               token,
 		Priority:         "high",
 		ContentAvailable: true,
-		Data: map[string]interface{}{
-			"foo":    "bar",
-			"cringe": "cringe",
-		},
+		Data:             data,
 		Notification: &fcm.Notification{
 			ChannelID: "xdn2",
 			Title:     title,

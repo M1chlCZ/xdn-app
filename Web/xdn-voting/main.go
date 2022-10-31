@@ -333,6 +333,10 @@ func sendMessage(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	go func(data dataReq, usedID string) {
+		d := map[string]interface{}{
+			"func": "sendMessage",
+			"from": addrFrom,
+		}
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.AddrTo)
 		if userTo.Valid {
 			nameFrom, err := database.ReadValue[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, addrFrom)
@@ -350,13 +354,13 @@ func sendMessage(c *fiber.Ctx) error {
 			if nameFrom.Valid {
 				if len(tk) > 0 {
 					for _, v := range tk {
-						utils.SendMessage(v.Token, fmt.Sprintf("Message from %s", nameFrom.String), data.Text)
+						utils.SendMessage(v.Token, fmt.Sprintf("Message from %s", nameFrom.String), data.Text, d)
 					}
 				}
 			} else {
 				if len(tk) > 0 {
 					for _, v := range tk {
-						utils.SendMessage(v.Token, fmt.Sprintf("Incoming message from %s", addrFrom), data.Text)
+						utils.SendMessage(v.Token, fmt.Sprintf("Incoming message from %s", addrFrom), data.Text, d)
 					}
 				}
 			}
@@ -597,6 +601,9 @@ func sendContactTransaction(c *fiber.Ctx) error {
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", data.Contact, tx, "send")
 
 	go func(data dataReq, addrSend string) {
+		d := map[string]interface{}{
+			"func": "sendContactTransaction",
+		}
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.Address)
 		if userTo.Valid {
 			nameFrom, err := database.ReadValue[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, addrSend)
@@ -614,13 +621,13 @@ func sendContactTransaction(c *fiber.Ctx) error {
 			if nameFrom.Valid {
 				if len(tk) > 0 {
 					for _, v := range tk {
-						utils.SendMessage(v.Token, fmt.Sprintf("Transaction from %s", nameFrom.String), fmt.Sprintf("%3f XDN", data.Amount))
+						utils.SendMessage(v.Token, fmt.Sprintf("Transaction from %s", nameFrom.String), fmt.Sprintf("%3f XDN", data.Amount), d)
 					}
 				}
 			} else {
 				if len(tk) > 0 {
 					for _, v := range tk {
-						utils.SendMessage(v.Token, fmt.Sprintf("Incoming transaction from %s", addrSend), fmt.Sprintf("%3f XDN", data.Amount))
+						utils.SendMessage(v.Token, fmt.Sprintf("Incoming transaction from %s", addrSend), fmt.Sprintf("%3f XDN", data.Amount), d)
 					}
 				}
 			}
@@ -657,6 +664,9 @@ func sendTransaction(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Wallet problem, try again later", fiber.StatusConflict)
 	}
 	go func(data dataReq, addrSend string) {
+		d := map[string]interface{}{
+			"func": "sendTransaction",
+		}
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.Address)
 		if userTo.Valid {
 			nameFrom, err := database.ReadValue[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, addrSend)
@@ -674,13 +684,13 @@ func sendTransaction(c *fiber.Ctx) error {
 			if nameFrom.Valid {
 				if len(tk) > 0 {
 					for _, v := range tk {
-						utils.SendMessage(v.Token, fmt.Sprintf("Transaction from %s", nameFrom.String), fmt.Sprintf("%.3f XDN", data.Amount))
+						utils.SendMessage(v.Token, fmt.Sprintf("Transaction from %s", nameFrom.String), fmt.Sprintf("%.3f XDN", data.Amount), d)
 					}
 				}
 			} else {
 				if len(tk) > 0 {
 					for _, v := range tk {
-						utils.SendMessage(v.Token, fmt.Sprintf("Incoming transaction from %s", addrSend), fmt.Sprintf("%3f XDN", data.Amount))
+						utils.SendMessage(v.Token, fmt.Sprintf("Incoming transaction from %s", addrSend), fmt.Sprintf("%3f XDN", data.Amount), d)
 					}
 				}
 			}
