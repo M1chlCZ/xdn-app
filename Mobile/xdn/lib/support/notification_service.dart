@@ -50,6 +50,11 @@ class NotificationService {
     final DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(onDidReceiveLocalNotification: _onDidReceiveLocalNotification);
     final InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
     await flutterLocalNotificationsPlugin.initialize(initializationSettings,  onDidReceiveNotificationResponse: _onDidReceiveLocalNotificationResponse);
+
+  }
+
+  FlutterLocalNotificationsPlugin getPlugin() {
+    return flutterLocalNotificationsPlugin;
   }
 
   // void _registerNotification() async {

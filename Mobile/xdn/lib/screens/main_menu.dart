@@ -98,15 +98,30 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     }
   }
 
-  getNotification() {
+  getNotification() async {
+    RemoteMessage? initialMessage =
+    await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      if (initialMessage.data['func'] == "sendMessage") {
+        String sentAddr = initialMessage.data['fr'];
+        String? contact = await db.getContactNameByAddr(sentAddr);
+        MessageGroup m = MessageGroup(
+            sentAddr: contact ?? sentAddr, sentAddressOrignal: sentAddr);
+        if (mounted) Navigator.pushNamed(context, MessageDetailScreen.route, arguments: m);
+        return;
+      }
+    }
+
     FirebaseMessaging.onMessageOpenedApp.listen((message) async {
       if (message.data['func'] == "sendMessage") {
         String sentAddr = message.data['fr'];
         String? contact = await db.getContactNameByAddr(sentAddr);
         MessageGroup m = MessageGroup(sentAddr: contact ?? sentAddr, sentAddressOrignal: sentAddr);
-        if(mounted) Navigator.pushNamed(context, MessageDetailScreen.route, arguments: m);
+        if (mounted) Navigator.pushNamed(context, MessageDetailScreen.route, arguments: m);
+
       }
     });
+
   }
 
   getPriceData() async {
