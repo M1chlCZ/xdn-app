@@ -781,7 +781,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
     };
 
     try {
-      await interface.post("/contest/vote", debug: true, serverType: ComInterface.serverDAO, body: {
+      await interface.post("/contest/vote", debug: false, serverType: ComInterface.serverDAO, body: {
         "idEntry": idEntry,
         "amount": amount,
       }, request: {});
@@ -794,7 +794,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
 
   Future<bool> saveAddress(String address) async {
     try {
-      await interface.post("/user/address/add", debug: true, serverType: ComInterface.serverDAO, body: {
+      await interface.post("/user/address/add", debug: false, serverType: ComInterface.serverDAO, body: {
         "address": address,
       }, request: {});
       return true;

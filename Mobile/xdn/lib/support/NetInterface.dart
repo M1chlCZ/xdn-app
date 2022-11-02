@@ -27,7 +27,7 @@ class NetInterface {
     try {
       ComInterface interface = ComInterface();
       Response response = await interface.post("/avatar/upload",
-          body: {"file": base64}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+          body: {"file": base64}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
 
       if (response.statusCode == 200) {
       } else {
@@ -47,7 +47,7 @@ class NetInterface {
     try {
       ComInterface interface = ComInterface();
       Response response = await interface.get("/user/xls",
-          body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+          body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
 
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
@@ -101,7 +101,7 @@ class NetInterface {
     try {
       ComInterface interface = ComInterface();
       Response response = await interface.post("/avatar",
-          body: {"address": addr}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+          body: {"address": addr}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
       if (response.statusCode == 200) {
         var s = json.decode(response.body);
         return s['avatar'];
@@ -121,7 +121,7 @@ class NetInterface {
     ComInterface interface = ComInterface();
     try {
     await interface.post("/firebase",
-        body: {"token": token, "platform": Platform.isAndroid ? "A" : "I"}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+        body: {"token": token, "platform": Platform.isAndroid ? "A" : "I"}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
     } on TimeoutException catch (_) {
       if (kDebugMode) print('Service unreachable');
     } on SocketException catch (_) {
@@ -257,7 +257,7 @@ class NetInterface {
       };
       ComInterface ci = ComInterface();
       Map<String, dynamic> res = await ci.post("/user/messages",
-          body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+          body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
       List<dynamic> response = res["data"];
       List<Message> l = response.map((data) => Message.fromJson(data)).toList();
       int i = await AppDatabase().addMessages(l);
@@ -319,7 +319,7 @@ class NetInterface {
 
       ComInterface ci = ComInterface();
       Map<String, dynamic> res = await ci.post("/user/messages/likes",
-          body:m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+          body:m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
 
       int i = int.parse(res['likes'].toString().trim());
       await AppDatabase().updateMessageLikes(id, i);
@@ -367,7 +367,7 @@ class NetInterface {
         "text": text,
       };
       ComInterface ci = ComInterface();
-      await ci.post("/user/messages/send", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+      await ci.post("/user/messages/send", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
       await AppDatabase().updateMessageGroupRead(addr!, address);
 
     } on TimeoutException catch (_) {
@@ -384,7 +384,7 @@ class NetInterface {
 
       ComInterface interface = ComInterface();
       Response response = await interface.post("/user/send/contact",
-          body: {"address": addr, "contact": name, "amount": double.parse(amount)}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+          body: {"address": addr, "contact": name, "amount": double.parse(amount)}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
 
       if (response.statusCode == 200) {
         return 1;
@@ -420,7 +420,7 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.post("/staking/set", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: true);
+      Response response = await ci.post("/staking/set", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: false);
 
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       // final response = await http.get(Uri.parse('${globals.SERVER_URL}/data'), headers: {
@@ -462,7 +462,7 @@ class NetInterface {
         "type": type,
       };
       ComInterface ci = ComInterface();
-      Response response = await ci.post("/staking/unset", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: true);
+      Response response = await ci.post("/staking/unset", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: false);
 
       // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
       //
@@ -556,7 +556,7 @@ class NetInterface {
           "name": nickname,
         };
         ComInterface ci = ComInterface();
-        var response = await ci.post("/user/rename", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: true);
+        var response = await ci.post("/user/rename", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: false);
         if (response.statusCode == 200) {
           globals.reloadData = true;
 
@@ -595,7 +595,7 @@ class NetInterface {
       };
 
       ComInterface ci = ComInterface();
-      Response response = await ci.post("/password/change", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+      Response response = await ci.post("/password/change", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
 
 
       if (response.statusCode == 200) {
@@ -650,7 +650,7 @@ class NetInterface {
         "datetime": type == 1 ? DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()) : Utils.getUTC()
       };
 
-      String? rs = await interface.post("/staking/graph", debug: true, type: ComInterface.typePlain,
+      String? rs = await interface.post("/staking/graph", debug: false, type: ComInterface.typePlain,
           serverType: ComInterface.serverDAO, body: m);
       return rs;
     }catch(e){
@@ -662,7 +662,7 @@ class NetInterface {
   static Future<Map?> deleteAccount() async {
     try {
       ComInterface ci = ComInterface();
-      await ci.post("/user/delete", body: {}, type: ComInterface.typeJson, serverType: ComInterface.serverGoAPI, debug: true);
+      await ci.post("/user/delete", body: {}, type: ComInterface.typeJson, serverType: ComInterface.serverGoAPI, debug: false);
       return {"status": "ok"};
     } on TimeoutException catch (_) {
       return null;
@@ -677,7 +677,7 @@ class NetInterface {
   static Future<bool> daoLogin() async {
     try {
       ComInterface ci = ComInterface();
-    Response r =  await ci.get("/ping", debug: true, serverType: ComInterface.serverDAO, type: ComInterface.typePlain, request: {});
+    Response r =  await ci.get("/ping", debug: false, serverType: ComInterface.serverDAO, type: ComInterface.typePlain, request: {});
     if (r.statusCode == 200) {
       return true;
     }else{
@@ -697,7 +697,7 @@ class NetInterface {
   static Future<bool> checkContest() async {
     try {
       ComInterface ci = ComInterface();
-      await ci.get("/contest/check", debug: true, serverType: ComInterface.serverDAO, request: {});
+      await ci.get("/contest/check", debug: false, serverType: ComInterface.serverDAO, request: {});
       return true;
     }on UnauthorisedException catch (e) {
       if (kDebugMode) print(e.toString());
@@ -712,7 +712,7 @@ class NetInterface {
     try {
       String? jwt = await SecureStorage.read(key: globals.TOKEN);
       ComInterface ci = ComInterface();
-      Map response = await ci.post("/login", debug: true, serverType: ComInterface.serverDAO, body: {"token": jwt}, request: {});
+      Map response = await ci.post("/login", debug: false, serverType: ComInterface.serverDAO, body: {"token": jwt}, request: {});
       if(response["token"] != null) {
         var token = response["token"];
         debugPrint("| Dao Register success : ${token.toString()} |");

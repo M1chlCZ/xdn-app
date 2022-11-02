@@ -4,10 +4,10 @@ PODS:
   - Firebase/Messaging (10.0.0):
     - Firebase/CoreOnly
     - FirebaseMessaging (~> 10.0.0)
-  - firebase_core (2.1.0):
+  - firebase_core (2.1.1):
     - Firebase/CoreOnly (= 10.0.0)
     - Flutter
-  - firebase_messaging (14.0.2):
+  - firebase_messaging (14.0.3):
     - Firebase/Messaging (= 10.0.0)
     - firebase_core
     - Flutter
@@ -130,7 +130,7 @@ PODS:
     - nanopb/encode (= 2.30909.0)
   - nanopb/decode (2.30909.0)
   - nanopb/encode (2.30909.0)
-  - open_file (0.0.1):
+  - open_file_safe (0.0.1):
     - Flutter
   - package_info (0.0.1):
     - Flutter
@@ -169,7 +169,7 @@ DEPENDENCIES:
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - local_auth_ios (from `.symlinks/plugins/local_auth_ios/ios`)
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/ios`)
-  - open_file (from `.symlinks/plugins/open_file/ios`)
+  - open_file_safe (from `.symlinks/plugins/open_file_safe/ios`)
   - package_info (from `.symlinks/plugins/package_info/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -235,8 +235,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/local_auth_ios/ios"
   mobile_scanner:
     :path: ".symlinks/plugins/mobile_scanner/ios"
-  open_file:
-    :path: ".symlinks/plugins/open_file/ios"
+  open_file_safe:
+    :path: ".symlinks/plugins/open_file_safe/ios"
   package_info:
     :path: ".symlinks/plugins/package_info/ios"
   path_provider_ios:
@@ -254,8 +254,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Firebase: 1b810f3d0c0532e27a48f1961f8c0400a668a2cf
-  firebase_core: 9f457751caed72a30d23be90eb72de6ccbd1f9b0
-  firebase_messaging: 169ae56e5d64013d605b954b43e1b928a9170471
+  firebase_core: 5c0bb0ca7d0e70480a68a6e9ad9bf55d1edd5305
+  firebase_messaging: 46616a7ded661b632eb7a28846d906849c8b15af
   FirebaseCore: 97f48a3a567a72b8d4daa0f03c3aadb78df4e995
   FirebaseCoreInternal: 96d75228e10fd369564da51bd898414eb0f54df5
   FirebaseInstallations: 99d24bac0243cf8b0e96cf5426340d211f0bcc80
@@ -286,7 +286,7 @@ SPEC CHECKSUMS:
   MLKitVision: e87dc3f2e456a6ab32361ebd985e078dd2746143
   mobile_scanner: 073e39c0c96360297389f4db68e4297a1fa58349
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
-  open_file: 02eb5cb6b21264bd3a696876f5afbfb7ca4f4b7d
+  open_file_safe: 84c01ac91378bd9166ab570d7f22f4fb3532141a
   package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
   permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce

@@ -67,10 +67,9 @@ void main() async {
   setupLocator();
   await NotificationService().init();
   FCM().setNotifications();
-
   runApp(
     Phoenix(
-      child: const MaterialApp(home: MyApp(),),
+      child: const MyApp(),
     ),
   );
 }

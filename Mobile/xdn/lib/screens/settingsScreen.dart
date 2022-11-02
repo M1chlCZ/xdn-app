@@ -10,8 +10,6 @@ import 'package:digitalnote/screens/loginscreen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/models/get_info.dart';
-import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
@@ -25,7 +23,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_file_safe/open_file_safe.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -68,7 +66,7 @@ class _SettingsState extends State<SettingsScreen> {
     try {
       ComInterface ci = ComInterface();
       Map<String, dynamic> m = await ci.get("/twofactor/check",
-          request: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+          request: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
       Future.delayed(Duration.zero, () {
         setState(() {
           twoFactor = m['twoFactor'];
@@ -1003,7 +1001,7 @@ return null;
     try {
       ComInterface interface = ComInterface();
       Map<String, dynamic> m = await interface.post("/twofactor",
-          body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+          body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
 
       _set2FA(m['code']);
     } catch (e) {
@@ -1024,7 +1022,7 @@ return null;
       try {
         ComInterface interface = ComInterface();
         http.Response res = await interface.post("/twofactor/activate",
-            body: {"code": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+            body: {"code": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
         if (res.statusCode == 200) {
           if (mounted) Navigator.of(context).pop();
           setState(() {
@@ -1052,7 +1050,7 @@ return null;
     try {
       ComInterface interface = ComInterface();
       http.Response res = await interface.post("/twofactor/remove",
-          body: {"token": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+          body: {"token": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
       if (res.statusCode == 200) {
         setState(() {
           twoFactor = false;

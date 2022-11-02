@@ -76,7 +76,7 @@ class _LoginState extends State<LoginPage> {
           body: m,
           serverType: ComInterface.serverGoAPI,
           type: ComInterface.typePlain,
-          debug: true);
+          debug: false);
       if (res.statusCode == 200) {
         if (mounted) {
           Navigator.of(context).pop();
@@ -124,7 +124,7 @@ class _LoginState extends State<LoginPage> {
           body: m,
           serverType: ComInterface.serverGoAPI,
           type: ComInterface.typePlain,
-          debug: true);
+          debug: false);
 
       // var res = await http.post(Uri.parse("$serverIP/login"), headers: {
       //   "Content-Type": "application/json",

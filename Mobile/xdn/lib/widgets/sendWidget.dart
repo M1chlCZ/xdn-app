@@ -99,7 +99,7 @@ class SendWidgetState extends State<SendWidget> {
 
       ComInterface interface = ComInterface();
       await interface.post(method,
-          body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+          body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
       setState(() {
         wait = false;
         succ = true;

@@ -1,3 +1,4 @@
 api
 /.cert/
 /utils/config.go
+/firebase/

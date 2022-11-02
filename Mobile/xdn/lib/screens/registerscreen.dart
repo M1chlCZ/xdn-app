@@ -49,7 +49,7 @@ class _RegisterState extends State<RegisterScreen> {
       };
 
       ComInterface ci = ComInterface();
-      var response = await ci.post("/register", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: true);
+      var response = await ci.post("/register", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: false);
 
       return response.statusCode;
     } on TimeoutException catch (_) {

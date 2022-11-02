@@ -241,7 +241,7 @@ class _TokenScreenState extends State<TokenScreen> {
 
   Future<bool> saveAddress(String address) async {
     try {
-      await interface.post("/user/address/add", debug: true, serverType: ComInterface.serverDAO, body: {
+      await interface.post("/user/address/add", debug: false, serverType: ComInterface.serverDAO, body: {
         "address": address,
       }, request: {});
       return true;

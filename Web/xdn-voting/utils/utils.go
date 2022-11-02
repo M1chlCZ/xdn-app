@@ -2,16 +2,19 @@ package utils
 
 import (
 	"bufio"
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	firebase2 "firebase.google.com/go"
+	"firebase.google.com/go/messaging"
 	"fmt"
-	"github.com/appleboy/go-fcm"
 	"github.com/bitly/go-simplejson"
 	"github.com/dgrijalva/jwt-go"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	"google.golang.org/api/option"
 	"io"
 	_ "io/ioutil"
 	"log"
@@ -419,28 +422,42 @@ func GetDaemon() *models.Daemon {
 	return &DaemonWallet
 }
 
-func SendMessage(token string, title string, body string, data map[string]interface{}) {
-	msg := &fcm.Message{
-		To:               token,
-		Priority:         "high",
-		ContentAvailable: true,
-		Data:             data,
-		Notification: &fcm.Notification{
-			ChannelID: "xdn2",
-			Title:     title,
-			Body:      body,
-			Icon:      "@drawable/ic_notification",
-			Badge:     "1",
+func SendMessage(token string, title string, body string, data map[string]string) {
+	opts := []option.ClientOption{option.WithCredentialsFile("xdn-project.json")}
+	c := &firebase2.Config{
+		ProjectID: "xdn-project",
+	}
+	firebase, err := firebase2.NewApp(context.Background(), c, opts...)
+	if err != nil {
+		WrapErrorLog(err.Error())
+		return
+	}
+	mess, err := firebase.Messaging(context.Background())
+	if err != nil {
+		WrapErrorLog(err.Error())
+		return
+	}
+	_, err = mess.Send(context.Background(), &messaging.Message{
+		Notification: &messaging.Notification{
+			Title: title,
+			Body:  body,
 		},
-	}
+		Android: &messaging.AndroidConfig{
+			Priority: "high",
+			Data:     data,
+			Notification: &messaging.AndroidNotification{
+				ChannelID: "xdn1",
+				Title:     title,
+				Body:      body,
+				Icon:      "@drawable/ic_notification",
+			},
+		},
+		Data:  data,
+		Token: token, // a token that you received from a client
+	})
 
-	client, err := fcm.NewClient("AAAAHEj7Gkg:APA91bFW6pn_-elk4GquSDd11Vp5dDYiclZHiTrpr5um9_H-JiiKSt4oXCy7yP1MqxX2QgpwyyWdG-8AJZVakHuNv8PS6siZMZjoS59IMADrbfjQdTG5R4iZhIXhWP-5wjcTUIoJ78X3")
 	if err != nil {
-		ReportMessage(err.Error())
-	}
-
-	_, err = client.Send(msg)
-	if err != nil {
-		ReportMessage(err.Error())
+		WrapErrorLog(err.Error())
+		return
 	}
 }

@@ -123,17 +123,19 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		call, err = WrapDaemon(wallet, 1, "walletlock")
 	}
 	if !stakeWallet {
-		userSend, _ := database.ReadValue[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressSend)
-		_, errInsert := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userSend.String, amount*-1, 0, addressSend, "send")
-		if errInsert != nil {
-			utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", addressReceive, errInsert.Error()))
-			return "", errInsert
+		userSend := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressSend)
+		if userSend.Valid {
+			_, errInsert := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userSend.String, amount*-1, 0, addressSend, "send")
+			if errInsert != nil {
+				utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", addressReceive, errInsert.Error()))
+				return "", errInsert
+			}
 		}
 	} else {
 		call, err = WrapDaemon(wallet, 1, "walletpassphrase", wallet.PassPhrase.String, 99999999, true)
 		utils.ReportMessage("UNLOCKED STAKE WALLET")
 	}
-	userReceive, _ := database.ReadValue[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressReceive)
+	userReceive := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressReceive)
 	if userReceive.Valid {
 		_, errInsert2 := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userReceive.String, amount, 0, addressReceive, "receive")
 		if errInsert2 != nil {

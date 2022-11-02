@@ -274,7 +274,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
 
   Future<void> _getStakingDetails() async {
     ComInterface interface = ComInterface();
-    var res = await interface.get("/staking/info", debug: true, serverType: ComInterface.serverGoAPI, request: {});
+    var res = await interface.get("/staking/info", debug: false, serverType: ComInterface.serverGoAPI, request: {});
     StakeCheck? sc = StakeCheck.fromJson(res);
     if (sc.hasError == true) return;
     if (sc.active == 0) {

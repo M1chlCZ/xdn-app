@@ -160,7 +160,7 @@ class AddressScreenState extends State<AddressScreen> {
 
         ComInterface interface = ComInterface();
         Response response = await interface.post("/user/send/contact",
-            body: {"address": addr, "contact": name, "amount": double.parse(amount)}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+            body: {"address": addr, "contact": name, "amount": double.parse(amount)}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
 
         if (response.statusCode == 200) {
           globals.reloadData = true;
@@ -203,7 +203,7 @@ class AddressScreenState extends State<AddressScreen> {
 
       ComInterface interface = ComInterface();
       Response response = await interface.post("/user/addressbook/delete",
-          body: {"address": addr, "name": name}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: true);
+          body: {"address": addr, "name": name}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
 
       if (response.statusCode == 200) {
         AppDatabase().deleteContact(contactID);

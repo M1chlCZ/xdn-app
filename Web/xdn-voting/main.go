@@ -140,7 +140,7 @@ func main() {
 	config := &tls.Config{Certificates: []tls.Certificate{cer}}
 
 	// Create custom listener
-	ln, err := tls.Listen("tcp", ":6800", config)
+	ln, err := tls.Listen("tcp", "127.0.0.1:6800", config)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		panic(err)
@@ -266,12 +266,12 @@ func firebaseToken(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
 	}
 
-	exist, err := database.ReadValue[sql.NullInt64]("SELECT id FROM devices WHERE token = ?", Req.Token)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
-	}
+	exist := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM devices WHERE token = ?", Req.Token)
 	if !exist.Valid {
-		_, _ = database.InsertSQl("INSERT INTO devices(idUser, token, device_type) VALUES (?, ?, ?)", userID, Req.Token, Req.Platform)
+		_, err := database.InsertSQl("INSERT INTO devices(idUser, token, device_type) VALUES (?, ?, ?)", userID, Req.Token, Req.Platform)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -333,9 +333,9 @@ func sendMessage(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	go func(data dataReq, usedID string) {
-		d := map[string]interface{}{
+		d := map[string]string{
 			"func": "sendMessage",
-			"from": addrFrom,
+			"fr":   addrFrom,
 		}
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.AddrTo)
 		if userTo.Valid {
@@ -601,8 +601,8 @@ func sendContactTransaction(c *fiber.Ctx) error {
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", data.Contact, tx, "send")
 
 	go func(data dataReq, addrSend string) {
-		d := map[string]interface{}{
-			"func": "sendContactTransaction",
+		d := map[string]string{
+			"fn": "sendTransaction",
 		}
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.Address)
 		if userTo.Valid {
@@ -664,8 +664,8 @@ func sendTransaction(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Wallet problem, try again later", fiber.StatusConflict)
 	}
 	go func(data dataReq, addrSend string) {
-		d := map[string]interface{}{
-			"func": "sendTransaction",
+		d := map[string]string{
+			"fn": "sendTransaction",
 		}
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.Address)
 		if userTo.Valid {
@@ -870,8 +870,8 @@ func registerAPI(c *fiber.Ctx) error {
 	if req.Username == "" || req.Password == "" || req.Email == "" || req.RealName == "" || req.Udid == "" {
 		return utils.ReportError(c, "Missing register details", http.StatusNotFound)
 	}
-	userExists, err := database.ReadValue[bool]("SELECT EXISTS(SELECT * FROM users WHERE username = ? OR email= ?)", req.Username, req.Password)
-	if userExists {
+	userExists := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE username = ? OR email= ?", req.Username, req.Password)
+	if userExists.Valid {
 		return utils.ReportError(c, "User already exists", http.StatusConflict)
 	}
 	address, err := coind.WrapDaemon(utils.DaemonWallet, 2, "getnewaddress", req.Username)
@@ -888,10 +888,18 @@ func registerAPI(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
+	if len(pKey) == 0 {
+		return utils.ReportError(c, "Cannot get private key", http.StatusInternalServerError)
+	}
 	privKey := strings.Trim(string(pKey), "\"")
 	_, _ = coind.WrapDaemon(utils.DaemonWallet, 2, "walletlock")
-	_, err = database.InsertSQl("INSERT INTO users(username, password, email, addr, nickname, realname, UDID, privkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", req.Username, req.Password, req.Email, addr, req.Username, req.RealName, req.Udid, privKey)
 
+	hash := utils.HashPass(req.Password)
+	_, err = database.InsertSQl("INSERT INTO users(username, password, email, addr, nickname, realname, UDID, privkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", req.Username, hash, req.Email, addr, req.Username, req.RealName, req.Udid, privKey)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	utils.ReportMessage(fmt.Sprintf("/// User %s registered ///", req.Username))
 	return c.Status(fiber.StatusCreated).JSON(&fiber.Map{
 		"hasError":   false,
 		utils.STATUS: utils.OK,
@@ -944,7 +952,7 @@ func loginAPI(c *fiber.Ctx) error {
 	if errInsertToken != nil {
 		return utils.ReportError(c, errInsertToken.Error(), http.StatusInternalServerError)
 	}
-
+	utils.ReportMessage(fmt.Sprintf("/// User %s logged in ///", user.Username))
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"hasError":      false,
 		utils.STATUS:    utils.OK,
