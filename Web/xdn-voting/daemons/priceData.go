@@ -13,7 +13,8 @@ var PriceDat map[string]float64
 func PriceData() {
 	getAny, getError := utils.GETAny("https://api.coingecko.com/api/v3/coins/digitalnote?tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false")
 	if getError != nil {
-		utils.WrapErrorLog(getError.ErrorMessage() + " " + strconv.Itoa(getError.StatusCode()))
+		utils.WrapErrorLog("COINGECKO ISSUE" + " " + getError.ErrorMessage() + " " + strconv.Itoa(getError.StatusCode()))
+		return
 	}
 	body, _ := io.ReadAll(getAny.Body)
 	var pr models.PriceDatStruct

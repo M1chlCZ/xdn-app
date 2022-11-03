@@ -122,13 +122,17 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 	if wallet.PassPhrase.Valid {
 		call, err = WrapDaemon(wallet, 1, "walletlock")
 	}
+	if tx == "" {
+		utils.WrapErrorLog(fmt.Sprintf("sendrawtransaction error, addr: %s", addressReceive))
+		return "", errors.New("sendrawtransaction error")
+	}
 	if !stakeWallet {
 		userSend := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressSend)
 		if userSend.Valid {
 			_, errInsert := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userSend.String, amount*-1, 0, addressSend, "send")
 			if errInsert != nil {
 				utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", addressReceive, errInsert.Error()))
-				return "", errInsert
+				//return "", errInsert
 			}
 		}
 	} else {
@@ -140,7 +144,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		_, errInsert2 := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userReceive.String, amount, 0, addressReceive, "receive")
 		if errInsert2 != nil {
 			utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error: %s", addressReceive, errInsert2.Error()))
-			return "", errInsert2
+			//return "", errInsert2
 		}
 	}
 	return tx, nil

@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	VERSION        = "0.0.0.6"
+	VERSION        = "0.0.0.8"
 	STATUS  string = "status"
 	OK      string = "OK"
 	FAIL    string = "FAIL"
@@ -305,6 +305,7 @@ func GenerateSocialsToken(length int) string {
 	var letterRunes = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]rune, length)
 	for i := range b {
+		mathRand.Seed(time.Now().UnixNano())
 		if i%4 == 0 && i != 0 {
 			b[i] = '-'
 			b[i+1] = letterRunes[mathRand.Intn(len(letterRunes))]
@@ -437,6 +438,10 @@ func GetDaemon() *models.Daemon {
 	return &DaemonWallet
 }
 
+func RandInt(min int, max int) int {
+	return min + mathRand.Intn(max-min)
+}
+
 func SendMessage(token string, title string, body string, data map[string]string) {
 	opts := []option.ClientOption{option.WithCredentialsFile("xdn-project.json")}
 	c := &firebase2.Config{
@@ -472,7 +477,7 @@ func SendMessage(token string, title string, body string, data map[string]string
 	})
 
 	if err != nil {
-		WrapErrorLog(err.Error())
+		//WrapErrorLog(err.Error())
 		return
 	}
 }

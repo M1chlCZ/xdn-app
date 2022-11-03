@@ -595,7 +595,7 @@ func getTxXLS(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	readSql, err := database.ReadSql("SELECT * FROM transaction WHERE account = ? ORDER BY id DESC", usr)
+	readSql, err := database.ReadSql("SELECT txid, amount, confirmation, category, date FROM transaction WHERE account = ? ORDER BY id DESC", usr)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
@@ -944,6 +944,14 @@ func registerAPI(c *fiber.Ctx) error {
 	privKey := strings.Trim(string(pKey), "\"")
 	_, _ = coind.WrapDaemon(utils.DaemonWallet, 2, "walletlock")
 	tokSoc := utils.GenerateSocialsToken(32)
+	for true {
+		exist := database.ReadValueEmpty[sql.NullString]("SELECT tokenSocials FROM users WHERE token = ?", tokSoc)
+		if !exist.Valid {
+			break
+		} else {
+			tokSoc = utils.GenerateSocialsToken(32)
+		}
+	}
 	hash := utils.HashPass(req.Password)
 	_, err = database.InsertSQl("INSERT INTO users(username, password, email, addr, nickname, realname, UDID, privkey, tokenSocials) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", req.Username, hash, req.Email, addr, req.Username, req.RealName, req.Udid, privKey, tokSoc)
 	if err != nil {

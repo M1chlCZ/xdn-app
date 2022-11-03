@@ -38,7 +38,6 @@ func unlockStakeWallet() {
 }
 
 func submitStakeTransaction(c *fiber.Ctx) error {
-	utils.ReportMessage("Stake endpoint called")
 	txid := c.Get("txid")
 	if txid == "" {
 		return utils.ReportError(c, "No txid", http.StatusBadRequest)
