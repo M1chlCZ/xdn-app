@@ -26,7 +26,7 @@ func HandleBot() {
 	updates := bot.GetUpdatesChan(updateConfig)
 
 	for update := range updates {
-		if update.Message == nil {
+		if update.Message.Command() == "" {
 			continue
 		}
 
@@ -43,7 +43,7 @@ func HandleBot() {
 				msg.Text = tx
 			}
 		case "status":
-			msg.Text = "I'm ok."
+			msg.Text = "I'm ok, you?"
 		case "register":
 			err := register(update.Message.CommandArguments(), update.Message.From)
 			if err != nil {
@@ -52,8 +52,7 @@ func HandleBot() {
 				msg.Text = "Registered successfully!"
 			}
 		default:
-			//msg.Text = "Invalid command"
-			continue
+			msg.Text = "Invalid command"
 		}
 
 		if _, err := bot.Send(msg); err != nil {
@@ -90,7 +89,7 @@ func register(token string, from *tgbotapi.User) error {
 	if err != nil {
 		return errors.New("Error #3")
 	}
-	utils.ReportMessage("Registered user " + from.UserName + " with token " + token)
+	utils.ReportMessage(fmt.Sprintf("Registered user %s (uid: %d) ", from.UserName, idUser.Int64))
 	return nil
 }
 
