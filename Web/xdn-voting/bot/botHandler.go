@@ -135,6 +135,40 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	go func(addrTo string, addrSend string, amount string) {
+		d := map[string]string{
+			"fn": "sendTransaction",
+		}
+		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", addrTo)
+		if userTo.Valid {
+			nameFrom, err := database.ReadValue[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, addrSend)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			usrTo := database.ReadValueEmpty[int64]("SELECT id FROM users WHERE addr = ?", addrTo)
+			type Token struct {
+				Token string `json:"token"`
+			}
+			tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", usrTo)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			if nameFrom.Valid {
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Tip from %s", nameFrom.String), fmt.Sprintf("%s XDN", amount), d)
+					}
+				}
+			} else {
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Tip from %s", addrSend), fmt.Sprintf("%s XDN", amount), d)
+					}
+				}
+			}
+		}
+	}(addrFrom.String, addrTo.String, amount[len(amount)-1])
+
 	return fmt.Sprintf("User @%s tipped @%s %sXDN", username, ut, amount[len(amount)-1]), nil
 	//return nil
 }
