@@ -8,6 +8,7 @@ import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
 import 'package:digitalnote/screens/loginscreen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
+import 'package:digitalnote/screens/socials_screen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/daemon_status.dart';
@@ -207,6 +208,61 @@ return null;
                           Header(header: AppLocalizations.of(context)!.settings_screen),
                           Column(
                             children: [
+                              SizedBox(
+                                height: 60,
+                                width: MediaQuery.of(context).size.width - 20.0,
+                                child: Card(
+                                  color: Colors.transparent,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    child: Material(
+                                      color: Colors.black12,
+                                      child: InkWell(
+                                        splashColor: Colors.white54,
+                                        // splash color
+                                        onTap: ()  {
+                                          Navigator.of(context).pushNamed(SocialScreen.route);
+                                        },
+                                        // button pressed
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(left: 10.0),
+                                              child: Image.asset(
+                                                "images/socials_general.png",
+                                                height: 32.0,
+                                                width: 32.0,
+                                                color: const Color(0xFFBDBEC2),
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 10.0,
+                                            ),
+                                            SizedBox(
+                                              width: MediaQuery.of(context).size.width - 100.0,
+                                              child: AutoSizeText(
+                                                AppLocalizations.of(context)!.socials_popup.toLowerCase().capitalize(),
+                                                style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                                minFontSize: 8,
+                                                maxLines: 1,
+                                                textAlign: TextAlign.start,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Divider(
+                                height: 5.0,
+                                color: Colors.transparent,
+                              ),
                               SizedBox(
                                 height: 60,
                                 width: MediaQuery.of(context).size.width - 20.0,

@@ -301,6 +301,21 @@ func GenerateNewPassword(length int) string {
 	return string(b)
 }
 
+func GenerateSocialsToken(length int) string {
+	var letterRunes = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	b := make([]rune, length)
+	for i := range b {
+		if i%4 == 0 && i != 0 {
+			b[i] = '-'
+			b[i+1] = letterRunes[mathRand.Intn(len(letterRunes))]
+		} else {
+			b[i] = letterRunes[mathRand.Intn(len(letterRunes))]
+		}
+		//b[i] = letterRunes[mathRand.Intn(len(letterRunes))]
+	}
+	return string(b)
+}
+
 func ReadFile(fileName string) ([]string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {

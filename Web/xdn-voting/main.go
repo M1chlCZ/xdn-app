@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 	"xdn-voting/apiWallet"
+	"xdn-voting/bot"
 	"xdn-voting/coind"
 	"xdn-voting/daemons"
 	"xdn-voting/database"
@@ -45,8 +46,11 @@ func main() {
 	// ============= Price Data  ===============
 	go daemons.PriceData()
 
-	// ============== API Wallet ===============
+	// ============= API Wallet ================
 	go apiWallet.Handler()
+
+	// ============ TELEGRAM BOT ===============
+	go bot.HandleBot()
 
 	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
@@ -105,6 +109,9 @@ func main() {
 	app.Post("api/v1/user/addressbook/delete", utils.Authorized(deleteFromAddressBook))
 	app.Post("api/v1/user/addressbook/update", utils.Authorized(updateAddressBook))
 
+	app.Get("api/v1/user/bot", utils.Authorized(getTokenBot))
+	app.Post("api/v1/user/bot/unlink", utils.Authorized(unlinkBot))
+
 	app.Post("api/v1/user/rename", utils.Authorized(renameUser))
 	app.Post("api/v1/user/delete", utils.Authorized(deleteUser))
 
@@ -149,6 +156,49 @@ func main() {
 	// Start server with https/ssl enabled on http://localhost:443
 	log.Fatal(app.Listener(ln))
 
+}
+
+func unlinkBot(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
+	}
+	_, err := database.InsertSQl("DELETE FROM users_bot WHERE idUser = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func getTokenBot(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
+	}
+
+	token := database.ReadValueEmpty[sql.NullString]("SELECT tokenSocials FROM users WHERE id = ?", userID)
+	if !token.Valid || token.String == "" {
+		return utils.ReportError(c, "Token not found", fiber.StatusBadRequest)
+	}
+
+	exist := database.ReadValueEmpty[sql.NullString]("SELECT token FROM users_bot WHERE idUser = ?", userID)
+	ex := false
+	user := ""
+	if exist.Valid || exist.String != "" {
+		ex = true
+		user = database.ReadValueEmpty[string]("SELECT idSocial FROM users_bot WHERE idUser = ?", userID)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"token":      token.String,
+		"linked":     ex,
+		"user":       user,
+	})
 }
 
 func deleteUser(c *fiber.Ctx) error {
@@ -893,9 +943,9 @@ func registerAPI(c *fiber.Ctx) error {
 	}
 	privKey := strings.Trim(string(pKey), "\"")
 	_, _ = coind.WrapDaemon(utils.DaemonWallet, 2, "walletlock")
-
+	tokSoc := utils.GenerateSocialsToken(32)
 	hash := utils.HashPass(req.Password)
-	_, err = database.InsertSQl("INSERT INTO users(username, password, email, addr, nickname, realname, UDID, privkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", req.Username, hash, req.Email, addr, req.Username, req.RealName, req.Udid, privKey)
+	_, err = database.InsertSQl("INSERT INTO users(username, password, email, addr, nickname, realname, UDID, privkey, tokenSocials) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", req.Username, hash, req.Email, addr, req.Username, req.RealName, req.Udid, privKey, tokSoc)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
@@ -1528,14 +1578,6 @@ func getStakeGraph(c *fiber.Ctx) error {
 	createdFormat := "2006-01-02 15:04:05"
 	timez := stakeReq.Datetime.Format(createdFormat)
 	year, month, _ := stakeReq.Datetime.Date()
-
-	//staking, err := database.ReadValue[sql.NullBool]("SELECT active FROM users_stakes WHERE idUser = ?", userID)
-	//if err != nil {
-	//	return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-	//}
-	//if !staking.Valid {
-	//	return utils.ReportError(c, err.Error(), http.StatusBadRequest)
-	//}
 
 	if stakeReq.Type == 0 {
 		sqlQuery = `SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN ? AND date_add(?, INTERVAL 24 HOUR) AND idUser = ? AND credited = 0 GROUP BY hour, day ORDER BY hour`

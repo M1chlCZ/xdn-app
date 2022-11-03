@@ -14,6 +14,7 @@ extension DurationExtensions on Duration {
     return "${_toTwoDigits(inHours)}:$twoDigitMinutes:$twoDigitSeconds";
   }
 
+
   String _toTwoDigits(int n) {
     if (n >= 10) return "$n";
     return "0$n";
