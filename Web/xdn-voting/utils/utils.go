@@ -162,22 +162,6 @@ func CreateToken(userId uint64) (string, error) {
 	return token, nil
 }
 
-func CreateTokenClient(jwtKey string) (string, error) {
-	var err error
-	//Creating Access Token
-	//jwtKey := GetENV("JWT_KEY")
-
-	atClaims := jwt.MapClaims{}
-	atClaims["authorized"] = true
-	atClaims["exp"] = time.Now().Add(time.Hour * 24 * 365 * 10).Unix()
-	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
-	token, err := at.SignedString([]byte(jwtKey))
-	if err != nil {
-		return "", err
-	}
-	return token, nil
-}
-
 func GenerateSecureToken(length int) string {
 	b := make([]byte, length)
 	if _, err := rand.Read(b); err != nil {
@@ -229,8 +213,10 @@ func WrapErrorLog(message string) {
 }
 
 func ReportMessage(message ...string) {
-	logToFile(fmt.Sprintf("%s", message))
-	logToFile("")
+	go func() {
+		logToFile(fmt.Sprintf("%s", message))
+		logToFile("")
+	}()
 }
 
 func round(num float64) int {
