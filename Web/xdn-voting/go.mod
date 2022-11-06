@@ -23,6 +23,8 @@ require (
 require (
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	cloud.google.com/go/longrunning v0.3.0 // indirect
+	github.com/Clinet/discordgo-embed v0.0.0-20220113222025-bafe0c917646 // indirect
+	github.com/bwmarrin/discordgo v0.26.1 // indirect
 )
 
 require (

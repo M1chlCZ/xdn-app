@@ -50,7 +50,10 @@ func main() {
 	go apiWallet.Handler()
 
 	// ============ TELEGRAM BOT ===============
-	go bot.HandleBot()
+	go bot.StartTelegramBot()
+
+	// ============= DISCORD BOT ===============
+	go bot.StartDiscord()
 
 	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")

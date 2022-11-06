@@ -16,7 +16,7 @@ import (
 
 var statusMessage = []string{"I'm okay, you?", "All is good", "Yep...still okay", "Living the expensive life currently, you?", "I'm fine, how are you?", "I'm good, thanks!", "I'm fine"}
 
-func HandleBot() {
+func StartTelegramBot() {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM"))
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
@@ -35,7 +35,7 @@ func HandleBot() {
 			case "":
 				continue
 			case "help":
-				msg.Text = "I understand /register /status and /tip."
+				msg.Text = "I understand /register /unlink /status and /tip."
 			case "tip":
 				tx, err := tip(update.Message.From.UserName, update.Message)
 				if err != nil {
@@ -52,6 +52,13 @@ func HandleBot() {
 					msg.Text = "Error: " + err.Error()
 				} else {
 					msg.Text = "Registered successfully!"
+				}
+			case "unlink":
+				err := unlink(update.Message.From)
+				if err != nil {
+					msg.Text = "Error: " + err.Error()
+				} else {
+					msg.Text = "Unliked successfully!"
 				}
 			default:
 				msg.Text = "Invalid command"
@@ -95,8 +102,37 @@ func register(token string, from *tgbotapi.User) error {
 	if err != nil {
 		return errors.New("Error #3")
 	}
+	RegenerateTokenSocial(idUser.Int64)
 	utils.ReportMessage(fmt.Sprintf("Registered user %s (uid: %d) ", from.UserName, idUser.Int64))
 	return nil
+}
+
+func unlink(from *tgbotapi.User) error {
+	if from.IsBot {
+		return errors.New("Bots are not allowed")
+	}
+	if from.UserName == "" {
+		return errors.New("Username is required")
+	}
+
+	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ?", from.UserName)
+	if !already.Valid {
+		return errors.New("Not seeing you in the database")
+	}
+
+	idUser := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", from.UserName)
+	if !idUser.Valid {
+		return errors.New("Not seeing you in the database")
+	}
+
+	_, err := database.InsertSQl("DELETE FROM users_bot WHERE id = ?", already.Int64)
+	if err != nil {
+		return errors.New("Error #5")
+	}
+	RegenerateTokenSocial(idUser.Int64)
+	utils.ReportMessage(fmt.Sprintf("Unlinked user %s (uid: %d) ", from.UserName, idUser.Int64))
+	return nil
+
 }
 
 func tip(username string, from *tgbotapi.Message) (string, error) {
@@ -132,16 +168,13 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 		return "", errors.New("User to tip not registered")
 	}
 	contactTO := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = (SELECT addr FROM users WHERE id = (SELECT idUser FROM users_bot WHERE idSocial = ? ))", usrFrom, ut)
-	if !contactTO.Valid {
-		return "", errors.New("User to tip not registered")
-	}
 	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)
 	if !addrFrom.Valid {
-		return "", errors.New("Error getting user address")
+		return "", errors.New("Error getting user address #1")
 	}
 	addrTo := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrTo.Int64)
 	if !addrTo.Valid {
-		return "", errors.New("Error getting user address")
+		return "", errors.New("Error getting user address #2")
 	}
 	utils.ReportMessage(fmt.Sprintf("From: %s, To: %s, Amount: %s", addrFrom.String, addrTo.String, strings.TrimSpace(amount[len(amount)-1])))
 	amnt, err := strconv.ParseFloat(strings.TrimSpace(amount[len(amount)-1]), 32)
@@ -192,7 +225,7 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 		}
 	}(addrTo.String, addrFrom.String, amount[len(amount)-1])
 	mes := fmt.Sprintf("User @%s tipped @%s%s XDN", username, ut, amount[len(amount)-1])
-	utils.ReportMessage(mes)
+	utils.ReportMessage(fmt.Sprintf("User @%s tipped @%s%s XDN on Telegram", username, ut, amount[len(amount)-1]))
 	return mes, nil
 	//return nil
 }
