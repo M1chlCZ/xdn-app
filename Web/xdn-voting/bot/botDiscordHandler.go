@@ -143,6 +143,7 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 
 	idUser := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE tokenSocials = ?", token)
 	if !idUser.Valid {
+		RegenerateTokenSocial(idUser.Int64)
 		return errors.New("Invalid token")
 	}
 
@@ -192,7 +193,7 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 		return nil, errors.New("Username is required")
 	}
 	if len(from.Mentions) == 0 {
-		return nil, errors.New("No user mention")
+		return nil, errors.New("No user mentioned in tip command")
 	}
 	if len(from.Mentions) > 1 {
 		return nil, errors.New("You can tip only one user")
@@ -209,11 +210,11 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ?", username)
 	if !usrFrom.Valid {
-		return nil, errors.New("Not registered")
+		return nil, errors.New("You are not registered in the bot db")
 	}
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ?", strings.TrimSpace(ut))
 	if !usrTo.Valid {
-		return nil, errors.New("User to tip not registered")
+		return nil, errors.New("Mentioned user not registered in the bot db")
 	}
 	contactTO := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = (SELECT addr FROM users WHERE id = (SELECT idUser FROM users_bot WHERE idSocial = ? ))", usrFrom, ut)
 	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)

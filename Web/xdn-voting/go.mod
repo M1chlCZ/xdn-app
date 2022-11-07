@@ -4,7 +4,8 @@ go 1.19
 
 require (
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/chenzhijie/go-web3 v0.0.0-20220815040233-bb8a40fab52c
+	github.com/bwmarrin/discordgo v0.26.1
+	github.com/chenzhijie/go-web3 v0.0.0-20221106065746-e008ed0e5419
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
@@ -24,7 +25,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	cloud.google.com/go/longrunning v0.3.0 // indirect
 	github.com/Clinet/discordgo-embed v0.0.0-20220113222025-bafe0c917646 // indirect
-	github.com/bwmarrin/discordgo v0.26.1 // indirect
 )
 
 require (

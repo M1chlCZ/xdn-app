@@ -161,11 +161,11 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ?", username)
 	if !usrFrom.Valid {
-		return "", errors.New("Not registered")
+		return "", errors.New("You are not registered in the bot db")
 	}
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ?", strings.TrimSpace(ut))
 	if !usrTo.Valid {
-		return "", errors.New("User to tip not registered")
+		return "", errors.New("Mentioned user not registered in the bot db")
 	}
 	contactTO := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = (SELECT addr FROM users WHERE id = (SELECT idUser FROM users_bot WHERE idSocial = ? ))", usrFrom, ut)
 	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)

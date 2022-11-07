@@ -1,17 +1,11 @@
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/LifecycleWatcherState.dart';
-import 'package:digitalnote/support/Utils.dart';
-import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/social_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
-import '../models/user.dart';
-import '../widgets/button_flat.dart';
 
 class SocialScreen extends StatefulWidget {
   static const String route = "menu/settings/socials";
@@ -24,15 +18,14 @@ class SocialScreen extends StatefulWidget {
 
 class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
   final ComInterface _interface = ComInterface();
-  final TextEditingController _discordTextController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _paused = false;
-  String? tokenLink;
-  bool _linked = false;
-  String? _name;
-  User? _me;
+  String? _tokenLink;
 
-  bool _discordDetails = false;
+  bool _telegramDetails = false;
+
+  String? _telegram;
+  String? _discord;
 
   @override
   void initState() {
@@ -41,25 +34,21 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
   }
 
   getTokenLink() async {
-    var token = await _interface.get("/user/bot", serverType: ComInterface.serverGoAPI, debug: true);
+    var token = await _interface.get("/user/bot/connect", serverType: ComInterface.serverGoAPI, debug: false);
     if (token != null) {
       setState(() {
-        tokenLink = token['token'];
-        _linked = token['linked'];
-        _name = token['user'];
+        _tokenLink = token['token'];
+        _telegram = token['telegram'];
+        _discord = token['discord'];
       });
-      _discordTextController.text = '/register $tokenLink';
     }
+
   }
 
-  void unlinkToken() async {
+  void unlinkBot(int typeBot) async {
     try {
-      var token = await _interface.post("/user/bot/unlink", serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
-      if (token != null) {
-        setState(() {
-          _linked = false;
-        });
-      }
+      await _interface.post("/user/bot/unlink", serverType: ComInterface.serverGoAPI, body:{"typeBot" : typeBot}, type: ComInterface.typeJson, debug: true);
+      getTokenLink();
     } catch (e) {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
     }
@@ -72,7 +61,7 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
     }
   }
 
-  void showInSnackBar(String value) {
+  showInSnackBar(String value) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value, textAlign: TextAlign.center,), backgroundColor: Colors.green));
   }
 
@@ -118,15 +107,15 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
               height: 30.0,
             ),
             SocialMediaCard(
-              name: _name,
-              cardActiveColor: const Color(0xFF1DA1F2),
-              pictureName: 'images/socials_general.png',
+              name: _telegram ?? "XDN TIP Telegram Bot",
+              cardActiveColor: const Color(0xFF229ED9),
+              pictureName: 'images/telegram.png',
               onTap: () async {
                 setState(() {
-                  if (_discordDetails) {
-                    _discordDetails = false;
+                  if (_telegramDetails) {
+                    _telegramDetails = false;
                   } else {
-                    _discordDetails = true;
+                    _telegramDetails = true;
                   }
                 });
                 // if (!_socials.contains(3)) {
@@ -134,140 +123,41 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
                 //   // _launchURL(_twitter!.data!.url!);
                 // }
               },
-              unlink: unlinkToken,
-              socials: _linked,
+              linkSocials: 'https://t.me/xdntip_bot',
+              tokenCommand: "/register ${_tokenLink ?? ""}",
+              showSnackBar: () {showInSnackBar(AppLocalizations.of(context)!.dl_priv_copy);},
+              unlink: unlinkBot,
+              socials: linkedCheck(_telegram), typeBot: 1,
             ),
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: _discordDetails ? 1.0 : 0.0,
-              child: Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(left: 10.0, right: 20.0),
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                    color: Color(0xFF7289DA),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0, top: 8.0),
-                          child: GestureDetector(
-                            onTap: () {
-                              _launchURL('https://t.me/xdntip_bot');
-                            },
-                            child: Row(
-                              children: [
-                                Text(
-                                  '- ${AppLocalizations.of(context)!.join_discord}',
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
-                                ),
-                                const SizedBox(
-                                  width: 5.0,
-                                ),
-                                const Icon(
-                                  Icons.open_in_new,
-                                  color: Colors.white,
-                                  size: 14.0,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 12.0,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Row(
-                            children: [
-                              Text(
-                                '- ${AppLocalizations.of(context)!.send_discord}',
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 10.0,
-                        ),
-                        Container(
-                          // margin: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                          width: double.infinity,
-                          height: 30.0,
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                            color: Color(0xFF252525),
-                          ),
-                          child: Stack(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 5.0, left: 5.0),
-                                child: SizedBox(
-                                  width: MediaQuery.of(context).size.width * 0.82,
-                                  child: AutoSizeTextField(
-                                    maxLines: 1,
-                                    minFontSize: 8.0,
-                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white, fontSize: 14.0),
-                                    autocorrect: false,
-                                    readOnly: true,
-                                    controller: _discordTextController,
-                                    textAlign: TextAlign.left,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.only(left: 4.0, right: 4.0),
-                                      isDense: true,
-                                      hintStyle: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white54, fontSize: 14.0),
-                                      hintText: '',
-                                      enabledBorder: const UnderlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.transparent),
-                                      ),
-                                      focusedBorder: const UnderlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.transparent),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 0.0, right: 3.0),
-                                  child: SizedBox(
-                                    width: 30.0,
-                                    height: 25.0,
-                                    child: FlatCustomButton(
-                                        onTap: () {
-                                          Clipboard.setData(ClipboardData(text: '/register $tokenLink'));
-                                          showInSnackBar(AppLocalizations.of(context)!.dl_priv_copy);
-                                        },
-                                        color: const Color(0xFF7289DA),
-                                        splashColor: Colors.black38,
-                                        child: const Icon(
-                                          Icons.content_copy,
-                                          size: 18.0,
-                                          color: Colors.white,
-                                        )),
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
-            )
+            const SizedBox(
+              height: 30.0,
+            ),
+            SocialMediaCard(
+              name: _discord ?? "XDN TIP Discord Bot",
+              cardActiveColor: const Color(0xFF7289DA),
+              pictureName: 'images/discord.png',
+              onTap: () {
+              },
+              linkSocials: 'https://discord.gg/S9bZmTTG4a',
+              tokenCommand: "\$connect ${_tokenLink ?? ""}",
+              showSnackBar: () {showInSnackBar(AppLocalizations.of(context)!.dl_priv_copy);},
+              unlink: unlinkBot,
+              socials: linkedCheck(_discord), typeBot: 2,
+            ),
           ]),
         )
       ]),
     );
   }
 
-  void _launchURL(String url) async {
-    var kUrl = url.replaceAll(" ", "+");
-    Utils.openLink(kUrl);
+  bool linkedCheck(String? social) {
+    if (social == null) {
+      return false;
+    } else {
+      return true;
+    }
   }
+
 
   @override
   void onDetached() {

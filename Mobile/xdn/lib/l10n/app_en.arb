@@ -219,7 +219,7 @@
   "social_accounts": "XDN TIP Bot",
   "join_discord" : "Open Bot link",
   "send_discord" : "Send DM to bot with text below",
-  "socials_info": "Linking your account to XDN TIP Bot will enable to send and receive tips on Telegram",
+  "socials_info": "Linking your account to XDN TIP Bot will enable to send and receive tips on social media",
   "socials_info_add": "RocketBot.pro & Merge need to be linked to web",
   "unlink" : "Unlink {1}",
   "socials_popup" : "CONNECT"

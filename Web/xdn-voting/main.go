@@ -112,7 +112,8 @@ func main() {
 	app.Post("api/v1/user/addressbook/delete", utils.Authorized(deleteFromAddressBook))
 	app.Post("api/v1/user/addressbook/update", utils.Authorized(updateAddressBook))
 
-	app.Get("api/v1/user/bot", utils.Authorized(getTokenBot))
+	app.Get("api/v1/user/bot", utils.Authorized(getTokenBot)) //TODO deprecated
+	app.Get("api/v1/user/bot/connect", utils.Authorized(getBotConnect))
 	app.Post("api/v1/user/bot/unlink", utils.Authorized(unlinkBot))
 
 	app.Post("api/v1/user/rename", utils.Authorized(renameUser))
@@ -161,12 +162,53 @@ func main() {
 
 }
 
-func unlinkBot(c *fiber.Ctx) error {
+func getBotConnect(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	if userID == "" {
 		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
 	}
-	_, err := database.InsertSQl("DELETE FROM users_bot WHERE idUser = ?", userID)
+	token := database.ReadValueEmpty[sql.NullString]("SELECT tokenSocials FROM users WHERE id = ?", userID)
+	if !token.Valid || token.String == "" {
+		return utils.ReportError(c, "Token not found", fiber.StatusBadRequest)
+	}
+	var response struct {
+		TelegramUserName string `json:"telegram,omitempty"`
+		DiscordUserName  string `json:"discord,omitempty"`
+		Token            string `json:"token"`
+	}
+	tl := database.ReadValueEmpty[sql.NullString]("SELECT idSocial FROM users_bot WHERE idUser = ? AND typeBot = ?", userID, 1)
+	if tl.Valid {
+		response.TelegramUserName = tl.String
+	}
+
+	ds := database.ReadValueEmpty[sql.NullString]("SELECT idSocial FROM users_bot WHERE idUser = ? AND typeBot = ?", userID, 2)
+	if ds.Valid {
+		response.DiscordUserName = ds.String
+	}
+	response.Token = token.String
+
+	payload, err := json.Marshal(response)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+	}
+
+	return c.Status(fiber.StatusOK).Send(payload)
+
+}
+
+func unlinkBot(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	var request struct {
+		Type int `json:"typeBot"`
+	}
+	err := c.BodyParser(&request)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+	if userID == "" {
+		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
+	}
+	_, err = database.InsertSQl("DELETE FROM users_bot WHERE idUser = ? and typeBot = ?", userID, request.Type)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
 	}
