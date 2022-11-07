@@ -88,7 +88,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		err := registerDiscord(strings.TrimSpace(content), m)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
-			_, err = s.ChannelMessageSend(m.ChannelID, "Registration failed...")
+			_, err = s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
 		_, err = s.ChannelMessageSend(m.ChannelID, "Successfully registered...")
@@ -117,7 +117,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed(err.Error())})
 			return
 		}
-		_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipEmbed(discord["author"], discord["tipped"], discord["amount"])})
+		_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipEmbed(discord["author"], discord["tipped"], discord["amount"], m.Author.AvatarURL("128"), m.Author.Username)})
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			return
@@ -136,7 +136,7 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 		return errors.New("Username is required")
 	}
 
-	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ?", from.Author.Username)
+	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ?", from.Author.ID, 2)
 	if already.Valid {
 		return errors.New("Already registered")
 	}
@@ -147,17 +147,16 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 		return errors.New("Invalid token")
 	}
 
-	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot) VALUES (?, ?, ?, ?)", idUser.Int64, from.Author.Username, token, 2)
+	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot) VALUES (?, ?, ?, ?)", idUser.Int64, from.Author.ID, token, 2)
 	if err != nil {
 		return errors.New("Error #3")
 	}
 	RegenerateTokenSocial(idUser.Int64)
-	utils.ReportMessage(fmt.Sprintf("Registered user %s (uid: %d) ", from.Author.Username, idUser.Int64))
+	utils.ReportMessage(fmt.Sprintf("Registered user %s (uid: %d) to Discord bot", from.Author.Username, idUser.Int64))
 	return nil
 }
 
 func deregisterDiscord(from *discordgo.MessageCreate) error {
-	//check if user is bot
 	if from.Author.Bot {
 		return errors.New("Bot can't register")
 	}
@@ -165,12 +164,12 @@ func deregisterDiscord(from *discordgo.MessageCreate) error {
 		return errors.New("Username is required")
 	}
 
-	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ?", from.Author.Username)
+	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ?", from.Author.ID)
 	if !already.Valid {
 		return errors.New("Not seeing you in the database")
 	}
 
-	idUser := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", from.Author.Username)
+	idUser := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", from.Author.ID)
 	if !idUser.Valid {
 		return errors.New("Not seeing you in the database")
 	}
@@ -180,7 +179,7 @@ func deregisterDiscord(from *discordgo.MessageCreate) error {
 		return errors.New("Error #5")
 	}
 	RegenerateTokenSocial(idUser.Int64)
-	utils.ReportMessage(fmt.Sprintf("Unlinked user %s (uid: %d) ", from.Author.Username, idUser.Int64))
+	utils.ReportMessage(fmt.Sprintf("Unlinked user %s (uid: %d) from Discord", from.Author.Username, idUser.Int64))
 	return nil
 }
 
@@ -199,8 +198,8 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 		return nil, errors.New("You can tip only one user")
 	}
 
-	username := from.Author.Username
-	ut := from.Mentions[0].Username
+	username := from.Author.ID
+	ut := from.Mentions[0].ID
 	tippeUserID := from.Mentions[0].ID
 	authorUserID := from.Author.ID
 	reg := regexp.MustCompile("\\s[0-9]+")
@@ -208,11 +207,11 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 
 	utils.ReportMessage(fmt.Sprintf("Tipping user %s %s XDN on Discord", from.Mentions[0].Username, strings.TrimSpace(amount[len(amount)-1])))
 
-	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ?", username)
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", username, 2)
 	if !usrFrom.Valid {
 		return nil, errors.New("You are not registered in the bot db")
 	}
-	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ?", strings.TrimSpace(ut))
+	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 2)
 	if !usrTo.Valid {
 		return nil, errors.New("Mentioned user not registered in the bot db")
 	}
@@ -282,7 +281,7 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 	return returnMap, nil
 }
 
-func TipEmbed(userFrom, userTo, amount string) *discordgo.MessageEmbed {
+func TipEmbed(userFrom, userTo, amount, avatar, username string) *discordgo.MessageEmbed {
 	timeString := time.Now().Format(time.RFC3339)
 	genericEmbed := discordgo.MessageEmbed{
 		Type:        "",
@@ -296,9 +295,9 @@ func TipEmbed(userFrom, userTo, amount string) *discordgo.MessageEmbed {
 		Video:       nil,
 		Provider:    nil,
 		Author: &discordgo.MessageEmbedAuthor{
-			Name:    "XDN Tip Bot",
+			Name:    username,
 			URL:     "",
-			IconURL: "https://cdn.discordapp.com/avatars/1038623597746458644/b4aa43e5d422bcc3b72e49d067d87f73.webp?size=160",
+			IconURL: avatar,
 		},
 		Fields: nil,
 	}

@@ -23,8 +23,8 @@ dependencies:
   intl: ^0.17.0
   qr_flutter: ^4.0.0
   sqflite: ^2.2.0+3
-  tuple: ^2.0.1
-  encrypt: ^5.0.1
+  tuple: ^2.0.1 #candidate
+  encrypt: ^5.0.1 #candidate
   sprintf: any
   get_it: ^7.2.0
   auto_size_text: ^3.0.0
@@ -40,7 +40,7 @@ dependencies:
   flutter_app_badger: ^1.5.0
   bubble: ^1.2.1
   flutter_typeahead: ^4.1.1
-  flutter_linkify: ^5.0.2
+  flutter_linkify: ^5.0.2 #candidate
   vector_math: ^2.1.2
   font_awesome_flutter: ^10.2.1
   flutter_native_timezone: ^2.0.0
@@ -55,7 +55,7 @@ dependencies:
   walletconnect_qrcode_modal_dart: ^0.1.0
   web3dart: ^2.4.1
   decimal: any
-  jwt_decode: ^0.3.1
+  jwt_decode: ^0.3.1 #candidate
   rxdart: ^0.27.5
   open_file_safe: ^3.2.3
   external_path: ^1.0.3

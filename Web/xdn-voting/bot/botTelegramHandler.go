@@ -103,7 +103,7 @@ func register(token string, from *tgbotapi.User) error {
 		return errors.New("Error #3")
 	}
 	RegenerateTokenSocial(idUser.Int64)
-	utils.ReportMessage(fmt.Sprintf("Registered user %s (uid: %d) ", from.UserName, idUser.Int64))
+	utils.ReportMessage(fmt.Sprintf("Registered user %s (uid: %d) to Telegram bot", from.UserName, idUser.Int64))
 	return nil
 }
 
@@ -115,7 +115,7 @@ func unlink(from *tgbotapi.User) error {
 		return errors.New("Username is required")
 	}
 
-	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ?", from.UserName)
+	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ?", from.UserName, 1)
 	if !already.Valid {
 		return errors.New("Not seeing you in the database")
 	}
@@ -130,7 +130,7 @@ func unlink(from *tgbotapi.User) error {
 		return errors.New("Error #5")
 	}
 	RegenerateTokenSocial(idUser.Int64)
-	utils.ReportMessage(fmt.Sprintf("Unlinked user %s (uid: %d) ", from.UserName, idUser.Int64))
+	utils.ReportMessage(fmt.Sprintf("Unlinked user %s (uid: %d) from Telegram", from.UserName, idUser.Int64))
 	return nil
 
 }
@@ -159,11 +159,11 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	}
 	ut := strings.Trim(usr, "@")
 
-	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ?", username)
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db")
 	}
-	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ?", strings.TrimSpace(ut))
+	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 1)
 	if !usrTo.Valid {
 		return "", errors.New("Mentioned user not registered in the bot db")
 	}
