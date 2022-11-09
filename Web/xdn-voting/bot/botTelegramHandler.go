@@ -31,61 +31,78 @@ func StartTelegramBot() {
 
 	for update := range updates {
 		if update.Message != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-
-			switch update.Message.Command() {
-			case "":
-				continue
-			case "help":
-				msg.Text = "I understand /register /unlink /status and /tip."
-			case "tip":
-				tx, err := tip(update.Message.From.UserName, update.Message)
-				if err != nil {
-					msg.Text = "Error: " + err.Error()
-				} else {
-					msg.Text = tx
+			go func(update tgbotapi.Update) {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+				switch update.Message.Command() {
+				case "status":
+					msg.Text = statusMessage[rand.Intn(len(statusMessage))]
+					if _, err := bot.Send(msg); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					return
+				case "help":
+					msg.Text = "I understand /register /unlink /status and /tip."
+					if _, err := bot.Send(msg); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					return
+				case "tip":
+					tx, err := tip(update.Message.From.UserName, update.Message)
+					if err != nil {
+						msg.Text = "Error: " + err.Error()
+					} else {
+						msg.Text = tx
+					}
+					if _, err := bot.Send(msg); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					return
+				case "rain":
+					tx, errr, data := rain(update.Message.From.UserName, update.Message)
+					if errr != nil {
+						msg.Text = "Error: " + errr.Error()
+					} else {
+						msg.Text = tx
+					}
+					mmm, err := bot.Send(msg)
+					if err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					tx, err = finishRain(data)
+					if err != nil {
+						tx = "Error: " + err.Error()
+					}
+					ms := tgbotapi.NewEditMessageText(mmm.Chat.ID, mmm.MessageID, tx)
+					if _, err := bot.Send(ms); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					return
+				case "register":
+					err := register(update.Message.CommandArguments(), update.Message.From)
+					if err != nil {
+						msg.Text = "Error: " + err.Error()
+					} else {
+						msg.Text = "Registered successfully!"
+					}
+					if _, err := bot.Send(msg); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					return
+				case "unlink":
+					err := unlink(update.Message.From)
+					if err != nil {
+						msg.Text = "Error: " + err.Error()
+					} else {
+						msg.Text = "Unliked successfully!"
+					}
+					if _, err := bot.Send(msg); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					return
+				default:
+					return
 				}
-			case "rain":
-				tx, err, data := rain(update.Message.From.UserName, update.Message)
-				if err != nil {
-					msg.Text = "Error: " + err.Error()
-				} else {
-					msg.Text = tx
-				}
-				mmm, err := bot.Send(msg)
-				if err != nil {
-					utils.WrapErrorLog(err.Error())
-				}
-				tx, err = finishRain(data)
-				if err != nil {
-					tx = "Error: " + err.Error()
-				}
-				ms := tgbotapi.NewEditMessageText(mmm.Chat.ID, mmm.MessageID, tx)
-				if _, err := bot.Send(ms); err != nil {
-					utils.WrapErrorLog(err.Error())
-				}
-				continue
-			case "register":
-				err := register(update.Message.CommandArguments(), update.Message.From)
-				if err != nil {
-					msg.Text = "Error: " + err.Error()
-				} else {
-					msg.Text = "Registered successfully!"
-				}
-			case "unlink":
-				err := unlink(update.Message.From)
-				if err != nil {
-					msg.Text = "Error: " + err.Error()
-				} else {
-					msg.Text = "Unliked successfully!"
-				}
-			default:
-				msg.Text = "Invalid command"
-			}
-
-			if _, err := bot.Send(msg); err != nil {
-				utils.WrapErrorLog(err.Error())
-			}
+			}(update)
 		}
 	}
 
@@ -117,14 +134,8 @@ func register(token string, from *tgbotapi.User) error {
 		return errors.New("Invalid token")
 	}
 
-	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token) VALUES (?, ?, ?)", idUser.Int64, from.UserName, token)
+	_, _ = database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot) VALUES (?, ?, ?,?)", idUser.Int64, from.UserName, token, 1)
 
-	//ban xdnTips
-	_, err = database.InsertSQl("update users_bot set ban = 1 where idSocial = ?", "xdnTips")
-
-	if err != nil {
-		return errors.New("Error #3")
-	}
 	RegenerateTokenSocial(idUser.Int64)
 	utils.ReportMessage(fmt.Sprintf("Registered user %s (uid: %d) to Telegram bot", from.UserName, idUser.Int64))
 	return nil
@@ -164,10 +175,11 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	}
 	str1 := strings.ReplaceAll(from.Text, "@", "")
 	str2 := from.Text
+	utils.ReportMessage(fmt.Sprintf("Tip from %s text %s", username, from.Text))
 	if (len(str2) - len(str1)) > 1 {
 		return "", errors.New("You can tip only one user per command")
 	}
-	re := regexp.MustCompile("\\B@[a-zA-z]+")
+	re := regexp.MustCompile("\\B@[a-zA-z0-9]+")
 	reg := regexp.MustCompile("\\s[0-9]+")
 	m := re.FindSubmatch([]byte(from.Text))
 	usr := ""
@@ -182,7 +194,9 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	if usr == "" {
 		return "", errors.New("No user to tip")
 	}
+	utils.ReportMessage(fmt.Sprintf("Tip %x", m))
 	ut := strings.Trim(usr, "@")
+	utils.ReportMessage(fmt.Sprintf("Tip from %s to %s amount %s", username, ut, amount))
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
 	if !usrFrom.Valid {
@@ -208,7 +222,7 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	}
 	tx, err := coind.SendCoins(addrTo.String, addrFrom.String, amnt, false)
 	if err != nil {
-		return "", err
+		return "", errors.New("Error sending coins from " + username)
 	}
 	if contactTO.Valid {
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip to: "+contactTO.String, tx, "send")
@@ -343,12 +357,15 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 		Amount:   amount,
 		AddrFrom: addrTo.String,
 		Username: username,
+		AddrSend: addrFrom.String,
 	}
 
 }
 func finishRain(data RainReturnStruct) (string, error) {
 	amountToUser := data.Amount / float64(len(data.UsrList))
-	//send coins to users
+	d := map[string]string{
+		"fn": "sendTransaction",
+	}
 	finalUsrs := make([]UsrStruct, 0)
 	for _, v := range data.UsrList {
 		tx, err := coind.SendCoins(v.Addr, data.AddrFrom, amountToUser, true)
@@ -357,7 +374,45 @@ func finishRain(data RainReturnStruct) (string, error) {
 		}
 		finalUsrs = append(finalUsrs, v)
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain by: "+data.Username, tx, "receive")
-		time.Sleep(1 * time.Second)
+		utils.ReportMessage("Rain", fmt.Sprintf("Sent %f XDN to %s", amountToUser, v.Addr))
+		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", v.Addr)
+		if userTo.Valid {
+			nameFrom := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, data.AddrSend)
+			if nameFrom.Valid {
+				usrTo := database.ReadValueEmpty[int64]("SELECT id FROM users WHERE addr = ?", v.Addr)
+				type Token struct {
+					Token string `json:"token"`
+				}
+				tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", usrTo)
+				if err != nil {
+					utils.WrapErrorLog(err.Error())
+				}
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Caught rain by: %s", nameFrom.String), fmt.Sprintf("%s XDN", strconv.FormatFloat(amountToUser, 'f', 2, 32)), d)
+					}
+				}
+				continue
+			} else {
+				usrTo := database.ReadValueEmpty[int64]("SELECT id FROM users WHERE addr = ?", v.Addr)
+				type Token struct {
+					Token string `json:"token"`
+				}
+				tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", usrTo)
+				if err != nil {
+					utils.WrapErrorLog(err.Error())
+				}
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Caught rain by: %s", data.AddrFrom), fmt.Sprintf("%s XDN", fmt.Sprintf("%s XDN", strconv.FormatFloat(amountToUser, 'f', 2, 32))), d)
+					}
+				}
+			}
+			continue
+		} else {
+			utils.ReportMessage(fmt.Sprintf("user invalid/////////////"))
+		}
+
 	}
 	userString := ""
 	for _, v := range finalUsrs {

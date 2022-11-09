@@ -158,7 +158,7 @@ func main() {
 	}
 
 	// Start server with https/ssl enabled on http://localhost:443
-	log.Fatal(app.Listener(ln))
+	utils.WrapErrorLog(error.Error(app.Listener(ln)))
 
 }
 

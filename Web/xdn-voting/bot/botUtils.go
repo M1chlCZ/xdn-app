@@ -46,4 +46,5 @@ type RainReturnStruct struct {
 	Amount   float64
 	AddrFrom string
 	Username string
+	AddrSend string
 }

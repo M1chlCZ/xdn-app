@@ -153,7 +153,7 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 
 	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot, dName) VALUES (?, ?, ?, ?, ?)", idUser.Int64, from.Author.ID, token, 2, from.Author.Username)
 	if err != nil {
-		return errors.New("Error #3")
+		return err
 	}
 	RegenerateTokenSocial(idUser.Int64)
 	utils.ReportMessage(fmt.Sprintf("Registered user %s (uid: %d) to Discord bot", from.Author.Username, idUser.Int64))
