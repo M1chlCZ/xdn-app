@@ -5,10 +5,12 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"gopkg.in/errgo.v2/errors"
+	"math/rand"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"xdn-voting/coind"
 	"xdn-voting/database"
 	"xdn-voting/utils"
@@ -43,9 +45,26 @@ func StartTelegramBot() {
 				} else {
 					msg.Text = tx
 				}
-			case "status":
-				stMess := statusMessage[utils.RandInt(0, len(statusMessage)-1)]
-				msg.Text = stMess
+			case "rain":
+				tx, err, data := rain(update.Message.From.UserName, update.Message)
+				if err != nil {
+					msg.Text = "Error: " + err.Error()
+				} else {
+					msg.Text = tx
+				}
+				mmm, err := bot.Send(msg)
+				if err != nil {
+					utils.WrapErrorLog(err.Error())
+				}
+				tx, err = finishRain(data)
+				if err != nil {
+					tx = "Error: " + err.Error()
+				}
+				ms := tgbotapi.NewEditMessageText(mmm.Chat.ID, mmm.MessageID, tx)
+				if _, err := bot.Send(ms); err != nil {
+					utils.WrapErrorLog(err.Error())
+				}
+				continue
 			case "register":
 				err := register(update.Message.CommandArguments(), update.Message.From)
 				if err != nil {
@@ -99,6 +118,10 @@ func register(token string, from *tgbotapi.User) error {
 	}
 
 	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token) VALUES (?, ?, ?)", idUser.Int64, from.UserName, token)
+
+	//ban xdnTips
+	_, err = database.InsertSQl("update users_bot set ban = 1 where idSocial = ?", "xdnTips")
+
 	if err != nil {
 		return errors.New("Error #3")
 	}
@@ -144,13 +167,15 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	if (len(str2) - len(str1)) > 1 {
 		return "", errors.New("You can tip only one user per command")
 	}
-	re := regexp.MustCompile("\\B@\\w+")
+	re := regexp.MustCompile("\\B@[a-zA-z]+")
 	reg := regexp.MustCompile("\\s[0-9]+")
 	m := re.FindSubmatch([]byte(from.Text))
 	usr := ""
+	if len(m) == 0 {
+		return "", errors.New("Invalid username")
+	}
 	for _, match := range m {
 		s := string(match)
-		utils.ReportMessage(fmt.Sprintf("Match - %s:", strings.Trim(s, "\n")))
 		usr = strings.Trim(s, "\n") + " "
 	}
 	amount := reg.FindAllString(from.Text, -1)
@@ -228,4 +253,118 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	utils.ReportMessage(fmt.Sprintf("User @%s tipped @%s%s XDN on Telegram", username, ut, amount[len(amount)-1]))
 	return mes, nil
 	//return nil
+}
+
+func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStruct) {
+	if from.From.IsBot {
+		return "", errors.New("Bots are not allowed"), RainReturnStruct{}
+	}
+	str1 := strings.ReplaceAll(from.Text, "@", "")
+	str2 := from.Text
+	if (len(str2) - len(str1)) > 1 {
+		return "", errors.New("Only one parameter is allowed"), RainReturnStruct{}
+	}
+
+	//eg: @100 people
+	re := regexp.MustCompile("\\B@[0-9]+[^a-zA-Z]?$")
+	m := re.FindAllString(from.Text, -1)
+	if len(m) == 0 {
+		return "", errors.New("Missing number of people to tip"), RainReturnStruct{}
+	}
+	if len(m) > 1 {
+		return "", errors.New("You can specify only one number of people to tip"), RainReturnStruct{}
+	}
+	numOfUsers, err := strconv.Atoi(strings.ReplaceAll(m[0], "@", ""))
+	if err != nil {
+		return "", errors.New("Invalid number of people to tip"), RainReturnStruct{}
+	}
+
+	//eg: 100XDN
+	reg := regexp.MustCompile("\\s[0-9]+")
+	am := reg.FindAllString(from.Text, -1)
+	if len(am) == 0 {
+		return "", errors.New("Missing amount to tip"), RainReturnStruct{}
+	}
+	if len(am) > 1 {
+		return "", errors.New("You can specify only one amount to tip"), RainReturnStruct{}
+	}
+	amount, err := strconv.ParseFloat(strings.TrimSpace(am[len(am)-1]), 32)
+	if err != nil {
+		return "", errors.New("Invalid amount to tip"), RainReturnStruct{}
+	}
+
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db"), RainReturnStruct{}
+	}
+	ban := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ? AND ban = ?", username, 1, 1)
+	if ban.Valid {
+		return "", errors.New("You are banned from raining on Telegram"), RainReturnStruct{}
+	}
+	usersTo, err := database.ReadArray[UsrStruct](`SELECT a.addr as addr, b.idSocial as name FROM users  as a
+												INNER JOIN users_bot  as b 
+												ON a.id = b.idUser
+												WHERE b.typeBot = 1 AND ban = 0`)
+	if len(usersTo) == 0 {
+		return "", errors.New("Can't find any users to tip"), RainReturnStruct{}
+	}
+	if len(usersTo) < numOfUsers {
+		return "", errors.New("Too many users to tip"), RainReturnStruct{}
+	}
+	//send coins to stake wallet
+	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)
+	if !addrFrom.Valid {
+		return "", errors.New("Error getting user address #1"), RainReturnStruct{}
+	}
+
+	addrTo := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
+	if !addrTo.Valid {
+		return "", errors.New("Problem sending coins to rain service"), RainReturnStruct{}
+	}
+
+	tx, err := coind.SendCoins(addrTo.String, addrFrom.String, amount, false)
+	if err != nil {
+		return "", err, RainReturnStruct{}
+	}
+	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
+
+	//shuffle usrFrom
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(usersTo), func(i, j int) { usersTo[i], usersTo[j] = usersTo[j], usersTo[i] })
+
+	//random select numOfUser from usrFrom
+	usersToTip := make([]UsrStruct, 0)
+	for i := 0; i < numOfUsers; i++ {
+		usersToTip = append(usersToTip, usersTo[i])
+	}
+
+	return fmt.Sprintf("Raining %s XDN on %d users", am[len(am)-1], numOfUsers), nil, RainReturnStruct{
+		UsrList:  usersToTip,
+		Amount:   amount,
+		AddrFrom: addrTo.String,
+		Username: username,
+	}
+
+}
+func finishRain(data RainReturnStruct) (string, error) {
+	amountToUser := data.Amount / float64(len(data.UsrList))
+	//send coins to users
+	finalUsrs := make([]UsrStruct, 0)
+	for _, v := range data.UsrList {
+		tx, err := coind.SendCoins(v.Addr, data.AddrFrom, amountToUser, true)
+		if err != nil {
+			continue
+		}
+		finalUsrs = append(finalUsrs, v)
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain by: "+data.Username, tx, "receive")
+		time.Sleep(1 * time.Second)
+	}
+	userString := ""
+	for _, v := range finalUsrs {
+		userString += "@" + v.Name + " "
+	}
+	//create final message
+	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.Username, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
+
+	return mes, nil
 }

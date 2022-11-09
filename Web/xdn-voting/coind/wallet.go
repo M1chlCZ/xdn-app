@@ -86,7 +86,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		_, _ = WrapDaemon(wallet, 1, "walletpassphrase", wallet.PassPhrase.String, 10)
 	}
 
-	call, err := WrapDaemon(wallet, 1, "createrawtransaction", firstParam, secondParam)
+	call, err := WrapDaemon(wallet, 5, "createrawtransaction", firstParam, secondParam)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("createrawtransaction error, addr: %s", addressReceive))
 		return "", errors.New("createrawtransaction error")
@@ -95,7 +95,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 
 	hex := strings.Trim(string(call), "\"")
 	time.Sleep(1 * time.Second)
-	call, err = WrapDaemon(wallet, 1, "signrawtransaction", hex)
+	call, err = WrapDaemon(wallet, 5, "signrawtransaction", hex)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("signrawtransaction error, addr: %s", addressReceive))
 		return "", errors.New("signrawtransaction error")
@@ -112,7 +112,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		utils.WrapErrorLog(fmt.Sprintf("signrawtransaction error, addr: %s", addressReceive))
 		return "", errors.New("signrawtransaction error")
 	}
-	call, err = WrapDaemon(wallet, 1, "sendrawtransaction", sign.Hex)
+	call, err = WrapDaemon(wallet, 5, "sendrawtransaction", sign.Hex)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("sendrawtransaction error, addr: %s", addressReceive))
 		return "", errors.New("sendrawtransaction error")

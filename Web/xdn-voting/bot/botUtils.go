@@ -35,3 +35,15 @@ func ReadConfigDiscord() error {
 	return nil
 
 }
+
+type UsrStruct struct {
+	Addr string `db:"addr"`
+	Name string `db:"name"`
+}
+
+type RainReturnStruct struct {
+	UsrList  []UsrStruct
+	Amount   float64
+	AddrFrom string
+	Username string
+}

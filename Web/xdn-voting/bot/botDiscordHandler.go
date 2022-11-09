@@ -105,12 +105,16 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, err = s.ChannelMessageSend(m.ChannelID, "Unlink failed...")
 			return
 		}
+
 		_, err = s.ChannelMessageSend(m.ChannelID, "Successfully unliked...")
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			return
 		}
+
+		//s.ChannelMessageEditEmbed(asd.ChannelID, asd.ID, "Unlink successful...")
 	} else if command == "tip" {
+
 		discord, err := tipDiscord(m)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
@@ -147,7 +151,7 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 		return errors.New("Invalid token")
 	}
 
-	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot) VALUES (?, ?, ?, ?)", idUser.Int64, from.Author.ID, token, 2)
+	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot, dName) VALUES (?, ?, ?, ?, ?)", idUser.Int64, from.Author.ID, token, 2, from.Author.Username)
 	if err != nil {
 		return errors.New("Error #3")
 	}
@@ -198,24 +202,22 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 		return nil, errors.New("You can tip only one user")
 	}
 
-	username := from.Author.ID
-	ut := from.Mentions[0].ID
-	tippeUserID := from.Mentions[0].ID
-	authorUserID := from.Author.ID
+	author := from.Author.ID
+	tippedUser := from.Mentions[0].ID
 	reg := regexp.MustCompile("\\s[0-9]+")
 	amount := reg.FindAllString(from.Message.Content, -1)
 
 	utils.ReportMessage(fmt.Sprintf("Tipping user %s %s XDN on Discord", from.Mentions[0].Username, strings.TrimSpace(amount[len(amount)-1])))
 
-	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", username, 2)
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
 	if !usrFrom.Valid {
 		return nil, errors.New("You are not registered in the bot db")
 	}
-	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 2)
+	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ? AND typeBot = ?", strings.TrimSpace(tippedUser), 2)
 	if !usrTo.Valid {
-		return nil, errors.New("Mentioned user not registered in the bot db")
+		return nil, errors.New("Mentioned user is not registered in the Discord bot db")
 	}
-	contactTO := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = (SELECT addr FROM users WHERE id = (SELECT idUser FROM users_bot WHERE idSocial = ? ))", usrFrom, ut)
+	contactTO := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = (SELECT addr FROM users WHERE id = (SELECT idUser FROM users_bot WHERE idSocial = ? ))", usrFrom, tippedUser)
 	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)
 	if !addrFrom.Valid {
 		return nil, errors.New("Error getting user from address #1")
@@ -236,9 +238,9 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 	if contactTO.Valid {
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip to: "+contactTO.String, tx, "send")
 	} else {
-		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip to: "+strings.TrimSpace(ut), tx, "send")
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip to: "+strings.TrimSpace(tippedUser), tx, "send")
 	}
-	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tipped by: "+username, tx, "receive")
+	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tipped by: "+author, tx, "receive")
 	go func(addrTo string, addrSend string, amount string) {
 		d := map[string]string{
 			"fn": "sendTransaction",
@@ -273,11 +275,11 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 		}
 	}(addrTo.String, addrFrom.String, amount[len(amount)-1])
 	returnMap := map[string]string{
-		"author": authorUserID,
-		"tipped": tippeUserID,
+		"author": author,
+		"tipped": tippedUser,
 		"amount": amount[len(amount)-1],
 	}
-	utils.ReportMessage(fmt.Sprintf("User @%s tipped @%s%s XDN on Discord", username, ut, amount[len(amount)-1]))
+	utils.ReportMessage(fmt.Sprintf("User @%s tipped @%s%s XDN on Discord", from.Author.Username, from.Mentions[0].Username, amount[len(amount)-1]))
 	return returnMap, nil
 }
 

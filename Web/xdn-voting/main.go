@@ -181,7 +181,7 @@ func getBotConnect(c *fiber.Ctx) error {
 		response.TelegramUserName = tl.String
 	}
 
-	ds := database.ReadValueEmpty[sql.NullString]("SELECT idSocial FROM users_bot WHERE idUser = ? AND typeBot = ?", userID, 2)
+	ds := database.ReadValueEmpty[sql.NullString]("SELECT dName FROM users_bot WHERE idUser = ? AND typeBot = ?", userID, 2)
 	if ds.Valid {
 		response.DiscordUserName = ds.String
 	}
@@ -1521,7 +1521,10 @@ func setStake(c *fiber.Ctx) error {
 }
 
 func unstake(c *fiber.Ctx) error {
-	userID := c.Get("User_id")
+	userID, er := strconv.Atoi(c.Get("User_id"))
+	if er != nil {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
 	type req struct {
 		Type int `json:"type"`
 	}
