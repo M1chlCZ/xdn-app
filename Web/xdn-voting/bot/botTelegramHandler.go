@@ -31,7 +31,7 @@ func StartTelegramBot() {
 
 	for update := range updates {
 		if update.Message != nil {
-			go func(update tgbotapi.Update) {
+			go func(update *tgbotapi.Update) {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 				switch update.Message.Command() {
 				case "status":
@@ -61,18 +61,25 @@ func StartTelegramBot() {
 					tx, errr, data := rain(update.Message.From.UserName, update.Message)
 					if errr != nil {
 						msg.Text = "Error: " + errr.Error()
-					} else {
-						msg.Text = tx
+						_, _ = bot.Send(msg)
+						return
 					}
+					msg.Text = tx
 					mmm, err := bot.Send(msg)
 					if err != nil {
+						m := tgbotapi.NewMessage(update.Message.Chat.ID, "Error: "+err.Error())
+						_, _ = bot.Send(m)
 						utils.WrapErrorLog(err.Error())
+						return
 					}
-					tx, err = finishRain(data)
+					tx, mes, err := finishRain(data, &mmm)
 					if err != nil {
-						tx = "Error: " + err.Error()
+						m := tgbotapi.NewMessage(update.Message.Chat.ID, "Error: "+err.Error())
+						_, _ = bot.Send(m)
+						utils.WrapErrorLog(err.Error())
+						return
 					}
-					ms := tgbotapi.NewEditMessageText(mmm.Chat.ID, mmm.MessageID, tx)
+					ms := tgbotapi.NewEditMessageText(mes.Chat.ID, mes.MessageID, tx)
 					if _, err := bot.Send(ms); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
@@ -102,7 +109,7 @@ func StartTelegramBot() {
 				default:
 					return
 				}
-			}(update)
+			}(&update)
 		}
 	}
 
@@ -229,7 +236,6 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	} else {
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip to: "+strings.TrimSpace(ut), tx, "send")
 	}
-	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tipped by: "+username, tx, "receive")
 	go func(addrTo string, addrSend string, amount string) {
 		d := map[string]string{
 			"fn": "sendTransaction",
@@ -279,20 +285,6 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 		return "", errors.New("Only one parameter is allowed"), RainReturnStruct{}
 	}
 
-	//eg: @100 people
-	re := regexp.MustCompile("\\B@[0-9]+[^a-zA-Z]?$")
-	m := re.FindAllString(from.Text, -1)
-	if len(m) == 0 {
-		return "", errors.New("Missing number of people to tip"), RainReturnStruct{}
-	}
-	if len(m) > 1 {
-		return "", errors.New("You can specify only one number of people to tip"), RainReturnStruct{}
-	}
-	numOfUsers, err := strconv.Atoi(strings.ReplaceAll(m[0], "@", ""))
-	if err != nil {
-		return "", errors.New("Invalid number of people to tip"), RainReturnStruct{}
-	}
-
 	//eg: 100XDN
 	reg := regexp.MustCompile("\\s[0-9]+")
 	am := reg.FindAllString(from.Text, -1)
@@ -311,6 +303,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db"), RainReturnStruct{}
 	}
+	utils.ReportMessage(fmt.Sprintf("--- Rain from %s ---", username))
 	ban := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ? AND ban = ?", username, 1, 1)
 	if ban.Valid {
 		return "", errors.New("You are banned from raining on Telegram"), RainReturnStruct{}
@@ -322,14 +315,43 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	if len(usersTo) == 0 {
 		return "", errors.New("Can't find any users to tip"), RainReturnStruct{}
 	}
-	if len(usersTo) < numOfUsers {
-		return "", errors.New("Too many users to tip"), RainReturnStruct{}
+	usersToTip := make([]UsrStruct, 0)
+	numOfUsers := 0
+
+	//eg: @100 people
+	re := regexp.MustCompile("\\B@[0-9]+[^a-zA-Z]?$")
+	m := re.FindAllString(from.Text, -1)
+	if len(m) != 0 {
+		if len(m) > 1 {
+			return "", errors.New("You can specify only one number of people to tip"), RainReturnStruct{}
+		}
+		numOfUsers, err = strconv.Atoi(strings.ReplaceAll(m[0], "@", ""))
+		if err != nil {
+			return "", errors.New("Invalid number of people to tip"), RainReturnStruct{}
+		}
+
+		if len(usersTo) < numOfUsers {
+			return "", errors.New("Too many users to tip"), RainReturnStruct{}
+		}
+		//shuffle usrFrom
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(usersTo), func(i, j int) { usersTo[i], usersTo[j] = usersTo[j], usersTo[i] })
+		//random select numOfUser from usrFrom
+		for i := 0; i < numOfUsers; i++ {
+			usersToTip = append(usersToTip, usersTo[i])
+		}
+	} else {
+		usersToTip = usersTo
+		numOfUsers = len(usersTo)
 	}
+
 	//send coins to stake wallet
 	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)
 	if !addrFrom.Valid {
 		return "", errors.New("Error getting user address #1"), RainReturnStruct{}
 	}
+
+	_, _ = database.InsertSQl("UPDATE users_bot SET numberRained = numberRained + 1 WHERE idSocial  = ?", usrFrom.Int64) //update number of rains
 
 	addrTo := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
 	if !addrTo.Valid {
@@ -342,17 +364,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
 
-	//shuffle usrFrom
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(usersTo), func(i, j int) { usersTo[i], usersTo[j] = usersTo[j], usersTo[i] })
-
-	//random select numOfUser from usrFrom
-	usersToTip := make([]UsrStruct, 0)
-	for i := 0; i < numOfUsers; i++ {
-		usersToTip = append(usersToTip, usersTo[i])
-	}
-
-	return fmt.Sprintf("Raining %s XDN on %d users", am[len(am)-1], numOfUsers), nil, RainReturnStruct{
+	return fmt.Sprintf("Raining %.2f XDN on %d users", amount, numOfUsers), nil, RainReturnStruct{
 		UsrList:  usersToTip,
 		Amount:   amount,
 		AddrFrom: addrTo.String,
@@ -361,7 +373,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	}
 
 }
-func finishRain(data RainReturnStruct) (string, error) {
+func finishRain(data RainReturnStruct, m *tgbotapi.Message) (string, *tgbotapi.Message, error) {
 	amountToUser := data.Amount / float64(len(data.UsrList))
 	d := map[string]string{
 		"fn": "sendTransaction",
@@ -404,7 +416,7 @@ func finishRain(data RainReturnStruct) (string, error) {
 				}
 				if len(tk) > 0 {
 					for _, v := range tk {
-						utils.SendMessage(v.Token, fmt.Sprintf("Caught rain by: %s", data.AddrFrom), fmt.Sprintf("%s XDN", fmt.Sprintf("%s XDN", strconv.FormatFloat(amountToUser, 'f', 2, 32))), d)
+						utils.SendMessage(v.Token, fmt.Sprintf("Caught rain by: %s", data.AddrSend), fmt.Sprintf("%s XDN", fmt.Sprintf("%s XDN", strconv.FormatFloat(amountToUser, 'f', 2, 32))), d)
 					}
 				}
 			}
@@ -421,5 +433,5 @@ func finishRain(data RainReturnStruct) (string, error) {
 	//create final message
 	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.Username, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
 
-	return mes, nil
+	return mes, m, nil
 }

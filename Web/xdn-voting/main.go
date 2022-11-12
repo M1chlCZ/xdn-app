@@ -163,10 +163,13 @@ func main() {
 }
 
 func getBotConnect(c *fiber.Ctx) error {
-	userID := c.Get("User_id")
-	if userID == "" {
+	userID, err := strconv.Atoi(c.Get("User_id"))
+	if err != nil {
 		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
 	}
+
+	bot.RegenerateTokenSocial(int64(userID))
+	time.Sleep(time.Millisecond * 10)
 	token := database.ReadValueEmpty[sql.NullString]("SELECT tokenSocials FROM users WHERE id = ?", userID)
 	if !token.Valid || token.String == "" {
 		return utils.ReportError(c, "Token not found", fiber.StatusBadRequest)

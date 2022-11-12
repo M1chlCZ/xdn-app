@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	VERSION        = "0.0.0.8"
+	VERSION        = "0.0.0.9"
 	STATUS  string = "status"
 	OK      string = "OK"
 	FAIL    string = "FAIL"
