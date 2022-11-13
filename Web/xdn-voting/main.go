@@ -168,7 +168,6 @@ func getBotConnect(c *fiber.Ctx) error {
 		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
 	}
 
-	bot.RegenerateTokenSocial(int64(userID))
 	time.Sleep(time.Millisecond * 10)
 	token := database.ReadValueEmpty[sql.NullString]("SELECT tokenSocials FROM users WHERE id = ?", userID)
 	if !token.Valid || token.String == "" {
@@ -1127,16 +1126,21 @@ func getBalance(c *fiber.Ctx) error {
 	if er != nil {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
 	}
+	imm := 0.0
+	bl := 0.0
 	acc, _ := database.ReadValue[string]("SELECT username FROM users WHERE id = ?", userID)
 	addr, _ := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
-	immature, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount),0) as immature FROM transaction WHERE account = ? AND confirmation < 2 AND category = 'receive'", acc)
-	daemon := utils.GetDaemon()
-	unspent, err := coind.WrapDaemon(*daemon, 5, "listunspent", 1, 9999999, []string{addr})
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	immature := database.ReadValueEmpty[sql.NullFloat64]("SELECT IFNULL(SUM(amount),0) as immature FROM transaction WHERE account = ? AND confirmation < 2 AND category = 'receive'", acc)
+	bal := database.ReadValueEmpty[sql.NullFloat64](`SELECT SUM(amount) as amount FROM transaction WHERE account = ?`, acc)
+	if immature.Valid {
+		imm = immature.Float64
+	}
+	if bal.Valid {
+		bl = bal.Float64
 	}
 
-	bal, err := database.ReadValue[float64](`SELECT SUM(amount) as amount FROM transaction WHERE account = ?`, acc)
+	daemon := utils.GetDaemon()
+	unspent, err := coind.WrapDaemon(*daemon, 5, "listunspent", 1, 9999999, []string{addr})
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
@@ -1153,7 +1157,7 @@ func getBalance(c *fiber.Ctx) error {
 			spendable += v.Amount
 		}
 	}
-	pending := bal - spendable
+	pending := bl - spendable
 	elapsed := time.Since(start)
 	if debugTime {
 		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
@@ -1162,7 +1166,7 @@ func getBalance(c *fiber.Ctx) error {
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
 		"balance":    fmt.Sprintf("%.2f", float32(pending)),
-		"immature":   float32(immature),
+		"immature":   float32(imm),
 		"spendable":  float32(spendable),
 	})
 }

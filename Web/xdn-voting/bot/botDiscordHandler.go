@@ -20,6 +20,10 @@ var (
 	config *configStruct
 )
 
+const (
+	MainChannelID = "469466166642081792"
+)
+
 type configStruct struct {
 	Token     string `json:"Token"`
 	BotPrefix string `json:"BotPrefix"`
@@ -61,11 +65,11 @@ func Setup() {
 
 	goBot.AddHandler(messageHandler)
 	err = goBot.Open()
-
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return
 	}
+
 	utils.ReportMessage(fmt.Sprintf("Bot is running as %s Prefix: %s", u.Username, config.BotPrefix))
 }
 
@@ -180,6 +184,7 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 	}
 
 	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot, dName) VALUES (?, ?, ?, ?, ?)", idUser.Int64, from.Author.ID, token, 2, from.Author.Username)
+	//_, err = database.InsertSQl("UPDATE users_bot SET dName = CONVERT(BINARY(CONVERT(? USING latin1)) USING utf8mb4) WHERE idSocial = ? ", from.Author.Username, from.Author.ID)
 	if err != nil {
 		return err
 	}
@@ -390,7 +395,7 @@ func rainDiscord(from *discordgo.MessageCreate) (string, error, RainReturnStruct
 		return "", errors.New("Error getting user address #1"), RainReturnStruct{}
 	}
 
-	_, _ = database.InsertSQl("UPDATE users_bot SET numberRained = numberRained + 1 WHERE idSocial  = ?", usrFrom.Int64) //update number of rains
+	_, _ = database.InsertSQl("UPDATE users_bot SET numberRained = numberRained+1 WHERE idUser = ?", usrFrom.Int64) //update number of rains
 
 	addrTo := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
 	if !addrTo.Valid {

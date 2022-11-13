@@ -16,6 +16,10 @@ import (
 	"xdn-voting/utils"
 )
 
+const (
+	MainChannel = -1001238019497
+)
+
 var statusMessage = []string{"I'm okay, you?", "All is good", "Yep...still okay", "Living the expensive life currently, you?", "I'm fine, how are you?", "I'm good, thanks!", "I'm fine"}
 
 func StartTelegramBot() {
@@ -35,6 +39,7 @@ func StartTelegramBot() {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 				switch update.Message.Command() {
 				case "status":
+					utils.ReportMessage(fmt.Sprintf("Message from %d", update.Message.Chat.ID))
 					msg.Text = statusMessage[rand.Intn(len(statusMessage))]
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
@@ -72,14 +77,16 @@ func StartTelegramBot() {
 						utils.WrapErrorLog(err.Error())
 						return
 					}
-					tx, mes, err := finishRain(data, &mmm)
+					chatID := mmm.Chat.ID
+					messageID := mmm.MessageID
+					txd, err := finishRain(data)
 					if err != nil {
-						m := tgbotapi.NewMessage(update.Message.Chat.ID, "Error: "+err.Error())
+						m := tgbotapi.NewMessage(chatID, "Error: "+err.Error())
 						_, _ = bot.Send(m)
 						utils.WrapErrorLog(err.Error())
 						return
 					}
-					ms := tgbotapi.NewEditMessageText(mes.Chat.ID, mes.MessageID, tx)
+					ms := tgbotapi.NewEditMessageText(chatID, messageID, txd)
 					if _, err := bot.Send(ms); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
@@ -351,7 +358,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 		return "", errors.New("Error getting user address #1"), RainReturnStruct{}
 	}
 
-	_, _ = database.InsertSQl("UPDATE users_bot SET numberRained = numberRained + 1 WHERE idSocial  = ?", usrFrom.Int64) //update number of rains
+	_, _ = database.InsertSQl("UPDATE users_bot SET numberRained = numberRained + 1 WHERE idUser  = ?", usrFrom.Int64) //update number of rains
 
 	addrTo := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
 	if !addrTo.Valid {
@@ -373,7 +380,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	}
 
 }
-func finishRain(data RainReturnStruct, m *tgbotapi.Message) (string, *tgbotapi.Message, error) {
+func finishRain(data RainReturnStruct) (string, error) {
 	amountToUser := data.Amount / float64(len(data.UsrList))
 	d := map[string]string{
 		"fn": "sendTransaction",
@@ -433,5 +440,5 @@ func finishRain(data RainReturnStruct, m *tgbotapi.Message) (string, *tgbotapi.M
 	//create final message
 	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.Username, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
 
-	return mes, m, nil
+	return mes, nil
 }
