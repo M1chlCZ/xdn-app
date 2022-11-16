@@ -3,6 +3,7 @@ package bot
 import (
 	"database/sql"
 	"fmt"
+	"github.com/bwmarrin/discordgo"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"gopkg.in/errgo.v2/errors"
 	"math/rand"
@@ -39,19 +40,24 @@ func StartTelegramBot() {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 				switch update.Message.Command() {
 				case "status":
+					Running = true
 					utils.ReportMessage(fmt.Sprintf("Message from %d", update.Message.Chat.ID))
 					msg.Text = statusMessage[rand.Intn(len(statusMessage))]
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
+					Running = false
 					return
 				case "help":
+					Running = true
 					msg.Text = "I understand /register /unlink /status and /tip."
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
+					Running = false
 					return
 				case "tip":
+					Running = true
 					tx, err := tip(update.Message.From.UserName, update.Message)
 					if err != nil {
 						msg.Text = "Error: " + err.Error()
@@ -61,12 +67,15 @@ func StartTelegramBot() {
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
+					Running = false
 					return
 				case "rain":
+					Running = true
 					tx, errr, data := rain(update.Message.From.UserName, update.Message)
 					if errr != nil {
 						msg.Text = "Error: " + errr.Error()
 						_, _ = bot.Send(msg)
+						Running = false
 						return
 					}
 					msg.Text = tx
@@ -75,6 +84,7 @@ func StartTelegramBot() {
 						m := tgbotapi.NewMessage(update.Message.Chat.ID, "Error: "+err.Error())
 						_, _ = bot.Send(m)
 						utils.WrapErrorLog(err.Error())
+						Running = false
 						return
 					}
 					chatID := mmm.Chat.ID
@@ -84,14 +94,51 @@ func StartTelegramBot() {
 						m := tgbotapi.NewMessage(chatID, "Error: "+err.Error())
 						_, _ = bot.Send(m)
 						utils.WrapErrorLog(err.Error())
+						Running = false
 						return
 					}
 					ms := tgbotapi.NewEditMessageText(chatID, messageID, txd)
 					if _, err := bot.Send(ms); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
+					Running = false
+					return
+				case "thunder":
+					Running = true
+					tx, errr, data := thunderTelegram(update.Message.From.UserName, update.Message)
+					if errr != nil {
+						msg.Text = "Error: " + errr.Error()
+						_, _ = bot.Send(msg)
+						Running = false
+						return
+					}
+					msg.Text = tx
+					mmm, err := bot.Send(msg)
+					if err != nil {
+						m := tgbotapi.NewMessage(update.Message.Chat.ID, "Error: "+err.Error())
+						_, _ = bot.Send(m)
+						utils.WrapErrorLog(err.Error())
+						Running = false
+						return
+					}
+					chatID := mmm.Chat.ID
+					messageID := mmm.MessageID
+					txd, err := finishThunder(data)
+					if err != nil {
+						m := tgbotapi.NewMessage(chatID, "Error: "+err.Error())
+						_, _ = bot.Send(m)
+						utils.WrapErrorLog(err.Error())
+						Running = false
+						return
+					}
+					ms := tgbotapi.NewEditMessageText(chatID, messageID, txd)
+					if _, err := bot.Send(ms); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					Running = false
 					return
 				case "register":
+					Running = true
 					err := register(update.Message.CommandArguments(), update.Message.From)
 					if err != nil {
 						msg.Text = "Error: " + err.Error()
@@ -101,8 +148,10 @@ func StartTelegramBot() {
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
+					Running = false
 					return
 				case "unlink":
+					Running = true
 					err := unlink(update.Message.From)
 					if err != nil {
 						msg.Text = "Error: " + err.Error()
@@ -112,8 +161,10 @@ func StartTelegramBot() {
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
+					Running = false
 					return
 				default:
+					Running = false
 					return
 				}
 			}(&update)
@@ -122,20 +173,12 @@ func StartTelegramBot() {
 
 }
 
-func isRegistered(userID string) error {
-	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", userID)
-	if !usrFrom.Valid {
-		return errors.New("Not registered")
-	}
-	return nil
-}
-
 func register(token string, from *tgbotapi.User) error {
 	if from.IsBot {
 		return errors.New("Bots are not allowed")
 	}
 	if from.UserName == "" {
-		return errors.New("Username is required")
+		return errors.New("UserID is required")
 	}
 
 	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ?", from.UserName)
@@ -145,6 +188,7 @@ func register(token string, from *tgbotapi.User) error {
 
 	idUser := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE tokenSocials = ?", token)
 	if !idUser.Valid {
+		RegenerateTokenSocial(idUser.Int64)
 		return errors.New("Invalid token")
 	}
 
@@ -160,7 +204,7 @@ func unlink(from *tgbotapi.User) error {
 		return errors.New("Bots are not allowed")
 	}
 	if from.UserName == "" {
-		return errors.New("Username is required")
+		return errors.New("UserID is required")
 	}
 
 	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ?", from.UserName, 1)
@@ -375,7 +419,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 		UsrList:  usersToTip,
 		Amount:   amount,
 		AddrFrom: addrTo.String,
-		Username: username,
+		UserID:   username,
 		AddrSend: addrFrom.String,
 	}
 
@@ -392,7 +436,7 @@ func finishRain(data RainReturnStruct) (string, error) {
 			continue
 		}
 		finalUsrs = append(finalUsrs, v)
-		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain by: "+data.Username, tx, "receive")
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain by: "+data.UserID, tx, "receive")
 		utils.ReportMessage("Rain", fmt.Sprintf("Sent %f XDN to %s", amountToUser, v.Addr))
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", v.Addr)
 		if userTo.Valid {
@@ -438,7 +482,212 @@ func finishRain(data RainReturnStruct) (string, error) {
 		userString += "@" + v.Name + " "
 	}
 	//create final message
-	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.Username, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
+	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.UserID, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
 
 	return mes, nil
+}
+
+func thunderTelegram(username string, from *tgbotapi.Message) (string, error, ThunderReturnStruct) {
+	if from.From.IsBot {
+		return "", errors.New("Bots are not allowed"), ThunderReturnStruct{}
+	}
+	str1 := strings.ReplaceAll(from.Text, "@", "")
+	str2 := from.Text
+	if (len(str2) - len(str1)) > 1 {
+		return "", errors.New("Only one parameter is allowed"), ThunderReturnStruct{}
+	}
+
+	//eg: 100XDN
+	reg := regexp.MustCompile("\\s[0-9]+")
+	am := reg.FindAllString(from.Text, -1)
+	if len(am) == 0 {
+		return "", errors.New("Missing amount to tip"), ThunderReturnStruct{}
+	}
+	amount, err := strconv.ParseFloat(strings.TrimSpace(am[0]), 32)
+	if err != nil {
+		return "", errors.New("Invalid amount to tip"), ThunderReturnStruct{}
+	}
+
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db"), ThunderReturnStruct{}
+	}
+	utils.ReportMessage(fmt.Sprintf("--- Thunder from %s ---", username))
+
+	//join userTelegram with userDiscord
+
+	telegramFinalSlice := make([]UsrStruct, 0)
+	discordFinalSlice := make([]UsrStruct, 0)
+
+	numOfUsers := 0
+
+	addrTo := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
+	if !addrTo.Valid {
+		return "", errors.New("Problem sending coins to rain service"), ThunderReturnStruct{}
+	}
+	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)
+	if !addrFrom.Valid {
+		return "", errors.New("Error getting user address #1"), ThunderReturnStruct{}
+	}
+
+	//eg: @100 people
+	re := regexp.MustCompile("\\B@[0-9]+[^a-zA-Z]?$")
+	m := re.FindAllString(from.Text, -1)
+	if len(m) != 0 {
+		utils.ReportMessage("Thunder by number")
+		if len(m) > 1 {
+			return "", errors.New("You can specify only one number of people to tip"), ThunderReturnStruct{}
+		}
+		numOfUsers, err = strconv.Atoi(strings.ReplaceAll(m[0], "@", ""))
+		if err != nil {
+			return "", errors.New("Invalid number of people to tip"), ThunderReturnStruct{}
+		}
+
+		usrTL, err := database.ReadArray[UsrStructThunder](`SELECT ANY_VALUE(a.idSocial) as name, ANY_VALUE(a.typeBot) as typeBot, b.addr as addr from users_bot a, users b WHERE a.idUser = b.id 
+		AND idUser IN  (SELECT idUser  FROM users_bot AS t1 JOIN (SELECT id FROM users_bot ORDER BY RAND()) as t2 ON t1.id=t2.id) 
+		GROUP BY a.idUser
+		`)
+		if err != nil {
+			return "", errors.New("Error getting users"), ThunderReturnStruct{}
+		}
+
+		if len(usrTL) < numOfUsers {
+			return "", errors.New("Too many users to tip"), ThunderReturnStruct{}
+		}
+
+		//shuffle usrFrom
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(usrTL), func(i, j int) { usrTL[i], usrTL[j] = usrTL[j], usrTL[i] })
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(usrTL), func(i, j int) { usrTL[i], usrTL[j] = usrTL[j], usrTL[i] })
+		//random select numOfUser from usrFrom
+		var usersToTip []UsrStructThunder
+		for i := 0; i < numOfUsers; i++ {
+			usersToTip = append(usersToTip, usrTL[i])
+		}
+
+		for i := 0; i < numOfUsers; i++ {
+			if usrTL[i].TypeBot == 1 {
+				telegramFinalSlice = append(telegramFinalSlice, UsrStruct{
+					Addr: usrTL[i].Addr,
+					Name: usrTL[i].Name,
+				})
+			} else {
+				discordFinalSlice = append(discordFinalSlice, UsrStruct{
+					Addr: usrTL[i].Addr,
+					Name: usrTL[i].Name,
+				})
+			}
+		}
+	} else {
+		utils.ReportMessage("Thunder by all")
+
+		usrTL, err := database.ReadArray[UsrStructThunder](`SELECT ANY_VALUE(a.idSocial) as name, ANY_VALUE(a.typeBot) as typeBot, b.addr as addr from users_bot a, users b WHERE a.idUser = b.id 
+		AND idUser IN  (SELECT idUser  FROM users_bot AS t1 JOIN (SELECT id FROM users_bot ORDER BY RAND()) as t2 ON t1.id=t2.id) 
+		GROUP BY a.idUser`)
+		if err != nil {
+			return "", errors.New("Error getting users"), ThunderReturnStruct{}
+		}
+
+		for i := 0; i < len(usrTL); i++ {
+			if usrTL[i].TypeBot == 1 {
+				telegramFinalSlice = append(telegramFinalSlice, UsrStruct{
+					Addr: usrTL[i].Addr,
+					Name: usrTL[i].Name,
+				})
+			} else {
+				discordFinalSlice = append(discordFinalSlice, UsrStruct{
+					Addr: usrTL[i].Addr,
+					Name: usrTL[i].Name,
+				})
+			}
+		}
+		numOfUsers = len(usrTL)
+	}
+
+	_, _ = database.InsertSQl("UPDATE users_bot SET numberRained = numberRained + 1 WHERE idUser  = ?", usrFrom.Int64) //update number of rains
+	utils.ReportMessage(fmt.Sprintf("Sending coins to rain service %s", username))
+	tx, err := coind.SendCoins(addrTo.String, addrFrom.String, amount, false)
+	if err != nil {
+		return "", err, ThunderReturnStruct{}
+	}
+	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
+
+	return fmt.Sprintf("Raining thunder of %.2f XDN on %d users", amount, numOfUsers), nil, ThunderReturnStruct{
+		UsrListTelegram: telegramFinalSlice,
+		UsrListDiscord:  discordFinalSlice,
+		Amount:          amount,
+		AddrFrom:        addrTo.String,
+		Username:        username,
+		AddrSend:        addrFrom.String,
+	}
+}
+
+func finishThunder(data ThunderReturnStruct) (string, error) {
+	numberOfUsers := len(data.UsrListTelegram) + len(data.UsrListDiscord)
+	amountTelegram := (data.Amount / float64(numberOfUsers)) * float64(len(data.UsrListTelegram))
+	amountDiscord := (data.Amount / float64(numberOfUsers)) * float64(len(data.UsrListDiscord))
+
+	telegramResponse := ""
+	var telegramError error
+	if len(data.UsrListTelegram) != 0 {
+		telegramResponse, telegramError = finishRain(RainReturnStruct{
+			UsrList:  data.UsrListTelegram,
+			Amount:   amountTelegram,
+			AddrFrom: data.AddrFrom,
+			UserID:   data.Username,
+			AddrSend: data.AddrSend,
+		})
+	}
+
+	if len(data.UsrListDiscord) != 0 {
+		idUser := database.ReadValueEmpty[int64]("SELECT idUser FROM users_bot WHERE binary idSocial = ?", data.Username)
+		discordUserID := database.ReadValueEmpty[string]("SELECT idSocial FROM users_bot WHERE idUser = ? AND typeBot = 2", idUser)
+		discordUserName := database.ReadValueEmpty[string]("SELECT dname FROM users_bot WHERE id = ? AND typeBot = 2", idUser)
+		utils.ReportMessage(fmt.Sprintf("Discord username: %s", discordUserID))
+
+		a, b, c := finishRainDiscord(RainReturnStruct{
+			UsrList:  data.UsrListDiscord,
+			Amount:   amountDiscord,
+			AddrFrom: data.AddrFrom,
+			UserID:   discordUserID,
+			AddrSend: data.AddrSend,
+		}, &discordgo.Message{
+			ID:                discordUserID,
+			ChannelID:         MainChannelID,
+			GuildID:           "",
+			Content:           "",
+			Timestamp:         time.Time{},
+			EditedTimestamp:   nil,
+			MentionRoles:      nil,
+			TTS:               false,
+			MentionEveryone:   false,
+			Author:            &discordgo.User{Username: discordUserName, ID: discordUserID},
+			Attachments:       nil,
+			Components:        nil,
+			Embeds:            nil,
+			Mentions:          nil,
+			Reactions:         nil,
+			Pinned:            false,
+			Type:              0,
+			WebhookID:         "",
+			Member:            nil,
+			MentionChannels:   nil,
+			Activity:          nil,
+			Application:       nil,
+			MessageReference:  nil,
+			ReferencedMessage: nil,
+			Interaction:       nil,
+			Flags:             0,
+			Thread:            nil,
+			StickerItems:      nil,
+		})
+		if c != nil {
+			utils.WrapErrorLog(c.Error())
+		} else {
+			showThunderMessage(a, b)
+		}
+	}
+
+	return telegramResponse, telegramError
 }

@@ -22,6 +22,7 @@ var (
 
 const (
 	MainChannelID = "469466166642081792"
+	TestChannelID = "1033753700721754172"
 )
 
 type configStruct struct {
@@ -30,7 +31,7 @@ type configStruct struct {
 }
 
 var botID string
-var _ *discordgo.Session
+var goBot *discordgo.Session
 
 func StartDiscord() {
 	err := ReadConfigDiscord()
@@ -46,7 +47,8 @@ func StartDiscord() {
 }
 
 func Setup() {
-	goBot, err := discordgo.New("Bot " + config.Token)
+	var err error
+	goBot, err = discordgo.New("Bot " + config.Token)
 
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
@@ -79,7 +81,6 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 		if m.Author.ID == botID {
 			return
 		}
-
 		re := regexp.MustCompile("\\B\\$\\w+")
 		comArray := re.FindAllString(m.Content, 1)
 		if len(comArray) == 0 {
@@ -88,56 +89,71 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 		command := strings.Replace(comArray[0], "$", "", 1)
 
 		if command == "ping" {
+			utils.ReportMessage(fmt.Sprintf("Pong! %s", m.ChannelID))
 			_, _ = s.ChannelMessageSend(m.ChannelID, "pong")
+		} else if command == "bvcx" {
+			Running = false
+			_, _ = s.ChannelMessageSend(m.ChannelID, "shut")
 		} else if command == "connect" {
+			Running = true
 			content := strings.ReplaceAll(m.Message.Content, config.BotPrefix+"connect", "")
 			utils.ReportMessage(fmt.Sprintf("Registering user %s", content))
 			err := registerDiscord(strings.TrimSpace(content), m)
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				_, err = s.ChannelMessageSend(m.ChannelID, err.Error())
+				Running = false
 				return
 			}
 			_, err = s.ChannelMessageSend(m.ChannelID, "Successfully registered...")
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
+				Running = false
 				return
 			}
+			Running = false
 		} else if command == "unlink" {
+			Running = true
 			content := strings.ReplaceAll(m.Message.Content, config.BotPrefix+"unlink", "")
 			utils.ReportMessage(fmt.Sprintf("Unlinking user %s", content))
 			err := deregisterDiscord(m)
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				_, err = s.ChannelMessageSend(m.ChannelID, "Unlink failed...")
+				Running = false
 				return
 			}
-
 			_, err = s.ChannelMessageSend(m.ChannelID, "Successfully unliked...")
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
+				Running = false
 				return
 			}
-
+			Running = false
 			//s.ChannelMessageEditEmbed(asd.ChannelID, asd.ID, "Unlink successful...")
 		} else if command == "tip" {
+			Running = true
 			discord, err := tipDiscord(m)
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Tip unsuccessful", err.Error())})
+				Running = false
 				return
 			}
-
 			_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipEmbed(discord["author"], discord["tipped"], discord["amount"], m.Author.AvatarURL("128"), m.Author.Username)})
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
+				Running = false
 				return
 			}
+			Running = false
 		} else if command == "rain" {
+			Running = true
 			discord, err, res := rainDiscord(m)
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Rain unsuccessful", err.Error())})
+				Running = false
 				return
 			}
 			mm, _ := s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{RainEmbed(discord)})
@@ -145,16 +161,20 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				_, _ = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Rain unsuccessful", err.Error())})
+				Running = false
 				return
 			}
 			_, err = s.ChannelMessageEditEmbeds(d.ChannelID, d.ID, []*discordgo.MessageEmbed{RainFinishEmbed(create, m.Author.AvatarURL("128"), m.Author.Username)})
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				_, _ = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Rain unsuccessful", err.Error())})
+				Running = false
 				return
 			}
+			Running = false
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Unknown command")
+			Running = false
 		}
 	}(mes)
 }
@@ -165,7 +185,7 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 		return errors.New("Bot can't register")
 	}
 	if from.Author.Username == "" {
-		return errors.New("Username is required")
+		return errors.New("UserID is required")
 	}
 
 	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ?", from.Author.ID, 2)
@@ -184,7 +204,7 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 	}
 
 	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot, dName) VALUES (?, ?, ?, ?, ?)", idUser.Int64, from.Author.ID, token, 2, from.Author.Username)
-	//_, err = database.InsertSQl("UPDATE users_bot SET dName = CONVERT(BINARY(CONVERT(? USING latin1)) USING utf8mb4) WHERE idSocial = ? ", from.Author.Username, from.Author.ID)
+	//_, err = database.InsertSQl("UPDATE users_bot SET dName = CONVERT(BINARY(CONVERT(? USING latin1)) USING utf8mb4) WHERE idSocial = ? ", from.Author.UserID, from.Author.ID)
 	if err != nil {
 		return err
 	}
@@ -198,7 +218,7 @@ func deregisterDiscord(from *discordgo.MessageCreate) error {
 		return errors.New("Bot can't register")
 	}
 	if from.Author.Username == "" {
-		return errors.New("Username is required")
+		return errors.New("UserID is required")
 	}
 
 	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ?", from.Author.ID)
@@ -226,7 +246,7 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 		return nil, errors.New("Bot can't tip")
 	}
 	if from.Author.Username == "" {
-		return nil, errors.New("Username is required")
+		return nil, errors.New("UserID is required")
 	}
 	if len(from.Mentions) == 0 {
 		return nil, errors.New("No user mentioned in tip command")
@@ -412,11 +432,12 @@ func rainDiscord(from *discordgo.MessageCreate) (string, error, RainReturnStruct
 		UsrList:  usersToTip,
 		Amount:   amount,
 		AddrFrom: addrTo.String,
-		Username: from.Author.ID,
+		UserID:   from.Author.ID,
 		AddrSend: addrFrom.String,
 	}
 
 }
+
 func finishRainDiscord(data RainReturnStruct, m *discordgo.Message) (string, *discordgo.Message, error) {
 	amountToUser := data.Amount / float64(len(data.UsrList))
 	d := map[string]string{
@@ -478,95 +499,21 @@ func finishRainDiscord(data RainReturnStruct, m *discordgo.Message) (string, *di
 			userString += " "
 		}
 	}
+	utils.ReportMessage(fmt.Sprintf("///// userName: %s", data.UserID))
 	//create final message
-	mes := fmt.Sprintf("User <@%s> rained on %s %s XDN each", data.Username, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
+	mes := fmt.Sprintf("User <@%s> rained on %s %s XDN each", data.UserID, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
 
 	return mes, m, nil
 }
 
-func RainEmbed(message string) *discordgo.MessageEmbed {
-	timeString := time.Now().Format(time.RFC3339)
-	genericEmbed := discordgo.MessageEmbed{
-		Type:        "",
-		Title:       "Rain in progress",
-		Description: message,
-		Timestamp:   timeString,
-		Color:       0x00ff00,
-		Footer:      nil,
-		Image:       nil,
-		Thumbnail:   nil,
-		Video:       nil,
-		Provider:    nil,
-		Fields:      nil,
+func showThunderMessage(message string, d *discordgo.Message) {
+	user, err := goBot.User(d.Author.ID)
+	if err != nil {
+		utils.WrapErrorLog(fmt.Sprintf("Get USER %s", err.Error()))
+		return
 	}
-	return &genericEmbed
-}
-
-func RainFinishEmbed(message, avatar, username string) *discordgo.MessageEmbed {
-	timeString := time.Now().Format(time.RFC3339)
-	genericEmbed := discordgo.MessageEmbed{
-		Type:        "",
-		Title:       "Rain successfull",
-		Description: message,
-		Timestamp:   timeString,
-		Color:       0x00ff00,
-		Footer:      nil,
-		Image:       nil,
-		Thumbnail:   nil,
-		Video:       nil,
-		Provider:    nil,
-		Author: &discordgo.MessageEmbedAuthor{
-			Name:    username,
-			URL:     "",
-			IconURL: avatar,
-		},
-		Fields: nil,
+	_, err = goBot.ChannelMessageSendEmbeds(d.ChannelID, []*discordgo.MessageEmbed{ThunderFinishEmbed(message, user.AvatarURL("160"), user.Username)})
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
 	}
-	return &genericEmbed
-}
-
-func TipEmbed(userFrom, userTo, amount, avatar, username string) *discordgo.MessageEmbed {
-	timeString := time.Now().Format(time.RFC3339)
-	genericEmbed := discordgo.MessageEmbed{
-		Type:        "",
-		Title:       "Tip successful",
-		Description: fmt.Sprintf("User <@%s> tipped <@%s> %s XDN", userFrom, userTo, amount),
-		Timestamp:   timeString,
-		Color:       0x00ff00,
-		Footer:      nil,
-		Image:       nil,
-		Thumbnail:   nil,
-		Video:       nil,
-		Provider:    nil,
-		Author: &discordgo.MessageEmbedAuthor{
-			Name:    username,
-			URL:     "",
-			IconURL: avatar,
-		},
-		Fields: nil,
-	}
-	return &genericEmbed
-}
-
-func TipErrorEmbed(error, title string) *discordgo.MessageEmbed {
-	timeString := time.Now().Format(time.RFC3339)
-	genericEmbed := discordgo.MessageEmbed{
-		Type:        "",
-		Title:       title,
-		Description: error,
-		Timestamp:   timeString,
-		Color:       0xEB0000,
-		Footer:      nil,
-		Image:       nil,
-		Thumbnail:   nil,
-		Video:       nil,
-		Provider:    nil,
-		Author: &discordgo.MessageEmbedAuthor{
-			Name:    "XDN Tip Bot",
-			URL:     "",
-			IconURL: "https://cdn.discordapp.com/avatars/1038623597746458644/b4aa43e5d422bcc3b72e49d067d87f73.webp?size=160",
-		},
-		Fields: nil,
-	}
-	return &genericEmbed
 }

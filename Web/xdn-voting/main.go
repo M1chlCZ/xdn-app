@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"database/sql"
 	"encoding/base64"
@@ -17,9 +18,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 	"xdn-voting/apiWallet"
 	"xdn-voting/bot"
@@ -34,6 +37,8 @@ import (
 )
 
 var debugTime = false
+
+var wait = time.Second * 15
 
 func main() {
 	database.New()
@@ -112,7 +117,6 @@ func main() {
 	app.Post("api/v1/user/addressbook/delete", utils.Authorized(deleteFromAddressBook))
 	app.Post("api/v1/user/addressbook/update", utils.Authorized(updateAddressBook))
 
-	app.Get("api/v1/user/bot", utils.Authorized(getTokenBot)) //TODO deprecated
 	app.Get("api/v1/user/bot/connect", utils.Authorized(getBotConnect))
 	app.Post("api/v1/user/bot/unlink", utils.Authorized(unlinkBot))
 
@@ -149,6 +153,8 @@ func main() {
 	}
 
 	config := &tls.Config{Certificates: []tls.Certificate{cer}}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 
 	// Create custom listener
 	ln, err := tls.Listen("tcp", "127.0.0.1:6800", config)
@@ -156,10 +162,30 @@ func main() {
 		utils.WrapErrorLog(err.Error())
 		panic(err)
 	}
+	go func() {
+		err := app.Listener(ln)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			panic(err)
+		}
+		//utils.WrapErrorLog(error.Error(app.Listener(ln)))
+	}()
+
+	<-c
+
+	for bot.Running == true {
+		utils.ReportMessage("Waiting for bot to stop")
+		time.Sleep(time.Second * 5)
+	}
+
+	_, cancel := context.WithTimeout(context.Background(), wait)
+	utils.ReportMessage("/// = = Shutting down = = ///")
+	defer cancel()
+	_ = ln.Close()
+	_ = app.Shutdown()
+	os.Exit(0)
 
 	// Start server with https/ssl enabled on http://localhost:443
-	utils.WrapErrorLog(error.Error(app.Listener(ln)))
-
 }
 
 func getBotConnect(c *fiber.Ctx) error {
@@ -169,6 +195,7 @@ func getBotConnect(c *fiber.Ctx) error {
 	}
 
 	time.Sleep(time.Millisecond * 10)
+	bot.RegenerateTokenSocial(int64(userID))
 	token := database.ReadValueEmpty[sql.NullString]("SELECT tokenSocials FROM users WHERE id = ?", userID)
 	if !token.Valid || token.String == "" {
 		return utils.ReportError(c, "Token not found", fiber.StatusBadRequest)
@@ -221,11 +248,10 @@ func unlinkBot(c *fiber.Ctx) error {
 }
 
 func getTokenBot(c *fiber.Ctx) error {
-	userID := c.Get("User_id")
-	if userID == "" {
+	userID, er := strconv.Atoi(c.Get("User_id"))
+	if er == nil {
 		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
 	}
-
 	token := database.ReadValueEmpty[sql.NullString]("SELECT tokenSocials FROM users WHERE id = ?", userID)
 	if !token.Valid || token.String == "" {
 		return utils.ReportError(c, "Token not found", fiber.StatusBadRequest)
