@@ -34,7 +34,7 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
   }
 
   getTokenLink() async {
-    var token = await _interface.get("/user/bot/connect", serverType: ComInterface.serverGoAPI, debug: false);
+    var token = await _interface.get("/user/bot/connect", serverType: ComInterface.serverGoAPI, debug: true);
     if (token != null) {
       setState(() {
         _tokenLink = token['token'];

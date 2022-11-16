@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
@@ -18,6 +19,7 @@ import 'package:digitalnote/widgets/card_header.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -25,7 +27,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:open_file_safe/open_file_safe.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -52,6 +54,7 @@ class _SettingsState extends State<SettingsScreen> {
   var twoFactor = false;
   var settingUP = false;
   var run = false;
+  var valid = false;
   DaemonStatus? getInfo;
   String? tempPass;
 
@@ -61,6 +64,61 @@ class _SettingsState extends State<SettingsScreen> {
     _initPackageInfo();
     _getTwoFactor();
     _getInfoGet();
+    Future.delayed(Duration.zero, ()async {
+      var b  = await _initPlatform();
+      setState(() {
+        valid = b;
+      });
+    });
+  }
+
+  Future<bool> _initPlatform() async {
+    var di = await getDeviceInfo();
+    if (di == false) {
+      return false;
+    }
+    if (Platform.isAndroid) {
+      try {
+        PackageInfo packageInfo = await PackageInfo.fromPlatform();
+        Directory tempDir = await getTemporaryDirectory();
+        String tempPath = tempDir.path;
+        var dots = tempPath.replaceAll(".", "");
+        var numDots = tempPath.length - dots.length;
+        var bundleOK = numDots < 3 ? true : false;
+        var st = tempPath.split("/data/user");
+        String packageName = packageInfo.packageName;
+        if (packageName == "com.m1chl.xdn" && st.length == 2 && bundleOK && !tempPath.contains("virtual")) {
+          return true;
+        } else {
+          return false;
+        }
+      } on PlatformException {
+        return false;
+      }
+    } else {
+      return true;
+    }
+  }
+
+  Future<bool> getDeviceInfo() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isIOS) {
+      var iosInfo = await deviceInfo.iosInfo;
+      if (iosInfo.isPhysicalDevice) {
+        return true;
+      } else {
+        return false;
+      }
+    } else if (Platform.isAndroid) {
+      var androidInfo = await deviceInfo.androidInfo;
+      bool andr = androidInfo.isPhysicalDevice ?? false;
+      if (andr) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
   }
 
   _getTwoFactor() async {
@@ -208,51 +266,58 @@ return null;
                           Header(header: AppLocalizations.of(context)!.settings_screen),
                           Column(
                             children: [
-                              SizedBox(
-                                height: 60,
-                                width: MediaQuery.of(context).size.width - 20.0,
-                                child: Card(
-                                  color: Colors.transparent,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(5.0),
-                                    child: Material(
-                                      color: Colors.black12,
-                                      child: InkWell(
-                                        splashColor: Colors.white54,
-                                        // splash color
-                                        onTap: ()  {
-                                          Navigator.of(context).pushNamed(SocialScreen.route);
-                                        },
-                                        // button pressed
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: const EdgeInsets.only(left: 10.0),
-                                              child: Image.asset(
-                                                "images/socials_general.png",
-                                                height: 32.0,
-                                                width: 32.0,
-                                                color: const Color(0xFFBDBEC2),
+                              Opacity(
+                                opacity: valid ? 1.0 : 0.5,
+                                child: SizedBox(
+                                  height: 60,
+                                  width: MediaQuery.of(context).size.width - 20.0,
+                                  child: Card(
+                                    color: Colors.transparent,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      child: Material(
+                                        color: Colors.black12,
+                                        child: InkWell(
+                                          splashColor: Colors.white54,
+                                          // splash color
+                                          onTap: ()  {
+                                            if (valid) {
+                                              Navigator.of(context).pushNamed(SocialScreen.route);
+                                            }else{
+                                              Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "This section is not allowed while running app  in vm or emulator");
+                                            }
+                                          },
+                                          // button pressed
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(left: 10.0),
+                                                child: Image.asset(
+                                                  "images/socials_general.png",
+                                                  height: 32.0,
+                                                  width: 32.0,
+                                                  color: const Color(0xFFBDBEC2),
+                                                ),
                                               ),
-                                            ),
-                                            const SizedBox(
-                                              width: 10.0,
-                                            ),
-                                            SizedBox(
-                                              width: MediaQuery.of(context).size.width - 100.0,
-                                              child: AutoSizeText(
-                                                AppLocalizations.of(context)!.socials_popup.toLowerCase().capitalize(),
-                                                style: const TextStyle(fontSize: 20, color: Colors.white70),
-                                                minFontSize: 8,
-                                                maxLines: 1,
-                                                textAlign: TextAlign.start,
-                                                overflow: TextOverflow.ellipsis,
+                                              const SizedBox(
+                                                width: 10.0,
                                               ),
-                                            ),
-                                          ],
+                                              SizedBox(
+                                                width: MediaQuery.of(context).size.width - 100.0,
+                                                child: AutoSizeText(
+                                                  AppLocalizations.of(context)!.socials_popup.toLowerCase().capitalize(),
+                                                  style: const TextStyle(fontSize: 20, color: Colors.white70),
+                                                  minFontSize: 8,
+                                                  maxLines: 1,
+                                                  textAlign: TextAlign.start,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),

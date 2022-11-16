@@ -23,6 +23,7 @@ import 'package:digitalnote/support/notification_service.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
@@ -32,7 +33,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/io_client.dart';
 
 import 'firebase_options.dart';
 import 'globals.dart' as globals;
@@ -93,7 +93,6 @@ class MyAppState extends State<MyApp> {
   Future<String> get jwtOrEmpty async {
     precache();
     await getPin();
-
     String? refToken = await SecureStorage.read(key: globals.TOKEN_REFRESH);
     if (refToken == null) {
       FlutterNativeSplash.remove();
@@ -111,7 +110,7 @@ class MyAppState extends State<MyApp> {
       } else {
         bool res = await NetInterface.daoLogin();
         if (res) {
-         debugPrint("Dao Login OK");
+          debugPrint("Dao Login OK");
         } else {
           debugPrint("Dao Login FUCKED");
           FlutterNativeSplash.remove();
@@ -176,7 +175,7 @@ class MyAppState extends State<MyApp> {
     _setOptimalDisplayMode();
     super.initState();
     _getSetLang();
-   _manageStorage();
+    _manageStorage();
   }
 
   void _manageStorage() async {
@@ -331,11 +330,12 @@ class MyAppState extends State<MyApp> {
                       color: Colors.white,
                       fontWeight: FontWeight.w200,
                       fontSize: 18.0,
-                    )), textSelectionTheme: const TextSelectionThemeData(
+                    )),
+                textSelectionTheme: const TextSelectionThemeData(
                   cursorColor: Colors.white,
-                selectionColor: Colors.blue,
-                selectionHandleColor: Colors.blue,
-              ),
+                  selectionColor: Colors.blue,
+                  selectionHandleColor: Colors.blue,
+                ),
               ),
               home: const BackgroundWidget(mainMenu: true),
             );
@@ -385,11 +385,11 @@ class MyAppState extends State<MyApp> {
       case MessageDetailScreen.route:
         Object? args = settings.arguments;
         if (args != null) {
-         MessageGroup m = args as MessageGroup;
+          MessageGroup m = args as MessageGroup;
           return MaterialPageRoute(
               builder: (_) => MessageDetailScreen(
-               mgroup: m,
-              ));
+                    mgroup: m,
+                  ));
         } else {
           return MaterialPageRoute(builder: (_) => const MessageScreen());
         }

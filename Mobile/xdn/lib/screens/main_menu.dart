@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:digitalnote/models/summary.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
@@ -99,14 +98,12 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   getNotification() async {
-    RemoteMessage? initialMessage =
-    await FirebaseMessaging.instance.getInitialMessage();
+    RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
       if (initialMessage.data['func'] == "sendMessage") {
         String sentAddr = initialMessage.data['fr'];
         String? contact = await db.getContactNameByAddr(sentAddr);
-        MessageGroup m = MessageGroup(
-            sentAddr: contact ?? sentAddr, sentAddressOrignal: sentAddr);
+        MessageGroup m = MessageGroup(sentAddr: contact ?? sentAddr, sentAddressOrignal: sentAddr);
         if (mounted) Navigator.pushNamed(context, MessageDetailScreen.route, arguments: m);
         return;
       }
@@ -118,10 +115,8 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         String? contact = await db.getContactNameByAddr(sentAddr);
         MessageGroup m = MessageGroup(sentAddr: contact ?? sentAddr, sentAddressOrignal: sentAddr);
         if (mounted) Navigator.pushNamed(context, MessageDetailScreen.route, arguments: m);
-
       }
     });
-
   }
 
   getPriceData() async {
@@ -180,7 +175,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   Future<DaemonStatus> getDaemonStatus() async {
     try {
-      Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug:true);
+      Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug: true);
       DaemonStatus dm = DaemonStatus.fromJson(req['data']);
       return dm;
     } catch (e) {
@@ -347,8 +342,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                               gradient: const LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [Color(0xFF333A57),
-                                  Color(0xFF2C334E)],
+                                colors: [Color(0xFF333A57), Color(0xFF2C334E)],
                               ),
                               boxShadow: [
                                 BoxShadow(
@@ -358,8 +352,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                   offset: const Offset(0.0, 0.0), // shadow direction: bottom right
                                 )
                               ],
-                              borderRadius: const BorderRadius.all(Radius.circular(8.0)
-                              ),
+                              borderRadius: const BorderRadius.all(Radius.circular(8.0)),
                             ),
                             child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
                               Container(
@@ -439,8 +432,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                   Container(
                                     width: MediaQuery.of(context).size.width * 0.97,
                                     padding: const EdgeInsets.only(left: 0.0, right: 0.0, top: 5.0, bottom: 5.0),
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10.0), color: Colors.black12),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.black12),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
