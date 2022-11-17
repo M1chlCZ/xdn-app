@@ -3,7 +3,10 @@ package bot
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"math/rand"
+	"strings"
 	"time"
+	"xdn-voting/utils"
 )
 
 func RainEmbed(message string) *discordgo.MessageEmbed {
@@ -48,21 +51,59 @@ func RainFinishEmbed(message, avatar, username string) *discordgo.MessageEmbed {
 }
 
 func ThunderFinishEmbed(message, avatar, username string) *discordgo.MessageEmbed {
+	rand.Seed(time.Now().UnixNano())
+	randNum := rand.Intn(len(Picture))
+
+	t := strings.ReplaceAll(message, "rained", "brought Thunder")
+
+	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
+	utils.ReportMessage(url)
+
 	timeString := time.Now().Format(time.RFC3339)
 	genericEmbed := discordgo.MessageEmbed{
 		URL:         "https://t.me/XDNDN",
 		Type:        "",
-		Title:       "Join us on our Telegram channel",
-		Description: message,
+		Title:       "|>>> Join us on our Telegram channel <<<|",
+		Description: t,
 		Timestamp:   timeString,
-		Color:       0x00ff00,
+		Color:       0xe19624,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text:         "Thunderstorm finished",
 			IconURL:      "",
 			ProxyIconURL: "",
 		},
 		Image: &discordgo.MessageEmbedImage{
-			URL: "https://abload.de/img/thunder9odaz.png",
+			URL: url,
+		},
+		Thumbnail: nil,
+		Video:     nil,
+		Provider:  nil,
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    username,
+			URL:     "",
+			IconURL: avatar,
+		},
+		Fields: nil,
+	}
+	return &genericEmbed
+}
+
+func GenericEmbed(message, avatar, username, picture string) *discordgo.MessageEmbed {
+	timeString := time.Now().Format(time.RFC3339)
+	genericEmbed := discordgo.MessageEmbed{
+		URL:         "https://t.me/XDNDN",
+		Type:        "",
+		Title:       "This is a test",
+		Description: message,
+		Timestamp:   timeString,
+		Color:       0x00ff00,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text:         "This is a test",
+			IconURL:      "",
+			ProxyIconURL: "",
+		},
+		Image: &discordgo.MessageEmbedImage{
+			URL: picture,
 		},
 		Thumbnail: nil,
 		Video:     nil,

@@ -16,6 +16,7 @@ import (
 	"gopkg.in/guregu/null.v4"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -128,6 +129,9 @@ func main() {
 
 	app.Get("api/v1/status", utils.Authorized(getStatus))
 
+	app.Get("api/v1/file/get", getFile)
+	app.Get("api/v1/file/gram", getFileGram)
+
 	app.Get("api/v1/ping", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 			utils.ERROR:  true,
@@ -166,7 +170,7 @@ func main() {
 		err := app.Listener(ln)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
-			panic(err)
+			//panic(err)
 		}
 		//utils.WrapErrorLog(error.Error(app.Listener(ln)))
 	}()
@@ -186,6 +190,32 @@ func main() {
 	os.Exit(0)
 
 	// Start server with https/ssl enabled on http://localhost:443
+}
+
+func getFile(c *fiber.Ctx) error {
+	picture := []string{"thunder.png", "thunder2.jpg"}
+	rand.Seed(time.Now().UnixNano())
+	pic := picture[rand.Intn(len(picture))]
+	return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
+}
+
+func getFileGram(c *fiber.Ctx) error {
+	//get form data
+	formValue := c.FormValue("file", "1")
+	//convert to int
+	file, err := strconv.Atoi(formValue)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	}
+
+	if file > len(bot.Picture) {
+		file = len(bot.Picture)
+	}
+	pic := bot.Picture[file]
+	return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
 }
 
 func getBotConnect(c *fiber.Ctx) error {
@@ -220,7 +250,6 @@ func getBotConnect(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
 	}
-
 	return c.Status(fiber.StatusOK).Send(payload)
 
 }

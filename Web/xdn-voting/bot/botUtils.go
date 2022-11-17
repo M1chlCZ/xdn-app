@@ -8,7 +8,9 @@ import (
 	"xdn-voting/utils"
 )
 
-var Running bool = false
+var Running = false
+
+var Picture = []string{"thunder.png", "thunder2.png"}
 
 func RegenerateTokenSocial(userID int64) {
 	tk := utils.GenerateSocialsToken(32)

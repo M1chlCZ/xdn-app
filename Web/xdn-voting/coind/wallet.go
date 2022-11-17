@@ -59,7 +59,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 	}
 
 	inputsCount := len(inputs)
-	fee := 0.0001 * float64(inputsCount)
+	fee := 0.001 * float64(inputsCount)
 	txBack := inputsAmount - fee - amount
 
 	if totalCoins <= (amount + fee) {
@@ -141,7 +141,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 	}
 	userReceive := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressReceive)
 	if userReceive.Valid {
-		_, errInsert2 := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userReceive.String, amount, 0, addressReceive, "receive")
+		_, errInsert2 := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userReceive.String, amount+fee, 0, addressReceive, "receive")
 		if errInsert2 != nil {
 			utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error: %s", addressReceive, errInsert2.Error()))
 			//return "", errInsert2

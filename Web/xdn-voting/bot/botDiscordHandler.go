@@ -91,9 +91,6 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 		if command == "ping" {
 			utils.ReportMessage(fmt.Sprintf("Pong! %s", m.ChannelID))
 			_, _ = s.ChannelMessageSend(m.ChannelID, "pong")
-		} else if command == "bvcx" {
-			Running = false
-			_, _ = s.ChannelMessageSend(m.ChannelID, "shut")
 		} else if command == "connect" {
 			Running = true
 			content := strings.ReplaceAll(m.Message.Content, config.BotPrefix+"connect", "")
@@ -499,7 +496,6 @@ func finishRainDiscord(data RainReturnStruct, m *discordgo.Message) (string, *di
 			userString += " "
 		}
 	}
-	utils.ReportMessage(fmt.Sprintf("///// userName: %s", data.UserID))
 	//create final message
 	mes := fmt.Sprintf("User <@%s> rained on %s %s XDN each", data.UserID, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
 

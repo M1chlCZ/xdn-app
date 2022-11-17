@@ -48,6 +48,23 @@ func StartTelegramBot() {
 					}
 					Running = false
 					return
+				case "test":
+					Running = true
+					utils.ReportMessage(fmt.Sprintf("Message from %d", update.Message.Chat.ID))
+					msg.Text = statusMessage[rand.Intn(len(statusMessage))]
+
+					rand.Seed(time.Now().UnixNano())
+					randNum := rand.Intn(len(Picture))
+
+					url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
+					utils.ReportMessage(url)
+					photo := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(url))
+					photo.Caption = "Test \n\nFUCK\n https://discord\\.gg/MHQqDeWd"
+					if _, err := bot.Send(photo); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					Running = false
+					return
 				case "help":
 					Running = true
 					msg.Text = "I understand /register /unlink /status and /tip."
@@ -131,9 +148,40 @@ func StartTelegramBot() {
 						Running = false
 						return
 					}
-					ms := tgbotapi.NewEditMessageText(chatID, messageID, txd)
-					if _, err := bot.Send(ms); err != nil {
-						utils.WrapErrorLog(err.Error())
+					if update.Message.Chat.ID != MainChannel {
+						dl := tgbotapi.NewDeleteMessage(chatID, messageID)
+						if _, err := bot.Send(dl); err != nil {
+							utils.WrapErrorLog(err.Error())
+						}
+						rand.Seed(time.Now().UnixNano())
+						randNum := rand.Intn(len(Picture))
+
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
+						utils.ReportMessage(url)
+						photo := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(url))
+						utils.ReportMessage(txd)
+						photo.Caption = "\n Join our OFFICIAL Telegram channel, lot of cool stuff there!\n" +
+							"\n       https://t.me/XDNDN \n\n" + txd
+						if _, err := bot.Send(photo); err != nil {
+							utils.WrapErrorLog(err.Error())
+						}
+					} else {
+						dl := tgbotapi.NewDeleteMessage(chatID, messageID)
+						if _, err := bot.Send(dl); err != nil {
+							utils.WrapErrorLog(err.Error())
+						}
+						rand.Seed(time.Now().UnixNano())
+						randNum := rand.Intn(len(Picture))
+
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
+						utils.ReportMessage(url)
+						photo := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(url))
+						utils.ReportMessage(txd)
+						photo.Caption = "\nJoin us on our new Discord Server!\n" +
+							"\n     https://discord.gg/HD9vpTcMez \n\n" + txd
+						if _, err := bot.Send(photo); err != nil {
+							utils.WrapErrorLog(err.Error())
+						}
 					}
 					Running = false
 					return
@@ -688,6 +736,6 @@ func finishThunder(data ThunderReturnStruct) (string, error) {
 			showThunderMessage(a, b)
 		}
 	}
-
-	return telegramResponse, telegramError
+	t := strings.ReplaceAll(telegramResponse, "rained", "brought Thunder")
+	return t, telegramError
 }

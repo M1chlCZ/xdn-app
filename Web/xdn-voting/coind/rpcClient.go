@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"time"
+	"xdn-voting/utils"
 )
 
 // A rpcClient represents a JSON RPC client (over HTTP(s)).
@@ -109,10 +110,12 @@ func (c *rpcClient) call(method string, params any) (rr rpcResponse, err error) 
 	jsonEncoder := json.NewEncoder(payloadBuffer)
 	err = jsonEncoder.Encode(rpcR)
 	if err != nil {
+		utils.ReportMessage("Error encoding JSON RPC request %s", err.Error())
 		return
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.serverAddr, payloadBuffer)
 	if err != nil {
+		utils.ReportMessage("Error encoding JSON RPC request %s", err.Error())
 		return
 	}
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -125,12 +128,14 @@ func (c *rpcClient) call(method string, params any) (rr rpcResponse, err error) 
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		utils.ReportMessage("Error encoding JSON RPC request %s", err.Error())
 		_ = req.Body.Close()
 		return
 	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
+		utils.ReportMessage("Error encoding JSON RPC request %s", err.Error())
 		_ = resp.Body.Close()
 		_ = req.Body.Close()
 		return
