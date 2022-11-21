@@ -54,7 +54,7 @@ func StartTelegramBot() {
 					msg.Text = statusMessage[rand.Intn(len(statusMessage))]
 
 					rand.Seed(time.Now().UnixNano())
-					randNum := rand.Intn(len(Picture))
+					randNum := rand.Intn(len(PictureThunder))
 
 					url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
 					utils.ReportMessage(url)
@@ -114,10 +114,51 @@ func StartTelegramBot() {
 						Running = false
 						return
 					}
-					ms := tgbotapi.NewEditMessageText(chatID, messageID, txd)
-					if _, err := bot.Send(ms); err != nil {
-						utils.WrapErrorLog(err.Error())
+					if chatID != MainChannel {
+						dl := tgbotapi.NewDeleteMessage(chatID, messageID)
+						if _, err := bot.Send(dl); err != nil {
+							utils.WrapErrorLog(err.Error())
+						}
+						//rand.Seed(time.Now().UnixNano()) //TODO more pictures
+						//randNum := rand.Intn(len(PictureThunder))
+
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=0", 0)
+						utils.ReportMessage(url)
+						photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(url))
+						utils.ReportMessage(txd)
+						photo.Caption = "\n Join our OFFICIAL Telegram channel, lot of cool stuff there!\n" +
+							"\n       https://t.me/XDNDN \n\n" + txd
+						if len(photo.Caption) > 1024 {
+							photo.Caption = photo.Caption[:1024]
+						}
+						if _, err := bot.Send(photo); err != nil {
+							utils.WrapErrorLog(err.Error())
+						}
+					} else {
+						dl := tgbotapi.NewDeleteMessage(chatID, messageID)
+						if _, err := bot.Send(dl); err != nil {
+							utils.WrapErrorLog(err.Error())
+						}
+						//rand.Seed(time.Now().UnixNano()) //TODO more pictures
+						//randNum := rand.Intn(len(PictureThunder))
+
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=0", 0)
+						utils.ReportMessage(url)
+						photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(url))
+						utils.ReportMessage(txd)
+						photo.Caption = "\nJoin us on our new Discord Server!\n" +
+							"\n     https://discord.gg/HD9vpTcMez \n\n" + txd
+						if len(photo.Caption) > 1024 {
+							photo.Caption = photo.Caption[:1024]
+						}
+						if _, err := bot.Send(photo); err != nil {
+							utils.WrapErrorLog(err.Error())
+						}
 					}
+					//ms := tgbotapi.NewEditMessageText(chatID, messageID, txd)
+					//if _, err := bot.Send(ms); err != nil {
+					//	utils.WrapErrorLog(err.Error())
+					//}
 					Running = false
 					return
 				case "thunder":
@@ -148,20 +189,23 @@ func StartTelegramBot() {
 						Running = false
 						return
 					}
-					if update.Message.Chat.ID != MainChannel {
+					if chatID != MainChannel {
 						dl := tgbotapi.NewDeleteMessage(chatID, messageID)
 						if _, err := bot.Send(dl); err != nil {
 							utils.WrapErrorLog(err.Error())
 						}
 						rand.Seed(time.Now().UnixNano())
-						randNum := rand.Intn(len(Picture))
+						randNum := rand.Intn(len(PictureThunder))
 
-						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=1", randNum)
 						utils.ReportMessage(url)
-						photo := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(url))
+						photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(url))
 						utils.ReportMessage(txd)
 						photo.Caption = "\n Join our OFFICIAL Telegram channel, lot of cool stuff there!\n" +
 							"\n       https://t.me/XDNDN \n\n" + txd
+						if len(photo.Caption) > 1024 {
+							photo.Caption = photo.Caption[:1024]
+						}
 						if _, err := bot.Send(photo); err != nil {
 							utils.WrapErrorLog(err.Error())
 						}
@@ -171,14 +215,17 @@ func StartTelegramBot() {
 							utils.WrapErrorLog(err.Error())
 						}
 						rand.Seed(time.Now().UnixNano())
-						randNum := rand.Intn(len(Picture))
+						randNum := rand.Intn(len(PictureThunder))
 
-						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=1", randNum)
 						utils.ReportMessage(url)
-						photo := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(url))
+						photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(url))
 						utils.ReportMessage(txd)
 						photo.Caption = "\nJoin us on our new Discord Server!\n" +
 							"\n     https://discord.gg/HD9vpTcMez \n\n" + txd
+						if len(photo.Caption) > 1024 {
+							photo.Caption = photo.Caption[:1024]
+						}
 						if _, err := bot.Send(photo); err != nil {
 							utils.WrapErrorLog(err.Error())
 						}
@@ -335,6 +382,7 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	} else {
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip to: "+strings.TrimSpace(ut), tx, "send")
 	}
+	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial) VALUES (?, ?, ?, ?)", usrFrom.Int64, amount, 2, 0)
 	go func(addrTo string, addrSend string, amount string) {
 		d := map[string]string{
 			"fn": "sendTransaction",
@@ -462,6 +510,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 		return "", err, RainReturnStruct{}
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
+	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial) VALUES (?, ?, ?, ?)", usrFrom.Int64, amount, 0, 0)
 
 	return fmt.Sprintf("Raining %.2f XDN on %d users", amount, numOfUsers), nil, RainReturnStruct{
 		UsrList:  usersToTip,
@@ -530,7 +579,7 @@ func finishRain(data RainReturnStruct) (string, error) {
 		userString += "@" + v.Name + " "
 	}
 	//create final message
-	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.UserID, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
+	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.UserID, strconv.FormatFloat(amountToUser, 'f', 2, 32), userString)
 
 	return mes, nil
 }
@@ -661,6 +710,8 @@ func thunderTelegram(username string, from *tgbotapi.Message) (string, error, Th
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
 
+	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial) VALUES (?, ?, ?, ?)", usrFrom.Int64, amount, 1, 0)
+
 	return fmt.Sprintf("Raining thunder of %.2f XDN on %d users", amount, numOfUsers), nil, ThunderReturnStruct{
 		UsrListTelegram: telegramFinalSlice,
 		UsrListDiscord:  discordFinalSlice,
@@ -701,34 +752,10 @@ func finishThunder(data ThunderReturnStruct) (string, error) {
 			UserID:   discordUserID,
 			AddrSend: data.AddrSend,
 		}, &discordgo.Message{
-			ID:                discordUserID,
-			ChannelID:         MainChannelID,
-			GuildID:           "",
-			Content:           "",
-			Timestamp:         time.Time{},
-			EditedTimestamp:   nil,
-			MentionRoles:      nil,
-			TTS:               false,
-			MentionEveryone:   false,
-			Author:            &discordgo.User{Username: discordUserName, ID: discordUserID},
-			Attachments:       nil,
-			Components:        nil,
-			Embeds:            nil,
-			Mentions:          nil,
-			Reactions:         nil,
-			Pinned:            false,
-			Type:              0,
-			WebhookID:         "",
-			Member:            nil,
-			MentionChannels:   nil,
-			Activity:          nil,
-			Application:       nil,
-			MessageReference:  nil,
-			ReferencedMessage: nil,
-			Interaction:       nil,
-			Flags:             0,
-			Thread:            nil,
-			StickerItems:      nil,
+			ID:        discordUserID,
+			ChannelID: MainChannelID,
+			Timestamp: time.Time{},
+			Author:    &discordgo.User{Username: discordUserName, ID: discordUserID},
 		})
 		if c != nil {
 			utils.WrapErrorLog(c.Error())

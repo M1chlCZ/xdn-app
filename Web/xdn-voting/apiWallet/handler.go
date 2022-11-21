@@ -54,7 +54,7 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 
 	if txID.Generated == true {
 		utils.ReportMessage("Transaction is stake")
-		_, err = database.InsertSQl("INSERT INTO transaction_stake(txid, amount) VALUES (?, ?)", txID.Txid, 100)
+		_, err = database.InsertSQl("INSERT INTO transaction_stake(txid, amount) VALUES (?, ?)", txID.Txid, 95)
 		if err != nil {
 			utils.ReportMessage(err.Error())
 			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)

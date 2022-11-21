@@ -282,6 +282,8 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 		return nil, errors.New("Invalid amount")
 	}
 	tx, err := coind.SendCoins(addrTo.String, addrFrom.String, amnt, false)
+	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial) VALUES (?, ?, ?, ?)", usrFrom.Int64, amount, 0, 1)
+
 	if err != nil {
 		return nil, err
 	}

@@ -528,10 +528,10 @@ type PriceDatStruct struct {
 		} `json:"fully_diluted_valuation"`
 		TotalVolume struct {
 			Aed  float64 `json:"aed"`
-			Ars  int     `json:"ars"`
+			Ars  float64 `json:"ars"`
 			Aud  float64 `json:"aud"`
 			Bch  float64 `json:"bch"`
-			Bdt  int     `json:"bdt"`
+			Bdt  float64 `json:"bdt"`
 			Bhd  float64 `json:"bhd"`
 			Bmd  float64 `json:"bmd"`
 			Bnb  float64 `json:"bnb"`
@@ -539,7 +539,7 @@ type PriceDatStruct struct {
 			Btc  float64 `json:"btc"`
 			Cad  float64 `json:"cad"`
 			Chf  float64 `json:"chf"`
-			Clp  int     `json:"clp"`
+			Clp  float64 `json:"clp"`
 			Cny  float64 `json:"cny"`
 			Czk  float64 `json:"czk"`
 			Dkk  float64 `json:"dkk"`
@@ -549,23 +549,23 @@ type PriceDatStruct struct {
 			Eur  float64 `json:"eur"`
 			Gbp  float64 `json:"gbp"`
 			Hkd  float64 `json:"hkd"`
-			Huf  int     `json:"huf"`
-			Idr  int     `json:"idr"`
+			Huf  float64 `json:"huf"`
+			Idr  float64 `json:"idr"`
 			Ils  float64 `json:"ils"`
 			Inr  float64 `json:"inr"`
-			Jpy  int     `json:"jpy"`
-			Krw  int     `json:"krw"`
+			Jpy  float64 `json:"jpy"`
+			Krw  float64 `json:"krw"`
 			Kwd  float64 `json:"kwd"`
-			Lkr  int     `json:"lkr"`
+			Lkr  float64 `json:"lkr"`
 			Ltc  float64 `json:"ltc"`
-			Mmk  int     `json:"mmk"`
+			Mmk  float64 `json:"mmk"`
 			Mxn  float64 `json:"mxn"`
 			Myr  float64 `json:"myr"`
-			Ngn  int     `json:"ngn"`
+			Ngn  float64 `json:"ngn"`
 			Nok  float64 `json:"nok"`
 			Nzd  float64 `json:"nzd"`
 			Php  float64 `json:"php"`
-			Pkr  int     `json:"pkr"`
+			Pkr  float64 `json:"pkr"`
 			Pln  float64 `json:"pln"`
 			Rub  float64 `json:"rub"`
 			Sar  float64 `json:"sar"`
@@ -577,17 +577,17 @@ type PriceDatStruct struct {
 			Uah  float64 `json:"uah"`
 			Usd  float64 `json:"usd"`
 			Vef  float64 `json:"vef"`
-			Vnd  int     `json:"vnd"`
+			Vnd  float64 `json:"vnd"`
 			Xag  float64 `json:"xag"`
 			Xau  float64 `json:"xau"`
 			Xdr  float64 `json:"xdr"`
-			Xlm  int     `json:"xlm"`
+			Xlm  float64 `json:"xlm"`
 			Xrp  float64 `json:"xrp"`
 			Yfi  float64 `json:"yfi"`
 			Zar  float64 `json:"zar"`
 			Bits float64 `json:"bits"`
 			Link float64 `json:"link"`
-			Sats int     `json:"sats"`
+			Sats float64 `json:"sats"`
 		} `json:"total_volume"`
 		High24H struct {
 			Aed  float64 `json:"aed"`

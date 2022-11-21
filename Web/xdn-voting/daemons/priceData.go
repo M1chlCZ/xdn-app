@@ -21,6 +21,7 @@ func PriceData() {
 	err := json.Unmarshal(body, &pr)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
+		return
 	}
 
 	PriceDat = map[string]float64{

@@ -10,7 +10,8 @@ import (
 
 var Running = false
 
-var Picture = []string{"thunder.png", "thunder2.png"}
+var PictureThunder = []string{"thunder.png", "thunder2.png"}
+var PictureRain = []string{"rain.png"}
 
 func RegenerateTokenSocial(userID int64) {
 	tk := utils.GenerateSocialsToken(32)

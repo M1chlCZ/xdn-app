@@ -130,7 +130,7 @@ func main() {
 	app.Get("api/v1/status", utils.Authorized(getStatus))
 
 	app.Get("api/v1/file/get", getFile)
-	app.Get("api/v1/file/gram", getFileGram)
+	app.Get("api/v1/file/gram", getFileThunder)
 
 	app.Get("api/v1/ping", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -199,11 +199,13 @@ func getFile(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
 }
 
-func getFileGram(c *fiber.Ctx) error {
+func getFileThunder(c *fiber.Ctx) error {
 	//get form data
 	formValue := c.FormValue("file", "1")
+	formValueType := c.FormValue("type", "1")
 	//convert to int
 	file, err := strconv.Atoi(formValue)
+	tp, err := strconv.Atoi(formValueType)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			utils.ERROR:  true,
@@ -211,11 +213,19 @@ func getFileGram(c *fiber.Ctx) error {
 		})
 	}
 
-	if file > len(bot.Picture) {
-		file = len(bot.Picture)
+	if tp != 1 {
+		if file > len(bot.PictureRain) {
+			file = len(bot.PictureRain) - 1
+		}
+		pic := bot.PictureRain[file]
+		return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
+	} else {
+		if file > len(bot.PictureThunder) {
+			file = len(bot.PictureThunder) - 1
+		}
+		pic := bot.PictureThunder[file]
+		return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
 	}
-	pic := bot.Picture[file]
-	return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
 }
 
 func getBotConnect(c *fiber.Ctx) error {
@@ -1547,9 +1557,9 @@ func setStake(c *fiber.Ctx) error {
 		} else {
 			balance = r.Amount
 		}
-		tx, err := coind.SendCoins(server, userAddr, r.Amount, false)
-		if err != nil {
-			return utils.ReportError(c, err.Error(), http.StatusConflict)
+		tx, errWallet := coind.SendCoins(server, userAddr, r.Amount, false)
+		if errWallet != nil {
+			return utils.ReportError(c, err.Error(), 400)
 		}
 		_, _ = database.InsertSQl("UPDATE users_stake SET amount = ? WHERE idUser = ? AND active = ?", balance, userID, 1)
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Staking", tx, "send")
