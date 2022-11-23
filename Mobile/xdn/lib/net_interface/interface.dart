@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
 import '../globals.dart' as globals;
-import '../support/Encrypt.dart';
 import '../support/secure_storage.dart';
 import 'app_exception.dart';
 
@@ -22,7 +21,6 @@ class ComInterface {
 
   Future<dynamic> get(String url,
       {Map<String, dynamic>? request, bool wholeURL = false, int serverType = serverAPI, Map<String, dynamic>? query, dynamic body, int type = typeJson, bool debug = false}) async {
-    String? jwt = await SecureStorage.read(key: globals.TOKEN);
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
     var ioClient = await GetIt.I.getAsync<IOClient>();
     String bearer = "";
@@ -37,11 +35,7 @@ class ComInterface {
       mUrl = url;
     }
 
-    if (serverType == serverAPI) {
-      mUrl = globals.API_URL + url;
-      bearer = jwt ?? "";
-      payload = encryptAESCryptoJS(json.encode(request!), "rp9ww*jK8KX_!537e%Crmf");
-    } else if (serverType == serverDAO) {
+     if (serverType == serverDAO) {
       mUrl = globals.DAO_URL + url;
       bearer = "Bearer ${daoJWT ?? ""}";
     } else if (serverType == serverGoAPI) {
@@ -61,10 +55,7 @@ class ComInterface {
       response = await ioClient.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
       if (debug) {
         debugPrint(mUrl);
-        if (serverType == serverAPI) {
-          var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-          debugPrint(data);
-        } else if (serverType == serverDAO || serverType == serverGoAPI) {
+         if (serverType == serverDAO || serverType == serverGoAPI) {
           debugPrint(response.body.toString());
         } else if (serverType == serverGoAPI) {
           debugPrint(response.body.toString());
@@ -116,7 +107,6 @@ class ComInterface {
   }
 
   Future<dynamic> post(String url, {Map<String, dynamic>? request, int serverType = serverAPI, dynamic body, int type = typeJson, bool debug = false, bool bandwidth = false}) async {
-    String? jwt = await SecureStorage.read(key: globals.TOKEN);
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
     var ioClient = await GetIt.I.getAsync<IOClient>();
     String bearer = "";
@@ -125,11 +115,7 @@ class ComInterface {
     http.Response response;
 
     var mUrl = globals.API_URL + url;
-    if (serverType == serverAPI) {
-      mUrl = globals.DAO_URL + url;
-      bearer = jwt ?? "";
-      payload = encryptAESCryptoJS(json.encode(request!), "rp9ww*jK8KX_!537e%Crmf");
-    } else if (serverType == serverDAO) {
+     if (serverType == serverDAO) {
       mUrl = globals.DAO_URL + url;
       bearer = "Bearer ${daoJWT ?? ""}";
     } else if (serverType == serverGoAPI) {
@@ -226,46 +212,7 @@ class ComInterface {
   }
 
   dynamic _returnResponse(http.Response response) {
-    switch (response.statusCode) {
-      case 200:
-      case 201:
-        var data = decryptAESCryptoJS(response.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-        var responseJson = json.decode(data);
-        return responseJson;
-      case 400:
-        throw BadRequestException(response.body.toString());
-      case 401:
-        Map<String, dynamic> error = {
-          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
-          "statusCode": response.statusCode,
-          "messageBody": response.body.toString(),
-        };
-        throw UnauthorisedException(error);
-
-      case 403:
-      case 422:
-        Map<String, dynamic> error = {
-          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
-          "statusCode": response.statusCode,
-          "messageBody": response.body.toString(),
-        };
-        throw UnauthorisedException(error);
-      case 404:
-        Map<String, dynamic> error = {
-          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
-          "statusCode": response.statusCode,
-          "messageBody": response.body.toString(),
-        };
-        throw UnauthorisedException(error);
-      case 500:
-      default:
-        Map<String, dynamic> error = {
-          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
-          "statusCode": response.statusCode,
-          "messageBody": response.body.toString(),
-        };
-        throw FetchDataException(error);
-    }
+    throw Exception("Not implemented");
   }
 
   dynamic _returnDaoResponse(http.Response response) {

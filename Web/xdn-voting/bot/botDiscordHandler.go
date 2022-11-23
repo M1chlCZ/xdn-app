@@ -76,7 +76,6 @@ func Setup() {
 }
 
 func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
-
 	go func(m *discordgo.MessageCreate) {
 		if m.Author.ID == botID {
 			return
@@ -87,7 +86,6 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 			return
 		}
 		command := strings.Replace(comArray[0], "$", "", 1)
-
 		if command == "ping" {
 			utils.ReportMessage(fmt.Sprintf("Pong! %s", m.ChannelID))
 			_, _ = s.ChannelMessageSend(m.ChannelID, "pong")
@@ -282,7 +280,7 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 		return nil, errors.New("Invalid amount")
 	}
 	tx, err := coind.SendCoins(addrTo.String, addrFrom.String, amnt, false)
-	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial) VALUES (?, ?, ?, ?)", usrFrom.Int64, amount, 0, 1)
+	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 0, 1, from.ChannelID)
 
 	if err != nil {
 		return nil, err

@@ -6,7 +6,6 @@ import 'package:digitalnote/globals.dart' as globals;
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
-import 'package:digitalnote/support/Encrypt.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:flutter/cupertino.dart';
@@ -203,7 +202,7 @@ class _LoginState extends State<LoginPage> {
       } else {
         if (mounted) {
           var data =
-              decryptAESCryptoJS(res.body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+              res.body.toString();
           var error = '';
           if (data.toString() == 'User does not exists') {
             error = AppLocalizations.of(context)!.user_not_exists;

@@ -149,6 +149,7 @@ func main() {
 	utils.ScheduleFunc(daemons.SaveTokenTX, time.Minute*10)
 	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
 	utils.ScheduleFunc(daemons.PriceData, time.Minute*5)
+	utils.ScheduleFunc(daemons.RunTelegramAnn, time.Minute*30)
 
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
@@ -201,6 +202,7 @@ func getFile(c *fiber.Ctx) error {
 
 func getFileThunder(c *fiber.Ctx) error {
 	//get form data
+	bot.LoadPictures()
 	formValue := c.FormValue("file", "1")
 	formValueType := c.FormValue("type", "1")
 	//convert to int
@@ -213,18 +215,18 @@ func getFileThunder(c *fiber.Ctx) error {
 		})
 	}
 
-	if tp != 1 {
+	if tp == 0 {
 		if file > len(bot.PictureRain) {
 			file = len(bot.PictureRain) - 1
 		}
 		pic := bot.PictureRain[file]
-		return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
+		return c.Status(fiber.StatusOK).SendFile("./" + pic)
 	} else {
 		if file > len(bot.PictureThunder) {
 			file = len(bot.PictureThunder) - 1
 		}
 		pic := bot.PictureThunder[file]
-		return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
+		return c.Status(fiber.StatusOK).SendFile("./" + pic)
 	}
 }
 

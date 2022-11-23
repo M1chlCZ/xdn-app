@@ -5,19 +5,16 @@ import 'dart:io';
 import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Utils.dart';
-import 'package:digitalnote/models/get_info.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 import '../globals.dart' as globals;
 import 'AppDatabase.dart';
 import '../models/Contact.dart';
 import 'Dialogs.dart';
-import 'Encrypt.dart';
 import '../models/Message.dart';
 import '../models/MessageGroup.dart';
 import '../models/TranSaction.dart';
@@ -274,17 +271,17 @@ class NetInterface {
     }
   }
 
-  static List<Message>? parseMessages(String body) {
-    try {
-      var data = decryptAESCryptoJS(body.toString(), "rp9ww*jK8KX_!537e%Crmf");
-      List responseList = json.decode(data);
-      List<Message> l = responseList.map((data) => Message.fromJson(data)).toList();
-      return l;
-    } catch (e) {
-      if (kDebugMode) print(e);
-      return null;
-    }
-  }
+  // static List<Message>? parseMessages(String body) {
+  //   try {
+  //     var data = decryptAESCryptoJS(body.toString(), "rp9ww*jK8KX_!537e%Crmf");
+  //     List responseList = json.decode(data);
+  //     List<Message> l = responseList.map((data) => Message.fromJson(data)).toList();
+  //     return l;
+  //   } catch (e) {
+  //     if (kDebugMode) print(e);
+  //     return null;
+  //   }
+  // }
 
   static Future<void> updateRead(String address) async {
     try {

@@ -19,12 +19,17 @@ import (
 
 const (
 	MainChannel = -1001238019497
+	TestChannel = -1001873293473
 )
 
-var statusMessage = []string{"I'm okay, you?", "All is good", "Yep...still okay", "Living the expensive life currently, you?", "I'm fine, how are you?", "I'm good, thanks!", "I'm fine"}
+var (
+	bot           *tgbotapi.BotAPI
+	statusMessage = []string{"I'm okay, you?", "All is good", "Yep...still okay", "Living the expensive life currently, you?", "I'm fine, how are you?", "I'm good, thanks!", "I'm fine"}
+)
 
 func StartTelegramBot() {
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM"))
+	var err error
+	bot, err = tgbotapi.NewBotAPI(os.Getenv("TELEGRAM"))
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
@@ -67,7 +72,7 @@ func StartTelegramBot() {
 					return
 				case "help":
 					Running = true
-					msg.Text = "I understand /register /unlink /status and /tip."
+					msg.Text = "I understand /register /unlink /status /tip /rain /thunder."
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
@@ -163,6 +168,7 @@ func StartTelegramBot() {
 					return
 				case "thunder":
 					Running = true
+					utils.ReportMessage(fmt.Sprintf("Thunder %s", update.Message.From.UserName))
 					tx, errr, data := thunderTelegram(update.Message.From.UserName, update.Message)
 					if errr != nil {
 						msg.Text = "Error: " + errr.Error()
@@ -263,6 +269,55 @@ func StartTelegramBot() {
 					return
 				}
 			}(&update)
+		} else if update.CallbackQuery != nil {
+			utils.ReportMessage("CallbackQuery")
+			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
+			_, err := bot.Request(callback)
+			if err != nil {
+				utils.ReportMessage(err.Error())
+			}
+			if err == nil {
+				if strings.Contains(update.CallbackQuery.Data, "likeAnn") || strings.Contains(update.CallbackQuery.Data, "dislikeAnn") {
+					Running = true
+					dataSplit := strings.Split(update.CallbackQuery.Data, ":")
+					idPost := database.ReadValueEmpty[int64]("SELECT idPost FROM bot_post_activity WHERE idMessage = ?", update.CallbackQuery.Message.MessageID)
+					likeActivity, err := database.ReadStruct[ActivityBot]("SELECT activity, COUNT(*) as count FROM users_activity WHERE idPost = ? AND idChannel = ? AND activity = 1 GROUP BY activity", update.CallbackQuery.Message.MessageID, update.CallbackQuery.Message.Chat.ID)
+					dislikeActivity, err := database.ReadStruct[ActivityBot]("SELECT activity, COUNT(*) as count FROM users_activity WHERE idPost = ? AND idChannel = ? AND activity = 0 GROUP BY activity", update.CallbackQuery.Message.MessageID, update.CallbackQuery.Message.Chat.ID)
+					idU := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", update.CallbackQuery.From.UserName)
+					idUser := 0
+					likes := 0
+					dislikes := 0
+					if idU.Valid {
+						idUser = int(idU.Int64)
+					}
+					if err != nil {
+						utils.WrapErrorLog(err.Error())
+						return
+					}
+					if likeActivity.Count > 0 {
+						likes = likeActivity.Count
+					}
+					if dislikeActivity.Count > 0 {
+						dislikes = dislikeActivity.Count
+					}
+					if dataSplit[0] == "likeAnn" {
+						likes++
+						_, _ = database.InsertSQl("INSERT INTO users_activity (idUser, idPost, idUserSocial, activity, idChannel) VALUES (?,?,?,?,?)", idUser, update.CallbackQuery.Message.MessageID, update.CallbackQuery.From.ID, 1, update.CallbackQuery.Message.Chat.ID)
+					} else if dataSplit[0] == "dislikeAnn" {
+						dislikes++
+						_, _ = database.InsertSQl("INSERT INTO users_activity (idUser, idPost, idUserSocial, activity, idChannel) VALUES (?,?,?,?,?)", idUser, update.CallbackQuery.Message.MessageID, update.CallbackQuery.From.ID, 0, update.CallbackQuery.Message.Chat.ID)
+					}
+					var rows []tgbotapi.InlineKeyboardButton
+					rows = append(rows, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("👍🏻 %d", likes), fmt.Sprintf("likeAnn:%d", idPost)))
+					rows = append(rows, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("👎🏻 %d", dislikes), fmt.Sprintf("dislikeAnn:%d", idPost)))
+					m := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, tgbotapi.NewInlineKeyboardMarkup(rows))
+					_, err = bot.Send(m)
+					if err != nil {
+						utils.ReportMessage(err.Error())
+					}
+					Running = false
+				}
+			}
 		}
 	}
 
@@ -382,7 +437,7 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	} else {
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip to: "+strings.TrimSpace(ut), tx, "send")
 	}
-	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial) VALUES (?, ?, ?, ?)", usrFrom.Int64, amount, 2, 0)
+	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 2, 0, from.Chat.ID)
 	go func(addrTo string, addrSend string, amount string) {
 		d := map[string]string{
 			"fn": "sendTransaction",
@@ -510,7 +565,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 		return "", err, RainReturnStruct{}
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
-	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial) VALUES (?, ?, ?, ?)", usrFrom.Int64, amount, 0, 0)
+	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 0, 0, from.Chat.ID)
 
 	return fmt.Sprintf("Raining %.2f XDN on %d users", amount, numOfUsers), nil, RainReturnStruct{
 		UsrList:  usersToTip,
@@ -521,6 +576,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	}
 
 }
+
 func finishRain(data RainReturnStruct) (string, error) {
 	amountToUser := data.Amount / float64(len(data.UsrList))
 	d := map[string]string{
@@ -710,7 +766,7 @@ func thunderTelegram(username string, from *tgbotapi.Message) (string, error, Th
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
 
-	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial) VALUES (?, ?, ?, ?)", usrFrom.Int64, amount, 1, 0)
+	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 1, 0, from.Chat.ID)
 
 	return fmt.Sprintf("Raining thunder of %.2f XDN on %d users", amount, numOfUsers), nil, ThunderReturnStruct{
 		UsrListTelegram: telegramFinalSlice,
@@ -765,4 +821,36 @@ func finishThunder(data ThunderReturnStruct) (string, error) {
 	}
 	t := strings.ReplaceAll(telegramResponse, "rained", "brought Thunder")
 	return t, telegramError
+}
+
+func Announcement() {
+	LoadPictures()
+	rand.Seed(time.Now().UnixNano())
+	randNum := rand.Intn(len(PictureThunder))
+
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	postID := post.PostID
+	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=1", randNum)
+	msg := tgbotapi.NewPhoto(TestChannel, tgbotapi.FileURL(url))
+	var rows []tgbotapi.InlineKeyboardButton
+	rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👍🏻", fmt.Sprintf("likeAnn:%d", postID)))
+	rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👎🏻", fmt.Sprintf("dislikeAnn:%d", postID)))
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows)
+	msg.ParseMode = tgbotapi.ModeMarkdown
+
+	msg.Caption = post.Message
+	mess, err := bot.Send(msg)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+
+	_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 }

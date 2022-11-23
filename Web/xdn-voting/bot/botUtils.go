@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"xdn-voting/database"
 	"xdn-voting/utils"
 )
@@ -12,6 +14,15 @@ var Running = false
 
 var PictureThunder = []string{"thunder.png", "thunder2.png"}
 var PictureRain = []string{"rain.png"}
+
+func LoadPictures() {
+	var err error
+	PictureThunder, err = FindFilesByName("thunder", "./Files")
+	PictureRain, err = FindFilesByName("rain", "./Files")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+}
 
 func RegenerateTokenSocial(userID int64) {
 	tk := utils.GenerateSocialsToken(32)
@@ -41,6 +52,26 @@ func ReadConfigDiscord() error {
 
 }
 
+func FindFilesByName(name string, path string) ([]string, error) {
+	var files []string
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if strings.Contains(info.Name(), name) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
 type UsrStruct struct {
 	Addr string `db:"addr"`
 	Name string `db:"name"`
@@ -67,4 +98,14 @@ type UsrStructThunder struct {
 	Addr    string `db:"addr"`
 	Name    string `db:"name"`
 	TypeBot int    `db:"typeBot"`
+}
+
+type Post struct {
+	PostID  int64  `db:"id"`
+	Message string `db:"message"`
+}
+
+type ActivityBot struct {
+	Activity int `db:"activity"`
+	Count    int `db:"count"`
 }

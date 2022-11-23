@@ -22,13 +22,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.3.1"
-  asn1lib:
-    dependency: transitive
-    description:
-      name: asn1lib
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.4.0"
   async:
     dependency: transitive
     description:
@@ -232,13 +225,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.2"
-  encrypt:
-    dependency: "direct main"
-    description:
-      name: encrypt
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "5.0.1"
   equatable:
     dependency: transitive
     description:
@@ -441,7 +427,7 @@ packages:
       name: flutter_local_notifications
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "12.0.3+1"
+    version: "12.0.4"
   flutter_local_notifications_linux:
     dependency: transitive
     description:
@@ -474,7 +460,7 @@ packages:
       name: flutter_native_splash
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.2.14"
+    version: "2.2.15"
   flutter_native_timezone:
     dependency: "direct main"
     description:
@@ -556,7 +542,7 @@ packages:
       name: flutter_udid
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "2.0.1"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -792,7 +778,7 @@ packages:
       name: mobile_scanner
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "2.1.0"
   octo_image:
     dependency: transitive
     description:
@@ -1120,13 +1106,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.9.0"
-  tuple:
-    dependency: "direct main"
-    description:
-      name: tuple
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.1"
   typed_data:
     dependency: transitive
     description:

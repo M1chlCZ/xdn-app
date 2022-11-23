@@ -51,6 +51,7 @@ func RainFinishEmbed(message, avatar, username string) *discordgo.MessageEmbed {
 }
 
 func ThunderFinishEmbed(message, avatar, username string) *discordgo.MessageEmbed {
+	LoadPictures()
 	rand.Seed(time.Now().UnixNano())
 	randNum := rand.Intn(len(PictureThunder))
 
