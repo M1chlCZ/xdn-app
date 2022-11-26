@@ -50,8 +50,6 @@ class ComInterface {
         "payload": payload,
       };
 
-      // print("GET: $mUrl ${json.encode(request!)}");
-
       response = await ioClient.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
       if (debug) {
         debugPrint(mUrl);

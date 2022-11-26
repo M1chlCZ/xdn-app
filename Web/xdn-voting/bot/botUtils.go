@@ -14,14 +14,21 @@ var Running = false
 
 var PictureThunder = []string{"thunder.png", "thunder2.png"}
 var PictureRain = []string{"rain.png"}
+var PictureNFT = []string{"nft.jpeg"}
+var PictureANN = []string{"ann.png"}
 
 func LoadPictures() {
 	var err error
 	PictureThunder, err = FindFilesByName("thunder", "./Files")
 	PictureRain, err = FindFilesByName("rain", "./Files")
+	PictureNFT, err = FindFilesByName("nft", "./Files")
+	PictureANN, err = FindFilesByName("ann", "./Files")
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
+	utils.ReportMessage(fmt.Sprintf("Ann pictures: %v", PictureANN))
+	//utils.ReportMessage(fmt.Sprintf("Thunder pictures: %d", len(PictureThunder)))
+	//utils.ReportMessage(fmt.Sprintf("Rain pictures: %d", len(PictureRain)))
 }
 
 func RegenerateTokenSocial(userID int64) {

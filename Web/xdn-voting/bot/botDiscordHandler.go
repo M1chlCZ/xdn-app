@@ -66,13 +66,31 @@ func Setup() {
 	botID = u.ID
 
 	goBot.AddHandler(messageHandler)
+	goBot.AddHandler(reactionAddHandler)
+	goBot.AddHandler(reactionRemoveHandler)
 	err = goBot.Open()
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return
 	}
+}
 
-	utils.ReportMessage(fmt.Sprintf("Bot is running as %s Prefix: %s", u.Username, config.BotPrefix))
+func reactionAddHandler(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
+	if strings.Contains(r.MessageReaction.Emoji.Name, "👍") {
+		utils.ReportMessage("Added like")
+	}
+	if strings.Contains(r.MessageReaction.Emoji.Name, "👎") {
+		utils.ReportMessage("Added dislike")
+	}
+}
+
+func reactionRemoveHandler(s *discordgo.Session, r *discordgo.MessageReactionRemove) {
+	if strings.Contains(r.MessageReaction.Emoji.Name, "👍") {
+		utils.ReportMessage("Removed like")
+	}
+	if strings.Contains(r.MessageReaction.Emoji.Name, "👎") {
+		utils.ReportMessage("Removed dislike")
+	}
 }
 
 func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
@@ -172,6 +190,7 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 			Running = false
 		}
 	}(mes)
+
 }
 
 func registerDiscord(token string, from *discordgo.MessageCreate) error {
@@ -252,7 +271,7 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 
 	author := from.Author.ID
 	tippedUser := from.Mentions[0].ID
-	reg := regexp.MustCompile("\\s[0-9]+")
+	reg := regexp.MustCompile("\\s[0-9.]+")
 	amount := reg.FindAllString(from.Message.Content, -1)
 
 	utils.ReportMessage(fmt.Sprintf("Tipping user %s %s XDN on Discord", from.Mentions[0].Username, strings.TrimSpace(amount[len(amount)-1])))
@@ -347,7 +366,7 @@ func rainDiscord(from *discordgo.MessageCreate) (string, error, RainReturnStruct
 	}
 
 	//eg: 100XDN
-	reg := regexp.MustCompile("\\s[0-9]+")
+	reg := regexp.MustCompile("\\s[0-9.]+")
 	am := reg.FindAllString(from.Message.Content, -1)
 	if len(am) == 0 {
 		return "", errors.New("Missing amount to tip"), RainReturnStruct{}
@@ -511,5 +530,42 @@ func showThunderMessage(message string, d *discordgo.Message) {
 	_, err = goBot.ChannelMessageSendEmbeds(d.ChannelID, []*discordgo.MessageEmbed{ThunderFinishEmbed(message, user.AvatarURL("160"), user.Username)})
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
+	}
+}
+
+func AnnouncementDiscord() {
+	LoadPictures()
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	messageBold := strings.ReplaceAll(post.Message, "*", "**")
+
+	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 0)
+	msg, err := goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)})
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	//_, err = goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", "If you want to be notified when we post a new announcement, please react with :white_check_mark: to this message.", "XDN Announce Bot", url)})
+
+	go func(cID, mID string) {
+		time.Sleep(2 * time.Second)
+		err := goBot.MessageReactionAdd(cID, mID, "👍")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}(msg.ChannelID, msg.ID)
+
+	channelID, ko := strconv.Atoi(msg.ChannelID)
+	messageID, ko := strconv.Atoi(msg.ID)
+	if ko != nil {
+		utils.WrapErrorLog("Error converting string to int")
+	} else {
+		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
 	}
 }

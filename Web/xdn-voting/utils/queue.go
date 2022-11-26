@@ -1,34 +1,38 @@
 package utils
 
 import (
-	"container/list"
-	"errors"
+	"sync"
 )
 
 type Queue struct {
-	items *list.List
+	lock   *sync.Mutex
+	Values []map[string]interface{}
 }
 
-func (c *Queue) Enqueue(value string) {
-	c.items.PushBack(value)
+func Init() Queue {
+	return Queue{&sync.Mutex{}, make([]map[string]interface{}, 0)}
 }
 
-func (c *Queue) Dequeue() {
-	if c.items.Len() > 0 {
-		element := c.items.Front()
-		c.items.Remove(element)
+func (q *Queue) Enqueue(x map[string]interface{}) {
+	for {
+		q.lock.Lock()
+		q.Values = append(q.Values, x)
+		q.lock.Unlock()
+		return
 	}
 }
 
-func (c *Queue) Front() (*list.Element, error) {
-	if c.items.Len() > 0 {
-		return c.items.Front(), nil
+func (q *Queue) Dequeue() *map[string]interface{} {
+	for {
+		if len(q.Values) > 0 {
+			q.lock.Lock()
+			x := q.Values[0]
+			q.Values = q.Values[1:]
+			q.lock.Unlock()
+			return &x
+		}
+		return nil
 	}
-	return nil, errors.New("queue is empty")
-}
-
-func (c *Queue) Size() int {
-	return c.items.Len()
 }
 
 //// Initialize queue

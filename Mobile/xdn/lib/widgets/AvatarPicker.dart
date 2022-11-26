@@ -154,18 +154,19 @@ class AvatarPickerState extends State<AvatarPicker> {
   }
 
   void _checkPermissions() async {
-    var status = await Permission.photos.status;
-    if (await Permission.photos.isPermanentlyDenied) {
-      await Dialogs.openAlertBoxReturn(context, "Warning", "Please grant this app permissions for Photos");
-      openAppSettings();
-    } else if (status.isDenied) {
-      var r = await Permission.photos.request();
-      if (r.isGranted) {
-        _pickImage();
-      }
-    } else {
-      _pickImage();
-    }
+    _pickImage();
+    // var status = await Permission.photos.status;
+    // if (await Permission.photos.isPermanentlyDenied) {
+    //   await Dialogs.openAlertBoxReturn(context, "Warning", "Please grant this app permissions for Photos");
+    //   openAppSettings();
+    // } else if (status.isDenied) {
+    //   var r = await Permission.photos.request();
+    //   if (r.isGranted) {
+    //     _pickImage();
+    //   }
+    // } else {
+    //   _pickImage();
+    // }
   }
 
   Future<void> _pickImage() async {

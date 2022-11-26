@@ -251,6 +251,27 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                       style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
                                     ),
                                     Text(name ?? '', style: Theme.of(context).textTheme.headline5),
+                                    const SizedBox(height: 2.0,),
+                                    InkWell(
+                                      splashColor: Colors.white24,
+                                      onTap: () {
+                                        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "Tips, Rains, Thunder directly from the app. Coming soon!");
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(7.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.transparent,
+                                          borderRadius: BorderRadius.circular(10.0),
+                                          border: Border.all(color: Colors.white24, width: 1.0),
+                                        ),
+                                        child: Image.asset(
+                                          "images/socials_general.png",
+                                          height: 28.0,
+                                          width: 28.0,
+                                          color: Colors.white.withOpacity(0.9),
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),

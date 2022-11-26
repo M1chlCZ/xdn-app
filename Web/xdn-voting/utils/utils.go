@@ -15,6 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
+	"hash/maphash"
 	"io"
 	_ "io/ioutil"
 	"log"
@@ -33,7 +34,7 @@ import (
 )
 
 const (
-	VERSION        = "0.0.0.9"
+	VERSION        = "0.0.1.0"
 	STATUS  string = "status"
 	OK      string = "OK"
 	FAIL    string = "FAIL"
@@ -466,4 +467,10 @@ func SendMessage(token string, title string, body string, data map[string]string
 		//WrapErrorLog(err.Error())
 		return
 	}
+}
+
+func RandNum(elements int) int {
+	r := mathRand.New(mathRand.NewSource(int64(new(maphash.Hash).Sum64())))
+	r = mathRand.New(mathRand.NewSource(int64(new(maphash.Hash).Sum64())))
+	return r.Intn(elements)
 }

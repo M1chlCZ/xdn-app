@@ -45,6 +45,7 @@ func main() {
 	database.New()
 	utils.NewJWT()
 	web3.New()
+	daemons.InitCron()
 
 	//debug time
 	debugTime = false
@@ -130,7 +131,7 @@ func main() {
 	app.Get("api/v1/status", utils.Authorized(getStatus))
 
 	app.Get("api/v1/file/get", getFile)
-	app.Get("api/v1/file/gram", getFileThunder)
+	app.Get("api/v1/file/gram", getPictureBots)
 
 	app.Get("api/v1/ping", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -149,7 +150,6 @@ func main() {
 	utils.ScheduleFunc(daemons.SaveTokenTX, time.Minute*10)
 	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
 	utils.ScheduleFunc(daemons.PriceData, time.Minute*5)
-	utils.ScheduleFunc(daemons.RunTelegramAnn, time.Minute*30)
 
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
@@ -200,7 +200,7 @@ func getFile(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
 }
 
-func getFileThunder(c *fiber.Ctx) error {
+func getPictureBots(c *fiber.Ctx) error {
 	//get form data
 	bot.LoadPictures()
 	formValue := c.FormValue("file", "1")
@@ -215,17 +215,29 @@ func getFileThunder(c *fiber.Ctx) error {
 		})
 	}
 
-	if tp == 0 {
-		if file > len(bot.PictureRain) {
-			file = len(bot.PictureRain) - 1
-		}
-		pic := bot.PictureRain[file]
-		return c.Status(fiber.StatusOK).SendFile("./" + pic)
-	} else {
+	if tp == 1 {
 		if file > len(bot.PictureThunder) {
 			file = len(bot.PictureThunder) - 1
 		}
 		pic := bot.PictureThunder[file]
+		return c.Status(fiber.StatusOK).SendFile("./" + pic)
+	} else if tp == 2 {
+		if file > len(bot.PictureNFT) {
+			file = len(bot.PictureNFT) - 1
+		}
+		pic := bot.PictureNFT[file]
+		return c.Status(fiber.StatusOK).SendFile("./" + pic)
+	} else if tp == 3 {
+		if file > len(bot.PictureANN) {
+			file = len(bot.PictureANN) - 1
+		}
+		pic := bot.PictureANN[file]
+		return c.Status(fiber.StatusOK).SendFile("./" + pic)
+	} else {
+		if file > len(bot.PictureRain) {
+			file = len(bot.PictureRain) - 1
+		}
+		pic := bot.PictureRain[file]
 		return c.Status(fiber.StatusOK).SendFile("./" + pic)
 	}
 }
@@ -285,33 +297,6 @@ func unlinkBot(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
-	})
-}
-
-func getTokenBot(c *fiber.Ctx) error {
-	userID, er := strconv.Atoi(c.Get("User_id"))
-	if er == nil {
-		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
-	}
-	token := database.ReadValueEmpty[sql.NullString]("SELECT tokenSocials FROM users WHERE id = ?", userID)
-	if !token.Valid || token.String == "" {
-		return utils.ReportError(c, "Token not found", fiber.StatusBadRequest)
-	}
-
-	exist := database.ReadValueEmpty[sql.NullString]("SELECT token FROM users_bot WHERE idUser = ?", userID)
-	ex := false
-	user := ""
-	if exist.Valid || exist.String != "" {
-		ex = true
-		user = database.ReadValueEmpty[string]("SELECT idSocial FROM users_bot WHERE idUser = ?", userID)
-	}
-
-	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-		utils.ERROR:  false,
-		utils.STATUS: utils.OK,
-		"token":      token.String,
-		"linked":     ex,
-		"user":       user,
 	})
 }
 
@@ -1561,7 +1546,7 @@ func setStake(c *fiber.Ctx) error {
 		}
 		tx, errWallet := coind.SendCoins(server, userAddr, r.Amount, false)
 		if errWallet != nil {
-			return utils.ReportError(c, err.Error(), 400)
+			return utils.ReportError(c, errWallet.Error(), 400)
 		}
 		_, _ = database.InsertSQl("UPDATE users_stake SET amount = ? WHERE idUser = ? AND active = ?", balance, userID, 1)
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Staking", tx, "send")

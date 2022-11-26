@@ -51,6 +51,7 @@ class _SettingsState extends State<SettingsScreen> {
   bool isAuthenticated = false;
   int confirmation = 1;
   String? firstPass;
+  bool switchValue = false;
   var twoFactor = false;
   var settingUP = false;
   var run = false;
@@ -64,8 +65,9 @@ class _SettingsState extends State<SettingsScreen> {
     _initPackageInfo();
     _getTwoFactor();
     _getInfoGet();
-    Future.delayed(Duration.zero, ()async {
-      var b  = await _initPlatform();
+    _getSSLPin();
+    Future.delayed(Duration.zero, () async {
+      var b = await _initPlatform();
       setState(() {
         valid = b;
       });
@@ -124,8 +126,7 @@ class _SettingsState extends State<SettingsScreen> {
   _getTwoFactor() async {
     try {
       ComInterface ci = ComInterface();
-      Map<String, dynamic> m = await ci.get("/twofactor/check",
-          request: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+      Map<String, dynamic> m = await ci.get("/twofactor/check", request: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
       Future.delayed(Duration.zero, () {
         setState(() {
           twoFactor = m['twoFactor'];
@@ -141,14 +142,14 @@ class _SettingsState extends State<SettingsScreen> {
   _getInfoGet() async {
     try {
       ComInterface cm = ComInterface();
-      Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug:true);
+      Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug: true);
       DaemonStatus dm = DaemonStatus.fromJson(req['data']);
       setState(() {
         getInfo = dm;
       });
     } catch (e) {
       debugPrint(e.toString());
-return null;
+      return null;
     }
   }
 
@@ -254,9 +255,7 @@ return null;
             color: Colors.black54,
             fontWeight: FontWeight.w300,
           ),
-
-        )
-        ),
+        )),
         child: Scaffold(
             backgroundColor: Colors.transparent,
             body: Builder(
@@ -281,10 +280,10 @@ return null;
                                         child: InkWell(
                                           splashColor: Colors.white54,
                                           // splash color
-                                          onTap: ()  {
+                                          onTap: () {
                                             if (valid) {
                                               Navigator.of(context).pushNamed(SocialScreen.route);
-                                            }else{
+                                            } else {
                                               Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "This section is not allowed while running app  in vm or emulator");
                                             }
                                           },
@@ -632,14 +631,83 @@ return null;
                                             ),
                                             SizedBox(
                                               width: MediaQuery.of(context).size.width - 100.0,
-                                              child:  AutoSizeText(
-                                                  AppLocalizations.of(context)!.blockchain_info,
+                                              child: AutoSizeText(
+                                                AppLocalizations.of(context)!.blockchain_info,
                                                 style: const TextStyle(fontSize: 20, color: Colors.white70),
                                                 minFontSize: 8,
                                                 maxLines: 1,
                                                 textAlign: TextAlign.start,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Divider(
+                                height: 5.0,
+                                color: Colors.transparent,
+                              ),
+                              SizedBox(
+                                height: 60,
+                                width: MediaQuery.of(context).size.width - 20.0,
+                                child: Card(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                                  color: Colors.transparent,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    child: Material(
+                                      color: Colors.black12,
+                                      child: InkWell(
+                                        splashColor: Colors.white54,
+                                        // splash color
+                                        onTap: () {
+                                          // Navigator.of(context).pushNamed(BlockInfoScreen.route);
+                                          // Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
+                                        },
+                                        // button pressed
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.only(left: 15.0),
+                                              child: Icon(
+                                                FontAwesomeIcons.userSecret,
+                                                color: Colors.white70,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 15.0,
+                                            ),
+                                            const Expanded(
+                                              child: AutoSizeText(
+                                                "SSL Pinning",
+                                                style: TextStyle(fontSize: 20, color: Colors.white70),
+                                                minFontSize: 8,
+                                                maxLines: 1,
+                                                textAlign: TextAlign.start,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            Theme(
+                                              data: Theme.of(context).copyWith(
+                                                unselectedWidgetColor: Colors.white70,
+                                                selectedRowColor: Colors.amber,
+                                              ),
+                                              child: Switch(
+                                                  value: switchValue,
+                                                  activeColor: Colors.lightBlueAccent,
+                                                  inactiveThumbColor: Colors.black,
+                                                  onChanged: (b) {
+                                                    setState(() {
+                                                      switchValue = b;
+                                                      sslPin(b);
+                                                    });
+                                                  }),
                                             ),
                                           ],
                                         ),
@@ -1062,7 +1130,7 @@ return null;
         print(e);
       }
       if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
-    }else{
+    } else {
       runDelete = false;
       if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "We were unable to delete your account, please contact support");
     }
@@ -1121,8 +1189,7 @@ return null;
   _get2FACode() async {
     try {
       ComInterface interface = ComInterface();
-      Map<String, dynamic> m = await interface.post("/twofactor",
-          body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+      Map<String, dynamic> m = await interface.post("/twofactor", body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
 
       _set2FA(m['code']);
     } catch (e) {
@@ -1142,8 +1209,7 @@ return null;
       run = true;
       try {
         ComInterface interface = ComInterface();
-        http.Response res = await interface.post("/twofactor/activate",
-            body: {"code": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+        http.Response res = await interface.post("/twofactor/activate", body: {"code": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
         if (res.statusCode == 200) {
           if (mounted) Navigator.of(context).pop();
           setState(() {
@@ -1155,7 +1221,6 @@ return null;
         if (kDebugMode) {
           print(e);
         }
-
       }
     }
     run = false;
@@ -1170,8 +1235,7 @@ return null;
     Navigator.of(context).pop();
     try {
       ComInterface interface = ComInterface();
-      http.Response res = await interface.post("/twofactor/remove",
-          body: {"token": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
+      http.Response res = await interface.post("/twofactor/remove", body: {"token": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
       if (res.statusCode == 200) {
         setState(() {
           twoFactor = false;
@@ -1204,5 +1268,29 @@ return null;
       debugPrint(e.toString());
     }
     settingUP = false;
+  }
+
+  void sslPin(bool b) async {
+    String? sslEnable = await SecureStorage.read(key: "SSL");
+    bool ssl = sslEnable == "true";
+    if (b == ssl) {
+      return;
+    } else {
+      if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "App needs to be restarted for changes to be applied");
+      await SecureStorage.write(key: "SSL", value: b.toString());
+    }
+  }
+
+  void _getSSLPin() async {
+    String? sslEnable = await SecureStorage.read(key: "SSL");
+    if (sslEnable == "true") {
+      setState(() {
+        switchValue = true;
+      });
+    } else {
+      setState(() {
+        switchValue = false;
+      });
+    }
   }
 }

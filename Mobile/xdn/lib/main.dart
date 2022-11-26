@@ -58,6 +58,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   // await Firebase.initializeApp();
+  setupLocator();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await SystemChrome.setPreferredOrientations(
     [
@@ -65,7 +66,6 @@ void main() async {
       DeviceOrientation.portraitDown,
     ],
   );
-  setupLocator();
   await NotificationService().init();
   FCM().setNotifications();
   runApp(
@@ -179,7 +179,6 @@ class MyAppState extends State<MyApp> {
   }
 
   void _manageStorage() async {
-    // SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
     String? s = await SecureStorage.read(key: 'nextgen');
     if (s == null || s == "1") {
       SecureStorage.deleteAllStorage();

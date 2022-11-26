@@ -119,6 +119,36 @@ func GenericEmbed(message, avatar, username, picture string) *discordgo.MessageE
 	return &genericEmbed
 }
 
+func AnnEmbed(url, message, username, picture string) *discordgo.MessageEmbed {
+	timeString := time.Now().Format(time.RFC3339)
+	genericEmbed := discordgo.MessageEmbed{
+		URL:         url,
+		Type:        "",
+		Title:       "Announcement",
+		Description: message,
+		Timestamp:   timeString,
+		Color:       0x00ff00,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text:         "Announcement",
+			IconURL:      "https://github.com/DigitalNoteXDN/MediaPack/blob/master/XDN/DN2020_circle_hires.png?raw=true",
+			ProxyIconURL: "",
+		},
+		Image: &discordgo.MessageEmbedImage{
+			URL: picture,
+		},
+		Thumbnail: nil,
+		Video:     nil,
+		Provider:  nil,
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    username,
+			URL:     "",
+			IconURL: "https://github.com/DigitalNoteXDN/MediaPack/blob/master/XDN/DN2020_circle_hires.png?raw=true",
+		},
+		Fields: nil,
+	}
+	return &genericEmbed
+}
+
 func TipEmbed(userFrom, userTo, amount, avatar, username string) *discordgo.MessageEmbed {
 	timeString := time.Now().Format(time.RFC3339)
 	genericEmbed := discordgo.MessageEmbed{

@@ -9,7 +9,7 @@ PODS:
   - firebase_core (2.3.0):
     - Firebase/CoreOnly (= 10.2.0)
     - Flutter
-  - firebase_messaging (14.1.1):
+  - firebase_messaging (14.1.2):
     - Firebase/Messaging (= 10.2.0)
     - firebase_core
     - Flutter
@@ -48,7 +48,7 @@ PODS:
     - Flutter
   - flutter_native_timezone (0.0.1):
     - Flutter
-  - flutter_secure_storage (3.3.1):
+  - flutter_secure_storage (6.0.0):
     - Flutter
   - flutter_udid (0.0.1):
     - Flutter
@@ -261,7 +261,7 @@ SPEC CHECKSUMS:
   device_info_plus: e5c5da33f982a436e103237c0c85f9031142abed
   Firebase: a3ea7eba4382afd83808376edb99acdaff078dcf
   firebase_core: db1432de826785171029b7c1a26e5b22ce1dd477
-  firebase_messaging: 5babce6fa9ce1e0c63a854dabba227f23dc68b1b
+  firebase_messaging: 7d54a2ef65a4a28c5729241bbdd5854d305e86ec
   FirebaseCore: 813838072b797b64f529f3c2ee35e696e5641dd1
   FirebaseCoreInternal: 091bde13e47bb1c5e9fe397634f3593dc390430f
   FirebaseInstallations: 004915af170935e3a583faefd5f8bc851afc220f
@@ -274,7 +274,7 @@ SPEC CHECKSUMS:
   flutter_native_image: 9c0b7451838484458e5b0fae007b86a4c2d4bdfe
   flutter_native_splash: 52501b97d1c0a5f898d687f1646226c1f93c56ef
   flutter_native_timezone: 5f05b2de06c9776b4cc70e1839f03de178394d22
-  flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
+  flutter_secure_storage: 23fc622d89d073675f2eaa109381aefbcf5a49be
   flutter_udid: 0848809dbed4c055175747ae6a45a8b4f6771e1c
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   GoogleDataTransport: 1c8145da7117bd68bbbed00cf304edb6a24de00f

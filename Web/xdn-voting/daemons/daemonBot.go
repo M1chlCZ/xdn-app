@@ -2,6 +2,7 @@ package daemons
 
 import "xdn-voting/bot"
 
-func RunTelegramAnn() {
-	bot.Announcement()
+func RunBotAnn() {
+	bot.AnnouncementTelegram()
+	bot.AnnouncementDiscord()
 }

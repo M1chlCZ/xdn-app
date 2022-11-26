@@ -6,6 +6,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"gopkg.in/errgo.v2/errors"
+	"hash/maphash"
 	"math/rand"
 	"os"
 	"regexp"
@@ -124,10 +125,9 @@ func StartTelegramBot() {
 						if _, err := bot.Send(dl); err != nil {
 							utils.WrapErrorLog(err.Error())
 						}
-						//rand.Seed(time.Now().UnixNano()) //TODO more pictures
-						//randNum := rand.Intn(len(PictureThunder))
+						randNum := utils.RandNum(len(PictureRain))
 
-						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=0", 0)
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=0", randNum)
 						utils.ReportMessage(url)
 						photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(url))
 						utils.ReportMessage(txd)
@@ -144,10 +144,9 @@ func StartTelegramBot() {
 						if _, err := bot.Send(dl); err != nil {
 							utils.WrapErrorLog(err.Error())
 						}
-						//rand.Seed(time.Now().UnixNano()) //TODO more pictures
-						//randNum := rand.Intn(len(PictureThunder))
+						randNum := utils.RandNum(len(PictureRain))
 
-						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=0", 0)
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=0", randNum)
 						utils.ReportMessage(url)
 						photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(url))
 						utils.ReportMessage(txd)
@@ -200,8 +199,7 @@ func StartTelegramBot() {
 						if _, err := bot.Send(dl); err != nil {
 							utils.WrapErrorLog(err.Error())
 						}
-						rand.Seed(time.Now().UnixNano())
-						randNum := rand.Intn(len(PictureThunder))
+						randNum := utils.RandNum(len(PictureThunder))
 
 						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=1", randNum)
 						utils.ReportMessage(url)
@@ -220,8 +218,7 @@ func StartTelegramBot() {
 						if _, err := bot.Send(dl); err != nil {
 							utils.WrapErrorLog(err.Error())
 						}
-						rand.Seed(time.Now().UnixNano())
-						randNum := rand.Intn(len(PictureThunder))
+						randNum := utils.RandNum(len(PictureThunder))
 
 						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=1", randNum)
 						utils.ReportMessage(url)
@@ -280,44 +277,59 @@ func StartTelegramBot() {
 				if strings.Contains(update.CallbackQuery.Data, "likeAnn") || strings.Contains(update.CallbackQuery.Data, "dislikeAnn") {
 					Running = true
 					dataSplit := strings.Split(update.CallbackQuery.Data, ":")
+					idPostage, _ := strconv.Atoi(dataSplit[1])
 					idPost := database.ReadValueEmpty[int64]("SELECT idPost FROM bot_post_activity WHERE idMessage = ?", update.CallbackQuery.Message.MessageID)
-					likeActivity, err := database.ReadStruct[ActivityBot]("SELECT activity, COUNT(*) as count FROM users_activity WHERE idPost = ? AND idChannel = ? AND activity = 1 GROUP BY activity", update.CallbackQuery.Message.MessageID, update.CallbackQuery.Message.Chat.ID)
-					dislikeActivity, err := database.ReadStruct[ActivityBot]("SELECT activity, COUNT(*) as count FROM users_activity WHERE idPost = ? AND idChannel = ? AND activity = 0 GROUP BY activity", update.CallbackQuery.Message.MessageID, update.CallbackQuery.Message.Chat.ID)
+					likeActivity, err := database.ReadStruct[ActivityBot]("SELECT activity, COUNT(*) as count FROM users_activity WHERE idMessage = ? AND idChannel = ? AND idPost = ? AND activity = 1 GROUP BY activity", update.CallbackQuery.Message.MessageID, update.CallbackQuery.Message.Chat.ID, idPostage)
+					dislikeActivity, err := database.ReadStruct[ActivityBot]("SELECT activity, COUNT(*) as count FROM users_activity WHERE idMessage = ? AND idChannel = ? AND idPost = ? AND activity = 0 GROUP BY activity", update.CallbackQuery.Message.MessageID, update.CallbackQuery.Message.Chat.ID, idPostage)
 					idU := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", update.CallbackQuery.From.UserName)
 					idUser := 0
 					likes := 0
 					dislikes := 0
+					userActivity := 0
 					if idU.Valid {
 						idUser = int(idU.Int64)
+						userActivity = database.ReadValueEmpty[int]("SELECT activity FROM users_activity WHERE idUser = ? AND idPost = ? AND idMessage = ? AND idChannel = ?", idUser, idPostage, update.CallbackQuery.Message.MessageID, update.CallbackQuery.Message.Chat.ID)
+						if userActivity == 0 {
+							if err != nil {
+								utils.WrapErrorLog(err.Error())
+								Running = false
+								return
+							}
+							if likeActivity.Count > 0 {
+								likes = likeActivity.Count
+							}
+							if dislikeActivity.Count > 0 {
+								dislikes = dislikeActivity.Count
+							}
+							if dataSplit[0] == "likeAnn" {
+								likes++
+								_, _ = database.InsertSQl("INSERT INTO users_activity (idUser, idMessage, idUserSocial, activity, idChannel, idPost) VALUES (?,?,?,?,?,?)", idUser, update.CallbackQuery.Message.MessageID, update.CallbackQuery.From.ID, 1, update.CallbackQuery.Message.Chat.ID, idPostage)
+							} else if dataSplit[0] == "dislikeAnn" {
+								dislikes++
+								_, _ = database.InsertSQl("INSERT INTO users_activity (idUser, idMessage, idUserSocial, activity, idChannel, idPost) VALUES (?,?,?,?,?,?)", idUser, update.CallbackQuery.Message.MessageID, update.CallbackQuery.From.ID, 0, update.CallbackQuery.Message.Chat.ID, idPostage)
+							}
+							var rows []tgbotapi.InlineKeyboardButton
+							rows = append(rows, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("👍🏻 %d", likes), fmt.Sprintf("likeAnn:%d", idPost)))
+							//rows = append(rows, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("👎🏻 %d", dislikes), fmt.Sprintf("dislikeAnn:%d", idPost)))
+							m := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, tgbotapi.NewInlineKeyboardMarkup(rows))
+							_, err = bot.Send(m)
+							if err != nil {
+								utils.ReportMessage(err.Error())
+							}
+							Running = false
+						} else {
+							utils.WrapErrorLog(fmt.Sprintf("User %d already voted", idUser))
+							Running = false
+							// user already voted
+						}
+					} else {
+						utils.WrapErrorLog("User not found")
+						Running = false
 					}
-					if err != nil {
-						utils.WrapErrorLog(err.Error())
-						return
-					}
-					if likeActivity.Count > 0 {
-						likes = likeActivity.Count
-					}
-					if dislikeActivity.Count > 0 {
-						dislikes = dislikeActivity.Count
-					}
-					if dataSplit[0] == "likeAnn" {
-						likes++
-						_, _ = database.InsertSQl("INSERT INTO users_activity (idUser, idPost, idUserSocial, activity, idChannel) VALUES (?,?,?,?,?)", idUser, update.CallbackQuery.Message.MessageID, update.CallbackQuery.From.ID, 1, update.CallbackQuery.Message.Chat.ID)
-					} else if dataSplit[0] == "dislikeAnn" {
-						dislikes++
-						_, _ = database.InsertSQl("INSERT INTO users_activity (idUser, idPost, idUserSocial, activity, idChannel) VALUES (?,?,?,?,?)", idUser, update.CallbackQuery.Message.MessageID, update.CallbackQuery.From.ID, 0, update.CallbackQuery.Message.Chat.ID)
-					}
-					var rows []tgbotapi.InlineKeyboardButton
-					rows = append(rows, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("👍🏻 %d", likes), fmt.Sprintf("likeAnn:%d", idPost)))
-					rows = append(rows, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("👎🏻 %d", dislikes), fmt.Sprintf("dislikeAnn:%d", idPost)))
-					m := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, tgbotapi.NewInlineKeyboardMarkup(rows))
-					_, err = bot.Send(m)
-					if err != nil {
-						utils.ReportMessage(err.Error())
-					}
-					Running = false
+
 				}
 			}
+			Running = false
 		}
 	}
 
@@ -488,7 +500,7 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	}
 
 	//eg: 100XDN
-	reg := regexp.MustCompile("\\s[0-9]+")
+	reg := regexp.MustCompile("\\s[0-9.]+")
 	am := reg.FindAllString(from.Text, -1)
 	if len(am) == 0 {
 		return "", errors.New("Missing amount to tip"), RainReturnStruct{}
@@ -536,8 +548,8 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 			return "", errors.New("Too many users to tip"), RainReturnStruct{}
 		}
 		//shuffle usrFrom
-		rand.Seed(time.Now().UnixNano())
-		rand.Shuffle(len(usersTo), func(i, j int) { usersTo[i], usersTo[j] = usersTo[j], usersTo[i] })
+		r := rand.New(rand.NewSource(int64(new(maphash.Hash).Sum64())))
+		r.Shuffle(len(usersTo), func(i, j int) { usersTo[i], usersTo[j] = usersTo[j], usersTo[i] })
 		//random select numOfUser from usrFrom
 		for i := 0; i < numOfUsers; i++ {
 			usersToTip = append(usersToTip, usersTo[i])
@@ -635,7 +647,7 @@ func finishRain(data RainReturnStruct) (string, error) {
 		userString += "@" + v.Name + " "
 	}
 	//create final message
-	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.UserID, strconv.FormatFloat(amountToUser, 'f', 2, 32), userString)
+	mes := fmt.Sprintf("User @%s rained on %s %s XDN each", data.UserID, userString, strconv.FormatFloat(amountToUser, 'f', 2, 32))
 
 	return mes, nil
 }
@@ -651,7 +663,7 @@ func thunderTelegram(username string, from *tgbotapi.Message) (string, error, Th
 	}
 
 	//eg: 100XDN
-	reg := regexp.MustCompile("\\s[0-9]+")
+	reg := regexp.MustCompile("\\s[0-9.]+")
 	am := reg.FindAllString(from.Text, -1)
 	if len(am) == 0 {
 		return "", errors.New("Missing amount to tip"), ThunderReturnStruct{}
@@ -709,10 +721,10 @@ func thunderTelegram(username string, from *tgbotapi.Message) (string, error, Th
 		}
 
 		//shuffle usrFrom
-		rand.Seed(time.Now().UnixNano())
-		rand.Shuffle(len(usrTL), func(i, j int) { usrTL[i], usrTL[j] = usrTL[j], usrTL[i] })
-		rand.Seed(time.Now().UnixNano())
-		rand.Shuffle(len(usrTL), func(i, j int) { usrTL[i], usrTL[j] = usrTL[j], usrTL[i] })
+		r := rand.New(rand.NewSource(int64(new(maphash.Hash).Sum64())))
+		r.Shuffle(len(usrTL), func(i, j int) { usrTL[i], usrTL[j] = usrTL[j], usrTL[i] })
+		r2 := rand.New(rand.NewSource(int64(new(maphash.Hash).Sum64())))
+		r2.Shuffle(len(usrTL), func(i, j int) { usrTL[i], usrTL[j] = usrTL[j], usrTL[i] })
 		//random select numOfUser from usrFrom
 		var usersToTip []UsrStructThunder
 		for i := 0; i < numOfUsers; i++ {
@@ -823,10 +835,10 @@ func finishThunder(data ThunderReturnStruct) (string, error) {
 	return t, telegramError
 }
 
-func Announcement() {
+func AnnouncementTelegram() {
 	LoadPictures()
-	rand.Seed(time.Now().UnixNano())
-	randNum := rand.Intn(len(PictureThunder))
+	//rand.Seed(time.Now().UnixNano())
+	//randNum := rand.Intn(len(PictureANN))
 
 	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post ORDER BY RAND() LIMIT 1")
 	if err != nil {
@@ -835,11 +847,12 @@ func Announcement() {
 	}
 
 	postID := post.PostID
-	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=1", randNum)
-	msg := tgbotapi.NewPhoto(TestChannel, tgbotapi.FileURL(url))
+	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 1)
+	utils.ReportMessage(fmt.Sprintf("Announcement url: %s", url))
+	msg := tgbotapi.NewPhoto(MainChannel, tgbotapi.FileURL(url))
 	var rows []tgbotapi.InlineKeyboardButton
 	rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👍🏻", fmt.Sprintf("likeAnn:%d", postID)))
-	rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👎🏻", fmt.Sprintf("dislikeAnn:%d", postID)))
+	//rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👎🏻", fmt.Sprintf("dislikeAnn:%d", postID)))
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows)
 	msg.ParseMode = tgbotapi.ModeMarkdown
 

@@ -82,12 +82,11 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		addressSend:    txBack}
 
 	//utils.ReportMessage(fmt.Sprintf("firstParam: %v secondParam %v", firstParam, secondParam))
-
 	if wallet.PassPhrase.Valid {
-		_, _ = WrapDaemon(wallet, 1, "walletpassphrase", wallet.PassPhrase.String, 10)
+		_, _ = WrapDaemon(wallet, 1, "walletpassphrase", wallet.PassPhrase.String, 100)
 	}
 
-	call, err := WrapDaemon(wallet, 3, "createrawtransaction", firstParam, secondParam)
+	call, err := WrapDaemon(wallet, 1, "createrawtransaction", firstParam, secondParam)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("createrawtransaction error, addr: %s", addressReceive))
 		return "", errors.New("createrawtransaction error")
@@ -96,7 +95,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 
 	hex := strings.Trim(string(call), "\"")
 	time.Sleep(1 * time.Second)
-	call, err = WrapDaemon(wallet, 3, "signrawtransaction", hex)
+	call, err = WrapDaemon(wallet, 1, "signrawtransaction", hex)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("signrawtransaction error, addr: %s", addressReceive))
 		return "", errors.New("signrawtransaction error")
@@ -113,7 +112,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		utils.WrapErrorLog(fmt.Sprintf("signrawtransaction error, addr: %s", addressReceive))
 		return "", errors.New("signrawtransaction error")
 	}
-	call, err = WrapDaemon(wallet, 3, "sendrawtransaction", sign.Hex)
+	call, err = WrapDaemon(wallet, 1, "sendrawtransaction", sign.Hex)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("sendrawtransaction error, addr: %s", addressReceive))
 		return "", errors.New("sendrawtransaction error")
@@ -136,9 +135,11 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 				//return "", errInsert
 			}
 		}
+		if wallet.PassPhrase.Valid {
+			_, _ = WrapDaemon(wallet, 1, "walletlock")
+		}
 	} else {
-		call, err = WrapDaemon(wallet, 1, "walletpassphrase", wallet.PassPhrase.String, 99999999, true)
-		utils.ReportMessage("UNLOCKED STAKE WALLET")
+		go deferWalletLock(wallet)
 	}
 	userReceive := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressReceive)
 	if userReceive.Valid {
@@ -149,4 +150,26 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		}
 	}
 	return tx, nil
+}
+
+var sec = 0
+
+func deferWalletLock(daemon models.Daemon) {
+	if sec == 0 {
+		go lockWalletStake(daemon)
+	}
+	sec += 5
+}
+
+func lockWalletStake(daemon models.Daemon) {
+	for {
+		time.Sleep(time.Second * 1)
+		sec--
+		utils.ReportMessage(fmt.Sprintf("sec remaining: %d", sec))
+		if sec <= 0 {
+			_, _ = WrapDaemon(daemon, 1, "walletpassphrase", daemon.PassPhrase.String, 99999999, true)
+			utils.ReportMessage("LOCKED STAKE WALLET")
+			break
+		}
+	}
 }

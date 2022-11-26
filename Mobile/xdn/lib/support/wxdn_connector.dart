@@ -48,8 +48,15 @@ class WalletConnectEthereumCredentials extends CustomTransactionSender {
   @override
   Future<MsgSignature> signToSignature(Uint8List payload,
       {int? chainId, bool isEIP1559 = false}) {
-    // TODO: implement signToSignature
     throw UnimplementedError();
+  }
+
+  @override
+  EthereumAddress get address => EthereumAddress.fromHex(provider.connector.session.accounts[0]);
+
+  @override
+  MsgSignature signToEcSignature(Uint8List payload, {int? chainId, bool isEIP1559 = false}) {
+    throw provider.sendRawTransaction(data: payload);
   }
 }
 
