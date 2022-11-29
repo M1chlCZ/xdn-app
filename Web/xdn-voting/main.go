@@ -132,6 +132,7 @@ func main() {
 
 	app.Get("api/v1/file/get", getFile)
 	app.Get("api/v1/file/gram", getPictureBots)
+	app.Get("api/v1/file", getPicture)
 
 	app.Get("api/v1/ping", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -150,7 +151,6 @@ func main() {
 	utils.ScheduleFunc(daemons.SaveTokenTX, time.Minute*10)
 	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
 	utils.ScheduleFunc(daemons.PriceData, time.Minute*5)
-
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
 	if err != nil {
@@ -175,7 +175,6 @@ func main() {
 		}
 		//utils.WrapErrorLog(error.Error(app.Listener(ln)))
 	}()
-
 	<-c
 
 	for bot.Running == true {
@@ -191,6 +190,11 @@ func main() {
 	os.Exit(0)
 
 	// Start server with https/ssl enabled on http://localhost:443
+}
+
+func getPicture(c *fiber.Ctx) error {
+	formValue := c.FormValue("file", "nft.png")
+	return c.Status(fiber.StatusOK).SendFile("./Files/" + formValue + ".png")
 }
 
 func getFile(c *fiber.Ctx) error {

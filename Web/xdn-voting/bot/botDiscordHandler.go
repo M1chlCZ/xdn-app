@@ -535,7 +535,7 @@ func showThunderMessage(message string, d *discordgo.Message) {
 
 func AnnouncementDiscord() {
 	LoadPictures()
-	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post ORDER BY RAND() LIMIT 1")
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 0 ORDER BY RAND() LIMIT 1")
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return
@@ -543,6 +543,50 @@ func AnnouncementDiscord() {
 	messageBold := strings.ReplaceAll(post.Message, "*", "**")
 
 	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 0)
+	msg, err := goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)})
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	//_, err = goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", "If you want to be notified when we post a new announcement, please react with :white_check_mark: to this message.", "XDN Announce Bot", url)})
+
+	go func(cID, mID string) {
+		time.Sleep(2 * time.Second)
+		err := goBot.MessageReactionAdd(cID, mID, "👍")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}(msg.ChannelID, msg.ID)
+
+	channelID, ko := strconv.Atoi(msg.ChannelID)
+	messageID, ko := strconv.Atoi(msg.ID)
+	if ko != nil {
+		utils.WrapErrorLog("Error converting string to int")
+	} else {
+		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}
+}
+
+func AnnouncementNFTDiscord() {
+	LoadPictures()
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 1 ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	messageBold := strings.ReplaceAll(post.Message, "*", "**")
+
+	url := ""
+	if post.Picture.Valid {
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+	} else {
+		randNum := utils.RandNum(len(PictureNFT))
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=2", randNum)
+	}
+
 	msg, err := goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)})
 	if err != nil {
 		utils.WrapErrorLog(err.Error())

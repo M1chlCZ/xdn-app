@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -41,7 +42,6 @@ func RegenerateTokenSocial(userID int64) {
 }
 
 func ReadConfigDiscord() error {
-	utils.ReportMessage("Reading config file...")
 	file, err := os.ReadFile("./config.json")
 
 	if err != nil {
@@ -108,8 +108,18 @@ type UsrStructThunder struct {
 }
 
 type Post struct {
-	PostID  int64  `db:"id"`
-	Message string `db:"message"`
+	PostID   int64          `db:"id"`
+	Message  string         `db:"message"`
+	Picture  sql.NullString `db:"picture"`
+	Category int64          `db:"category"`
+}
+
+type ActivityBotStruct struct {
+	Id        int    `db:"id"`
+	IdPost    int    `db:"idPost"`
+	IdChannel int64  `db:"idChannel"`
+	IdMessage int    `db:"idMessage"`
+	DateTime  string `db:"dateTime"`
 }
 
 type ActivityBot struct {
