@@ -118,7 +118,7 @@ type ActivityBotStruct struct {
 	Id        int    `db:"id"`
 	IdPost    int    `db:"idPost"`
 	IdChannel int64  `db:"idChannel"`
-	IdMessage int    `db:"idMessage"`
+	IdMessage int64  `db:"idMessage"`
 	DateTime  string `db:"dateTime"`
 }
 

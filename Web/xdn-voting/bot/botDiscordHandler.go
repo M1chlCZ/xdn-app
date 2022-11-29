@@ -68,12 +68,32 @@ func Setup() {
 	goBot.AddHandler(messageHandler)
 	goBot.AddHandler(reactionAddHandler)
 	goBot.AddHandler(reactionRemoveHandler)
+	goBot.AddHandler(buttonHandler)
 	err = goBot.Open()
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return
 	}
 }
+
+func buttonHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	switch i.Type {
+	//case discordgo.InteractionApplicationCommand:
+	//	if h, ok := commandsHandlers[i.ApplicationCommandData().Name]; ok {
+	//		h(s, i)
+	//	}
+	case discordgo.InteractionMessageComponent:
+		if h, ok := componentsHandlers[i.MessageComponentData().CustomID]; ok {
+			h(s, i)
+		}
+	}
+}
+
+var (
+	componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"giftBot": giftBotHandler,
+	}
+)
 
 func reactionAddHandler(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
 	if strings.Contains(r.MessageReaction.Emoji.Name, "👍") {
@@ -611,5 +631,212 @@ func AnnouncementNFTDiscord() {
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 		}
+	}
+}
+
+func GiftDiscordBot() {
+	LoadPictures()
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel > 0 ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	if lastPost.Id != 0 {
+		err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+
+	}
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 2 ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	usrTL := database.ReadValueEmpty[int64](`SELECT count(id) FROM users_bot WHERE typeBot = 1`)
+	luckyNumber := utils.RandNum(int(usrTL / 2))
+	text := ""
+	if luckyNumber == 0 {
+		luckyNumber++
+	}
+	if luckyNumber == 1 {
+		text = "first"
+	} else if luckyNumber == 2 {
+		text = "second"
+	} else if luckyNumber == 3 {
+		text = "third"
+	} else {
+		text = strconv.FormatInt(int64(luckyNumber), 10) + "th"
+	}
+	message := fmt.Sprintf(post.Message, text)
+	messageBold := strings.ReplaceAll(message, "*", "**")
+
+	url := ""
+	if post.Picture.Valid {
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+	} else {
+		randNum := utils.RandNum(len(PictureNFT))
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=2", randNum)
+	}
+
+	buttons := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Emoji: discordgo.ComponentEmoji{
+						Name: "🎁",
+					},
+					Label:    "Try your luck",
+					Style:    discordgo.SuccessButton,
+					CustomID: "giftBot",
+				},
+			},
+		},
+	}
+	//
+	messageSend := discordgo.MessageSend{
+		Content:         "",
+		Embeds:          []*discordgo.MessageEmbed{GiftEmbed(messageBold, url)},
+		TTS:             false,
+		Components:      buttons,
+		Files:           nil,
+		AllowedMentions: nil,
+		Reference:       nil,
+		File:            nil,
+		Embed:           nil,
+	}
+
+	msg, err := goBot.ChannelMessageSendComplex(MainChannelID, &messageSend)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	channelID, ko := strconv.Atoi(msg.ChannelID)
+	messageID, ko := strconv.Atoi(msg.ID)
+	if ko != nil {
+		utils.WrapErrorLog("Error converting string to int")
+	} else {
+		_, err = database.InsertSQl("INSERT INTO gift_bot_numbers (idMessage, luckyNumber, idChannel) VALUES (?,?,?)", messageID, luckyNumber, channelID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}
+}
+
+func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	utils.ReportMessage("giftBotHandler", i.Message.ChannelID, i.Message.ID, i.Member.User.ID)
+	idU := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", i.Member.User.ID)
+	if !idU.Valid {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Please link your XDN APP to Discord. Go to APP, tap on Settings, tap on Connect and then follow the instructions.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		utils.ReportMessage("User not found")
+		Running = false
+		return
+	}
+	luckyNumber := database.ReadValueEmpty[sql.NullInt64]("SELECT luckyNumber FROM gift_bot_numbers WHERE idMessage =? AND idChannel = ?", i.Message.ID, i.Message.ChannelID)
+	if !luckyNumber.Valid {
+		utils.ReportMessage("Lucky number not found")
+		Running = false
+		return
+	}
+	userVoted := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_activity WHERE idMessage = ? AND idChannel = ? AND idUserSocial = ?", i.Message.ID, i.Message.ChannelID, i.Member.User.ID)
+	if userVoted.Valid {
+		utils.ReportMessage(fmt.Sprintf("User %d already voted", userVoted.Int64))
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Already participated, better luck next time.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		utils.ReportMessage("Already participated")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		Running = false
+		return
+	}
+	_, err := database.InsertSQl("INSERT INTO users_activity (idUser, idMessage, idUserSocial, activity, idChannel, idPost) VALUES (?,?,?,?,?,?)", idU.Int64, i.Message.ID, i.Member.User.ID, 1, i.Message.ChannelID, 5) //todo change idPost
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	countUsers := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(*), 0) FROM users_activity WHERE idMessage = ? AND idChannel = ?", i.Message.ID, i.Message.ChannelID)
+	if countUsers != luckyNumber.Int64 {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Thank you for your participation, your number is not winning one, better luck next time.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		utils.ReportMessage("Already participated")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		Running = false
+		return
+	} else {
+		addressTo := database.ReadValueEmpty[string]("SELECT addr FROM users WHERE id = ?", idU.Int64)
+		addressFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
+		if !addressFrom.Valid {
+			utils.WrapErrorLog("Address from not found")
+			Running = false
+			return
+		}
+		_, err := s.ChannelMessageSendEmbeds(i.ChannelID, []*discordgo.MessageEmbed{WinEmbed(fmt.Sprintf("%s", i.Member.User.ID), "100", i.Member.User.AvatarURL("128"), i.Member.User.Username)})
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			Running = false
+			return
+		}
+		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Your reward is on the way!.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		_, err = coind.SendCoins(addressTo, addressFrom.String, 100.0, true)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			Running = false
+			return
+		}
+		d := map[string]string{
+			"fn": "sendTransaction",
+		}
+		type Token struct {
+			Token string `json:"token"`
+		}
+		tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", idU.Int64)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		if len(tk) > 0 {
+			for _, v := range tk {
+				utils.SendMessage(v.Token, "🎁 from Gift Bot", fmt.Sprintf("%s XDN", strconv.FormatFloat(100.0, 'f', 2, 32)), d)
+			}
+		}
+		err = goBot.ChannelMessageDelete(fmt.Sprintf("%s", i.Message.ChannelID), fmt.Sprintf("%s", i.Message.ID))
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		Running = false
 	}
 }

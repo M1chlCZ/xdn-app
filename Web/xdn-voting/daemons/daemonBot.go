@@ -14,4 +14,5 @@ func AnnNFTBot() {
 
 func GiftBot() {
 	bot.GiftTelegramBot()
+	bot.GiftDiscordBot()
 }

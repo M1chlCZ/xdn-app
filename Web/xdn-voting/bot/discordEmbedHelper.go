@@ -194,3 +194,51 @@ func TipErrorEmbed(error, title string) *discordgo.MessageEmbed {
 	}
 	return &genericEmbed
 }
+
+func GiftEmbed(message, picture string) *discordgo.MessageEmbed {
+	timeString := time.Now().Format(time.RFC3339)
+	genericEmbed := discordgo.MessageEmbed{
+		Type:        "",
+		Title:       "",
+		Description: message,
+		Timestamp:   timeString,
+		Color:       0x31BFCA,
+		Footer:      nil,
+		Image: &discordgo.MessageEmbedImage{
+			URL: picture,
+		},
+		Thumbnail: nil,
+		Video:     nil,
+		Provider:  nil,
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    "XDN Tip Bot",
+			URL:     "",
+			IconURL: "https://cdn.discordapp.com/avatars/1038623597746458644/b4aa43e5d422bcc3b72e49d067d87f73.webp?size=160",
+		},
+		Fields: nil,
+	}
+	return &genericEmbed
+}
+
+func WinEmbed(userTo, amount, avatar, username string) *discordgo.MessageEmbed {
+	timeString := time.Now().Format(time.RFC3339)
+	genericEmbed := discordgo.MessageEmbed{
+		Type:        "",
+		Title:       "Tip successful",
+		Description: fmt.Sprintf("Congrats <@%s> who won %s XDN!", userTo, amount),
+		Timestamp:   timeString,
+		Color:       0x00ff00,
+		Footer:      nil,
+		Image:       nil,
+		Thumbnail:   nil,
+		Video:       nil,
+		Provider:    nil,
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    username,
+			URL:     "",
+			IconURL: avatar,
+		},
+		Fields: nil,
+	}
+	return &genericEmbed
+}
