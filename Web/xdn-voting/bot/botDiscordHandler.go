@@ -777,7 +777,7 @@ func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "Thank you for your participation, your number is not winning one, better luck next time.",
+				Content: "Thank you for your participation, your number is not winning this one, better luck next time.",
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})

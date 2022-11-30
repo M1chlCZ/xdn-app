@@ -3,7 +3,7 @@ description: DigitalNote App Wallet
 
 publish_to: 'none'
 
-version: 1.0.77+77
+version: 1.0.78+78
 
 environment:
   sdk: ">=2.14.0 <3.0.0"
@@ -22,8 +22,6 @@ dependencies:
   intl: ^0.17.0
   qr_flutter: ^4.0.0
   sqflite: ^2.2.0+3
-  #tuple: ^2.0.1 #candidate
-  #encrypt: ^5.0.1 #candidate
   sprintf: any
   get_it: ^7.2.0
   auto_size_text: ^3.0.0
@@ -49,12 +47,11 @@ dependencies:
   mobile_scanner: ^2.1.0
   fl_chart: ^0.55.2
   jiffy: ^5.0.0
-  permission_handler: ^10.0.0
+  permission_handler: ^10.2.0
   local_auth: ^2.1.2
   walletconnect_qrcode_modal_dart: ^0.1.0
-  web3dart: ^2.5.0
+  web3dart: ^2.5.1
   decimal: any
-  jwt_decode: ^0.3.1 #candidate
   rxdart: ^0.27.7
   open_file_safe: ^3.2.3
   external_path: ^1.0.3
@@ -65,7 +62,7 @@ dependencies:
   package_info_plus: any
   flutter_displaymode: ^0.4.1
   slide_to_act: any
-  flutter_native_splash: ^2.2.15
+  flutter_native_splash: ^2.2.16
   flutter_biometrics:
     git:
       url: https://github.com/M1chlCZ/flutter_biometrics.git

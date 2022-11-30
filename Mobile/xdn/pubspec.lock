@@ -70,7 +70,7 @@ packages:
       name: cached_network_image
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.2.2"
+    version: "3.2.3"
   cached_network_image_platform_interface:
     dependency: transitive
     description:
@@ -460,7 +460,7 @@ packages:
       name: flutter_native_splash
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.2.15"
+    version: "2.2.16"
   flutter_native_timezone:
     dependency: "direct main"
     description:
@@ -688,13 +688,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.2"
-  jwt_decode:
-    dependency: "direct main"
-    description:
-      name: jwt_decode
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.3.1"
   linkify:
     dependency: transitive
     description:
@@ -771,7 +764,7 @@ packages:
       name: mime
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.2"
+    version: "1.0.3"
   mobile_scanner:
     dependency: "direct main"
     description:
@@ -1224,7 +1217,7 @@ packages:
       name: web3dart
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.5.0"
+    version: "2.5.1"
   web_socket_channel:
     dependency: transitive
     description:

@@ -14,6 +14,7 @@ import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/LifecycleWatcherState.dart';
 import 'package:digitalnote/support/NetInterface.dart';
+import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
@@ -21,11 +22,11 @@ import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
 import 'package:digitalnote/widgets/balance_card.dart';
 import 'package:digitalnote/widgets/balance_token_card.dart';
+import 'package:digitalnote/widgets/send_qr_dialog.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:digitalnote/widgets/voting_menu_widget.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
@@ -128,8 +129,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     name = await SecureStorage.read(key: globals.NICKNAME);
     setState(() {});
     daemonStatus = getDaemonStatus();
-    // var token = await SecureStorage.read(key: globals.TOKEN);
-    // print(token);
     NetInterface.getAddrBook();
   }
 
@@ -251,7 +250,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                       style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
                                     ),
                                     Text(name ?? '', style: Theme.of(context).textTheme.headline5),
-                                    const SizedBox(height: 2.0,),
+                                    const SizedBox(
+                                      height: 2.0,
+                                    ),
                                     InkWell(
                                       splashColor: Colors.white24,
                                       onTap: () {
@@ -294,6 +295,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                           key: _keyBal,
                           getBalanceFuture: _getBalance,
                           goto: gotoBalanceScreen,
+                          scan: scanQR,
                         ),
                         const SizedBox(
                           height: 10,
@@ -520,5 +522,118 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     } else {
       return AppLocalizations.of(context)!.good_day.capitalize();
     }
+  }
+
+  void scanQR() async {
+    Map<String, String?> data = {};
+    FocusScope.of(context).unfocus();
+    await Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+      return BarcodeScanner(
+        scanResult: (String s) {
+          data = _splitString(s);
+        },
+      );
+    }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+      return FadeTransition(opacity: animation, child: child);
+    }));
+    Future.delayed(const Duration(milliseconds: 100), () {
+      processData(data);
+    });
+  }
+
+  void processData(Map<String, String?> data) {
+    if (data["error"] == null) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return SendDialogQR(
+              data: data,
+              priceData: _priceData,
+              sendCoins: sendCoints,
+            );
+          });
+    } else {
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, data["error"]!);
+    }
+  }
+
+  void sendCoints(Map<String, String?> data) {
+    String method = "/user/send";
+    Map<String, dynamic>? m;
+    ComInterface interface = ComInterface();
+
+    var addr = data["address"]!;
+    var recipient = data["message"];
+    var amnt = data["amountCrypto"]!;
+
+    if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
+      return;
+    }
+
+    if (recipient == null) {
+      m = {
+        "address": addr,
+        "amount": double.parse(double.parse(amnt).toStringAsFixed(8)),
+      };
+    } else {
+      method = "/user/send/contact";
+      m = {
+        "address": addr,
+        "amount": double.parse(double.parse(amnt).toStringAsFixed(8)),
+        "contact": recipient,
+      };
+    }
+    Dialogs.openWaitBox(context);
+    Future.delayed(const Duration(milliseconds: 500), () async {
+      try {
+        await interface.post(method, body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+      } catch (e) {
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
+      }
+    });
+    Navigator.of(context).pop();
+  }
+
+  Map<String, String?> _splitString(String string) {
+    String? name;
+    String? address;
+    String? amount;
+    String? label;
+    String? message;
+
+    var split = string.split(":");
+    var split2 = split[1].split("?");
+    var split3 = split2[1].split("&");
+    name = split[0];
+    address = split2[0];
+    amount = split3[0].split("=")[1];
+    label = split3[1].split("=")[1];
+    message = split3[2].split("=")[1];
+
+    if (name != "DigitalNote") {
+      return {"error": "Invalid QR code"};
+    }
+    if (address.isEmpty) {
+      return {"error": "Invalid QR code"};
+    }
+
+    if (amount.isEmpty) {
+      return {"error": "Invalid QR code"};
+    }
+
+    if (label.isEmpty) {
+      return {"error": "Invalid QR code"};
+    }
+
+    Map<String, String?> m = {
+      "address": address,
+      "amount": amount,
+      "label": label,
+      "message": message,
+      "name": name,
+      "error": null,
+    };
+    return m;
   }
 }

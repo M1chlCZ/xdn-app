@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/support/Utils.dart';
@@ -8,14 +9,21 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class BalanceCardMainMenu extends StatefulWidget {
   final FutureOr<Map<String, dynamic>>? getBalanceFuture;
   final VoidCallback goto;
+  final VoidCallback scan;
 
-  const BalanceCardMainMenu({Key? key, required this.getBalanceFuture, required this.goto}) : super(key: key);
+  const BalanceCardMainMenu({Key? key, required this.getBalanceFuture, required this.goto, required this.scan}) : super(key: key);
 
   @override
   State<BalanceCardMainMenu> createState() => _BalanceCardMainMenuState();
 }
 
 class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
+  @override
+  void initState() {
+    // TODO: implement initState
+      super.initState();
+
+  }
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -25,7 +33,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
           widget.goto();
         },
         child: Container(
-          decoration:  BoxDecoration(
+          decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(15.0)),
             boxShadow: [
               BoxShadow(
@@ -46,22 +54,22 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         Map<String, dynamic> m = snapshot.data!;
-                         var balance = Utils.formatBalance(double.parse(m['spendable'].toString()));
-                         var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
-                         var pending = double.parse(m['balance'].toString()).toStringAsFixed(3);
+                        var balance = Utils.formatBalance(double.parse(m['spendable'].toString()));
+                        var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
+                        var pending = double.parse(m['balance'].toString()).toStringAsFixed(3);
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: ${Utils.formatBalance(double.parse(immature))} XDN";
                         var textPending = double.parse(pending).toInt() == 0 ? '' : "Pending ${Utils.formatBalance(double.parse(pending))} XDN";
                         if (textImature != '' && textPending != '') {
-                          textPending ='';
+                          textPending = '';
                         }
                         return Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.max,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.only(top: 6.0),
+                                padding: EdgeInsets.only(top: 12.0, right:Platform.isIOS ? 20 : 40),
                                 child: Center(
                                   child: Row(
                                     mainAxisSize: MainAxisSize.max,
@@ -89,39 +97,46 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                               child: Text(
                                             "XDN",
                                             textAlign: TextAlign.right,
-                                            style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70,  fontSize: 24.0, fontWeight: FontWeight.w800),
+                                            style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 24.0, fontWeight: FontWeight.w800),
                                           ))),
                                       const SizedBox(
                                         width: 0.0,
                                       ),
                                     ],
-
                                   ),
                                 ),
                               ),
                             ),
                             textImature != ''
-                                ? SizedBox(
-                                    width: MediaQuery.of(context).size.width * 0.8,
-                                    child: AutoSizeText(textImature,
-                                        minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
-                                  )
+                                ? Padding(
+                                  padding: EdgeInsets.only(right: Platform.isIOS ? 20 : 40),
+                                  child: SizedBox(
+                                      width: MediaQuery.of(context).size.width * 0.8,
+                                      child: AutoSizeText(textImature,
+                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                                    ),
+                                )
                                 : Container(),
                             textPending != ''
-                                ? SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.8,
-                              child: AutoSizeText(textPending,
-                                  minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
-                            )
+                                ? Padding(
+                                  padding: EdgeInsets.only(right: Platform.isIOS ? 20 : 40),
+                                  child: SizedBox(
+                                      width: MediaQuery.of(context).size.width * 0.8,
+                                      child: AutoSizeText(textPending,
+                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                                    ),
+                                )
                                 : Container(),
-                            const SizedBox(height: 10.0,),
+                            const SizedBox(
+                              height: 10.0,
+                            ),
                           ],
                         );
                       } else if (snapshot.hasError) {
                         return Center(child: Text("There was an error retrieving you balance", style: Theme.of(context).textTheme.headline1!.copyWith(color: Colors.white, fontSize: 14)));
                       } else {
                         return Center(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.center,mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
                             SizedBox(
                                 height: 25.0,
                                 width: 25.0,
@@ -136,10 +151,36 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                     }),
               ),
               Padding(
-                padding: const EdgeInsets.only(left:8.0, top: 4.0, bottom: 4.0),
-                child: SizedBox(
-                  width: 90,
-                    child: Image.asset("images/wallet_big.png")),
+                padding: const EdgeInsets.only(left: 8.0, top: 4.0, bottom: 4.0),
+                child: SizedBox(width: 90, child: Image.asset("images/wallet_big.png")),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(topRight: Radius.circular(15.0), bottomRight: Radius.circular(15.0)),
+                  child: Material(
+                    color: Colors.black12,
+                    child: InkWell(
+                      splashColor: Colors.black26,
+                      onTap: () {
+                        widget.scan();
+                      },
+                      child: Container(
+                        height: double.infinity,
+                        width: 75,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.only(topRight: Radius.circular(15.0), bottomRight: Radius.circular(15.0)),
+                          color: Colors.transparent,
+                        ),
+                        padding: const EdgeInsets.all(10.0),
+                        child: Image.asset(
+                          "images/QR.png",
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               )
             ],
           ),
