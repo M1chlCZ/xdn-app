@@ -1435,88 +1435,158 @@ class Dialogs {
 
   static void openUserQR(context) async {
     var qr = await SecureStorage.read(key: globals.ADR);
+    var qrData = qr;
+
+    TextEditingController textController = TextEditingController();
     showDialog(
         context: context,
         builder: (context) {
-          return BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
-            child: Dialog(
-              backgroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(side: BorderSide(color: Color(0xFF9F9FA4)), borderRadius: BorderRadius.all(Radius.circular(20.0))),
-              child: Wrap(children: [
-                Container(
-                  width: 400.0,
-                  padding: const EdgeInsets.all(15.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
-                          child: SizedBox(
-                            width: 380,
-                            child: AutoSizeText(
-                              AppLocalizations.of(context)!.dl_konj_addr,
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                              minFontSize: 8.0,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.black87),
+          return StatefulBuilder(builder: (BuildContext context, StateSetter sState) {
+            textController.addListener(() {
+              if (textController.text.isNotEmpty) {
+                sState(() {
+                  qrData = "DigitalNote:$qr?amount=${textController.text}";
+                });
+              }else{
+                sState(() {
+                  qrData = qr;
+                });
+              }
+            });
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
+              child: Dialog(
+                backgroundColor: Colors.white,
+                shape: const RoundedRectangleBorder(side: BorderSide(color: Color(0xFF9F9FA4)), borderRadius: BorderRadius.all(Radius.circular(20.0))),
+                child: Wrap(children: [
+                  Container(
+                    width: 400.0,
+                    padding: const EdgeInsets.all(15.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
+                            child: SizedBox(
+                              width: 380,
+                              child: AutoSizeText(
+                                AppLocalizations.of(context)!.dl_konj_addr,
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                                minFontSize: 8.0,
+                                style: Theme
+                                    .of(context)
+                                    .textTheme
+                                    .headline5!
+                                    .copyWith(fontSize: 22.0, color: Colors.black87),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Center(
-                          child: Text(
-                        '(${AppLocalizations.of(context)!.dl_share})',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.black54),
-                      )),
-                      const SizedBox(
-                        height: 5.0,
-                      ),
-                      const Divider(
-                        color: Colors.grey,
-                        height: 4.0,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2.0),
-                        child: GestureDetector(
-                          onTap: () {
-                            Clipboard.setData(ClipboardData(text: qr));
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(AppLocalizations.of(context)!.dl_qr_copy),
-                              duration: const Duration(seconds: 3),
-                              backgroundColor: Colors.green,
-                              behavior: SnackBarBehavior.fixed,
-                              elevation: 5.0,
-                            ));
-                            Navigator.pop(context);
-                          },
-                          onLongPress: () {
-                            Vibration.vibrate(duration: 200);
-                            Share.share(qr!);
-                            Navigator.pop(context);
-                          },
-                          child: QrImage(
-                            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
-                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
-                            errorCorrectionLevel: QrErrorCorrectLevel.H,
-                            data: qr.toString(),
-                            foregroundColor: Colors.black87,
-                            version: QrVersions.auto,
-                            // size: 250,
-                            gapless: false,
+                        Center(
+                            child: Text(
+                              '(${AppLocalizations.of(context)!.dl_share})',
+                              textAlign: TextAlign.center,
+                              style: Theme
+                                  .of(context)
+                                  .textTheme
+                                  .headline5!
+                                  .copyWith(fontSize: 14.0, color: Colors.black54),
+                            )),
+                        const SizedBox(
+                          height: 5.0,
+                        ),
+                        const Divider(
+                          color: Colors.grey,
+                          height: 4.0,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: qr));
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(AppLocalizations.of(context)!.dl_qr_copy),
+                                duration: const Duration(seconds: 3),
+                                backgroundColor: Colors.green,
+                                behavior: SnackBarBehavior.fixed,
+                                elevation: 5.0,
+                              ));
+                              Navigator.pop(context);
+                            },
+                            onLongPress: () {
+                              Vibration.vibrate(duration: 200);
+                              Share.share(qr!);
+                              Navigator.pop(context);
+                            },
+                            child: QrImage(
+                              dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
+                              eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
+                              errorCorrectionLevel: QrErrorCorrectLevel.H,
+                              data: qrData.toString(),
+                              foregroundColor: Colors.black87,
+                              version: QrVersions.auto,
+                              // size: 250,
+                              gapless: false,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                )
-              ]),
-            ),
-          );
+                        const SizedBox(
+                          height: 5.0,
+                        ),
+                        const Divider(
+                          color: Colors.grey,
+                          height: 4.0,
+                        ),
+                        const SizedBox(
+                          height: 2.0,
+                        ),
+                        Text("Request Payment", textAlign: TextAlign.center, style: Theme
+                            .of(context)
+                            .textTheme
+                            .headline5!
+                            .copyWith(fontSize: 18.0, color: Colors.black87)),
+                        const SizedBox(
+                          height: 5.0,
+                        ),
+                        TextField(
+                          textAlignVertical: TextAlignVertical.center,
+                          textAlign: TextAlign.center,
+                          controller: textController,
+                          cursorColor: Colors.black87,
+                          autofocus: true,
+                          keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                          ],
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .headline5!
+                              .copyWith(color: Colors.black87, fontSize: 22),
+                          decoration: InputDecoration(
+                            hintStyle: Theme
+                                .of(context)
+                                .textTheme
+                                .headline5!
+                                .copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.black54),
+                            hintText: "0.0 XDN",
+                            focusedBorder: const UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black87),
+                            ),
+                            // border: InputBorder.none,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                ]),
+              ),
+            );
+          });
         });
   }
 

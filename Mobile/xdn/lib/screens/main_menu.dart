@@ -566,7 +566,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     var recipient = data["message"];
     var amnt = data["amountCrypto"]!;
 
-    if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+    if (!RegExp(r"^\b(d)[a-zA-Z0-9]{33}$").hasMatch(addr)) {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
       return;
     }
@@ -596,44 +596,43 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   Map<String, String?> _splitString(String string) {
-    String? name;
-    String? address;
-    String? amount;
-    String? label;
-    String? message;
-
-    var split = string.split(":");
-    var split2 = split[1].split("?");
-    var split3 = split2[1].split("&");
-    name = split[0];
-    address = split2[0];
-    amount = split3[0].split("=")[1];
-    label = split3[1].split("=")[1];
-    message = split3[2].split("=")[1];
-
-    if (name != "DigitalNote") {
-      return {"error": "Invalid QR code"};
-    }
-    if (address.isEmpty) {
-      return {"error": "Invalid QR code"};
-    }
-
-    if (amount.isEmpty) {
-      return {"error": "Invalid QR code"};
-    }
-
-    if (label.isEmpty) {
+    Map<String, String?> data = {};
+    RegExp regex = RegExp(r"^\b(d)[a-zA-Z0-9]{33}$");
+    if (string.split(":").length > 1) {
+      var split = string.split(":");
+      var split2 = split[1].split("?");
+      if (regex.hasMatch(split2[0])) {
+        data["name"] = split[0];
+        data["address"] = split2[0];
+        var split3 = split2[1].split("&");
+        if (split3.isNotEmpty) {
+          data[split3[0].split("=")[0]] = split3[0].split("=")[1];
+        }
+        if (split3.length > 1) {
+          data[split3[1].split("=")[0]] = split3[1].split("=")[1];
+        }
+        if (split3.length > 2) {
+          data[split3[2].split("=")[0]] = split3[2].split("=")[1];
+        }
+      } else {
+        return {"error": "Invalid QR code"};
+      }
+    } else {
       return {"error": "Invalid QR code"};
     }
 
-    Map<String, String?> m = {
-      "address": address,
-      "amount": amount,
-      "label": label,
-      "message": message,
-      "name": name,
-      "error": null,
-    };
-    return m;
+    if (data["name"] != "DigitalNote") {
+      return {"error": "Invalid QR code"};
+    }
+    if (data["address"] == null || data["address"]!.isEmpty) {
+      return {"error": "Invalid QR code"};
+    }
+
+    if (data["amount"] == null || data["amount"]!.isEmpty) {
+      return {"error": "Invalid QR code"};
+    }
+
+    data["error"] = null;
+    return data;
   }
 }

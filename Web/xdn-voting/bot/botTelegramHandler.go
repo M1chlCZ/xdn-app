@@ -909,6 +909,17 @@ func finishThunder(data ThunderReturnStruct) (string, error) {
 
 func AnnouncementTelegram() {
 	LoadPictures()
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel < 0 ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	if lastPost.Id != 0 {
+		dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+		_, err := bot.Send(dl)
+		if err != nil {
+			utils.ReportMessage(err.Error())
+		}
+	}
 
 	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 0 ORDER BY RAND() LIMIT 1")
 	if err != nil {

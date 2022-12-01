@@ -68,7 +68,7 @@ class SendWidgetState extends State<SendWidget> {
         return;
       }
 
-      if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+      if (!RegExp(r"^\b(d)[a-zA-Z0-9]{33}$").hasMatch(addr)) {
         if (_recipient != null) {
           addr = _recipient!.addr!;
         } else {

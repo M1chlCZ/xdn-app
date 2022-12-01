@@ -1,3 +1,4 @@
+import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,9 +26,12 @@ class SendDialogQRState extends State<SendDialogQR> {
   void initState() {
     super.initState();
     mapData = widget.data;
-    double? currencyAmount = widget.priceData![mapData["label"]!.toLowerCase()];
-    if (currencyAmount == null) {
-      error = "Unknown currency";
+    double? currencyAmount = widget.priceData?[mapData["label"]!.toLowerCase()];
+    if (mapData["amount"] == null) {
+      mapData["amountCrypto"] = "0.0";
+    }else if (currencyAmount == null) {
+      amountXDN = double.parse(mapData["amount"]!);
+      mapData["amountCrypto"] = amountXDN.toString();
     } else {
       amountXDN = double.parse(mapData["amount"]!) / currencyAmount;
       mapData["amountCrypto"] = amountXDN.toString();
@@ -69,16 +73,18 @@ class SendDialogQRState extends State<SendDialogQR> {
                   height: 5,
                 ),
                 Text(
-                  "${mapData["amount"] ?? ''} ${mapData["label"] ?? ''}",
+                  "${mapData["amount"] ?? ''} ${mapData["label"] == null ? 'XDN' : mapData["label"]!.toUpperCase()}",
                   style: GoogleFonts.aBeeZee(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black.withOpacity(0.8)),
                 ),
                 const SizedBox(
                   height: 20,
                 ),
+                if (mapData["label"] != null)
                 Text(
                   "XDN Amount",
                   style: GoogleFonts.aBeeZee(fontSize: 12, fontWeight: FontWeight.w200, color: Colors.black.withOpacity(0.6)),
                 ),
+                if (mapData["label"] != null)
                 Text(
                   "${nf.format(amountXDN)} XDN",
                   style: GoogleFonts.aBeeZee(fontSize: 14, fontWeight: FontWeight.w200, color: Colors.black.withOpacity(0.8)),
@@ -86,10 +92,12 @@ class SendDialogQRState extends State<SendDialogQR> {
                 const SizedBox(
                   height: 10,
                 ),
+                if (mapData["message"] != null)
                 Text(
                   "Message",
                   style: GoogleFonts.aBeeZee(fontSize: 12, fontWeight: FontWeight.w200, color: Colors.black.withOpacity(0.6)),
                 ),
+                if (mapData["message"] != null)
                 Text(
                   mapData['message'] ?? '',
                   style: GoogleFonts.aBeeZee(fontSize: 14, fontWeight: FontWeight.w200, color: Colors.black.withOpacity(0.8)),

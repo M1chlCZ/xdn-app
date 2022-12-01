@@ -149,7 +149,7 @@ class AddressScreenState extends State<AddressScreen> {
         ));
         }
       } else {
-        if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
+        if (!RegExp(r"^\b(d)[a-zA-Z0-9]{33}$").hasMatch(addr)) {
           if (mounted) Dialogs.displayDialog(context, "Error", "Invalid XDN address");
           return;
         }

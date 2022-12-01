@@ -224,8 +224,8 @@ func WinEmbed(userTo, amount, avatar, username string) *discordgo.MessageEmbed {
 	timeString := time.Now().Format(time.RFC3339)
 	genericEmbed := discordgo.MessageEmbed{
 		Type:        "",
-		Title:       "Tip successful",
-		Description: fmt.Sprintf("Congrats <@%s> who won %s XDN!", userTo, amount),
+		Title:       "Gift Bot winner",
+		Description: fmt.Sprintf("Congrats <@%s>, you won %s XDN!", userTo, amount),
 		Timestamp:   timeString,
 		Color:       0x00ff00,
 		Footer:      nil,
