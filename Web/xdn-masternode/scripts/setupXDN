@@ -1,0 +1,122 @@
+#!/bin/bash
+set -e
+
+RPCUSER=$(head /dev/urandom | LC_ALL=C tr -dc A-Za-z0-9 | head -c 13)
+RPCPASSWORD=$(head /dev/urandom | LC_ALL=C tr -dc A-Za-z0-9 | head -c 13)
+IP=[$2]
+
+PRT=0
+if [ $1 -gt 9 ]
+then
+   PRT=40$1
+else
+   PRT=400$1
+fi
+
+echo $PRT
+
+cd "$HOME" || {
+    echo "cd failed"
+    exit 1
+}
+#CHANGE FOLDER
+folderXDN=.xdn"$1"
+num="$1"
+mnPort=18092
+
+mkdir "$HOME"/"$folderXDN"
+
+cd "$HOME"/"$folderXDN" || {
+    echo "cd failed"
+    exit 1
+}
+#CHANGE BLOCKCHAIN FOLDER
+cp -r "$HOME"/msXDN/* "$PWD"
+
+cd "$HOME" || {
+    echo "cd failed"
+    exit 1
+}
+#IMPORTANT CHANGE CONFIG NAME & SHIT and PORT!!!
+touch "$HOME"/"$folderXDN"/DigitalNote.conf
+cat >"$HOME"/"$folderXDN"/DigitalNote.conf <<EOL
+rpcuser=${RPCUSER}
+rpcpassword=${RPCPASSWORD}
+rpcallowip=127.0.0.1
+rpcport=${PRT}
+port=18092
+walletnotify=$HOME/${folderXDN}/txsubmit.sh %s
+listen=1
+server=1
+daemon=1
+staking=0
+maxconnections=150
+externalip=${IP}
+bind=${IP}:${PRT}
+masternodeaddr=${IP}:${mnPort}
+EOL
+chmod 0600 "$HOME"/"$folderXDN"/DigitalNote.conf
+
+touch "$HOME"/"$folderXDN"/txsubmit.sh
+cat >"$HOME"/"$folderXDN"/txsubmit.sh <<EOL
+#!/bin/bash
+
+#######################################################################
+# Config coin id
+#######################################################################
+
+coinID=40
+nodeID=X
+
+#######################################################################
+# Call API to submit transaction
+#######################################################################
+
+curl -X POST -H "node_id:\$nodeID" -H "tx_id:\$1" -H "coin_id:\$coinID" http://localhost:7466/submitTransaction
+EOL
+chmod +x "$HOME"/"$folderXDN"/txsubmit.sh
+
+cd "$HOME" || {
+    echo "cd failed"
+    exit 1
+}
+
+#CHANGE NAME of the service so it's like folder
+cat > .config/systemd/user/xdn$1.service <<EOL
+[Unit]
+Description=XDND
+After=network.target
+After=systemd-user-sessions.service
+After=network-online.target
+
+[Service]
+Type=forking
+ExecStart=$HOME/DigitalNoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN}
+ExecStop=$HOME/DigitalNoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN} stop
+TimeoutSec=10
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=350
+StartLimitBurst=10
+
+[Install]
+WantedBy=default.target
+EOL
+
+systemctl --user daemon-reload
+systemctl --user enable xdn$1.service #CHANGE
+systemctl --user start xdn$1.service #CHANGE
+
+echo "Sleeping"
+sleep 20s
+
+coinID=40
+wallet_usr=$RPCUSER
+wallet_pass=$RPCPASSWORD
+wallet_port=$PRT
+folder=xdn"$num" #WITHOUT A DOT!
+conf_file="DigitalNote.conf"
+ip="$2"
+mn_port=$mnPort #IMPORTANT CHANGE PORT
+
+curl -X POST -H "wallet_usr:$wallet_usr" -H "mn_port:$mn_port"  -H "wallet_pass:$wallet_pass" -H "wallet_port:$wallet_port" -H "folder:$folder" -H "coin_id:$coinID" -H "conf_file:$conf_file" -H "node_ip:$ip" http://localhost:6600/masternode/register

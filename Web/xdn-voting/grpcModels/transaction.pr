@@ -1,0 +1,71 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+package proto;
+option go_package = "./grpcModels";
+
+service TransactionService {
+  rpc SendTX(Transaction) returns (Response) {}
+}
+
+service ResponseService {
+  rpc Receive(Response) returns (Transaction) {}
+}
+
+message Response {
+  uint32 code = 1;
+}
+
+message Transaction {
+
+  message Scriptsig {
+    string asm = 1;
+    string hex = 2;
+  }
+
+  message Vin {
+    string txid = 1;
+    uint32 vout = 2;
+    Scriptsig scriptSig = 3;
+    uint32 sequence = 4;
+  }
+
+  message Scriptpubkey {
+    string asm = 1;
+    string hex = 2;
+    uint32 reqSigs = 3;
+    string type = 4;
+    repeated string addresses = 5;
+  }
+
+  message Vout {
+    double value = 1;
+    uint32 n = 2;
+    Scriptpubkey scriptPubKey = 3;
+  }
+
+  message Details {
+    string account = 1;
+    string address = 2;
+    string category = 3;
+    double amount = 4;
+    double fee = 5;
+  }
+
+  string txid = 1;
+  uint32 version = 2;
+  uint32 time = 3;
+  uint32 locktime = 4;
+  repeated Vin vin = 5;
+  repeated Vout vout = 6;
+  double amount = 7;
+  double fee = 8;
+  uint32 confirmations = 9;
+  uint32 bcconfirmations = 10;
+  string blockhash = 11;
+  uint32 blockindex = 12;
+  uint32 blocktime = 13;
+  repeated google.protobuf.Any walletconflicts = 14;
+  uint32 timereceived = 15;
+  repeated Details details = 16;
+}

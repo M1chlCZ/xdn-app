@@ -1,16 +1,18 @@
 package coind
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
-	"xdn-voting/database"
-	"xdn-voting/models"
-	"xdn-voting/utils"
+	"xdn-masternode/models"
+	"xdn-masternode/utils"
 )
+
+func init() {
+
+}
 
 func init() {
 
@@ -124,28 +126,28 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		return "", errors.New("sendrawtransaction error")
 	}
 	if !stakeWallet {
-		userSend := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressSend)
-		if userSend.Valid {
-			_, errInsert := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userSend.String, amount*-1, 0, addressSend, "send")
-			if errInsert != nil {
-				utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", addressReceive, errInsert.Error()))
-				//return "", errInsert
-			}
-		}
+		//userSend := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressSend)
+		//if userSend.Valid {
+		//	_, errInsert := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userSend.String, amount*-1, 0, addressSend, "send")
+		//	if errInsert != nil {
+		//		utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", addressReceive, errInsert.Error()))
+		//		//return "", errInsert
+		//	}
+		//}
 		if wallet.PassPhrase.Valid {
 			_, _ = WrapDaemon(wallet, 1, "walletlock")
 		}
 	} else {
 		go deferWalletLock(wallet)
 	}
-	userReceive := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressReceive)
-	if userReceive.Valid {
-		_, errInsert2 := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userReceive.String, amount, 0, addressReceive, "receive")
-		if errInsert2 != nil {
-			utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error: %s", addressReceive, errInsert2.Error()))
-			//return "", errInsert2
-		}
-	}
+	//userReceive := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE addr = ?", addressReceive)
+	//if userReceive.Valid {
+	//	_, errInsert2 := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userReceive.String, amount, 0, addressReceive, "receive")
+	//	if errInsert2 != nil {
+	//		utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error: %s", addressReceive, errInsert2.Error()))
+	//		//return "", errInsert2
+	//	}
+	//}
 	return tx, nil
 }
 

@@ -110,6 +110,49 @@ class Dialogs {
         });
   }
 
+  static void openQRAmountBot(context, String addr, Function(String amount, String addr) func) async {
+    TextEditingController textController = TextEditingController();
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return DialogBody(
+            buttonLabel: AppLocalizations.of(context)!.send,
+            oneButton: false,
+            onTap: () {
+              func(textController.text, addr);
+            },
+            header: "Amount to send",
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                  color: Colors.black12,
+                ),
+                padding: const EdgeInsets.all(5.0),
+                width: 500,
+                child: TextField(
+                  autofocus: true,
+                  controller: textController,
+                  keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                  ],
+                  style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.all(5.0),
+                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                    hintText: AppLocalizations.of(context)!.amount,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
   static void openRenameBox(context, String name, Function(String nickname) func) async {
     TextEditingController textController = TextEditingController();
     textController.text = name;
@@ -370,11 +413,11 @@ class Dialogs {
             buttonLabel: AppLocalizations.of(context)!.yes,
             onTap: () async {
               Navigator.of(context).pop();
-              SecureStorage.deleteAllStorage();
-              AppDatabase().deleteTableAddr();
-              AppDatabase().deleteTableMessages();
-              AppDatabase().deleteTableMgroup();
-              AppDatabase().deleteTableTran();
+              await SecureStorage.deleteAllStorage();
+              await AppDatabase().deleteTableAddr();
+              await AppDatabase().deleteTableMessages();
+              await AppDatabase().deleteTableMgroup();
+              await AppDatabase().deleteTableTran();
               String fileName = "avatar";
               String dir = (await getApplicationDocumentsDirectory()).path;
               String savePath = '$dir/$fileName';
@@ -1447,7 +1490,7 @@ class Dialogs {
                 sState(() {
                   qrData = "DigitalNote:$qr?amount=${textController.text}";
                 });
-              }else{
+              } else {
                 sState(() {
                   qrData = qr;
                 });
@@ -1477,25 +1520,17 @@ class Dialogs {
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
                                 minFontSize: 8.0,
-                                style: Theme
-                                    .of(context)
-                                    .textTheme
-                                    .headline5!
-                                    .copyWith(fontSize: 22.0, color: Colors.black87),
+                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.black87),
                               ),
                             ),
                           ),
                         ),
                         Center(
                             child: Text(
-                              '(${AppLocalizations.of(context)!.dl_share})',
-                              textAlign: TextAlign.center,
-                              style: Theme
-                                  .of(context)
-                                  .textTheme
-                                  .headline5!
-                                  .copyWith(fontSize: 14.0, color: Colors.black54),
-                            )),
+                          '(${AppLocalizations.of(context)!.dl_share})',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.black54),
+                        )),
                         const SizedBox(
                           height: 5.0,
                         ),
@@ -1544,11 +1579,7 @@ class Dialogs {
                         const SizedBox(
                           height: 2.0,
                         ),
-                        Text("Request Payment", textAlign: TextAlign.center, style: Theme
-                            .of(context)
-                            .textTheme
-                            .headline5!
-                            .copyWith(fontSize: 18.0, color: Colors.black87)),
+                        Text("Request Payment", textAlign: TextAlign.center, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.black87)),
                         const SizedBox(
                           height: 5.0,
                         ),
@@ -1562,17 +1593,9 @@ class Dialogs {
                           inputFormatters: <TextInputFormatter>[
                             FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                           ],
-                          style: Theme
-                              .of(context)
-                              .textTheme
-                              .headline5!
-                              .copyWith(color: Colors.black87, fontSize: 22),
+                          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.black87, fontSize: 22),
                           decoration: InputDecoration(
-                            hintStyle: Theme
-                                .of(context)
-                                .textTheme
-                                .headline5!
-                                .copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.black54),
+                            hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.black54),
                             hintText: "0.0 XDN",
                             focusedBorder: const UnderlineInputBorder(
                               borderSide: BorderSide(color: Colors.black87),
@@ -2132,19 +2155,19 @@ class Dialogs {
                 await NetInterface.getAddrBook();
                 await AppDatabase().getContacts();
                 Future.delayed(const Duration(milliseconds: 100), () {
-                                Navigator.of(context).pop();
-                              });
+                  Navigator.of(context).pop();
+                });
                 Future.delayed(const Duration(milliseconds: 100), () {
-                                Navigator.of(context).pop();
-                              });
+                  Navigator.of(context).pop();
+                });
                 setState(() {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: Text(AppLocalizations.of(context)!.contact_added),
-                                  backgroundColor: const Color(0xFF63C9F3),
-                                  behavior: SnackBarBehavior.fixed,
-                                  elevation: 5.0,
-                                ));
-                              });
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(AppLocalizations.of(context)!.contact_added),
+                    backgroundColor: const Color(0xFF63C9F3),
+                    behavior: SnackBarBehavior.fixed,
+                    elevation: 5.0,
+                  ));
+                });
               } catch (e) {
                 Future.delayed(const Duration(milliseconds: 100), () {
                   Navigator.of(context).pop();
@@ -2155,7 +2178,6 @@ class Dialogs {
                 Dialogs.openAlertBox(context, "ERROR", "INVALID ADDRESS");
                 print(e);
               }
-
             }
 
             return DialogBody(

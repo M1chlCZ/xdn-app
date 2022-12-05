@@ -2,3 +2,5 @@ api
 /.cert/
 /utils/config.go
 /firebase/
+*.pb.go
+*.pb.gw.go

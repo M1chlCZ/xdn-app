@@ -23,14 +23,11 @@ import (
 	mathRand "math/rand"
 	"net/http"
 	"os"
-	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
 	"time"
 	"unicode"
-	"xdn-voting/encrypt"
-	"xdn-voting/models"
 )
 
 const (
@@ -117,33 +114,6 @@ func ReportErrorSilent(c *fiber.Ctx, err string, statusCode int) error {
 		ERROR:          true,
 	}
 	return c.Status(statusCode).JSON(json)
-}
-
-func ReportEncError(enc string, w http.ResponseWriter, err string, statusCode int) {
-	url, errors := exec.Command("bash", "-c", "ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\\.){3}[0-9]*).*/\\2/p'").Output()
-	if errors != nil {
-		log.Fatal(errors)
-	}
-	json := simplejson.New()
-	json.Set("errorMessage", err)
-	json.Set(STATUS, FAIL)
-	json.Set(ERROR, true)
-
-	payload, e := json.MarshalJSON()
-	if e != nil {
-		log.Println(err)
-	}
-	logToFile("")
-	logToFile("//// - HTTP ERROR - ////")
-	logToFile("HTTP call failed : " + err + "  Status code: " + fmt.Sprintf("%d", statusCode))
-	logToFile("////==========////")
-	logToFile("")
-
-	w.Header().Add("url", string(url))
-	encryptMessage, _ := encrypt.EncMessage(enc, payload)
-	_ = SendResponse(w, []byte(encryptMessage))
-	// json.NewEncoder(w).Encode(err)
-	return
 }
 
 func CreateToken(userId uint64) (string, error) {
@@ -419,10 +389,6 @@ func HashPass(password string) string {
 	h := sha256.Sum256([]byte(password))
 	str := fmt.Sprintf("%x", h[:])
 	return str
-}
-
-func GetDaemon() *models.Daemon {
-	return &DaemonWallet
 }
 
 func RandInt(min int, max int) int {

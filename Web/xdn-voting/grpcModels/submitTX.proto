@@ -1,0 +1,129 @@
+syntax = "proto3";
+package proto;
+option go_package = "./grpcModels";
+
+service TransactionService {
+  rpc SubmitTX(SubmitRequest) returns (Response) {}
+}
+
+message Response {
+  uint32 code = 1;
+}
+
+message SubmitRequest {
+  string tx_id = 1;
+  uint32 node_id = 2;
+  bool generated = 3;
+  double amount = 4;
+  uint32 id_coin = 5;
+  double fee = 6;
+}
+
+service RegisterService {
+  rpc Register(RegisterRequest) returns (RegisterResponse) {}
+}
+
+message RegisterRequest {
+  string token = 1;
+  string url = 2;
+}
+
+message RegisterResponse {
+  uint32 code = 1;
+  string encrypt = 2;
+}
+
+service RegisterMasternodeService {
+  rpc RegisterMasternode(RegisterMasternodeRequest) returns (RegisterMasternodeResponse) {}
+  rpc StartMasternode (StartMasternodeRequest) returns (StartMasternodeResponse) {}
+  rpc GetPrivateKey (GetPrivateKeyRequest) returns (GetPrivateKeyResponse) {}
+  rpc Withdraw (WithdrawRequest) returns (WithdrawResponse) {}
+  rpc WithdrawConfirm (WithdrawConfirmRequest) returns (WithdrawConfirmResponse) {}
+  rpc MasternodeActive (MasternodeActiveRequest) returns (MasternodeActiveResponse) {}
+  rpc LastSeen (LastSeenRequest) returns (LastSeenResponse) {}
+}
+
+message RegisterMasternodeRequest {
+  string walletUSR = 1;
+  string walletPass = 2;
+  uint32 walletPort = 3;
+  string nodeIP = 4;
+  uint32 coinID = 5;
+  string folder = 6;
+  string address = 7;
+  string conf = 8;
+  string ip = 9;
+  string privKey = 10;
+  uint32 mnPort = 11;
+}
+
+message RegisterMasternodeResponse {
+  uint32 code = 1;
+  uint32 nodeID = 2;
+}
+
+message StartMasternodeRequest {
+  uint32 nodeID = 1;
+}
+
+message StartMasternodeResponse {
+  uint32 code = 1;
+}
+
+message GetPrivateKeyRequest {
+  uint32 nodeID = 1;
+}
+
+message GetPrivateKeyResponse {
+  uint32 code = 1;
+  string privKey = 2;
+}
+
+message WithdrawRequest {
+  uint32 nodeID = 1;
+  string deposit = 2;
+  double amount = 3;
+  uint32 type = 4;
+}
+
+message WithdrawResponse {
+  uint32 code = 1;
+}
+
+message WithdrawConfirmRequest {
+  uint32 nodeID = 1;
+  string txID = 2;
+  repeated string txArr = 3;
+  uint32 type = 4;
+  double amount = 5;
+}
+
+message WithdrawConfirmResponse {
+  uint32 code = 1;
+}
+
+message MasternodeActiveResponse {
+  message Mn {
+    uint32 id = 1;
+    uint32 active = 2;
+  }
+  repeated Mn mn = 1;
+}
+
+message MasternodeActiveRequest {
+  string url = 1;
+}
+
+message LastSeenRequest {
+  message LastSeen {
+    uint32 id = 1;
+    uint32 lastSeen = 2;
+    uint32 activeTime = 3;
+  }
+
+  repeated LastSeen items = 1;
+}
+
+message LastSeenResponse {
+  uint32 code = 1;
+}

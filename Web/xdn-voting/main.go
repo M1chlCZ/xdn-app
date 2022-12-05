@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/go-gomail/gomail"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cache"
 	_ "github.com/gofiber/fiber/v2/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/pquerna/otp/totp"
@@ -31,6 +32,7 @@ import (
 	"xdn-voting/daemons"
 	"xdn-voting/database"
 	"xdn-voting/errs"
+	"xdn-voting/grpc"
 	"xdn-voting/html"
 	"xdn-voting/models"
 	"xdn-voting/utils"
@@ -62,8 +64,22 @@ func main() {
 	// ============= DISCORD BOT ===============
 	go bot.StartDiscord()
 
+	// ============= gRPC Service ==============
+	go grpc.NewServer()
+
 	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
+
+	app.Use(cache.New(cache.Config{
+		ExpirationGenerator: func(c *fiber.Ctx, cfg *cache.Config) time.Duration {
+			newCacheTime, _ := strconv.Atoi(c.GetRespHeader("Cache-Time", "600"))
+			return time.Second * time.Duration(newCacheTime)
+		},
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.Path()
+		},
+	}))
+
 	// ================== DAO ==================
 	app.Post("dao/v1/login", login)
 	app.Get("dao/v1/ping", utils.Authorized(ping))
@@ -134,6 +150,8 @@ func main() {
 	app.Get("api/v1/file/gram", getPictureBots)
 	app.Get("api/v1/file", getPicture)
 
+	app.Get("blockchain.zip", getBlockchain)
+
 	app.Get("api/v1/ping", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 			utils.ERROR:  true,
@@ -151,6 +169,7 @@ func main() {
 	utils.ScheduleFunc(daemons.SaveTokenTX, time.Minute*10)
 	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
 	utils.ScheduleFunc(daemons.PriceData, time.Minute*5)
+	utils.ScheduleFunc(daemons.MNTransaction, time.Minute*1)
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
 	if err != nil {
@@ -190,6 +209,11 @@ func main() {
 	os.Exit(0)
 
 	// Start server with https/ssl enabled on http://localhost:443
+}
+
+func getBlockchain(c *fiber.Ctx) error {
+	c.Response().Header.Add("Cache-Time", "30")
+	return c.Status(fiber.StatusOK).SendFile("./blk.zip", true)
 }
 
 func getPicture(c *fiber.Ctx) error {

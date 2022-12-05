@@ -542,7 +542,21 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void processData(Map<String, String?> data) {
-    if (data["error"] == null) {
+    if (data["justAddress"] != null && data["address"] != null) {
+      Dialogs.openQRAmountBot(context, data["address"]!, (amount, addr) {
+        data["amount"] = amount;
+        Navigator.of(context).pop();
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return SendDialogQR(
+                data: data,
+                priceData: _priceData,
+                sendCoins: sendCoints,
+              );
+            });
+      });
+    }else if (data["error"] == null) {
       showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -618,7 +632,14 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         return {"error": "Invalid QR code"};
       }
     } else {
-      return {"error": "Invalid QR code"};
+      var match = regex.firstMatch(string);
+      if (match != null) {
+        data["address"] = match.group(0);
+        data["justAddress"] = "true";
+        return data;
+      } else {
+        return {"error": "Invalid QR code"};
+      }
     }
 
     if (data["name"] != "DigitalNote") {

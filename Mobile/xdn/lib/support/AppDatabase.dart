@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import "dart:io" as io;
 
-import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
@@ -95,8 +94,8 @@ class AppDatabase {
 
   Future addAddrBook(List<Contact> input) async {
     final dbClient = await db;
-    dbClient.delete(globals.TABLE_ADDR);
-    dbClient.execute(tableAddr);
+    await dbClient.delete(globals.TABLE_ADDR);
+    await dbClient.execute(tableAddr);
     for (var i = 0; i < input.length; i++) {
       await dbClient.insert(globals.TABLE_ADDR, input[i].toMap());
     }
@@ -105,22 +104,22 @@ class AppDatabase {
 
   Future<void> deleteTableAddr() async {
     final dbClient = await db;
-    dbClient.delete(globals.TABLE_ADDR);
+    await dbClient.delete(globals.TABLE_ADDR);
   }
 
   Future<void> deleteTableTran() async {
     final dbClient = await db;
-    dbClient.delete(globals.TABLE_TRANSACTION);
+    await dbClient.delete(globals.TABLE_TRANSACTION);
   }
 
   Future<void> deleteTableMessages() async {
     final dbClient = await db;
-    dbClient.delete(globals.TABLE_MESSAGES);
+    await dbClient.delete(globals.TABLE_MESSAGES);
   }
 
   Future<void> deleteTableMgroup() async {
     final dbClient = await db;
-    dbClient.delete(globals.TABLE_MGROUP);
+    await dbClient.delete(globals.TABLE_MGROUP);
   }
 
   Future addContact(String name, String addr) async {
