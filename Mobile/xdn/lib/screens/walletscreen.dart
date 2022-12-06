@@ -32,11 +32,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
   Future<Map<String, dynamic>>? _getBalance;
   Map<String, dynamic>? _priceData;
 
-  // AnimationController? animationController;
-  // AnimationController? animationSendController;
-  // Animation<double>? tween;
-  // Animation<Offset>? sendTween;
-  // Animation<double>? opacityTween;
   bool _forward = false;
   Widget? _switchWidget;
   double? heightVal;
@@ -44,6 +39,11 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
 
   void refreshBalance() {
     _getBalance = NetInterface.getBalance(details: true);
+  }
+
+  getPriceData() async {
+    _priceData = await NetInterface.getPriceData();
+    setState(() {});
   }
 
   void notif() {
@@ -104,13 +104,10 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
 
   void showTransactions() {
     animateButton();
-    // FocusScope.of(context).unfocus();
   }
 
   @override
   void dispose() {
-    // animationController!.dispose();
-    // animationSendController!.dispose();
     super.dispose();
   }
 
@@ -127,20 +124,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
         backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Stack(children: [
-            // Padding(
-            //   padding: const EdgeInsets.only(top: 80.0),
-            //   child: FadeTransition(
-            //     opacity: opacityTween!,
-            //     child: SlideTransition(
-            //       position: sendTween!,
-            //       child: SendWidget(
-            //         key: _key,
-            //         func: shrinkSendView,
-            //         balance: _getBalance,
-            //       ),
-            //     ),
-            //   ),
-            // ),
             Column(
               children: [
                 Header(header: AppLocalizations.of(context)!.wl_balance),
@@ -153,14 +136,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
                   },
                   child: _switchWidget,
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.only(top: 0.0),
-                //   child: BalanceCard(
-                //     key: _keyBal,
-                //     getBalanceFuture: _getBalance,
-                //     onPressSend: showTransactions,
-                //   ),
-                // ),
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.only(top: 10.0),

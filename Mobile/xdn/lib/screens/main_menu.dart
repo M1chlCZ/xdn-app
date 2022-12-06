@@ -537,7 +537,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
       return FadeTransition(opacity: animation, child: child);
     }));
     Future.delayed(const Duration(milliseconds: 100), () {
-      processData(data);
+      if (data.isNotEmpty) {
+        processData(data);
+      }
     });
   }
 

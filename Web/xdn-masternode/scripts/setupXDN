@@ -110,7 +110,7 @@ systemctl --user start xdn$1.service #CHANGE
 echo "Sleeping"
 sleep 20s
 
-coinID=40
+coinID=0
 wallet_usr=$RPCUSER
 wallet_pass=$RPCPASSWORD
 wallet_port=$PRT

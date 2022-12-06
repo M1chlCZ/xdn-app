@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/go-gomail/gomail"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cache"
 	_ "github.com/gofiber/fiber/v2/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/pquerna/otp/totp"
@@ -69,17 +68,6 @@ func main() {
 
 	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
-
-	app.Use(cache.New(cache.Config{
-		ExpirationGenerator: func(c *fiber.Ctx, cfg *cache.Config) time.Duration {
-			newCacheTime, _ := strconv.Atoi(c.GetRespHeader("Cache-Time", "600"))
-			return time.Second * time.Duration(newCacheTime)
-		},
-		KeyGenerator: func(c *fiber.Ctx) string {
-			return c.Path()
-		},
-	}))
-
 	// ================== DAO ==================
 	app.Post("dao/v1/login", login)
 	app.Get("dao/v1/ping", utils.Authorized(ping))

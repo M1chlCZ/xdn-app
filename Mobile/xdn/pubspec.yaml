@@ -3,7 +3,7 @@ description: DigitalNote App Wallet
 
 publish_to: 'none'
 
-version: 1.0.81+81
+version: 1.0.82+82
 
 environment:
   sdk: ">=2.15.0 <3.3.9"
@@ -21,7 +21,7 @@ dependencies:
   google_fonts: any
   intl: ^0.17.0
   qr_flutter: ^4.0.0
-  sqflite: ^2.2.1
+  sqflite: ^2.2.2
   sprintf: any
   get_it: ^7.2.0
   auto_size_text: ^3.0.0
@@ -39,7 +39,7 @@ dependencies:
   flutter_typeahead: ^4.1.1
   flutter_linkify: ^5.0.2
   vector_math: ^2.1.2
-  font_awesome_flutter: ^10.2.1
+  font_awesome_flutter: ^10.3.0
   flutter_native_timezone: ^2.0.0
   flutter_countdown_timer: ^4.1.0
   badges: ^2.0.3

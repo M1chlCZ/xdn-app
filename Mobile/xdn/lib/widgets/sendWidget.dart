@@ -41,6 +41,8 @@ class SendWidgetState extends State<SendWidget> {
 
   double? _balance = 0.0;
 
+  Map<String, dynamic>? _priceData;
+
   bool succ = false;
   bool fail = false;
   bool wait = false;
@@ -159,13 +161,18 @@ class SendWidgetState extends State<SendWidget> {
   void initState() {
     super.initState();
     _getCurrentBalance();
-
+   getPriceData();
       if (kDebugMode) {
         setState(() {
           _controllerAddress.text = "dcjvrzkNmPCV8f2e2C9UVB5wTroo4iELzt";
         });
       }
 
+  }
+
+  getPriceData() async {
+    _priceData = await NetInterface.getPriceData();
+    setState(() {});
   }
 
   void _getCurrentBalance() async {
@@ -180,12 +187,88 @@ class SendWidgetState extends State<SendWidget> {
     Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
       return BarcodeScanner(
         scanResult: (String s) {
-          _controllerAddress.text = s;
+          _splitString(s);
         },
       );
     }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
       return FadeTransition(opacity: animation, child: child);
     }));
+  }
+
+  void processData(Map<String, String?> data) {
+    if (data["justAddress"] != null && data["address"] != null) {
+      _controllerAddress.text = data["address"]!;
+    }else if (data["error"] == null) {
+      double? currencyAmount = _priceData?[data["label"]?.toLowerCase()];
+      if (data["amount"] == null) {
+        data["amountCrypto"] = "0.0";
+      }else if (currencyAmount == null) {
+        var amountXDN = double.parse(data["amount"]!);
+        _controllerAmount.text = amountXDN.toString();
+      } else {
+        var amountXDN = double.parse(data["amount"]!) / currencyAmount;
+        _controllerAmount.text = amountXDN.toString();
+      }
+      _controllerAddress.text = data["address"]!;
+       data["amount"]!;
+    } else {
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, data["error"]!);
+    }
+  }
+
+  _splitString(String string) {
+    Map<String, String?> data = {};
+    RegExp regex = RegExp(r"^\b(d)[a-zA-Z0-9]{33}$");
+    if (string.split(":").length > 1) {
+      var split = string.split(":");
+      var split2 = split[1].split("?");
+      if (regex.hasMatch(split2[0])) {
+        data["name"] = split[0];
+        data["address"] = split2[0];
+        var split3 = split2[1].split("&");
+        if (split3.isNotEmpty) {
+          data[split3[0].split("=")[0]] = split3[0].split("=")[1];
+        }
+        if (split3.length > 1) {
+          data[split3[1].split("=")[0]] = split3[1].split("=")[1];
+        }
+        if (split3.length > 2) {
+          data[split3[2].split("=")[0]] = split3[2].split("=")[1];
+        }
+      } else {
+        processData({"error": "Invalid QR code"});
+        return {"error": "Invalid QR code"};
+      }
+    } else {
+      var match = regex.firstMatch(string);
+      if (match != null) {
+        data["address"] = match.group(0);
+        data["justAddress"] = "true";
+        data["error"] = null;
+        processData(data);
+        return data;
+      } else {
+        processData({"error": "Invalid QR code"});
+        return {"error": "Invalid QR code"};
+      }
+    }
+
+    if (data["name"] != "DigitalNote") {
+      processData({"error": "Invalid QR code"});
+      return {"error": "Invalid QR code"};
+    }
+    if (data["address"] == null || data["address"]!.isEmpty) {
+      processData({"error": "Invalid QR code"});
+      return {"error": "Invalid QR code"};
+    }
+
+    if (data["amount"] == null || data["amount"]!.isEmpty) {
+      processData({"error": "Invalid QR code"});
+      return {"error": "Invalid QR code"};
+    }
+    data["error"] = null;
+    processData(data);
+    return data;
   }
 
   @override
