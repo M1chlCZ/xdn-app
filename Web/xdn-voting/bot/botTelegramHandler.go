@@ -555,7 +555,7 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 			}
 		}
 	}(addrTo.String, addrFrom.String, amount[len(amount)-1])
-	mes := fmt.Sprintf("User @%s tipped @%s %sXDN", username, ut, amount[len(amount)-1])
+	mes := fmt.Sprintf("User @%s tipped @%s%sXDN", username, ut, amount[len(amount)-1])
 	utils.ReportMessage(fmt.Sprintf("User @%s tipped @%s%s XDN on Telegram", username, ut, amount[len(amount)-1]))
 	return mes, nil
 	//return nil
@@ -1059,6 +1059,23 @@ func GiftTelegramBot() {
 	_, err = database.InsertSQl("INSERT INTO gift_bot_numbers (idMessage, luckyNumber, idChannel) VALUES (?,?,?)", mess.MessageID, luckyNumber, mess.Chat.ID)
 	_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)
 	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+}
+
+func showDiscordTelegramThunder(message string) {
+	randNum := utils.RandNum(len(PictureThunder))
+
+	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=1", randNum)
+	utils.ReportMessage(url)
+	photo := tgbotapi.NewPhoto(MainChannel, tgbotapi.FileURL(url))
+	utils.ReportMessage(message)
+	photo.Caption = "\n Join our OFFICIAL Telegram channel, lot of cool stuff there!\n" +
+		"\n       https://t.me/XDNDN \n\n" + message
+	if len(photo.Caption) > 1024 {
+		photo.Caption = photo.Caption[:1024]
+	}
+	if _, err := bot.Send(photo); err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
 }

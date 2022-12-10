@@ -26,7 +26,8 @@ class SendDialogQRState extends State<SendDialogQR> {
   void initState() {
     super.initState();
     mapData = widget.data;
-    double? currencyAmount = widget.priceData?[mapData["label"]?.toLowerCase()];
+    print(mapData["label"].toString());
+    num? currencyAmount = widget.priceData?[mapData["label"]?.toLowerCase()];
     if (mapData["amount"] == null) {
       mapData["amountCrypto"] = "0.0";
     }else if (currencyAmount == null) {

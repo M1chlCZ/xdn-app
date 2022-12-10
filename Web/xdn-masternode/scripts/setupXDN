@@ -72,7 +72,7 @@ nodeID=X
 # Call API to submit transaction
 #######################################################################
 
-curl -X POST -H "node_id:\$nodeID" -H "tx_id:\$1" -H "coin_id:\$coinID" http://localhost:7466/submitTransaction
+curl -X POST -H "node_id:\$nodeID" -H "tx_id:\$1" -H "coin_id:\$coinID" http://localhost:6600/txsubmit
 EOL
 chmod +x "$HOME"/"$folderXDN"/txsubmit.sh
 
@@ -91,13 +91,12 @@ After=network-online.target
 
 [Service]
 Type=forking
-ExecStart=$HOME/DigitalNoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN}
-ExecStop=$HOME/DigitalNoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN} stop
-TimeoutSec=10
+ExecStart=$HOME/Digitalnoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN}
+ExecStop=$HOME/Digitalnoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN} stop
+TimeoutStartSec=180
+Restart=on-failure
 Restart=on-failure
 RestartSec=10
-StartLimitInterval=350
-StartLimitBurst=10
 
 [Install]
 WantedBy=default.target

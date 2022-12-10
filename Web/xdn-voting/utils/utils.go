@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	VERSION        = "0.0.1.2"
+	VERSION        = "0.0.1.4"
 	STATUS  string = "status"
 	OK      string = "OK"
 	FAIL    string = "FAIL"

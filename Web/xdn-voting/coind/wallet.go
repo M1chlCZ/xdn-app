@@ -155,7 +155,7 @@ func deferWalletLock(daemon models.Daemon) {
 	if sec == 0 {
 		go lockWalletStake(daemon)
 	}
-	sec += 5
+	sec = 5
 }
 
 func lockWalletStake(daemon models.Daemon) {

@@ -40,6 +40,7 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 	var client *Coind
 	var errClient error
 	tries := 0
+
 	//utils.ReportMessage(fmt.Sprintf("Calling %s %s", daemon.Folder, command))
 	for {
 		if tries != 0 {
@@ -52,10 +53,10 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 
 		tries++
 		if client == nil {
-			client, errClient = New("127.0.0.1", daemon.WalletPort, daemon.WalletUser, daemon.WalletPass, false)
+			client, errClient = New("127.0.0.1", daemon.WalletPort, daemon.WalletUser, daemon.WalletPass, false, 60)
 			if errClient != nil {
 				utils.ReportMessage(errClient.Error())
-				time.Sleep(15 * time.Second)
+				time.Sleep(30 * time.Second)
 				continue
 			}
 		}
@@ -64,20 +65,37 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 
 		if er != nil {
 			utils.ReportMessage("Daemon unreachable " + er.Error())
-			time.Sleep(15 * time.Second)
+			time.Sleep(30 * time.Second)
 			continue
 		}
 		if string(p) != "null" {
 			if len(p) != 0 {
-				if command == "getmasternodeoutputs" && string(p) == ("[]") {
+				if command == "getmasternodeoutputs" && string(p) == string([]byte("[]")) {
 					//utils.ReportMessage("empty array")
-					time.Sleep(15 * time.Second)
+					time.Sleep(30 * time.Second)
 					continue
 				}
-				//utils.ReportMessage("success")
+				if command == "masternode" {
+					pa := params.([]interface{})
+					utils.ReportMessage(fmt.Sprintf("params %s", pa[0]))
+					if pa[0] == "start" {
+						if string(p) == "\"successfully started masternode\"" {
+							utils.ReportMessage("MN success!!")
+							c <- p
+							return
+						} else {
+							utils.ReportMessage(string(p))
+							time.Sleep(30 * time.Second)
+							continue
+						}
+					}
+					c <- p
+					return
+				}
 				c <- p
 				return
 			}
+
 		} else {
 			if command == "walletpassphrase" || command == "walletlock" || command == "importkey" {
 				//utils.ReportMessage("success")

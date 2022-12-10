@@ -65,5 +65,6 @@ func PriceData() {
 		"yfi":  pr.MarketData.CurrentPrice.Yfi,
 		"aed":  pr.MarketData.CurrentPrice.Aed,
 		"ars":  pr.MarketData.CurrentPrice.Ars,
+		"xdn":  1.0,
 	}
 }

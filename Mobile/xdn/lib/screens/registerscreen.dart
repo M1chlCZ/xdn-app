@@ -137,7 +137,7 @@ class _RegisterState extends State<RegisterScreen> {
                                 child: TextField(
                                   controller: _usernameController,
                                   inputFormatters: <TextInputFormatter>[
-                                    FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9_-\s]+')),
+                                    FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9_\-\s]+')),
                                   ],
                                   decoration: InputDecoration(
                                     fillColor: Colors.black26,

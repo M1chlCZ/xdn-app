@@ -16,6 +16,7 @@ message SubmitRequest {
   bool generated = 3;
   double amount = 4;
   uint32 id_coin = 5;
+  double fee = 6;
 }
 
 service RegisterService {
@@ -40,6 +41,7 @@ service RegisterMasternodeService {
   rpc WithdrawConfirm (WithdrawConfirmRequest) returns (WithdrawConfirmResponse) {}
   rpc MasternodeActive (MasternodeActiveRequest) returns (MasternodeActiveResponse) {}
   rpc LastSeen (LastSeenRequest) returns (LastSeenResponse) {}
+  rpc Ping (PingRequest) returns (PingResponse) {}
 }
 
 message RegisterMasternodeRequest {
@@ -124,5 +126,13 @@ message LastSeenRequest {
 }
 
 message LastSeenResponse {
+  uint32 code = 1;
+}
+
+message PingRequest {
+  uint32 nodeID = 1;
+}
+
+message PingResponse {
   uint32 code = 1;
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"xdn-voting/database"
 	"xdn-voting/grpcModels"
 	"xdn-voting/models"
@@ -86,8 +85,12 @@ func MNTransaction() {
 					utils.WrapErrorLog(errUpdate.Error())
 					return
 				}
-
-				grpcCon, err := grpc.Dial(fmt.Sprintf("%s:6810", ur), grpc.WithTransportCredentials(insecure.NewCredentials()))
+				creds, err := grpcModels.LoadTLSCredentials()
+				if err != nil {
+					utils.WrapErrorLog("cannot load TLS credentials: " + err.Error())
+					return
+				}
+				grpcCon, err := grpc.Dial(fmt.Sprintf("%s:6810", ur), grpc.WithTransportCredentials(creds))
 				if err != nil {
 					utils.WrapErrorLog(err.Error())
 					return

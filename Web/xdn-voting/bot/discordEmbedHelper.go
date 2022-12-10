@@ -27,6 +27,24 @@ func RainEmbed(message string) *discordgo.MessageEmbed {
 	return &genericEmbed
 }
 
+func ThunderEmbed(message string) *discordgo.MessageEmbed {
+	timeString := time.Now().Format(time.RFC3339)
+	genericEmbed := discordgo.MessageEmbed{
+		Type:        "",
+		Title:       "Thunder in progress",
+		Description: message,
+		Timestamp:   timeString,
+		Color:       0x00ff00,
+		Footer:      nil,
+		Image:       nil,
+		Thumbnail:   nil,
+		Video:       nil,
+		Provider:    nil,
+		Fields:      nil,
+	}
+	return &genericEmbed
+}
+
 func RainFinishEmbed(message, avatar, username string) *discordgo.MessageEmbed {
 	timeString := time.Now().Format(time.RFC3339)
 	genericEmbed := discordgo.MessageEmbed{

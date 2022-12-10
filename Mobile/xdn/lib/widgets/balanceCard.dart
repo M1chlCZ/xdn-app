@@ -187,7 +187,7 @@ class BalanceCardState extends State<BalanceCard> {
                       child: TextButton(
                         clipBehavior: Clip.antiAlias,
                         onPressed: () {
-                          Dialogs.openUserQR(context);
+                          Dialogs.openUserQR(context, _priceData);
                         },
                         style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/net/context"
-	"google.golang.org/protobuf/encoding/protojson"
 	"log"
 	"net/http"
 	"os"
@@ -67,6 +66,15 @@ func main() {
 
 // FUNCTION HANDLERS
 func setupSecureMNChannel() error {
+	ping, err := grpcClient.Ping(&grpcModels.PingRequest{NodeID: 1})
+	if err != nil {
+		utils.ReportMessage("Ping to Server -> Failed!")
+		utils.WrapErrorLog(fmt.Sprintf("err: %v\n", err))
+		return err
+	}
+	if ping.Code == 200 {
+		utils.ReportMessage("Ping to Server -> Success!")
+	}
 	getJWT, _ := database.GetEnc()
 	if len(getJWT) != 0 {
 		utils.ReportMessage("Already registered")
@@ -206,16 +214,24 @@ func registerMasternode(c *fiber.Ctx) error {
 }
 
 func submitTransaction(c *fiber.Ctx) error {
-	txid := c.Get("txid", "unknown")
-	nodeID := c.Get("nodeid", "unknown")
+	txid := c.Get("tx_id", "unknown")
 	if txid == "unknown" {
 		return utils.ReportError(c, "txid is unknown", fiber.StatusBadRequest)
 	}
-	if nodeID == "unknown" {
+	nodeID, err := strconv.Atoi(c.Get("node_id", "unknown"))
+	if err != nil {
+		utils.WrapErrorLog(fmt.Sprintf("err: %v\n", err))
 		return utils.ReportError(c, "node id is unknown", fiber.StatusBadRequest)
 	}
+	coinID, err := strconv.Atoi(c.Get("coin_id", "unknown"))
+	if err != nil {
+		utils.WrapErrorLog(fmt.Sprintf("err: %v\n", err))
+		return utils.ReportError(c, "node id is unknown", fiber.StatusBadRequest)
+	}
+	utils.ReportMessage(fmt.Sprintf("txid: %s, node id: %d, coin id: %d", txid, nodeID, coinID))
+	daemon, err := database.GetDaemon(nodeID)
 	var ing models.GetTransactionXDN
-	p, er := coind.WrapDaemon(utils.DaemonWallet, 5, "gettransaction", txid)
+	p, er := coind.WrapDaemon(*daemon, 5, "gettransaction", txid)
 	if er != nil {
 		log.Println("error transaction" + er.Error())
 		return utils.ReportError(c, "Wallet coin id is unreachable", http.StatusInternalServerError)
@@ -227,26 +243,22 @@ func submitTransaction(c *fiber.Ctx) error {
 
 	}
 
-	data := []byte(txid)
-	tx := grpcModels.SubmitRequest{
-		TxId:      ing.Txid,
-		NodeId:    0,
-		Generated: ing.Generated,
-		Amount:    ing.Amount,
-		IdCoin:    0,
+	amount := ing.Amount
+	if ing.Generated == true {
+		amount = 150
 	}
 
-	err := protojson.Unmarshal(data, &tx)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	tx := grpcModels.SubmitRequest{
+		TxId:      ing.Txid,
+		NodeId:    uint32(nodeID),
+		Generated: ing.Generated,
+		Amount:    amount,
+		IdCoin:    uint32(coinID),
 	}
+
 	response, err := grpcClient.CallSubmitTX(&tx)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"code": response.Code,

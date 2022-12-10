@@ -158,6 +158,7 @@ func main() {
 	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
 	utils.ScheduleFunc(daemons.PriceData, time.Minute*5)
 	utils.ScheduleFunc(daemons.MNTransaction, time.Minute*1)
+	utils.ScheduleFunc(daemons.ScoopMasternode, time.Minute*30)
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
 	if err != nil {

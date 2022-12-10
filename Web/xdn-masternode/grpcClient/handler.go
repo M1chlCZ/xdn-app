@@ -1,16 +1,45 @@
 package grpcClient
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 	"log"
+	"os"
 	"time"
 	"xdn-masternode/grpcModels"
 )
 
+
+func loadTLSCredentials() (credentials.TransportCredentials, error) {
+	// Load certificate of the CA who signed server's certificate
+	pemServerCA, err := os.ReadFile("./.cert/ca-cert.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemServerCA) {
+		return nil, fmt.Errorf("failed to add server CA's certificate")
+	}
+
+	// Create the credentials and return it
+	config := &tls.Config{
+		RootCAs:      certPool,
+	}
+
+	return credentials.NewTLS(config), nil
+}
+
 func CallSubmitTX(tx *grpcModels.SubmitRequest) (*grpcModels.Response, error) {
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -22,7 +51,11 @@ func CallSubmitTX(tx *grpcModels.SubmitRequest) (*grpcModels.Response, error) {
 }
 
 func CallRegisterRequest(tx *grpcModels.RegisterRequest) (*grpcModels.RegisterResponse, error) {
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -34,7 +67,11 @@ func CallRegisterRequest(tx *grpcModels.RegisterRequest) (*grpcModels.RegisterRe
 }
 
 func CallRegisterMN(tx *grpcModels.RegisterMasternodeRequest) (*grpcModels.RegisterMasternodeResponse, error) {
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -46,7 +83,11 @@ func CallRegisterMN(tx *grpcModels.RegisterMasternodeRequest) (*grpcModels.Regis
 }
 
 func CallGetPrivateKey(tx *grpcModels.GetPrivateKeyRequest) (*grpcModels.GetPrivateKeyResponse, error) {
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -58,7 +99,11 @@ func CallGetPrivateKey(tx *grpcModels.GetPrivateKeyRequest) (*grpcModels.GetPriv
 }
 
 func WithdrawConfirm(tx *grpcModels.WithdrawConfirmRequest) (*grpcModels.WithdrawConfirmResponse, error) {
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -70,7 +115,11 @@ func WithdrawConfirm(tx *grpcModels.WithdrawConfirmRequest) (*grpcModels.Withdra
 }
 
 func MasternodeActive(tx *grpcModels.MasternodeActiveRequest) (*grpcModels.MasternodeActiveResponse, error) {
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -82,7 +131,11 @@ func MasternodeActive(tx *grpcModels.MasternodeActiveRequest) (*grpcModels.Maste
 }
 
 func LastSeen(tx *grpcModels.LastSeenRequest) (*grpcModels.LastSeenResponse, error) {
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -91,4 +144,20 @@ func LastSeen(tx *grpcModels.LastSeenRequest) (*grpcModels.LastSeenResponse, err
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return c.LastSeen(ctx, tx)
+}
+
+func Ping(tx *grpcModels.PingRequest) (*grpcModels.PingResponse, error) {
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer grpcCon.Close()
+	c := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return c.Ping(ctx, tx)
 }

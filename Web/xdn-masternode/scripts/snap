@@ -1,0 +1,6 @@
+#!/bin/bash
+systemctl --user stop $1.service
+cd $HOME/.$1
+rm -rf blk0001.dat  database  debug.log peers.dat smsgDB blocks db.log mncache.dat smsg.ini txleveldb
+cp -r $HOME/msXDN/* $PWD
+systemctl --user start $1.service

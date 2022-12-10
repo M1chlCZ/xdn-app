@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"gopkg.in/errgo.v2/errors"
+	"hash/maphash"
 	"math/rand"
 	"regexp"
 	"strconv"
@@ -92,6 +93,7 @@ func buttonHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 var (
 	componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"giftBot": giftBotHandler,
+		"annBot":  annBotHandler,
 	}
 )
 
@@ -201,6 +203,31 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				_, _ = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Rain unsuccessful", err.Error())})
+				Running = false
+				return
+			}
+			Running = false
+		} else if command == "thunder" {
+			Running = true
+			discord, err, res := thunderDiscord(m)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Thunder unsuccessful", err.Error())})
+				Running = false
+				return
+			}
+			mm, _ := s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{ThunderEmbed(discord)})
+			create, err := finishThunderDiscord(res)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				_, _ = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Thunder unsuccessful", err.Error())})
+				Running = false
+				return
+			}
+			_, err = s.ChannelMessageEditEmbeds(mm.ChannelID, mm.ID, []*discordgo.MessageEmbed{ThunderFinishEmbed(create, m.Author.AvatarURL("128"), m.Author.Username)})
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				_, _ = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Thunder unsuccessful", err.Error())})
 				Running = false
 				return
 			}
@@ -553,6 +580,204 @@ func showThunderMessage(message string, d *discordgo.Message) {
 	}
 }
 
+func thunderDiscord(from *discordgo.MessageCreate) (string, error, ThunderReturnStruct) {
+	if from.Author.Bot {
+		return "", errors.New("Bots are not allowed"), ThunderReturnStruct{}
+	}
+	str1 := strings.ReplaceAll(from.Message.Content, "@", "")
+	str2 := from.Message.Content
+	if (len(str2) - len(str1)) > 1 {
+		return "", errors.New("Only one parameter is allowed"), ThunderReturnStruct{}
+	}
+	if len(from.Mentions) > 1 {
+		return "nil", errors.New("You can't rain on specific users, that's what tips are for"), ThunderReturnStruct{}
+	}
+
+	//eg: 100XDN
+	reg := regexp.MustCompile("\\s[0-9.]+")
+	am := reg.FindAllString(from.Message.Content, -1)
+	if len(am) == 0 {
+		return "", errors.New("Missing amount to tip"), ThunderReturnStruct{}
+	}
+	if len(am) > 1 {
+		return "", errors.New("You can specify only one amount to tip"), ThunderReturnStruct{}
+	}
+	amount, err := strconv.ParseFloat(strings.TrimSpace(am[len(am)-1]), 32)
+	if err != nil {
+		return "", errors.New("Invalid amount to tip"), ThunderReturnStruct{}
+	}
+
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", from.Author.ID, 2)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db"), ThunderReturnStruct{}
+	}
+	utils.ReportMessage(fmt.Sprintf("--- Rain from %s ---", from.Author.Username))
+	ban := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ? AND ban = ?", from.Author.ID, 1, 1)
+	if ban.Valid {
+		return "", errors.New("You are banned from raining on Discord"), ThunderReturnStruct{}
+	}
+	usersTo, err := database.ReadArray[UsrStruct](`SELECT a.addr as addr, b.idSocial as name FROM users  as a
+												INNER JOIN users_bot  as b 
+												ON a.id = b.idUser
+												WHERE b.typeBot = 2 AND ban = 0`)
+	if len(usersTo) == 0 {
+		return "", errors.New("Can't find any users to tip"), ThunderReturnStruct{}
+	}
+	usersToTip := make([]UsrStructThunder, 0)
+	telegramFinalSlice := make([]UsrStruct, 0)
+	discordFinalSlice := make([]UsrStruct, 0)
+	numOfUsers := 0
+
+	//eg: @100 people
+	re := regexp.MustCompile("\\B@[0-9]+[^a-zA-Z]?$")
+	m := re.FindAllString(from.Message.Content, -1)
+	if len(m) != 0 {
+		utils.ReportMessage("Thunder by number")
+		if len(m) > 1 {
+			return "", errors.New("You can specify only one number of people to tip"), ThunderReturnStruct{}
+		}
+		numOfUsers, err = strconv.Atoi(strings.ReplaceAll(m[0], "@", ""))
+		if err != nil {
+			return "", errors.New("Invalid number of people to tip"), ThunderReturnStruct{}
+		}
+
+		usrTL, err := database.ReadArray[UsrStructThunder](`SELECT ANY_VALUE(a.idSocial) as name, ANY_VALUE(a.typeBot) as typeBot, b.addr as addr from users_bot a, users b WHERE a.idUser = b.id 
+		AND idUser IN  (SELECT idUser  FROM users_bot AS t1 JOIN (SELECT id FROM users_bot ORDER BY RAND()) as t2 ON t1.id=t2.id) 
+		GROUP BY a.idUser
+		`)
+		if err != nil {
+			return "", errors.New("Error getting users"), ThunderReturnStruct{}
+		}
+
+		if len(usrTL) < numOfUsers {
+			return "", errors.New("Too many users to tip"), ThunderReturnStruct{}
+		}
+
+		//shuffle usrFrom
+		r := rand.New(rand.NewSource(int64(new(maphash.Hash).Sum64())))
+		r.Shuffle(len(usrTL), func(i, j int) { usrTL[i], usrTL[j] = usrTL[j], usrTL[i] })
+		r2 := rand.New(rand.NewSource(int64(new(maphash.Hash).Sum64())))
+		r2.Shuffle(len(usrTL), func(i, j int) { usrTL[i], usrTL[j] = usrTL[j], usrTL[i] })
+		//random select numOfUser from usrFrom
+		for i := 0; i < numOfUsers; i++ {
+			usersToTip = append(usersToTip, usrTL[i])
+		}
+
+		for i := 0; i < numOfUsers; i++ {
+			if usrTL[i].TypeBot == 1 {
+				telegramFinalSlice = append(telegramFinalSlice, UsrStruct{
+					Addr: usrTL[i].Addr,
+					Name: usrTL[i].Name,
+				})
+			} else {
+				discordFinalSlice = append(discordFinalSlice, UsrStruct{
+					Addr: usrTL[i].Addr,
+					Name: usrTL[i].Name,
+				})
+			}
+		}
+	} else {
+		utils.ReportMessage("Thunder by all")
+
+		usrTL, err := database.ReadArray[UsrStructThunder](`SELECT ANY_VALUE(a.idSocial) as name, ANY_VALUE(a.typeBot) as typeBot, b.addr as addr from users_bot a, users b WHERE a.idUser = b.id 
+		AND idUser IN  (SELECT idUser  FROM users_bot AS t1 JOIN (SELECT id FROM users_bot ORDER BY RAND()) as t2 ON t1.id=t2.id) 
+		GROUP BY a.idUser`)
+		if err != nil {
+			return "", errors.New("Error getting users"), ThunderReturnStruct{}
+		}
+
+		for i := 0; i < len(usrTL); i++ {
+			if usrTL[i].TypeBot == 1 {
+				telegramFinalSlice = append(telegramFinalSlice, UsrStruct{
+					Addr: usrTL[i].Addr,
+					Name: usrTL[i].Name,
+				})
+			} else {
+				discordFinalSlice = append(discordFinalSlice, UsrStruct{
+					Addr: usrTL[i].Addr,
+					Name: usrTL[i].Name,
+				})
+			}
+		}
+		numOfUsers = len(usrTL)
+	}
+
+	//send coins to stake wallet
+	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)
+	if !addrFrom.Valid {
+		return "", errors.New("Error getting user address #1"), ThunderReturnStruct{}
+	}
+
+	_, _ = database.InsertSQl("UPDATE users_bot SET numberRained = numberRained+1 WHERE idUser = ?", usrFrom.Int64) //update number of rains
+
+	addrTo := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
+	if !addrTo.Valid {
+		return "", errors.New("Problem sending coins to rain service"), ThunderReturnStruct{}
+	}
+
+	tx, err := coind.SendCoins(addrTo.String, addrFrom.String, amount, false)
+	if err != nil {
+		return "", err, ThunderReturnStruct{}
+	}
+	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
+
+	return fmt.Sprintf("Raining %.2f XDN on %d users", amount, numOfUsers), nil, ThunderReturnStruct{
+		UsrListDiscord:  discordFinalSlice,
+		UsrListTelegram: telegramFinalSlice,
+		Amount:          amount,
+		AddrFrom:        addrTo.String,
+		Username:        from.Author.ID,
+		AddrSend:        addrFrom.String,
+	}
+}
+
+func finishThunderDiscord(data ThunderReturnStruct) (string, error) {
+	numberOfUsers := len(data.UsrListTelegram) + len(data.UsrListDiscord)
+	amountTelegram := (data.Amount / float64(numberOfUsers)) * float64(len(data.UsrListTelegram))
+	amountDiscord := (data.Amount / float64(numberOfUsers)) * float64(len(data.UsrListDiscord))
+
+	telegramResponse := ""
+	var telegramError error
+	if len(data.UsrListTelegram) != 0 {
+		telegramResponse, telegramError = finishRain(RainReturnStruct{
+			UsrList:  data.UsrListTelegram,
+			Amount:   amountTelegram,
+			AddrFrom: data.AddrFrom,
+			UserID:   data.Username,
+			AddrSend: data.AddrSend,
+		})
+	}
+	discordMessage := ""
+	if len(data.UsrListDiscord) != 0 {
+		idUser := database.ReadValueEmpty[int64]("SELECT idUser FROM users_bot WHERE binary idSocial = ?", data.Username)
+		discordUserID := database.ReadValueEmpty[string]("SELECT idSocial FROM users_bot WHERE idUser = ? AND typeBot = 2", idUser)
+		discordUserName := database.ReadValueEmpty[string]("SELECT dname FROM users_bot WHERE id = ? AND typeBot = 2", idUser)
+		utils.ReportMessage(fmt.Sprintf("Discord username: %s", discordUserID))
+
+		a, _, c := finishRainDiscord(RainReturnStruct{
+			UsrList:  data.UsrListDiscord,
+			Amount:   amountDiscord,
+			AddrFrom: data.AddrFrom,
+			UserID:   discordUserID,
+			AddrSend: data.AddrSend,
+		}, &discordgo.Message{
+			ID:        discordUserID,
+			ChannelID: MainChannelID,
+			Timestamp: time.Time{},
+			Author:    &discordgo.User{Username: discordUserName, ID: discordUserID},
+		})
+		if c != nil {
+			utils.WrapErrorLog(c.Error())
+		} else {
+			t := strings.ReplaceAll(telegramResponse, "rained", "brought Thunder")
+			showDiscordTelegramThunder(t)
+		}
+		discordMessage = strings.ReplaceAll(a, "rained", "brought Thunder")
+	}
+
+	return discordMessage, telegramError
+}
+
 func AnnouncementDiscord() {
 	LoadPictures()
 	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 0 ORDER BY RAND() LIMIT 1")
@@ -563,20 +788,53 @@ func AnnouncementDiscord() {
 	messageBold := strings.ReplaceAll(post.Message, "*", "**")
 
 	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 0)
-	msg, err := goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)})
+	buttons := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Emoji: discordgo.ComponentEmoji{
+						Name: "👍🏻",
+					},
+					Label:    "Like",
+					Style:    discordgo.SuccessButton,
+					CustomID: "annBot",
+				},
+			},
+		},
+	}
+	//
+	messageSend := discordgo.MessageSend{
+		Content:         "",
+		Embeds:          []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)},
+		TTS:             false,
+		Components:      buttons,
+		Files:           nil,
+		AllowedMentions: nil,
+		Reference:       nil,
+		File:            nil,
+		Embed:           nil,
+	}
+
+	msg, err := goBot.ChannelMessageSendComplex(MainChannelID, &messageSend)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return
 	}
-	//_, err = goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", "If you want to be notified when we post a new announcement, please react with :white_check_mark: to this message.", "XDN Announce Bot", url)})
 
-	go func(cID, mID string) {
-		time.Sleep(2 * time.Second)
-		err := goBot.MessageReactionAdd(cID, mID, "👍")
-		if err != nil {
-			utils.WrapErrorLog(err.Error())
-		}
-	}(msg.ChannelID, msg.ID)
+	//msg, err := goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)})
+	//if err != nil {
+	//	utils.WrapErrorLog(err.Error())
+	//	return
+	//}
+	////_, err = goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", "If you want to be notified when we post a new announcement, please react with :white_check_mark: to this message.", "XDN Announce Bot", url)})
+	//
+	//go func(cID, mID string) {
+	//	time.Sleep(2 * time.Second)
+	//	err := goBot.MessageReactionAdd(cID, mID, "👍")
+	//	if err != nil {
+	//		utils.WrapErrorLog(err.Error())
+	//	}
+	//}(msg.ChannelID, msg.ID)
 
 	channelID, ko := strconv.Atoi(msg.ChannelID)
 	messageID, ko := strconv.Atoi(msg.ID)
@@ -827,6 +1085,114 @@ func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if len(tk) > 0 {
 			for _, v := range tk {
 				utils.SendMessage(v.Token, "🎁 from Gift Bot", fmt.Sprintf("%s XDN", strconv.FormatFloat(100.0, 'f', 2, 32)), d)
+			}
+		}
+		err = goBot.ChannelMessageDelete(fmt.Sprintf("%s", i.Message.ChannelID), fmt.Sprintf("%s", i.Message.ID))
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		Running = false
+	}
+}
+
+func annBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	utils.ReportMessage("annBotHandler", i.Message.ChannelID, i.Message.ID, i.Member.User.ID)
+	idU := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", i.Member.User.ID)
+	if !idU.Valid {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Please link your XDN APP to Discord. Go to APP, tap on Settings, tap on Connect and then follow the instructions.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		utils.ReportMessage("User not found")
+		Running = false
+		return
+	}
+	userVoted := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_activity WHERE idMessage = ? AND idChannel = ? AND idUserSocial = ?", i.Message.ID, i.Message.ChannelID, i.Member.User.ID)
+	if userVoted.Valid {
+		utils.ReportMessage(fmt.Sprintf("User %d already voted", userVoted.Int64))
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Already participated",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		utils.ReportMessage("Already participated")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		Running = false
+		return
+	}
+	_, err := database.InsertSQl("INSERT INTO users_activity (idUser, idMessage, idUserSocial, activity, idChannel, idPost) VALUES (?,?,?,?,?,?)", idU.Int64, i.Message.ID, i.Member.User.ID, 1, i.Message.ChannelID, 5) //todo change idPost
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	countUsers := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(*), 0) FROM users_activity WHERE idMessage = ? AND idChannel = ?", i.Message.ID, i.Message.ChannelID)
+	if countUsers != 50 {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Thank you for your participation! ",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		utils.ReportMessage("Already participated")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		Running = false
+		return
+	} else {
+		addressTo := database.ReadValueEmpty[string]("SELECT addr FROM users WHERE id = ?", idU.Int64)
+		addressFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
+		if !addressFrom.Valid {
+			utils.WrapErrorLog("Address from not found")
+			Running = false
+			return
+		}
+		_, err := s.ChannelMessageSendEmbeds(i.ChannelID, []*discordgo.MessageEmbed{WinEmbed(fmt.Sprintf("%s", i.Member.User.ID), "100", i.Member.User.AvatarURL("128"), i.Member.User.Username)})
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			Running = false
+			return
+		}
+		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "You have been 50th who liked the post, your reward is on the way!",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		_, err = coind.SendCoins(addressTo, addressFrom.String, 100.0, true)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			Running = false
+			return
+		}
+		d := map[string]string{
+			"fn": "sendTransaction",
+		}
+		type Token struct {
+			Token string `json:"token"`
+		}
+		tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", idU.Int64)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		if len(tk) > 0 {
+			for _, v := range tk {
+				utils.SendMessage(v.Token, "🎁 from Ann Bot", fmt.Sprintf("%s XDN", strconv.FormatFloat(100.0, 'f', 2, 32)), d)
 			}
 		}
 		err = goBot.ChannelMessageDelete(fmt.Sprintf("%s", i.Message.ChannelID), fmt.Sprintf("%s", i.Message.ID))
