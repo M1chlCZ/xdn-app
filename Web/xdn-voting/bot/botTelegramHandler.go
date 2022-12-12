@@ -54,26 +54,45 @@ func StartTelegramBot() {
 					}
 					Running = false
 					return
-				case "test":
+				//case "test":
+				//	Running = true
+				//	utils.ReportMessage(fmt.Sprintf("Message from %d", update.Message.Chat.ID))
+				//	msg.Text = statusMessage[rand.Intn(len(statusMessage))]
+				//
+				//	rand.Seed(time.Now().UnixNano())
+				//	randNum := rand.Intn(len(PictureThunder))
+				//
+				//	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
+				//	utils.ReportMessage(url)
+				//	photo := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(url))
+				//	photo.Caption = "Test \n\nFUCK\n https://discord\\.gg/MHQqDeWd"
+				//	if _, err := bot.Send(photo); err != nil {
+				//		utils.WrapErrorLog(err.Error())
+				//	}
+				//	Running = false
+				//	return
+				case "help":
 					Running = true
-					utils.ReportMessage(fmt.Sprintf("Message from %d", update.Message.Chat.ID))
-					msg.Text = statusMessage[rand.Intn(len(statusMessage))]
-
-					rand.Seed(time.Now().UnixNano())
-					randNum := rand.Intn(len(PictureThunder))
-
-					url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d", randNum)
-					utils.ReportMessage(url)
-					photo := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(url))
-					photo.Caption = "Test \n\nFUCK\n https://discord\\.gg/MHQqDeWd"
-					if _, err := bot.Send(photo); err != nil {
+					post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 99")
+					if err != nil {
+						utils.WrapErrorLog(err.Error())
+						return
+					}
+					msg.ParseMode = tgbotapi.ModeMarkdown
+					msg.Text = post.Message
+					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
 					Running = false
 					return
-				case "help":
+				case "ask":
 					Running = true
-					msg.Text = "I understand /register /unlink /status /tip /rain /thunder."
+					tx, err := ask(update.Message)
+					if err != nil {
+						msg.Text = "Error: " + err.Error()
+					} else {
+						msg.Text = tx
+					}
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
 					}
@@ -110,6 +129,12 @@ func StartTelegramBot() {
 						Running = false
 						return
 					}
+
+					if data.Amount == 0 {
+						Running = false
+						return
+					}
+
 					chatID := mmm.Chat.ID
 					messageID := mmm.MessageID
 					txd, err := finishRain(data)
@@ -177,6 +202,10 @@ func StartTelegramBot() {
 						m := tgbotapi.NewMessage(update.Message.Chat.ID, "Error: "+err.Error())
 						_, _ = bot.Send(m)
 						utils.WrapErrorLog(err.Error())
+						Running = false
+						return
+					}
+					if data.Amount == 0 {
 						Running = false
 						return
 					}
@@ -367,9 +396,9 @@ func StartTelegramBot() {
 						if err != nil {
 							utils.ReportMessage(err.Error())
 						}
-
-						msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
-						msg.Text = fmt.Sprintf("Congratulations @%s, you won 100 XDN!", update.CallbackQuery.From.UserName)
+						url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", "win")
+						msg := tgbotapi.NewPhoto(update.CallbackQuery.Message.Chat.ID, tgbotapi.FileURL(url))
+						msg.Caption = fmt.Sprintf("Congratulations @%s, you won 100 XDN!", update.CallbackQuery.From.UserName)
 						if _, err = bot.Send(msg); err != nil {
 							utils.WrapErrorLog(err.Error())
 							Running = false
@@ -465,6 +494,12 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	if from.From.IsBot {
 		return "", errors.New("Bots are not allowed")
 	}
+
+	r := regexp.MustCompile(`(?i)help`)
+	if r.MatchString(from.Text) {
+		return "Tip some user XDN\n\nUsage: /tip @<username> <amount>", nil
+	}
+
 	str1 := strings.ReplaceAll(from.Text, "@", "")
 	str2 := from.Text
 	utils.ReportMessage(fmt.Sprintf("Tip from %s text %s", username, from.Text))
@@ -564,6 +599,10 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStruct) {
 	if from.From.IsBot {
 		return "", errors.New("Bots are not allowed"), RainReturnStruct{}
+	}
+	r := regexp.MustCompile(`(?i)help`)
+	if r.MatchString(from.Text) {
+		return "Splash some coins on users on this social media\n\nUsage: /rain <amount> @<numOfUsers>\n\nParameter numOfUsers is optional, when not specified it will rain on all users registered on this social media", nil, RainReturnStruct{}
 	}
 	str1 := strings.ReplaceAll(from.Text, "@", "")
 	str2 := from.Text
@@ -727,6 +766,10 @@ func finishRain(data RainReturnStruct) (string, error) {
 func thunderTelegram(username string, from *tgbotapi.Message) (string, error, ThunderReturnStruct) {
 	if from.From.IsBot {
 		return "", errors.New("Bots are not allowed"), ThunderReturnStruct{}
+	}
+	r := regexp.MustCompile(`(?i)help`)
+	if r.MatchString(from.Text) {
+		return "Thunder is like rain, however it's not limited to one social media, it will rain on Telegram as well as Discord \n\nUsage: /thunder <amount> @<numOfUsers>\n\nParameter numOfUsers is optional, when not specified it will rain on all users registered on all social media", nil, ThunderReturnStruct{}
 	}
 	str1 := strings.ReplaceAll(from.Text, "@", "")
 	str2 := from.Text
@@ -1078,4 +1121,22 @@ func showDiscordTelegramThunder(message string) {
 	if _, err := bot.Send(photo); err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
+}
+
+func ask(from *tgbotapi.Message) (string, error) {
+	if from.From.IsBot {
+		return "", errors.New("Bots are not allowed")
+	}
+	if from.From.UserName == "" {
+		return "", errors.New("You need to set a username")
+	}
+	str := strings.ReplaceAll(from.Text, "/ask ", "")
+	userID := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", from.From.UserName)
+	if userID.Valid {
+		_, _ = database.InsertSQl("INSERT INTO ask_team (idUser, username, question) VALUES (?,?,?)", userID.Int64, from.From.UserName, str)
+	} else {
+		_, _ = database.InsertSQl("INSERT INTO ask_team (username, question) VALUES (?,?)", from.From.UserName, str)
+	}
+	return "Thank you, your question has been sent to the team.", nil
+
 }

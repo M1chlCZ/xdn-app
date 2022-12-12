@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net"
 	"xdn-voting/grpcModels"
@@ -29,6 +30,20 @@ func NewServer() {
 	grpcModels.RegisterRegisterServiceServer(grpcServer, &s)
 	grpcModels.RegisterRegisterMasternodeServiceServer(grpcServer, &s)
 	if err := grpcServer.Serve(lis); err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+}
+func NewAppServer() {
+	utils.ReportMessage("APP gRPC Online on port 6805!")
+	lisApp, errApp := net.Listen("tcp", fmt.Sprintf(":%d", 6805))
+	if errApp != nil {
+		utils.WrapErrorLog(errApp.Error())
+	}
+
+	sApp := ServerApp{}
+	grpcServerApp := grpc.NewServer(grpc.Creds(insecure.NewCredentials()), grpc.UnaryInterceptor(serverInterceptor))
+	grpcModels.RegisterAppServiceServer(grpcServerApp, &sApp)
+	if err := grpcServerApp.Serve(lisApp); err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
 }

@@ -54,14 +54,12 @@ func WithDraw(wdmn *grpcModels.WithdrawRequest) {
 		utils.WrapErrorLog(errJson.Error())
 		return
 	}
-	utils.ReportMessage("==========================================================")
 	txArray := make([]string, 0)
 	for _, unspent := range ing {
 		if unspent.Spendable == true {
 			if wdmn.Type == 0 && unspent.Amount > 1000 {
 				continue
 			}
-			utils.ReportMessage(fmt.Sprintf("%f %s", unspent.Amount, unspent.Txid))
 			unspentArray := models.RawTxArray{
 				Txid: unspent.Txid,
 				Vout: unspent.Vout,
@@ -73,8 +71,7 @@ func WithDraw(wdmn *grpcModels.WithdrawRequest) {
 			utils.ReportMessage(fmt.Sprintf("%f %s", unspent.Amount, unspent.Txid))
 		}
 	}
-	utils.ReportMessage("==========================================================")
-	if daemon.CoinID == 0 {
+	if daemon.CoinID == 0 || daemon.CoinID == 40 {
 		amount = amount - 0.001
 	} else {
 		fee, err := coind.WrapDaemon(*daemon, 10, "getinfo")
@@ -93,12 +90,16 @@ func WithDraw(wdmn *grpcModels.WithdrawRequest) {
 	}
 
 	if amount <= 0 {
-		utils.WrapErrorLog("Not enough funds")
 		return
 	}
+
+
 	var txid string
-	if daemon.CoinID == 0 {
+	if daemon.CoinID == 0 || daemon.CoinID == 40 {
 		utils.ReportMessage("==========================================================")
+		utils.ReportMessage(fmt.Sprintf("Amount: %f", amount))
+		utils.ReportMessage(fmt.Sprintf("%v+1", firstParam))
+		utils.ReportMessage(fmt.Sprintf("%s", ""))
 		utils.ReportMessage("Creating raw transaction")
 		secondParam := map[string]interface{}{
 			wdmn.Deposit: amount,

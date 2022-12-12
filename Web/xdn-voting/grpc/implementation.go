@@ -69,7 +69,6 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				IdUser  sql.NullInt64 `db:"idUser"`
 				Session sql.NullInt64 `db:"session"`
 			}
-
 			for readUsers.Next() {
 				var ru ReadUsers
 				if err := readUsers.StructScan(&ru); err != nil {
@@ -79,21 +78,32 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				idUser := ru.IdUser.Int64
 				session := ru.Session.Int64
 
-				dt := time.Now().UTC().Format("2006-01-02 15:04:05")
-				_, errUpdate := database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime) VALUES (?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt)
+				if idUser != 0 && idCoin != 0 {
+					dt := time.Now().UTC().Format("2006-01-02 15:04:05")
+					_, errUpdate := database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime) VALUES (?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt)
+					if errUpdate != nil {
+						utils.WrapErrorLog(errUpdate.Error())
+						return &grpcModels.Response{Code: 400}, errUpdate
+					}
+					_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
+					user, _ := database.ReadValue[string]("SELECT nickname FROM users WHERE id = ?", idUser)
+					utils.ReportMessage(fmt.Sprintf("-{ MN TX from node id: %d added, coin id: %d amount: %f | user: %s (uid: %d)}-", txDaemon.NodeId, idCoin, txRes.Amount, user, ru.IdUser.Int64))
+				} else {
+					dt := time.Now().UTC().Format("2006-01-02 15:04:05")
+					_, errUpdate := database.InsertSQl("INSERT INTO treasury(txid, amount, datetime) VALUES (?, ?, ?)", txRes.TXID, txRes.Amount, dt)
+					if errUpdate != nil {
+						utils.WrapErrorLog(errUpdate.Error())
+						return &grpcModels.Response{Code: 400}, errUpdate
+					}
+					_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
+					utils.ReportMessage(fmt.Sprintf("-{ MN TX from node id: %d added to treasury }-", txDaemon.NodeId))
+				}
+				_ = readUsers.Close()
+				_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET processed = 1 WHERE id = ?", id)
 				if errUpdate != nil {
 					utils.WrapErrorLog(errUpdate.Error())
 					return &grpcModels.Response{Code: 400}, errUpdate
 				}
-				_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
-				user, _ := database.ReadValue[string]("SELECT nickname FROM users WHERE id = ?", idUser)
-				utils.ReportMessage(fmt.Sprintf("-{ MN TX from node id: %d added, coin id: %d amount: %f | user: %s (uid: %d)}-", txDaemon.NodeId, idCoin, txRes.Amount, user, ru.IdUser.Int64))
-			}
-			_ = readUsers.Close()
-			_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET processed = 1 WHERE id = ?", id)
-			if errUpdate != nil {
-				utils.WrapErrorLog(errUpdate.Error())
-				return &grpcModels.Response{Code: 400}, errUpdate
 			}
 
 		}

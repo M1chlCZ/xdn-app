@@ -1,0 +1,24 @@
+syntax = "proto3";
+package proto;
+option go_package = "./grpcModels";
+
+service AppService {
+  rpc AppPing(AppPingRequest) returns (AppPingResponse) {}
+  rpc UserPermission(UserPermissionRequest) returns (UserPermissionResponse) {}
+}
+
+message AppPingRequest {
+  uint32 code = 1;
+}
+
+message AppPingResponse {
+  uint32 code = 1;
+}
+
+message UserPermissionRequest {
+  uint32 code = 1;
+}
+
+message UserPermissionResponse {
+  bool mn_permission = 1;
+}

@@ -52,4 +52,4 @@ GoogleService-info.plist
 /android/key.properties
 /android/keystore.jks
 flutter_01.sksl.json
-/assets/cert.pem
+*.pem

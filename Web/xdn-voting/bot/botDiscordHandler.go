@@ -120,7 +120,7 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 		if m.Author.ID == botID {
 			return
 		}
-		re := regexp.MustCompile("\\B\\$\\w+")
+		re := regexp.MustCompile("^\\B\\$\\S*")
 		comArray := re.FindAllString(m.Content, 1)
 		if len(comArray) == 0 {
 			return
@@ -176,6 +176,22 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 				return
 			}
 			_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipEmbed(discord["author"], discord["tipped"], discord["amount"], m.Author.AvatarURL("128"), m.Author.Username)})
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				Running = false
+				return
+			}
+			Running = false
+		} else if command == "ask" {
+			Running = true
+			discord, err := askDiscord(m)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{TipErrorEmbed("Question received unsuccessfully", err.Error())})
+				Running = false
+				return
+			}
+			_, err = s.ChannelMessageSendEmbeds(m.ChannelID, []*discordgo.MessageEmbed{AskEmbed(discord, "Question received successfully")})
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				Running = false
@@ -1205,4 +1221,23 @@ func annBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		Running = false
 	}
+}
+
+func askDiscord(from *discordgo.MessageCreate) (string, error) {
+	if from.Author.Bot {
+		return "", errors.New("Bot can't tip")
+	}
+	if from.Author.Username == "" {
+		return "", errors.New("UserID is required")
+	}
+
+	str := strings.ReplaceAll(from.Content, "$ask", "")
+	userID := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", from.Author.ID)
+	if userID.Valid {
+		_, _ = database.InsertSQl("INSERT INTO ask_team (idUser, username, question) VALUES (?,?,?)", userID.Int64, from.Author.Username, str)
+	} else {
+		_, _ = database.InsertSQl("INSERT INTO ask_team (username, question) VALUES (?,?)", from.Author.Username, str)
+	}
+	return "Thank you, XDN Team", nil
+
 }

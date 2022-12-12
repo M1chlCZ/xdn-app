@@ -65,6 +65,7 @@ func main() {
 
 	// ============= gRPC Service ==============
 	go grpc.NewServer()
+	go grpc.NewAppServer()
 
 	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")

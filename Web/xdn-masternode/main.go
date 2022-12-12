@@ -218,7 +218,14 @@ func submitTransaction(c *fiber.Ctx) error {
 	if txid == "unknown" {
 		return utils.ReportError(c, "txid is unknown", fiber.StatusBadRequest)
 	}
-	nodeID, err := strconv.Atoi(c.Get("node_id", "unknown"))
+	nID := c.Get("node_id", "unknown")
+	if nID == "unknown" {
+		return utils.ReportError(c, "node_id is unknown", fiber.StatusBadRequest)
+	}
+	if nID[0:1] == "0" {
+		nID = nID[1:]
+	}
+	nodeID, err := strconv.Atoi(nID)
 	if err != nil {
 		utils.WrapErrorLog(fmt.Sprintf("err: %v\n", err))
 		return utils.ReportError(c, "node id is unknown", fiber.StatusBadRequest)

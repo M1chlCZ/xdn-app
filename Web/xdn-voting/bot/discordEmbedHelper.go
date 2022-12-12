@@ -213,6 +213,29 @@ func TipErrorEmbed(error, title string) *discordgo.MessageEmbed {
 	return &genericEmbed
 }
 
+func AskEmbed(description, title string) *discordgo.MessageEmbed {
+	timeString := time.Now().Format(time.RFC3339)
+	genericEmbed := discordgo.MessageEmbed{
+		Type:        "",
+		Title:       title,
+		Description: description,
+		Timestamp:   timeString,
+		Color:       0x00ff00,
+		Footer:      nil,
+		Image:       nil,
+		Thumbnail:   nil,
+		Video:       nil,
+		Provider:    nil,
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    "XDN Tip Bot",
+			URL:     "",
+			IconURL: "https://cdn.discordapp.com/avatars/1038623597746458644/b4aa43e5d422bcc3b72e49d067d87f73.webp?size=160",
+		},
+		Fields: nil,
+	}
+	return &genericEmbed
+}
+
 func GiftEmbed(message, picture string) *discordgo.MessageEmbed {
 	timeString := time.Now().Format(time.RFC3339)
 	genericEmbed := discordgo.MessageEmbed{

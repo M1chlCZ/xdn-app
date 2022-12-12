@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/generated/phone.pbgrpc.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
+import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
@@ -28,9 +30,12 @@ import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:digitalnote/widgets/voting_menu_widget.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:get_it/get_it.dart';
+import 'package:grpc/grpc.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
 
 import '../globals.dart' as globals;
@@ -62,10 +67,20 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   SessionStatus? session;
 
   bool contestActive = false;
+  bool mnActive = false;
 
   Future<DaemonStatus>? daemonStatus;
 
   AppDatabase db = GetIt.I.get<AppDatabase>();
+
+  late final AnimationController _controller = AnimationController(
+    duration: const Duration(seconds: 1),
+    vsync: this,
+  );
+  late final Animation<double> _animation = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.fastOutSlowIn,
+  );
 
   @override
   void initState() {
@@ -73,6 +88,26 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     super.initState();
     loginDao();
     getNotification();
+    FlutterAppBadger.removeBadge();
+    getMNPermission();
+  }
+
+  getMNPermission() async {
+    final channel = ClientChannel('194.60.201.213', port: 6805, options: const ChannelOptions(credentials: ChannelCredentials.insecure()));
+    final stub = AppServiceClient(channel);
+
+    try {
+      String? token = await SecureStorage.read(key: globals.TOKEN_DAO);
+      var response = await stub.userPermission(UserPermissionRequest()..code = 200, options: CallOptions(metadata: {'authorization': token ?? ""}));
+
+      if (response.mnPermission) {
+        mnActive = true;
+        _controller.forward();
+      }
+    } catch (e) {
+      print('Caught error: ${e.toString()}');
+    }
+    await channel.shutdown();
   }
 
   void loginDao() async {
@@ -313,6 +348,20 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                         ),
                         const SizedBox(
                           height: 10,
+                        ),
+                        SizeTransition(
+                          sizeFactor: _animation,
+                          child: SizedBox(
+                            height: mnActive ? 90.0 : 0.0,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                MasternodeMenuWidget(
+                                  goto: gotoStakingScreen,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         VotingMenuWidget(
                           goto: gotoVotingScreen,
@@ -558,7 +607,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
               );
             });
       });
-    }else if (data["error"] == null) {
+    } else if (data["error"] == null) {
       showDialog(
           context: context,
           builder: (BuildContext context) {

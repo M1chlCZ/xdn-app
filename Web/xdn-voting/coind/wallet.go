@@ -59,9 +59,9 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 	}
 
 	inputsCount := len(inputs)
-	fee := 0.001 * float64(inputsCount)
+	fee := 0.01 * float64(inputsCount)
 	amountSend := amount - fee
-	txBack := inputsAmount - fee - amount
+	txBack := inputsAmount - amountSend
 
 	//g
 
