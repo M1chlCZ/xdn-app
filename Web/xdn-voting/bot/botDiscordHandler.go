@@ -1238,6 +1238,7 @@ func askDiscord(from *discordgo.MessageCreate) (string, error) {
 	} else {
 		_, _ = database.InsertSQl("INSERT INTO ask_team (username, question) VALUES (?,?)", from.Author.Username, str)
 	}
+	utils.ReportMessage(fmt.Sprintf("New question from %s: %s", from.Author.Username, str))
 	return "Thank you, XDN Team", nil
 
 }

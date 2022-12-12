@@ -283,11 +283,11 @@ func (db *DBClient) getDAEMONFolder(Folder string) (*models.Daemon, error) {
 	return &dm, nil
 }
 
-func (db *DBClient) getDAEMONStaking(NodeID int) (*models.DaemonStaking, error) {
+func (db *DBClient) getDAEMONStaking(NodeID int) (*models.Daemon, error) {
 	insertStudentSQL := `SELECT * FROM STAKING_DAEMON_TABLE WHERE coin_id = ?`
 	rows, _ := db.client.Query(insertStudentSQL, NodeID)
 
-	var dm models.DaemonStaking
+	var dm models.Daemon
 	for rows.Next() {
 		err := rows.Scan(&dm.ID, &dm.WalletUser, &dm.WalletPass, &dm.WalletPort, &dm.CoinID, &dm.PassPhrase)
 		if err != nil {
@@ -539,7 +539,7 @@ func GetAllCoins() (*[]CoinID, error) {
 	//clientDb.SetupTables()
 }
 
-func GetDaemonStaking(coinID int) (*models.DaemonStaking, error) {
+func GetDaemonStaking(coinID int) (*models.Daemon, error) {
 	clientDb, err := InitDB()
 	if err != nil {
 		fmt.Println(err)
@@ -550,7 +550,7 @@ func GetDaemonStaking(coinID int) (*models.DaemonStaking, error) {
 	res, errdb := clientDb.getDAEMONStaking(coinID)
 	if errdb != nil {
 		fmt.Println(errdb.Error())
-		return &models.DaemonStaking{}, errdb
+		return &models.Daemon{}, errdb
 	}
 	return res, nil
 	//clientDb.SetupTables()

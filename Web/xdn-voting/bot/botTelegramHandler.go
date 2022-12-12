@@ -1137,6 +1137,7 @@ func ask(from *tgbotapi.Message) (string, error) {
 	} else {
 		_, _ = database.InsertSQl("INSERT INTO ask_team (username, question) VALUES (?,?)", from.From.UserName, str)
 	}
-	return "Thank you, your question has been sent to the team.", nil
+	utils.ReportMessage(fmt.Sprintf("New question from %s: %s", from.From.UserName, str))
+	return "Thank you, your question has been sent to the team", nil
 
 }
