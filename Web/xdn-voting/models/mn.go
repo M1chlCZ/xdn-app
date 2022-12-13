@@ -1,6 +1,10 @@
 package models
 
-import "database/sql"
+import (
+	"database/sql"
+	"encoding/json"
+	"time"
+)
 
 type MnVerify struct {
 	IdCoin       int     `db:"idCoin"`
@@ -23,4 +27,80 @@ type WalletMNTX struct {
 	Processed bool          `db:"processed"`
 	DateC     string        `db:"date_created"`
 	DateP     string        `db:"processed_at"`
+}
+
+type ListMN struct {
+	ID int    `db:"id" json:"id"`
+	IP string `db:"ip" json:"ip"`
+}
+
+type MNList struct {
+	IP             string  `db:"ip" json:"ip"`
+	IDNode         int     `db:"idNode" json:"idNode"`
+	Amount         float64 `db:"amount" json:"amount"`
+	LastRewardDate string  `db:"lastRewardDate" json:"lastRewardDate"`
+	Address        string  `db:"address" json:"address"`
+}
+
+type MNListInfo struct {
+	ID         int           `db:"id" json:"id"`
+	IP         string        `db:"ip" json:"ip"`
+	DateStart  string        `db:"dateStart" json:"dateStart"`
+	LastSeen   sql.NullInt64 `json:"lastSeen" db:"last_seen"`
+	TimeActive sql.NullInt64 `json:"timeActive" db:"active_time"`
+	Average    string        `db:"average" json:"average"`
+}
+
+func (u *MNListInfo) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		ID         int       `db:"id" json:"id"`
+		IP         string    `db:"ip" json:"ip"`
+		DateStart  string    `db:"dateStart" json:"dateStart"`
+		LastSeen   time.Time `json:"lastSeen" db:"last_seen"`
+		TimeActive int64     `json:"timeActive" db:"active_time"`
+		Average    string    `db:"average" json:"average_pay_time"`
+	}{
+		LastSeen:   InlineIF[time.Time](u.LastSeen.Valid, time.Unix(u.LastSeen.Int64, 0), time.Time{}),
+		TimeActive: InlineIF[int64](u.TimeActive.Valid, u.TimeActive.Int64, 0),
+		ID:         u.ID,
+		IP:         u.IP,
+		DateStart:  u.DateStart,
+		Average:    u.Average,
+	})
+}
+
+func InlineIF[T any](condition bool, a T, b T) T {
+	if condition {
+		return a
+	}
+	return b
+}
+
+func (u *MNListInfo) AddAverage(value string) {
+	u.Average = value
+}
+
+type PendingMN struct {
+	IDNode int `db:"idNode" json:"idNode"`
+}
+
+type Collateral struct {
+	Amount int64 `db:"collateral" json:"amount"`
+}
+
+type MNInfoResponse struct {
+	Status              string       `json:"status"`
+	Error               bool         `json:"hasError"`
+	ActiveNodes         int          `json:"active_nodes"`
+	AveragePayTime      string       `json:"average_pay_time"`
+	AverageRewardPerDay float32      `json:"average_reward_per_day"`
+	AverageTimeToStart  string       `json:"average_time_to_start"`
+	AveragePayForDay    float32      `json:"average_pay_day"`
+	ROI                 float32      `json:"roi"`
+	FreeList            []ListMN     `json:"free_list"`
+	MnList              []MNListInfo `json:"mn_list"`
+	PendingList         []PendingMN  `json:"pending_list"`
+	Collateral          int64        `json:"collateral"`
+	CollateralTiers     []int64      `json:"collateral_tiers"`
+	NodeRewards         []MNList     `json:"node_rewards"`
 }

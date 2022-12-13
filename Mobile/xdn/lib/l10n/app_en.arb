@@ -222,5 +222,21 @@
   "socials_info": "Linking your account to XDN TIP Bot will enable to send and receive tips on social media",
   "socials_info_add": "RocketBot.pro & Merge need to be linked to web",
   "unlink" : "Unlink {1}",
-  "socials_popup" : "CONNECT"
+  "socials_popup" : "CONNECT",
+  "mn_your_mns" : "Your masternodes",
+  "mn_total" : "Number of active {1} MNs",
+  "mn_day_reward" : "Daily reward of 1 active MN",
+  "mn_average_payrate" : "MN average payrate",
+  "mn_average_start" : "Average time to start MN",
+  "mn_time_to_start" : "Average time to get 1st reward",
+  "mn_lock" : "Coins will be locked for 1 week",
+  "mn_start" : "Swipe to start MN",
+  "mn_manage" : "Manage your MNs",
+  "mn_reward" : "Available reward",
+  "mn_collateral" : "Cost of 1 MN",
+  "mn_uncofirmed" : "Pending Masternodes",
+  "mn_roi" : "Annual ROI",
+  "mn_free" : "Available MN nodes to start",
+  "settings_socials": "Social Media",
+  "mn_withdraw_box" : "Do you really want to withdraw MN #{1}?"
 }

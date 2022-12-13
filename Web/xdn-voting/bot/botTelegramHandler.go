@@ -15,6 +15,7 @@ import (
 	"time"
 	"xdn-voting/coind"
 	"xdn-voting/database"
+	"xdn-voting/models"
 	"xdn-voting/utils"
 )
 
@@ -328,6 +329,12 @@ func StartTelegramBot() {
 							}
 							if dataSplit[0] == "likeAnn" {
 								likes++
+								if likes == 50 {
+									_, err := TipUser(update.CallbackQuery.From.UserName)
+									if err != nil {
+										utils.WrapErrorLog(err.Error())
+									}
+								}
 								_, _ = database.InsertSQl("INSERT INTO users_activity (idUser, idMessage, idUserSocial, activity, idChannel, idPost) VALUES (?,?,?,?,?,?)", idUser, update.CallbackQuery.Message.MessageID, update.CallbackQuery.From.ID, 1, update.CallbackQuery.Message.Chat.ID, idPostage)
 							} else if dataSplit[0] == "dislikeAnn" {
 								dislikes++
@@ -556,7 +563,10 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	} else {
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip to: "+strings.TrimSpace(ut), tx, "send")
 	}
-	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 2, 0, from.Chat.ID)
+	_, err = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amnt, 2, 0, from.Chat.ID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 	go func(addrTo string, addrSend string, amount string) {
 		d := map[string]string{
 			"fn": "sendTransaction",
@@ -688,8 +698,10 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 		return "", err, RainReturnStruct{}
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
-	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 0, 0, from.Chat.ID)
-
+	_, err = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 0, 0, from.Chat.ID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 	return fmt.Sprintf("Raining %.2f XDN on %d users", amount, numOfUsers), nil, RainReturnStruct{
 		UsrList:  usersToTip,
 		Amount:   amount,
@@ -893,8 +905,10 @@ func thunderTelegram(username string, from *tgbotapi.Message) (string, error, Th
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
 
-	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 1, 0, from.Chat.ID)
-
+	_, err = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 1, 0, from.Chat.ID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 	return fmt.Sprintf("Raining thunder of %.2f XDN on %d users", amount, numOfUsers), nil, ThunderReturnStruct{
 		UsrListTelegram: telegramFinalSlice,
 		UsrListDiscord:  discordFinalSlice,
@@ -1140,4 +1154,177 @@ func ask(from *tgbotapi.Message) (string, error) {
 	utils.ReportMessage(fmt.Sprintf("New question from %s: %s", from.From.UserName, str))
 	return "Thank you, your question has been sent to the team", nil
 
+}
+
+func AnnOtherChannelTelegram() {
+	LoadPictures()
+
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 0 ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel < 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannel, MainChannel)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	for _, channel := range channels {
+		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+
+			if lastPost.Id != 0 {
+				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+				_, err := bot.Send(dl)
+				if err != nil {
+					utils.ReportMessage(err.Error())
+				}
+			}
+		}
+		postID := post.PostID
+		url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 1)
+		utils.ReportMessage(fmt.Sprintf("Announcement url: %s", url))
+		msg := tgbotapi.NewPhoto(channel.IdChannel, tgbotapi.FileURL(url))
+		var rows []tgbotapi.InlineKeyboardButton
+		rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👍🏻", fmt.Sprintf("likeAnn:%d", postID)))
+		//rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👎🏻", fmt.Sprintf("dislikeAnn:%d", postID)))
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows)
+		msg.ParseMode = tgbotapi.ModeMarkdown
+
+		msg.Caption = "*This is one per day post on non-XDN channels using XDN-bot, only important announcement* \n ! Rewards work on other channels as well !\n\n" + post.Message
+		mess, err := bot.Send(msg)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+
+		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}
+}
+
+func GiftOtherChannelsTelegram() {
+	LoadPictures()
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 2 ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	url := ""
+	if post.Picture.Valid {
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+	} else {
+		randNum := utils.RandNum(len(PictureNFT))
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=2", randNum)
+	}
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel < 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannel, MainChannel)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	for _, channel := range channels {
+		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+
+			if lastPost.Id != 0 {
+				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+				_, err := bot.Send(dl)
+				if err != nil {
+					utils.ReportMessage(err.Error())
+				}
+			}
+		}
+		utils.ReportMessage(fmt.Sprintf("GIFT url: %s", url))
+		msg := tgbotapi.NewPhoto(channel.IdChannel, tgbotapi.FileURL(url))
+		var rows []tgbotapi.InlineKeyboardButton
+		rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("🎁", "giftBot"))
+		usrTL := database.ReadValueEmpty[int64](`SELECT count(id) FROM users_bot WHERE typeBot = 1`)
+		luckyNumber := utils.RandNum(int(usrTL / 2))
+		text := ""
+		if luckyNumber == 0 {
+			luckyNumber++
+		}
+		if luckyNumber == 1 {
+			text = "first"
+		} else if luckyNumber == 2 {
+			text = "second"
+		} else if luckyNumber == 3 {
+			text = "third"
+		} else {
+			text = strconv.FormatInt(int64(luckyNumber), 10) + "th"
+		}
+		message := fmt.Sprintf(post.Message, text)
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows)
+		msg.ParseMode = tgbotapi.ModeMarkdown
+		utils.ReportMessage(fmt.Sprintf("Lucky number: %d, Post Message: %s", luckyNumber, post.Message))
+		msg.Caption = message
+		mess, err := bot.Send(msg)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		_, err = database.InsertSQl("INSERT INTO gift_bot_numbers (idMessage, luckyNumber, idChannel) VALUES (?,?,?)", mess.MessageID, luckyNumber, mess.Chat.ID)
+		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}
+}
+
+func TipUser(username string) (string, error) {
+	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", username, 1)
+	if !usrTo.Valid {
+		return "", errors.New("Mentioned user not registered in the bot db")
+	}
+	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
+	if !addrFrom.Valid {
+		return "", errors.New("Error getting user address #1")
+	}
+	addrTo := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrTo.Int64)
+	if !addrTo.Valid {
+		return "", errors.New("Error getting user address #2")
+	}
+	utils.ReportMessage(fmt.Sprintf("From: %s, To: %s, Amount: %s", addrFrom.String, addrTo.String, 100))
+	amnt := 100.0
+
+	_, err := coind.SendCoins(addrTo.String, addrFrom.String, amnt, false)
+	if err != nil {
+		return "", errors.New("Error sending coins from " + username)
+	}
+	_, err = bot.Send(tgbotapi.NewMessage(MainChannel, fmt.Sprintf("User %s won %f XDN", username, amnt)))
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	_, err = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Winning announcement contest, tx", "send")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	go func(addrTo string, addrSend string, amount string) {
+		d := map[string]string{
+			"fn": "sendTransaction",
+		}
+		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", addrTo)
+		if userTo.Valid {
+			type Token struct {
+				Token string `json:"token"`
+			}
+			tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", userTo.Int64)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+
+			if len(tk) > 0 {
+				for _, v := range tk {
+					utils.SendMessage(v.Token, fmt.Sprintf("Won the ann competition from %s", "XDN Bot"), fmt.Sprintf("%s XDN", amount), d)
+				}
+			}
+
+		}
+	}(addrTo.String, addrFrom.String, "100.0")
+	return fmt.Sprintf("You won %f XDN", amnt), nil
 }

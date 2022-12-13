@@ -7,6 +7,7 @@ import (
 
 func InitCron() {
 	go func() {
+		//main channel
 		err := gocron.Every(1).Day().At("04:00").Do(RunBotAnn)
 		err = gocron.Every(1).Day().At("08:00").Do(AnnNFTBot)
 		err = gocron.Every(1).Day().At("12:00").Do(RunBotAnn)
@@ -18,6 +19,11 @@ func InitCron() {
 		err = gocron.Every(1).Day().At("05:00").Do(GiftBot)
 		err = gocron.Every(1).Day().At("20:00").Do(RunBotAnn)
 		err = gocron.Every(1).Day().At("00:00").Do(RunBotAnn)
+		//other channel
+		err = gocron.Every(1).Day().At("22:00").Do(RunBotAnnOtherChannel)
+		err = gocron.Every(1).Day().At("02:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("10:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("18:00").Do(GiftBotOtherChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			return

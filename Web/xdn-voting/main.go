@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 	"xdn-voting/apiWallet"
@@ -98,6 +99,8 @@ func main() {
 	app.Post("api/v1/staking/set", utils.Authorized(setStake))
 	app.Post("api/v1/staking/unset", utils.Authorized(unstake))
 	app.Get("api/v1/staking/info", utils.Authorized(getStakeInfo))
+
+	app.Get("api/v1/masternode/info", utils.Authorized(getMNInfo))
 
 	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
@@ -199,6 +202,92 @@ func main() {
 	os.Exit(0)
 
 	// Start server with https/ssl enabled on http://localhost:443
+}
+
+func getMNInfo(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	avgPay, err := database.ReadValue[string]("SELECT SEC_TO_TIME(AVG(av)) as average FROM (SELECT TIMESTAMPDIFF(second, MIN(datetime), MAX(datetime)) / NULLIF(COUNT(*) - 1, 0) as av FROM payouts_masternode WHERE idCoin=? GROUP BY idNode) as b", 0)
+
+	returnListArr, err := database.ReadArrayStruct[models.ListMN]("SELECT id, ip FROM mn_clients WHERE active = 0 AND coin_id = ? AND locked = 0", 0)
+
+	returnArr, err := database.ReadArrayStruct[models.MNListInfo]("SELECT b.id, b.ip, a.dateStart, b.last_seen, b.active_time FROM users_mn as a, mn_clients as b WHERE a.idUser = ? AND a.idCoin = ? AND a.active = 1 AND a.idNode = b.id", userID, 0)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	}
+	//returnFinalArry := make([]listFinalMN, 0)
+	var wg sync.WaitGroup
+	wg.Add(len(returnArr))
+	for i := 0; i < len(returnArr); i++ {
+		go func(i int) {
+			id := returnArr[i].ID
+			maxSession, _ := database.ReadValue[int]("SELECT MAX(session) FROM users_mn WHERE idNode = ?", id)
+			sqlAveragePayrate := `SELECT IFNULL(SEC_TO_TIME(AVG(av)), 0) as average FROM (SELECT IFNULL(TIMESTAMPDIFF(second, MIN(datetime), MAX(datetime)) / NULLIF(COUNT(*) - 1, 0), 0) as av	FROM payouts_masternode WHERE idNode=? AND session=? GROUP BY idNode) as b`
+			avp, _ := database.ReadValue[string](sqlAveragePayrate, id, maxSession)
+			returnArr[i].AddAverage(avp)
+			wg.Done()
+		}(i)
+	}
+	go func() {
+		wg.Wait()
+	}()
+
+	returnArrr, err := database.ReadArrayStruct[models.MNList]("SELECT idNode, amount as amount, lastRewardDate, ip, address  FROM (SELECT a.idNode, SUM(a.amount) as amount, max(datetime) as lastRewardDate,  b.ip, b.address FROM payouts_masternode as a, mn_clients as b WHERE a.idCoin = ? AND a.idUser = ? AND a.idNode = b.id AND a.credited = 0  AND a.datetime < (NOW() - INTERVAL 5 MINUTE) GROUP BY a.idNode) as t1", 0, userID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	}
+	averageTimeToStart := ""
+
+	//for _, element := range stats {
+	//	if len(element[mnInfoReq.IdCoin]) != 0 {
+	//		averageTimeToStart = element[mnInfoReq.IdCoin]
+	//	}
+	//}
+
+	pendingMNList, _ := database.ReadArrayStruct[models.PendingMN]("SELECT idNode FROM mn_incoming_tx WHERE idUser = ? AND idCoin = ? AND processed = 0", userID, 0)
+	mnInfo, err := database.ReadValue[int]("SELECT collateral FROM mn_info WHERE idCoin = ?", 0)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	collateralAmount, _ := database.ReadArray[models.Collateral]("SELECT collateral FROM mn_info WHERE idCoin = ?", 0)
+	numberOfNodes, _ := database.ReadValue[int]("SELECT COUNT(id) FROM mn_clients WHERE active = 1 AND coin_id = ?", 0)
+	perDay, _ := database.ReadValue[float32]("SELECT AVG(amount) as amount FROM (SELECT idNode, sum(amount) AS amount FROM payouts_masternode WHERE idCoin = ? AND datetime BETWEEN DATE_SUB(CURDATE(),INTERVAL 1 DAY) AND CURDATE() group by idNode)as t", 0)
+	userNodeCount, _ := database.ReadValue[int64]("SELECT IFNULL(COUNT(id), 0) FROM users_mn WHERE idUser = ? AND idCoin = ? AND active = 1", userID, 0)
+	averageReward := perDay * float32(userNodeCount)
+
+	rewardPerDay, _ := database.ReadValue[float64](`SELECT AVG(amount) FROM
+														(SELECT DATE_FORMAT(datetime, '%Y-%m-%d') as theday, SUM(amount) as amount FROM payouts_masternode WHERE idCoin = ? GROUP BY idNode, DATE_FORMAT(datetime, '%Y-%m-%d')) as t1
+														WHERE theday >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 7 DAY), '%Y-%m-%d')`, 0)
+	roi := ((rewardPerDay * 365.2) / float64(mnInfo)) * 100
+	colArr := make([]int64, 0)
+	for _, element := range collateralAmount {
+		colArr = append(colArr, element.Amount)
+	}
+
+	resp := models.MNInfoResponse{
+		Status:              utils.OK,
+		Error:               false,
+		ActiveNodes:         numberOfNodes,
+		AveragePayTime:      avgPay,
+		AverageRewardPerDay: averageReward,
+		AverageTimeToStart:  averageTimeToStart,
+		AveragePayForDay:    float32(rewardPerDay),
+		ROI:                 float32(roi),
+		FreeList:            returnListArr,
+		MnList:              returnArr,
+		PendingList:         pendingMNList,
+		Collateral:          int64(mnInfo),
+		CollateralTiers:     colArr,
+		NodeRewards:         returnArrr,
+	}
+	return c.Status(fiber.StatusOK).JSON(&resp)
 }
 
 func getBlockchain(c *fiber.Ctx) error {

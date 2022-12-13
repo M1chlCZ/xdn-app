@@ -24,6 +24,7 @@ import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
 import 'package:digitalnote/widgets/balance_card.dart';
 import 'package:digitalnote/widgets/balance_token_card.dart';
+import 'package:digitalnote/widgets/masternode_menu_widget.dart';
 import 'package:digitalnote/widgets/send_qr_dialog.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
@@ -207,6 +208,10 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
   }
 
+  void gotoMasternodeScreen() {
+    Navigator.of(context).pushNamed(MasternodeScreen.route, arguments: "shit").then((value) => refreshBalance());
+  }
+
   Future<DaemonStatus> getDaemonStatus() async {
     try {
       Map<String, dynamic> req = await cm.get("/status", serverType: ComInterface.serverGoAPI, debug: true);
@@ -357,7 +362,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 MasternodeMenuWidget(
-                                  goto: gotoStakingScreen,
+                                  goto: gotoMasternodeScreen,
                                 ),
                               ],
                             ),

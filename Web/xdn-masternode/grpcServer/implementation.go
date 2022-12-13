@@ -31,7 +31,6 @@ func (s *Server) StartMasternode(ctx context.Context, in *grpcModels.StartMaster
 }
 
 func (s *Server) Withdraw(ctx context.Context, wdmn *grpcModels.WithdrawRequest) (*grpcModels.WithdrawResponse, error) {
-	utils.ReportMessage(fmt.Sprintf("Withdraw %s", wdmn.Deposit))
 	if len(wdmn.Deposit) == 0 || wdmn.Amount == 0 || wdmn.NodeID == 0 {
 		return &grpcModels.WithdrawResponse{Code: 400}, nil
 	}

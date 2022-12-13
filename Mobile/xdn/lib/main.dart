@@ -5,6 +5,7 @@ import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
 import 'package:digitalnote/screens/main_menu.dart';
+import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
@@ -357,6 +358,8 @@ class MyAppState extends State<MyApp> {
         return MaterialPageRoute(builder: (_) => const AddressScreen());
       case StakingScreen.route:
         return MaterialPageRoute(builder: (_) => const StakingScreen());
+      case MasternodeScreen.route:
+        return MaterialPageRoute(builder: (_) => const MasternodeScreen());
       case MessageScreen.route:
         return MaterialPageRoute(builder: (_) => const MessageScreen());
       case SettingsScreen.route:
