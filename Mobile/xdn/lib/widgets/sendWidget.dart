@@ -4,14 +4,12 @@ import 'dart:io';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/barcode_scanner.dart';
-import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
-import '../globals.dart' as globals;
 import '../models/Contact.dart';
 import '../support/AppDatabase.dart';
 import '../support/ColorScheme.dart';
@@ -100,8 +98,7 @@ class SendWidgetState extends State<SendWidget> {
       }
 
       ComInterface interface = ComInterface();
-      await interface.post(method,
-          body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+      await interface.post(method, body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
       setState(() {
         wait = false;
         succ = true;
@@ -161,13 +158,12 @@ class SendWidgetState extends State<SendWidget> {
   void initState() {
     super.initState();
     _getCurrentBalance();
-   getPriceData();
-      if (kDebugMode) {
-        setState(() {
-          _controllerAddress.text = "dcjvrzkNmPCV8f2e2C9UVB5wTroo4iELzt";
-        });
-      }
-
+    getPriceData();
+    if (kDebugMode) {
+      setState(() {
+        _controllerAddress.text = "dcjvrzkNmPCV8f2e2C9UVB5wTroo4iELzt";
+      });
+    }
   }
 
   getPriceData() async {
@@ -198,11 +194,11 @@ class SendWidgetState extends State<SendWidget> {
   void processData(Map<String, String?> data) {
     if (data["justAddress"] != null && data["address"] != null) {
       _controllerAddress.text = data["address"]!;
-    }else if (data["error"] == null) {
+    } else if (data["error"] == null) {
       double? currencyAmount = _priceData?[data["label"]?.toLowerCase()];
       if (data["amount"] == null) {
         data["amountCrypto"] = "0.0";
-      }else if (currencyAmount == null) {
+      } else if (currencyAmount == null) {
         var amountXDN = double.parse(data["amount"]!);
         _controllerAmount.text = amountXDN.toString();
       } else {
@@ -210,7 +206,7 @@ class SendWidgetState extends State<SendWidget> {
         _controllerAmount.text = amountXDN.toString();
       }
       _controllerAddress.text = data["address"]!;
-       data["amount"]!;
+      data["amount"]!;
     } else {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, data["error"]!);
     }
@@ -556,7 +552,8 @@ class SendWidgetState extends State<SendWidget> {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 15.0),
-                        child: IntrinsicHeight(
+                        child: SizedBox(
+                          height: 50,
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
@@ -567,10 +564,13 @@ class SendWidgetState extends State<SendWidget> {
                                     icon: const Icon(
                                       Icons.close,
                                       color: Colors.white,
+                                      size: 20,
                                     ),
-                                    label: Text(
+                                    label: AutoSizeText(
                                       AppLocalizations.of(context)!.cancel.toUpperCase(),
-                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0),
+                                      maxLines: 1,
+                                      minFontSize: 8,
+                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => cancelColors(states)),
@@ -592,9 +592,12 @@ class SendWidgetState extends State<SendWidget> {
                                     icon: const Icon(
                                       Icons.arrow_back_ios_sharp,
                                       color: Colors.white,
+                                      size: 16,
                                     ),
-                                    label: Text(
+                                    label: AutoSizeText(
                                       AppLocalizations.of(context)!.send.toUpperCase(),
+                                      maxLines: 1,
+                                      minFontSize: 8,
                                       style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
                                     ),
                                     style: ButtonStyle(
