@@ -91,6 +91,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				} else {
 					dt := time.Now().UTC().Format("2006-01-02 15:04:05")
 					_, errUpdate := database.InsertSQl("INSERT INTO treasury(txid, amount, datetime) VALUES (?, ?, ?)", txRes.TXID, txRes.Amount, dt)
+					_, errUpdate = database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime) VALUES (?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt)
 					if errUpdate != nil {
 						utils.WrapErrorLog(errUpdate.Error())
 						return &grpcModels.Response{Code: 400}, errUpdate

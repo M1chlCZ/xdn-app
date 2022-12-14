@@ -17,7 +17,7 @@ func serverInterceptor(ctx context.Context,
 	handler grpc.UnaryHandler) (interface{}, error) {
 	id := ""
 	var err error
-	utils.ReportMessage(info.FullMethod)
+	//utils.ReportMessage(info.FullMethod)
 	// Skip authorize when GetJWT is requested
 	if info.FullMethod != "/proto.EventStoreService/GetJWT" {
 		if id, err = authorize(ctx); err != nil {

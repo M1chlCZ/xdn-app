@@ -330,7 +330,7 @@ func StartTelegramBot() {
 							if dataSplit[0] == "likeAnn" {
 								likes++
 								if likes == 50 {
-									_, err := TipUser(update.CallbackQuery.From.UserName)
+									_, err := TipUser(update.CallbackQuery.From.UserName, update.CallbackQuery.Message.Chat.ID)
 									if err != nil {
 										utils.WrapErrorLog(err.Error())
 									}
@@ -448,7 +448,7 @@ func register(token string, from *tgbotapi.User) error {
 		return errors.New("Bots are not allowed")
 	}
 	if from.UserName == "" {
-		return errors.New("UserID is required")
+		return errors.New("Telegram username is required")
 	}
 
 	already := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ?", from.UserName)
@@ -966,7 +966,7 @@ func finishThunder(data ThunderReturnStruct) (string, error) {
 
 func AnnouncementTelegram() {
 	LoadPictures()
-	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel < 0 ORDER BY id DESC LIMIT 1")
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannel)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
@@ -1008,7 +1008,7 @@ func AnnouncementTelegram() {
 
 func AnnNFTTelegram() {
 	LoadPictures()
-	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 1) AND idChannel < 0 ORDER BY id DESC LIMIT 1")
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 1) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannel)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
@@ -1058,7 +1058,7 @@ func AnnNFTTelegram() {
 
 func GiftTelegramBot() {
 	LoadPictures()
-	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel < 0 ORDER BY id DESC LIMIT 1")
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannel)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
@@ -1276,7 +1276,7 @@ func GiftOtherChannelsTelegram() {
 	}
 }
 
-func TipUser(username string) (string, error) {
+func TipUser(username string, channelID int64) (string, error) {
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", username, 1)
 	if !usrTo.Valid {
 		return "", errors.New("Mentioned user not registered in the bot db")
@@ -1296,7 +1296,7 @@ func TipUser(username string) (string, error) {
 	if err != nil {
 		return "", errors.New("Error sending coins from " + username)
 	}
-	_, err = bot.Send(tgbotapi.NewMessage(MainChannel, fmt.Sprintf("User %s won %f XDN", username, amnt)))
+	_, err = bot.Send(tgbotapi.NewMessage(channelID, fmt.Sprintf("User %s won %f XDN", username, amnt)))
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 	}

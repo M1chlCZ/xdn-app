@@ -141,6 +141,7 @@ func main() {
 	app.Get("api/v1/file/get", getFile)
 	app.Get("api/v1/file/gram", getPictureBots)
 	app.Get("api/v1/file", getPicture)
+	app.Get("qt/release", getGithubRelease)
 
 	app.Get("blockchain.zip", getBlockchain)
 
@@ -202,6 +203,52 @@ func main() {
 	os.Exit(0)
 
 	// Start server with https/ssl enabled on http://localhost:443
+}
+
+func getGithubRelease(c *fiber.Ctx) error {
+	formValue := c.FormValue("os", "win64")
+	resp, err := http.Get("https://api.github.com/repos/DigitalNoteXDN/DigitalNote-2/releases/latest")
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	}
+	var result models.GitHubAssets
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	}
+	for _, asset := range result.Assets {
+		if strings.Contains(asset.Name, formValue) {
+			utils.ReportMessage(asset.BrowserDownloadURL)
+			utils.ReportMessage(asset.Name)
+			//download file from the asset.BrowserDownloadURL
+			//c.Response().Header.Set("Content-Disposition", "attachment; filename="+asset.Name)
+			//c.Response().Header.Set("Content-Type", "application/octet-stream")
+			//c.Response().Header.Set("Content-Length", strconv.Itoa(asset.Size))
+			//c.Response().Header.Set("Content-Transfer-Encoding", "binary")
+			//c.Response().Header.Set("Expires", "0")
+			//c.Response().Header.Set("url", asset.BrowserDownloadURL)
+			return c.Redirect(asset.BrowserDownloadURL, fiber.StatusSeeOther)
+		}
+	}
+	return c.Status(fiber.StatusNotFound).JSON(&fiber.Map{
+		utils.ERROR:  true,
+		utils.STATUS: utils.ERROR,
+	})
+
 }
 
 func getMNInfo(c *fiber.Ctx) error {

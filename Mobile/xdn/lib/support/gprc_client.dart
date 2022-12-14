@@ -47,4 +47,14 @@ class AppService extends AppServiceBase {
   Future<UserPermissionResponse> userPermission(ServiceCall call, UserPermissionRequest request) async {
     return UserPermissionResponse();
   }
+
+  @override
+  Future<MasternodeGraphResponse> masternodeGraph(ServiceCall call, MasternodeGraphRequest request) async {
+    return MasternodeGraphResponse();
+  }
+
+  @override
+  Future<StakeGraphResponse> stakeGraph(ServiceCall call, StakeGraphRequest request) async {
+    return StakeGraphResponse();
+  }
 }

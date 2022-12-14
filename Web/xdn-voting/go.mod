@@ -15,7 +15,7 @@ require (
 	github.com/jasonlvhit/gocron v0.0.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.4.0
-	github.com/pquerna/otp v1.3.0
+	github.com/pquerna/otp v1.4.0
 	github.com/simplereach/timeutils v1.2.0
 	github.com/tealeg/xlsx v1.0.5
 	gopkg.in/errgo.v2 v2.1.0

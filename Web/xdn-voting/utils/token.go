@@ -42,7 +42,7 @@ func CreateKeyToken(userid uint64) (string, error) {
 	claims["magic"] = GenerateSecureToken(32)
 	claims["authorized"] = true
 	claims["idUser"] = userid
-	claims["exp"] = time.Now().Add(time.Minute * 5).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodRS256, claims).SignedString(key)
 	if err != nil {

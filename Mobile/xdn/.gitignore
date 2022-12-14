@@ -53,3 +53,5 @@ GoogleService-info.plist
 /android/keystore.jks
 flutter_01.sksl.json
 *.pem
+
+lib/generated/*

@@ -5,6 +5,8 @@ option go_package = "./grpcModels";
 service AppService {
   rpc AppPing(AppPingRequest) returns (AppPingResponse) {}
   rpc UserPermission(UserPermissionRequest) returns (UserPermissionResponse) {}
+  rpc MasternodeGraph(MasternodeGraphRequest) returns (MasternodeGraphResponse) {}
+  rpc StakeGraph(StakeGraphRequest) returns (StakeGraphResponse) {}
 }
 
 message AppPingRequest {
@@ -21,4 +23,42 @@ message UserPermissionRequest {
 
 message UserPermissionResponse {
   bool mn_permission = 1;
+}
+
+message MasternodeGraphRequest {
+    uint32 idCoin = 1;
+    uint32 type = 2;
+    string datetime = 3;
+}
+
+message MasternodeGraphResponse {
+
+  message Rewards {
+    uint32 hour = 1;
+    double amount = 2;
+    string day = 3;
+  }
+
+  bool hasError = 1;
+  repeated Rewards rewards = 2;
+  string status = 3;
+}
+
+message StakeGraphRequest {
+  uint32 idCoin = 1;
+  uint32 type = 2;
+  string datetime = 3;
+}
+
+message StakeGraphResponse {
+
+  message Rewards {
+    uint32 hour = 1;
+    double amount = 2;
+    string day = 3;
+  }
+
+  bool hasError = 1;
+  repeated Rewards rewards = 2;
+  string status = 3;
 }

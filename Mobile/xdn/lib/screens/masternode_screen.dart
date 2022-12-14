@@ -1,18 +1,17 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
-import 'package:digitalnote/bloc/stake_graph_bloc.dart';
+import 'package:digitalnote/bloc/masternode_graph_bloc.dart';
+import 'package:digitalnote/generated/phone.pb.dart';
 import 'package:digitalnote/models/MasternodeInfo.dart';
-import 'package:digitalnote/models/staking_data.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Utils.dart';
-import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/card_header.dart';
+import 'package:digitalnote/widgets/coin_mn_graph.dart';
 import 'package:digitalnote/widgets/coin_stake_graph.dart';
 import 'package:digitalnote/widgets/percent_switch_widget.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -51,7 +50,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   final GlobalKey<SlideActionState> _keyStake = GlobalKey();
   final _controller = TextEditingController();
   StreamSubscription? _fcmSubscription;
-  StakeGraphBloc? _stakeBloc;
+  MasternodeGraphBloc? _stakeBloc;
   List<FlSpot>? values = [];
 
   int endTime = 0;
@@ -69,12 +68,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   bool _hideLoad = false;
   int _countNot = 0;
   bool _awaitingNot = false;
-  double _totalCoins = 0.0;
-  double _contribution = 0.0;
   double _estimated = 0.0;
-  double _locked = 0.0;
-  double _reward = 0.0;
-  double _stakeAmount = 0.0;
   Timer? t;
   int _typeGraph = 0;
 
@@ -83,13 +77,13 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   int _pendingMasternodes = 0;
   String _amountReward = "0.0";
   int _activeNodes = 0;
-  String _averagePayrate = "00:00:00";
-  String _averateTimeStart = "00:00:00";
+  // String _averagePayrate = "00:00:00";
+  // String _averateTimeStart = "00:00:00";
   double _averagePayDay = 0.0;
   double _roi = 0.0;
-  double _price = 0.0;
-  double _free = 0.0;
-  List<int> _collateralTiers = [];
+  // double _price = 0.0;
+  // double _free = 0.0;
+  // List<int> _collateralTiers = [];
 
   double? _fee;
   double? _min;
@@ -105,7 +99,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
       if (!_paused && mounted) {
         if (_dropdownValue == 0) {
           _getBalance();
-          _stakeBloc!.fetchStakeData(_dropdownValue);
+          _stakeBloc!.fetchStakeData(0, _dropdownValue);
           // _graphByDay();
         }
       } else {
@@ -116,9 +110,9 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
       _percentageKey.currentState!.deActivate();
     });
 
-    _stakeBloc = StakeGraphBloc();
+    _stakeBloc = MasternodeGraphBloc();
     _stakeBloc!.stakeBloc();
-    _stakeBloc!.fetchStakeData(_typeGraph);
+    _stakeBloc!.fetchStakeData(0, _typeGraph);
 
     _fcmSubscription = FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       // print('Got a message whilst in the foreground!');
@@ -299,17 +293,17 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     _activeNodes = _mnInfo!.activeNodes!;
     double rev = _mnInfo!.nodeRewards!.fold(0, (previousValue, element) => previousValue + element.amount!);
     _amountReward = rev.toString();
-    List<String> partsPayrate = _mnInfo!.averagePayTime!.split(".");
-    _averagePayrate = partsPayrate[0].isEmpty ? "00:00:00" : partsPayrate[0];
-    List<String> partsStart = _mnInfo!.averageTimeToStart!.split(".");
-    _averateTimeStart = partsStart[0].isEmpty ? "00:00:00" : partsStart[0];
+    // List<String> partsPayrate = _mnInfo!.averagePayTime!.split(".");
+    // _averagePayrate = partsPayrate[0].isEmpty ? "00:00:00" : partsPayrate[0];
+    // List<String> partsStart = _mnInfo!.averageTimeToStart!.split(".");
+    // _averateTimeStart = partsStart[0].isEmpty ? "00:00:00" : partsStart[0];
     _estimated = _mnInfo!.averageRewardPerDay!;
     _staking = _mnInfo!.mnList!.isNotEmpty ? true : false;
     _collateral = _mnInfo!.collateral!;
     _averagePayDay = _mnInfo!.averagePayDay!;
     _freeMN = _mnInfo?.freeList?.length ?? 0;
     _pendingMasternodes = _mnInfo?.pendingList?.length ?? 0;
-    _collateralTiers = _mnInfo?.collateralTiers ?? [_collateral];
+    // _collateralTiers = _mnInfo?.collateralTiers ?? [_collateral];
     _roi = _mnInfo?.roi ?? 0.0;
     _hideLoad = true;
     setState(() {});
@@ -380,15 +374,17 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                               switch (index) {
                                 case 0:
                                   _typeGraph = 0;
-                                  _stakeBloc!.fetchStakeData(_dropdownValue);
+                                  _stakeBloc!.fetchStakeData(0, _dropdownValue);
                                   // _graphByDay();
                                   break;
                                 case 1:
                                   _typeGraph = 2;
-                                  _stakeBloc!.fetchStakeData(_typeGraph);
+                                  _stakeBloc!.fetchStakeData(0, _typeGraph);
                                   // _graphByMonth();
                                   break;
                                 case 2:
+                                  _typeGraph = 3;
+                                  _stakeBloc!.fetchStakeData(0, _typeGraph);
                                   // _graphByYear();
                                   break;
                               }
@@ -411,6 +407,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                             items: [
                               AppLocalizations.of(context)!.st_coins_today,
                               AppLocalizations.of(context)!.st_coins_week,
+                              AppLocalizations.of(context)!.mn_coins_year,
                             ]
                                 .asMap()
                                 .entries
@@ -438,13 +435,13 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                     child: SizedBox(
                                         height: MediaQuery.of(context).size.height * 0.2,
                                         width: MediaQuery.of(context).size.width * 0.92,
-                                        child: StreamBuilder<ApiResponse<StakingData>>(
+                                        child: StreamBuilder<ApiResponse<MasternodeGraphResponse>>(
                                             stream: _stakeBloc!.coinsListStream,
                                             builder: (context, snapshot) {
                                               if (snapshot.hasData) {
                                                 switch (snapshot.data!.status) {
                                                   case Status.completed:
-                                                    return CoinStakeGraph(
+                                                    return CoinMNGraph(
                                                       key: _graphKey,
                                                       stake: snapshot.data?.data,
                                                       type: _typeGraph,
@@ -680,7 +677,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                       Text(
                                         "${AppLocalizations.of(context)!.mn_your_mns}:",
                                         // textAlign: TextAlign.end,
-                                        style: TextStyle( fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
+                                        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
                                       ),
                                       Expanded(
                                         child: Padding(
@@ -702,82 +699,119 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                     ],
                                   ),
                                 ),
-                                if (_pendingMasternodes != 0)
+                                if (_numberNodes > 0 || _pendingMasternodes > 0)
                                   Column(
                                     children: [
-                                      const SizedBox(
-                                        height: 5.0,
-                                      ),
-                                      Opacity(
-                                        opacity: 0.6,
-                                        child: Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(top: 5.0, right: 5.0, left: 10.0),
-                                            child: Row(
+                                      if (_pendingMasternodes != 0)
+                                        Column(
+                                          children: [
+                                            Column(
                                               children: [
-                                                Text(
-                                                  "${AppLocalizations.of(context)!.mn_uncofirmed}:",
-                                                  // textAlign: TextAlign.end,
-                                                  style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
+                                                const SizedBox(
+                                                  height: 5.0,
                                                 ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(right: 4.0),
-                                                    child: AutoSizeText(
-                                                      _pendingMasternodes.toString(),
-                                                      maxLines: 1,
-                                                      minFontSize: 8.0,
-                                                      textAlign: TextAlign.end,
-                                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.white70),
+                                                Opacity(
+                                                  opacity: 0.6,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(top: 5.0, right: 5.0, left: 10.0),
+                                                      child: Row(
+                                                        children: [
+                                                          Text(
+                                                            "${AppLocalizations.of(context)!.mn_uncofirmed}:",
+                                                            // textAlign: TextAlign.end,
+                                                            style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
+                                                          ),
+                                                          Expanded(
+                                                            child: Padding(
+                                                              padding: const EdgeInsets.only(right: 4.0),
+                                                              child: AutoSizeText(
+                                                                _pendingMasternodes.toString(),
+                                                                maxLines: 1,
+                                                                minFontSize: 8.0,
+                                                                textAlign: TextAlign.end,
+                                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.white70),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            _pendingMasternodes == 1 ? "MN" : "MNs",
+                                                            // textAlign: TextAlign.end,
+                                                            style: const TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                                Text(
-                                                  _pendingMasternodes == 1 ? "MN" : "MNs",
-                                                  // textAlign: TextAlign.end,
-                                                  style: const TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
-                                                ),
                                               ],
                                             ),
-                                          ),
+                                          ],
                                         ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              "${AppLocalizations.of(context)!.mn_reward}:",
+                                              // textAlign: TextAlign.end,
+                                              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 4.0),
+                                                child: AutoSizeText(
+                                                  _formatPriceString(_amountReward),
+                                                  maxLines: 1,
+                                                  minFontSize: 8.0,
+                                                  textAlign: TextAlign.end,
+                                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                                ),
+                                              ),
+                                            ),
+                                            const Text(
+                                              "XDN",
+                                              // textAlign: TextAlign.end,
+                                              style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              "${AppLocalizations.of(context)!.st_estimated}:",
+                                              // textAlign: TextAlign.end,
+                                              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 4.0),
+                                                child: AutoSizeText(
+                                                  Utils.formatBalance(_estimated),
+                                                  maxLines: 1,
+                                                  minFontSize: 8.0,
+                                                  textAlign: TextAlign.end,
+                                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                                ),
+                                              ),
+                                            ),
+                                            const Text(
+                                              "XDN",
+                                              // textAlign: TextAlign.end,
+                                              style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 10,
                                       ),
                                     ],
                                   ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          "${AppLocalizations.of(context)!.mn_reward}:",
-                                          // textAlign: TextAlign.end,
-                                          style:
-                                          TextStyle(fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
-                                        ),
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(right: 4.0),
-                                            child: AutoSizeText(
-                                              _formatPriceString(_amountReward),
-                                              maxLines: 1,
-                                              minFontSize: 8.0,
-                                              textAlign: TextAlign.end,
-                                              style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white70),
-                                            ),
-                                          ),
-                                        ),
-                                        const Text(
-                                          "XDN",
-                                          // textAlign: TextAlign.end,
-                                          style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
                                 const Padding(
                                   padding: EdgeInsets.only(left: 15.0, right: 15.0),
                                   child: Divider(
@@ -860,8 +894,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
-                                          child: AutoSizeText("APY",
-                                              minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                          child: AutoSizeText("APY", minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
                                         ),
                                         Text(
                                           "${_roi.toStringAsFixed(2)} %",

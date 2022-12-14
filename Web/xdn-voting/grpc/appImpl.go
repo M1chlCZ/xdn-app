@@ -3,8 +3,11 @@ package grpc
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
+	"gopkg.in/errgo.v2/errors"
+	"time"
 	"xdn-voting/database"
 	"xdn-voting/grpcModels"
 	"xdn-voting/utils"
@@ -34,9 +37,128 @@ func (s *ServerApp) UserPermission(ctx context.Context, _ *grpcModels.UserPermis
 	userID := uID[0]
 
 	value := database.ReadValueEmpty[sql.NullBool]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
-	utils.ReportMessage(fmt.Sprintf("UserPermission %v", value))
 	if value.Valid {
 		return &grpcModels.UserPermissionResponse{MnPermission: value.Bool}, nil
 	}
 	return &grpcModels.UserPermissionResponse{MnPermission: false}, nil
+}
+
+func (s *ServerApp) MasternodeGraph(ctx context.Context, request *grpcModels.MasternodeGraphRequest) (*grpcModels.MasternodeGraphResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("no metadata")
+	}
+	uID := md.Get("user_id")
+	userID := uID[0]
+	var rows *sqlx.Rows
+	var errDB error
+	var sqlQuery string
+	createdFormat := "2006-01-02 15:04:05"
+	timez := request.Datetime
+	golangDateTime, err := time.Parse(createdFormat, timez)
+	if err != nil {
+		return nil, err
+	}
+	//golangDateTime.Format("2006-01-02 15:04:05")
+	year, month, _ := golangDateTime.Date()
+
+	if request.Type == 0 {
+		sqlQuery = "SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_masternode WHERE datetime BETWEEN ? AND date_sub(NOW(), INTERVAL 5 MINUTE) AND idCoin = ? AND idUser = ? AND credited = 0 GROUP BY hour, day " +
+			"ORDER BY hour"
+		//utils.ReportMessage(fmt.Sprintf("SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_masternode WHERE datetime BETWEEN %s AND date_add(%s, INTERVAL 24 HOUR) AND idCoin = %d AND idUser = %s GROUP BY hour, day ORDER BY hour", timez, timez, stakeReq.IdCoin, userID))
+		rows, errDB = database.ReadSql(sqlQuery, timez, request.IdCoin, userID)
+	} else if request.Type == 1 {
+		sqlQuery = "SELECT date(datetime) as day, sum(amount) AS amount FROM  payouts_masternode WHERE datetime BETWEEN  date_sub(?, INTERVAL 1 WEEK) AND ? AND idCoin = ? AND idUser = ? GROUP BY day"
+		rows, errDB = database.ReadSql(sqlQuery, timez, timez, request.IdCoin, userID)
+	} else if request.Type == 2 {
+		sqlQuery = "SELECT DATE(datetime) as day, SUM(`amount`) AS amount FROM payouts_masternode WHERE idUser =? AND idCoin =? AND YEAR(date(datetime))=? AND MONTH(date(datetime))=? GROUP BY DATE(datetime)"
+		rows, errDB = database.ReadSql(sqlQuery, userID, request.IdCoin, year, month)
+	} else if request.Type == 3 {
+		sqlQuery = "SELECT ANY_VALUE(DATE_FORMAT(datetime,'%Y-%m')) AS day, SUM(`amount`) AS amount FROM payouts_masternode WHERE idUser = ? AND idCoin = ? AND YEAR(date(datetime))= ? GROUP BY MONTH (date(datetime))"
+		rows, errDB = database.ReadSql(sqlQuery, userID, request.IdCoin, year)
+	}
+
+	if errDB != nil {
+		return nil, errDB
+	}
+
+	type StakeGetEntry struct {
+		Hours  int64   `db:"hour" json:"hour default 0"`
+		Amount float64 `db:"amount" json:"amount"`
+		Day    string  `db:"day" json:"day"`
+	}
+
+	ra := database.ParseArrayStruct[StakeGetEntry](rows)
+	returnArray := make([]*grpcModels.MasternodeGraphResponse_Rewards, 0)
+	for _, v := range ra {
+		returnArray = append(returnArray, &grpcModels.MasternodeGraphResponse_Rewards{
+			Amount: v.Amount,
+			Day:    v.Day,
+			Hour:   uint32(v.Hours),
+		})
+	}
+	return &grpcModels.MasternodeGraphResponse{
+		HasError: false,
+		Rewards:  returnArray,
+		Status:   utils.OK,
+	}, nil
+}
+
+func (s *ServerApp) StakeGraph(ctx context.Context, request *grpcModels.StakeGraphRequest) (*grpcModels.StakeGraphResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("no metadata")
+	}
+	uID := md.Get("user_id")
+	userID := uID[0]
+	var rows *sqlx.Rows
+	var errDB error
+	var sqlQuery string
+	createdFormat := "2006-01-02 15:04:05"
+	timez := request.Datetime
+	golangDateTime, err := time.Parse(createdFormat, timez)
+	if err != nil {
+		return nil, err
+	}
+	//golangDateTime.Format("2006-01-02 15:04:05")
+	year, month, _ := golangDateTime.Date()
+
+	if request.Type == 0 {
+		sqlQuery = `SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN ? AND date_add(?, INTERVAL 24 HOUR) AND idUser = ? AND credited = 0 GROUP BY hour, day ORDER BY hour`
+		rows, errDB = database.ReadSql(sqlQuery, timez, timez, userID)
+	} else if request.Type == 1 {
+		sqlQuery = "SELECT date(datetime) as day, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN  date_sub(?, INTERVAL 1 WEEK) AND ? AND idUser = ? GROUP BY day"
+		rows, errDB = database.ReadSql(sqlQuery, timez, timez, userID)
+	} else if request.Type == 2 {
+		sqlQuery = "SELECT DATE(datetime) as day, SUM(`amount`) AS amount FROM payouts_stake WHERE idUser =? AND YEAR(date(datetime))=? AND MONTH(date(datetime))=? GROUP BY DATE(datetime)"
+		rows, errDB = database.ReadSql(sqlQuery, userID, year, month)
+	} else if request.Type == 3 {
+		sqlQuery = "SELECT ANY_VALUE(DATE_FORMAT(datetime,'%Y-%m')) AS day, SUM(`amount`) AS amount FROM payouts_stake WHERE idUser = ? AND YEAR(date(datetime))= ? GROUP BY MONTH (date(datetime))"
+		rows, errDB = database.ReadSql(sqlQuery, userID, year)
+	}
+
+	if errDB != nil {
+		return nil, errDB
+	}
+
+	type StakeGetEntry struct {
+		Hours  int64   `db:"hour" json:"hour default 0"`
+		Amount float64 `db:"amount" json:"amount"`
+		Day    string  `db:"day" json:"day"`
+	}
+
+	ra := database.ParseArrayStruct[StakeGetEntry](rows)
+	returnArray := make([]*grpcModels.StakeGraphResponse_Rewards, 0)
+	for _, v := range ra {
+		returnArray = append(returnArray, &grpcModels.StakeGraphResponse_Rewards{
+			Amount: v.Amount,
+			Day:    v.Day,
+			Hour:   uint32(v.Hours),
+		})
+	}
+	return &grpcModels.StakeGraphResponse{
+		HasError: false,
+		Rewards:  returnArray,
+		Status:   utils.OK,
+	}, nil
 }

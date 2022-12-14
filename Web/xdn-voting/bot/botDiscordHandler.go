@@ -742,7 +742,7 @@ func thunderDiscord(from *discordgo.MessageCreate) (string, error, ThunderReturn
 		UsrListTelegram: telegramFinalSlice,
 		Amount:          amount,
 		AddrFrom:        addrTo.String,
-		Username:        from.Author.ID,
+		Username:        from.Author.Username,
 		AddrSend:        addrFrom.String,
 	}
 }
@@ -796,6 +796,17 @@ func finishThunderDiscord(data ThunderReturnStruct) (string, error) {
 
 func AnnouncementDiscord() {
 	LoadPictures()
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	if lastPost.Id != 0 {
+		err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+
+	}
 	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 0 ORDER BY RAND() LIMIT 1")
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
@@ -866,6 +877,17 @@ func AnnouncementDiscord() {
 
 func AnnouncementNFTDiscord() {
 	LoadPictures()
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 1) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	if lastPost.Id != 0 {
+		err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+
+	}
 	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 1 ORDER BY RAND() LIMIT 1")
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
@@ -910,7 +932,7 @@ func AnnouncementNFTDiscord() {
 
 func GiftDiscordBot() {
 	LoadPictures()
-	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel > 0 ORDER BY id DESC LIMIT 1")
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 	}
