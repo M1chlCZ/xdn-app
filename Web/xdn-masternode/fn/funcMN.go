@@ -66,42 +66,60 @@ func StartMasternode(nodeID int) {
 		go Snap(daemon.Folder, daemon.CoinID)
 		return
 	}
-	txid = ing[0].Txhash
-	v, _ := strconv.Atoi(ing[0].Outputidx)
-	vout = v
-	//} else {
-	//var ing models_json.MasternodeOutputs
-	//mOut, err := coind.WrapDaemon(*daemon, 15, "getmasternodeoutputs")
-	//if err != nil {
-	//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s", daemon.Folder)).Output()
-	//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/wallet.dat", daemon.Folder)).Output()
-	//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user start %s", daemon.Folder)).Output()
-	//	time.Sleep(60 * time.Second)
-	//	priv, err := privateKey(daemon.NodeID)
-	//	if err != nil {
-	//		utils.WrapErrorLog(err.Error())
-	//	}
-	//	utils.ReportMessage("Importing key...")
-	//	utils.ReportMessage(priv.Key)
-	//	_, err = coind.WrapDaemon(*daemon, 5, "importprivkey", priv.Key)
-	//	if err != nil {
-	//		utils.WrapErrorLog(err.Error())
-	//	}
-	//	mOut, err = coind.WrapDaemon(*daemon, 15, "getmasternodeoutputs")
-	//}
-	//err = json.Unmarshal(mOut, &ing)
-	//if err != nil {
-	//	utils.ReportMessage("Error getting outputs")
-	//	go Snap(daemon.Folder, daemon.CoinID)
-	//	return
-	//}
-	//txid = ing[0].Txhash
-	//vout = ing[0].Outputidx
-	//}
+	if len(ing) != 0 {
+		txid = ing[0].Txhash
+		v, _ := strconv.Atoi(ing[0].Outputidx)
+		vout = v
+		//} else {
+		//var ing models_json.MasternodeOutputs
+		//mOut, err := coind.WrapDaemon(*daemon, 15, "getmasternodeoutputs")
+		//if err != nil {
+		//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s", daemon.Folder)).Output()
+		//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/wallet.dat", daemon.Folder)).Output()
+		//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user start %s", daemon.Folder)).Output()
+		//	time.Sleep(60 * time.Second)
+		//	priv, err := privateKey(daemon.NodeID)
+		//	if err != nil {
+		//		utils.WrapErrorLog(err.Error())
+		//	}
+		//	utils.ReportMessage("Importing key...")
+		//	utils.ReportMessage(priv.Key)
+		//	_, err = coind.WrapDaemon(*daemon, 5, "importprivkey", priv.Key)
+		//	if err != nil {
+		//		utils.WrapErrorLog(err.Error())
+		//	}
+		//	mOut, err = coind.WrapDaemon(*daemon, 15, "getmasternodeoutputs")
+		//}
+		//err = json.Unmarshal(mOut, &ing)
+		//if err != nil {
+		//	utils.ReportMessage("Error getting outputs")
+		//	go Snap(daemon.Folder, daemon.CoinID)
+		//	return
+		//}
+		//txid = ing[0].Txhash
+		//vout = ing[0].Outputidx
+		//}
 
-	//REEdundancy
-	if len(txid) == 0 {
-		utils.ReportMessage("No masternode output")
+		//REEdundancy
+		if len(txid) == 0 {
+			utils.ReportMessage("No masternode output")
+			mOut, err := coind.WrapDaemon(*daemon, 15, "masternode", "outputs")
+			if err != nil {
+				go Snap(daemon.Folder, daemon.CoinID)
+				return
+			}
+			err = json.Unmarshal(mOut, &ing)
+			if err != nil {
+				utils.ReportMessage("Error getting outputs")
+				go Snap(daemon.Folder, daemon.CoinID)
+				return
+			}
+			txid = ing[0].Txhash
+			v, _ := strconv.Atoi(ing[0].Outputidx)
+			vout = v
+		}
+	} else {
+		utils.ReportMessage("! No masternode output !")
 		mOut, err := coind.WrapDaemon(*daemon, 15, "masternode", "outputs")
 		if err != nil {
 			go Snap(daemon.Folder, daemon.CoinID)
@@ -200,7 +218,7 @@ func StartMasternode(nodeID int) {
 func Snap(folder string, coinID int) {
 	utils.ReportMessage(fmt.Sprintf("Snapping active %s", folder))
 	go func(folder string) {
-		_, errScript := exec.Command("bash", "-c", fmt.Sprintf("$HOME/Snap %s", folder)).Output()
+		_, errScript := exec.Command("bash", "-c", fmt.Sprintf("$HOME/snap %s", folder)).Output()
 		if errScript != nil {
 			utils.ReportMessage(errScript.Error())
 			return
@@ -533,7 +551,7 @@ func snapInactive(folder string, coinID int) {
 	utils.ReportMessage(fmt.Sprintf("Snapping %s", folder))
 	if coinID == 2 {
 
-		_, errScript := exec.Command("bash", "-c", fmt.Sprintf("$HOME/Snap %s", folder)).Output()
+		_, errScript := exec.Command("bash", "-c", fmt.Sprintf("$HOME/snap %s", folder)).Output()
 		if errScript != nil {
 			utils.ReportMessage(errScript.Error())
 			return

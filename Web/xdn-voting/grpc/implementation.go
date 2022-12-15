@@ -233,3 +233,21 @@ func (s *Server) Ping(_ context.Context, request *grpcModels.PingRequest) (*grpc
 	utils.ReportMessage(fmt.Sprintf("! Ping from %d !", request.NodeID))
 	return &grpcModels.PingResponse{Code: 200}, nil
 }
+
+func (s *Server) RemoveMasternode(_ context.Context, request *grpcModels.RemoveMasternodeRequest) (*grpcModels.RemoveMasternodeResponse, error) {
+	active := database.ReadValueEmpty[bool]("SELECT active FROM mn_clients WHERE id = ?", request.NodeID)
+	if active == true {
+		return &grpcModels.RemoveMasternodeResponse{Code: 400}, errors.New("masternode is active")
+	}
+	locked := database.ReadValueEmpty[bool]("SELECT locked FROM mn_clients WHERE id = ?", request.NodeID)
+	if locked == true {
+		return &grpcModels.RemoveMasternodeResponse{Code: 400}, errors.New("masternode is active")
+	}
+
+	_, err := database.InsertSQl("DELETE FROM mn_clients WHERE id = ?", request.NodeID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return &grpcModels.RemoveMasternodeResponse{Code: 400}, err
+	}
+	return &grpcModels.RemoveMasternodeResponse{Code: 200}, nil
+}

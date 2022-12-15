@@ -391,6 +391,7 @@ func StartTelegramBot() {
 						Running = false
 						continue
 					} else {
+						mID := database.ReadValueEmpty[int64]("SELECT idMessage FROM bot_post_activity WHERE idChannel = ? ORDER BY id DESC LIMIT 1", update.CallbackQuery.Message.Chat.ID)
 						addressTo := database.ReadValueEmpty[string]("SELECT addr FROM users WHERE id = ?", idU)
 						addressFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
 						if !addressFrom.Valid {
@@ -398,7 +399,7 @@ func StartTelegramBot() {
 							Running = false
 							continue
 						}
-						dl := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
+						dl := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, int(mID))
 						_, err = bot.Send(dl)
 						if err != nil {
 							utils.ReportMessage(err.Error())

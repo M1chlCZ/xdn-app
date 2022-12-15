@@ -8,6 +8,7 @@ import 'package:digitalnote/models/MasternodeInfo.dart';
 import 'package:digitalnote/models/MasternodeLock.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/screens/mn_manage_screen.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/coin_mn_graph.dart';
@@ -760,28 +761,36 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                 const SizedBox(
                                   height: 10,
                                 ),
-                                Opacity(
-                                  opacity: 0.7,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: AutoSizeText(AppLocalizations.of(context)!.mn_day_reward,
-                                              minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                Visibility(
+                                  visible: _activeNodes == 0,
+                                  child: Column(
+                                    children: [
+                                      Opacity(
+                                        opacity: 0.7,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: AutoSizeText(AppLocalizations.of(context)!.mn_day_reward,
+                                                    minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                              ),
+                                              Text(
+                                                "${Utils.formatBalance(_averagePayDay)} XDN",
+                                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                              ),
+                                              const SizedBox(
+                                                height: 10,
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        Text(
-                                          "${Utils.formatBalance(_averagePayDay)} XDN",
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
+
                                 Opacity(
                                   opacity: 0.7,
                                   child: Padding(
@@ -878,7 +887,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                               ),
                             ),
                             const SizedBox(
-                              height: 5.0,
+                              height: 10.0,
                             ),
                             Align(
                               alignment: Alignment.centerLeft,
@@ -987,7 +996,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                     width: MediaQuery.of(context).size.width * 0.95,
                     child: TextButton(
                       onPressed: () {
-                        _unstakeCoins(0);
+                        Navigator.pushNamed(context, MasternodeManageScreen.route, arguments: _mnInfo);
                         // Dialogs.openUserQR(context);
                       },
                       style: ButtonStyle(

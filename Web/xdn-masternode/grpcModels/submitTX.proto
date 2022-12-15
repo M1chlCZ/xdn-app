@@ -43,6 +43,7 @@ service RegisterMasternodeService {
   rpc LastSeen (LastSeenRequest) returns (LastSeenResponse) {}
   rpc Ping (PingRequest) returns (PingResponse) {}
   rpc CheckMasternode (CheckMasternodeRequest) returns (CheckMasternodeResponse) {}
+  rpc RemoveMasternode (RemoveMasternodeRequest) returns (RemoveMasternodeResponse) {}
 }
 
 message RegisterMasternodeRequest {
@@ -143,5 +144,13 @@ message CheckMasternodeRequest {
 }
 
 message CheckMasternodeResponse {
+  uint32 code = 1;
+}
+
+message RemoveMasternodeRequest {
+  uint32 nodeID = 1;
+}
+
+message RemoveMasternodeResponse {
   uint32 code = 1;
 }

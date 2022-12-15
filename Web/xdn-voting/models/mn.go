@@ -135,3 +135,7 @@ type SetMN struct {
 	CoinID int64 `json:"idCoin"`
 	NodeID int   `json:"node_id"`
 }
+
+type MNWithStruct struct {
+	IdNode int `json:"idNode"`
+}

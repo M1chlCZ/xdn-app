@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:digitalnote/models/MasternodeInfo.dart';
 import 'package:digitalnote/models/MessageGroup.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
@@ -8,6 +9,7 @@ import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
+import 'package:digitalnote/screens/mn_manage_screen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
@@ -362,6 +364,13 @@ class MyAppState extends State<MyApp> {
         return MaterialPageRoute(builder: (_) => const MasternodeScreen());
       case MessageScreen.route:
         return MaterialPageRoute(builder: (_) => const MessageScreen());
+      case MasternodeManageScreen.route:
+        Object? args = settings.arguments;
+        MasternodeInfo mn = args as MasternodeInfo;
+        return MaterialPageRoute(
+            builder: (_) => MasternodeManageScreen(
+                  mnInfo: mn,
+                ));
       case SettingsScreen.route:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case SecurityScreen.route:

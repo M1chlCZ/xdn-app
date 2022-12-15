@@ -13,7 +13,6 @@ import (
 	"xdn-masternode/grpcModels"
 )
 
-
 func loadTLSCredentials() (credentials.TransportCredentials, error) {
 	// Load certificate of the CA who signed server's certificate
 	pemServerCA, err := os.ReadFile("./.cert/ca-cert.pem")
@@ -28,7 +27,7 @@ func loadTLSCredentials() (credentials.TransportCredentials, error) {
 
 	// Create the credentials and return it
 	config := &tls.Config{
-		RootCAs:      certPool,
+		RootCAs: certPool,
 	}
 
 	return credentials.NewTLS(config), nil
@@ -160,4 +159,20 @@ func Ping(tx *grpcModels.PingRequest) (*grpcModels.PingResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return c.Ping(ctx, tx)
+}
+
+func RemoveMasternode(tx *grpcModels.RemoveMasternodeRequest) (*grpcModels.RemoveMasternodeResponse, error) {
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer grpcCon.Close()
+	c := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return c.RemoveMasternode(ctx, tx)
 }

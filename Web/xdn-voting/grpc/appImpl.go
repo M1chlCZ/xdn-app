@@ -51,6 +51,11 @@ func (s *ServerApp) MasternodeGraph(ctx context.Context, request *grpcModels.Mas
 	}
 	uID := md.Get("user_id")
 	userID := uID[0]
+
+	//if userID == "1" {
+	//	userID = "0"
+	//}
+
 	var rows *sqlx.Rows
 	var errDB error
 	var sqlQuery string
@@ -135,7 +140,7 @@ func (s *ServerApp) StakeGraph(ctx context.Context, request *grpcModels.StakeGra
 	if errDB != nil {
 		return nil, errDB
 	}
-	
+
 	ra := database.ParseArrayStruct[models.StakeGetEntry](rows)
 	returnArray := make([]*grpcModels.StakeGraphResponse_Rewards, 0)
 	for _, v := range ra {

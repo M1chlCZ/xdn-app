@@ -89,7 +89,7 @@ func ReportError(c *fiber.Ctx, err string, statusCode int) error {
 	// json.NewEncoder(w).Encode(err)
 }
 
-func ReportOK(w http.ResponseWriter, err string, statusCode int) {
+func ReportOK(c *fiber.Ctx, err string, statusCode int) error {
 	json := simplejson.New()
 	json.Set("message", err)
 	json.Set(STATUS, OK)
@@ -100,11 +100,9 @@ func ReportOK(w http.ResponseWriter, err string, statusCode int) {
 		log.Println(err)
 	}
 	ReportMessage(err)
-	w.WriteHeader(statusCode)
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(payload)
+
 	// json.NewEncoder(w).Encode(err)
-	return
+	return c.Status(statusCode).Send(payload)
 }
 
 func ReportErrorSilent(c *fiber.Ctx, err string, statusCode int) error {

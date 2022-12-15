@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/bitly/go-simplejson"
 	"github.com/go-gomail/gomail"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/gofiber/fiber/v2/utils"
@@ -106,6 +107,7 @@ func main() {
 	app.Post("api/v1/masternode/lock", utils.Authorized(lockMN))
 	app.Post("api/v1/masternode/unlock", utils.Authorized(unlockMN))
 	app.Post("api/v1/masternode/start", utils.Authorized(startMN))
+	app.Post("api/v1/masternode/withdraw", utils.Authorized(withdrawMN))
 
 	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
@@ -209,7 +211,87 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
-	// Start server with https/ssl enabled on http://localhost:443
+}
+
+func withdrawMN(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	var stakeReq models.MNWithStruct
+	errJson := c.BodyParser(&stakeReq)
+	if errJson != nil {
+		return utils.ReportError(c, "JSON Request Body empty", http.StatusBadRequest)
+
+	}
+
+	userNode, _ := database.ReadValue[int64]("SELECT COUNT(*) FROM users_masternode WHERE idUser = ? AND idNode = ? AND active = 1", userID, stakeReq.IdNode)
+	if userNode == 0 {
+		return utils.ReportError(c, "Selected node does not belong to the user", http.StatusConflict)
+
+	}
+
+	dateStarted, err := database.ReadValue[sql.NullTime]("SELECT dateStart FROM users_masternode WHERE idUser = ? AND idNode = ? AND active = 1", userID, stakeReq.IdNode)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+
+	}
+
+	if dateStarted.Valid == false {
+		return utils.ReportError(c, "Coins are still locked", http.StatusConflict)
+	}
+
+	dateChanged := dateStarted.Time.UTC().UnixMilli()
+	dateNow := time.Now().UnixMilli()
+	dateDiff := dateNow - dateChanged
+
+	if dateDiff < 604800000 {
+		return utils.ReportError(c, "Coins are locked for week", http.StatusConflict)
+	}
+
+	ur, errCrypt := database.ReadValue[string]("SELECT node_ip FROM masternode_clients WHERE id = ?", stakeReq.IdNode)
+	coinID, errCrypt := database.ReadValue[string]("SELECT coin_id FROM masternode_clients WHERE id = ?", stakeReq.IdNode)
+	if errCrypt != nil {
+		utils.ReportMessage("1")
+		return utils.ReportError(c, errCrypt.Error(), http.StatusInternalServerError)
+
+		//return nil, "", errCrypt
+	}
+
+	//var amount float64
+
+	addr, errCrypt := database.ReadValue[string]("SELECT addr FROM deposit_addr WHERE idUser = ? and idCoin = ?", userID, coinID)
+	if errCrypt != nil {
+		utils.ReportMessage("3")
+		return utils.ReportError(c, errCrypt.Error(), http.StatusInternalServerError)
+
+	}
+	str := &grpcModels.WithdrawRequest{}
+	str.NodeID = uint32(stakeReq.IdNode)
+	str.Amount = 1.0
+	str.Deposit = addr
+	str.Type = 1
+
+	creds, err := grpcModels.LoadTLSCredentials()
+	if err != nil {
+
+	}
+
+	grpcCon, err := gpc.Dial(fmt.Sprintf("%s:6810", ur), gpc.WithTransportCredentials(creds))
+	if err != nil {
+	}
+	cs := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+	resp, err := cs.Withdraw(context.Background(), str)
+	if err != nil {
+		return utils.ReportError(c, "cannot dial x: "+err.Error(), http.StatusInternalServerError)
+	}
+
+	if resp.Code == 200 {
+		utils.ReportMessage("Withdraw success")
+	}
+
+	utils.ReportMessage(fmt.Sprintf(" |=> Full Withdrawal of MN id: %d by UserID: %s <=| ", stakeReq.IdNode, userID))
+	j := simplejson.New()
+	j.Set(utils.STATUS, utils.OK)
+	j.Set(utils.ERROR, false)
+	return c.Status(fiber.StatusOK).JSON(j)
 }
 
 func startMN(c *fiber.Ctx) error {
