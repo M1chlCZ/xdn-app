@@ -488,7 +488,7 @@ packages:
       name: flutter_secure_storage
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "7.0.0"
+    version: "7.0.1"
   flutter_secure_storage_linux:
     dependency: transitive
     description:
@@ -1245,7 +1245,7 @@ packages:
       name: walletconnect_qrcode_modal_dart
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.0"
+    version: "0.1.1"
   web3dart:
     dependency: "direct main"
     description:

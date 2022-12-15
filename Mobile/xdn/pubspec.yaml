@@ -14,7 +14,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   http: ^0.13.5
-  flutter_secure_storage: ^7.0.0
+  flutter_secure_storage: ^7.0.1
   flutter_local_notifications: ^12.0.4
   firebase_messaging: any
   firebase_core: any
@@ -49,7 +49,7 @@ dependencies:
   jiffy: ^5.0.0
   permission_handler: ^10.2.0
   local_auth: ^2.1.2
-  walletconnect_qrcode_modal_dart: ^0.1.0
+  walletconnect_qrcode_modal_dart: ^0.1.1
   web3dart: ^2.5.1
   decimal: any
   rxdart: ^0.27.7

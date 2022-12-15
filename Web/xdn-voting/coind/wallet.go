@@ -47,23 +47,19 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 			}
 		}
 	}
-
+	fee := 0.01
 	inputs := make([]models.ListUnspent, 0)
 	inputsAmount := 0.0
 	for _, spent := range myUnspent {
 		inputsAmount += spent.Amount
 		inputs = append(inputs, spent)
-		if inputsAmount > amount {
+		if inputsAmount > (amount + fee) {
 			break
 		}
 	}
 
-	//inputsCount := len(inputs)
-	fee := 0.01
 	amountSend := amount - fee
 	txBack := inputsAmount - amountSend
-
-	//g
 
 	var firstParam []models.RawTxArray
 	for _, input := range inputs {

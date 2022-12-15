@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:digitalnote/generated/phone.pb.dart';
 import 'package:digitalnote/models/StakeData.dart';
-import 'package:digitalnote/models/staking_data.dart';
 import 'package:digitalnote/support/duration_extension.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
 
 class CoinStakeGraph extends StatefulWidget {
-  final StakingData? stake;
+  final StakeGraphResponse? stake;
   final int type;
   final Function(bool touch) blockTouch;
 
@@ -25,7 +25,7 @@ class CoinStakeGraph extends StatefulWidget {
 class CoinStakeGraphState extends State<CoinStakeGraph> {
   double _leftTitlesInterval = 1;
   var _touch = false;
-  StakingData? _stakes;
+  StakeGraphResponse? _stakes;
   int _dropdownValue = 0;
   String? _date;
   String? _locale;
@@ -93,10 +93,10 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
       List<StakeData>? data;
       if (_stakes != null) {
         var amount = 0.0;
-        List<StakeData>? dataPrep = List.generate(_stakes!.stakes!.length, (i) {
+        List<StakeData>? dataPrep = List.generate(_stakes!.rewards.length, (i) {
           return StakeData(
-            date: _dateParse(_stakes!.stakes![i].day!, _stakes!.stakes![i].hour!, _dropdownValue),
-            amount: _stakes!.stakes![i].amount!,
+            date: _dateParse(_stakes!.rewards[i].day, _stakes!.rewards[i].hour, _dropdownValue),
+            amount: _stakes!.rewards[i].amount,
           );
         });
         dataPrep.sort((a, b) => a.date.compareTo(b.date));

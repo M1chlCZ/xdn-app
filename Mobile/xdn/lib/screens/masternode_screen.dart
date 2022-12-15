@@ -1,31 +1,26 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:digitalnote/bloc/masternode_graph_bloc.dart';
 import 'package:digitalnote/generated/phone.pb.dart';
 import 'package:digitalnote/models/MasternodeInfo.dart';
+import 'package:digitalnote/models/MasternodeLock.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Utils.dart';
-import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/coin_mn_graph.dart';
 import 'package:digitalnote/widgets/coin_stake_graph.dart';
-import 'package:digitalnote/widgets/percent_switch_widget.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_countdown_timer/current_remaining_time.dart';
-import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:slide_to_act/slide_to_act.dart';
 
-import '../globals.dart' as globals;
 import '../support/ColorScheme.dart';
 import '../support/Dialogs.dart';
 import '../support/LifecycleWatcherState.dart';
@@ -46,9 +41,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   var _dropdownValue = 0;
   Future? _getBalanceFuture;
   final _graphKey = GlobalKey<CoinStakeGraphState>();
-  final _percentageKey = GlobalKey<PercentSwitchWidgetState>();
   final GlobalKey<SlideActionState> _keyStake = GlobalKey();
-  final _controller = TextEditingController();
   StreamSubscription? _fcmSubscription;
   MasternodeGraphBloc? _stakeBloc;
   List<FlSpot>? values = [];
@@ -77,10 +70,12 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   int _pendingMasternodes = 0;
   String _amountReward = "0.0";
   int _activeNodes = 0;
+
   // String _averagePayrate = "00:00:00";
-  // String _averateTimeStart = "00:00:00";
+  String _averateTimeStart = "00:00:00";
   double _averagePayDay = 0.0;
   double _roi = 0.0;
+
   // double _price = 0.0;
   // double _free = 0.0;
   // List<int> _collateralTiers = [];
@@ -94,7 +89,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   void initState() {
     super.initState();
     _getBalance();
-    _checkCountdown();
     t = Timer.periodic(const Duration(minutes: 1), (Timer t) {
       if (!_paused && mounted) {
         if (_dropdownValue == 0) {
@@ -105,9 +99,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
       } else {
         t.cancel();
       }
-    });
-    _controller.addListener(() {
-      _percentageKey.currentState!.deActivate();
     });
 
     _stakeBloc = MasternodeGraphBloc();
@@ -167,11 +158,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     }
   }
 
-  _changePercentage(double d) {
-    _controller.text = _formatPriceString(((double.parse(_balance)) * d).toString());
-    setState(() {});
-  }
-
   String _formatPriceString(String d) {
     try {
       var split = d.toString().split('.');
@@ -184,69 +170,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
       }
     } catch (e) {
       return "0";
-    }
-  }
-
-  void _sendStakeCoins(String amount) async {
-    try {
-      double amnt = double.parse(amount) - 0.01;
-      if (amnt == 0) {
-        _keyStake.currentState!.reset();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.amount_empty);
-      } else if (double.parse(_balance) < double.parse(amount)) {
-        _keyStake.currentState!.reset();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_insufficient);
-      } else if (amnt < 0) {
-        _keyStake.currentState!.reset();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_in_fees);
-      } else {
-        Dialogs.openWaitBox(context);
-
-        _serverStatus = await NetInterface.sendStakeCoins(amnt.toString());
-        if (_serverStatus == 2) {
-          if (mounted) {
-            _keyStake.currentState!.reset();
-            Navigator.of(context).pop();
-            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_cannot_stake);
-          }
-          return;
-        } else if (_serverStatus == 4) {
-          if (mounted) {
-            _keyStake.currentState!.reset();
-            Navigator.of(context).pop();
-            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_not_balance);
-          }
-          return;
-        }
-        var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
-        SecureStorage.write(key: globals.COUNTDOWN, value: endTime.toString());
-        setState(() {
-          endTime = endTime;
-          FocusScope.of(context).unfocus();
-        });
-        _awaitingNot = true;
-        _controller.clear();
-
-        Future.delayed(const Duration(milliseconds: 1000), () {
-          if (_awaitingNot) {
-            setState(() {
-              _awaitingNot = false;
-              _countNot = 0;
-              _getBalance();
-              // Navigator.of(context).pop();
-            });
-            Navigator.of(context).pop();
-            _keyStake.currentState!.reset();
-            Future.delayed(const Duration(milliseconds: 50), () {
-              FocusScope.of(context).unfocus();
-            });
-          }
-        });
-      }
-    } catch (e) {
-      Navigator.of(context).pop();
-      _keyStake.currentState!.reset();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.amount_empty);
     }
   }
 
@@ -286,7 +209,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
 
   Future<void> _getMasternodeDetails() async {
     ComInterface interface = ComInterface();
-    var res = await interface.get("/masternode/info", debug: true, serverType: ComInterface.serverGoAPI, request: {});
+    var res = await interface.get("/masternode/info", debug: false, serverType: ComInterface.serverGoAPI, request: {});
     _mnInfo = MasternodeInfo.fromJson(res);
     if (_mnInfo == null || _mnInfo!.hasError == true) return;
     _numberNodes = _mnInfo?.mnList?.length ?? 0;
@@ -295,8 +218,8 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     _amountReward = rev.toString();
     // List<String> partsPayrate = _mnInfo!.averagePayTime!.split(".");
     // _averagePayrate = partsPayrate[0].isEmpty ? "00:00:00" : partsPayrate[0];
-    // List<String> partsStart = _mnInfo!.averageTimeToStart!.split(".");
-    // _averateTimeStart = partsStart[0].isEmpty ? "00:00:00" : partsStart[0];
+    List<String> partsStart = _mnInfo!.averageTimeToStart!.split(".");
+    _averateTimeStart = partsStart[0].isEmpty ? "00:00:00" : partsStart[0];
     _estimated = _mnInfo!.averageRewardPerDay!;
     _staking = _mnInfo!.mnList!.isNotEmpty ? true : false;
     _collateral = _mnInfo!.collateral!;
@@ -307,33 +230,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     _roi = _mnInfo?.roi ?? 0.0;
     _hideLoad = true;
     setState(() {});
-  }
-
-  double _dp(double val, int places) {
-    num mod = pow(10.0, places);
-    return ((val * mod).round().toDouble() / mod);
-  }
-
-  void _checkCountdown() async {
-    var countDown = await SecureStorage.read(key: globals.COUNTDOWN);
-    if (countDown != null) {
-      int nowDate = DateTime.now().millisecondsSinceEpoch;
-      int countTime = int.parse(countDown);
-      if (nowDate < countTime) {
-        setState(() {
-          _lockedText = AppLocalizations.of(context)!.st_locked_coins;
-          endTime = int.parse(countDown);
-        });
-      } else {
-        setState(() {
-          _lockedText = AppLocalizations.of(context)!.st_coins_staked;
-        });
-      }
-    } else {
-      setState(() {
-        _lockedText = AppLocalizations.of(context)!.st_coins_staked;
-      });
-    }
   }
 
   @override
@@ -944,30 +840,57 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                 textStyle: const TextStyle(color: Colors.white24, fontSize: 24.0),
                                 key: _keyStake,
                                 onSubmit: () {
-                                  _sendStakeCoins(_controller.text);
+                                  _createWithdrawal();
                                 },
                               ),
                             ),
                             const SizedBox(
                               height: 5.0,
                             ),
-                            Visibility(
-                              visible: endTime == 0 ? true : false,
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 15.0, right: 8.0),
-                                  child: SizedBox(
-                                    width: MediaQuery.of(context).size.width * 0.9,
-                                    child: AutoSizeText(
-                                      AppLocalizations.of(context)!.mn_lock,
-                                      textAlign: TextAlign.center,
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 200,
+                                      child: AutoSizeText(
+                                        "${AppLocalizations.of(context)!.mn_time_to_start}  |",
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        minFontSize: 8,
+                                        overflow: TextOverflow.fade,
+                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 10.0, color: Colors.white54),
+                                      ),
+                                    ),
+                                    AutoSizeText(
+                                      _averateTimeStart,
+                                      textAlign: TextAlign.left,
                                       maxLines: 1,
                                       minFontSize: 8,
                                       overflow: TextOverflow.fade,
-                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white54),
+                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 10.0, color: Colors.white54),
                                     ),
-                                  ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 5.0,
+                            ),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                child: AutoSizeText(
+                                  AppLocalizations.of(context)!.mn_lock,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  minFontSize: 8,
+                                  overflow: TextOverflow.fade,
+                                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white54),
                                 ),
                               ),
                             ),
@@ -985,34 +908,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                       maxLines: 1,
                                       minFontSize: 8,
                                       overflow: TextOverflow.fade),
-                                ),
-                              ),
-                            ),
-                            Visibility(
-                              visible: endTime == 0 ? false : true,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 8.0, bottom: 5.0),
-                                child: CountdownTimer(
-                                  onEnd: () async {
-                                    Future.delayed(const Duration(milliseconds: 100), () {
-                                      setState(() {
-                                        endTime = 0;
-                                      });
-                                    });
-                                  },
-                                  endTime: endTime,
-                                  widgetBuilder: (_, CurrentRemainingTime? time) {
-                                    if (time == null) {
-                                      return const Text('');
-                                    }
-                                    return SizedBox(
-                                      width: MediaQuery.of(context).size.width,
-                                      child: Center(
-                                        child: Text('${_formatCountdownTime(time.hours ?? 0)}:${_formatCountdownTime(time.min ?? 0)}:${_formatCountdownTime(time.sec ?? 0)}',
-                                            style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 13.0, color: Colors.white70)),
-                                      ),
-                                    );
-                                  },
                                 ),
                               ),
                             ),
@@ -1055,7 +950,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                 height: 10.0,
               ),
               Visibility(
-                visible: _staking,
+                visible: _staking && _amountReward != "0.0",
                 child: Column(
                   children: [
                     ClipRect(
@@ -1072,42 +967,39 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                               shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0), side: BorderSide(color: Theme.of(context).konjHeaderColor)))),
                           child: Text(
-                            AppLocalizations.of(context)!.st_withdraw_reward,
+                            AppLocalizations.of(context)!.mn_withdraw_reward,
                             style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(
-                      height: 10.0,
-                    ),
-                    Visibility(
-                      visible: endTime == 0 ? true : false,
-                      child: ClipRect(
-                        child: SizedBox(
-                          height: 40,
-                          width: MediaQuery.of(context).size.width * 0.95,
-                          child: TextButton(
-                            onPressed: () {
-                              _unstakeCoins(0);
-                              // Dialogs.openUserQR(context);
-                            },
-                            style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.resolveWith((states) => getColorAll(states)),
-                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0), side: const BorderSide(color: Colors.transparent)))),
-                            child: Text(
-                              AppLocalizations.of(context)!.st_withdraw_all,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20.0,
+                      height: 15.0,
                     ),
                   ],
+                ),
+              ),
+              Visibility(
+                visible: _staking,
+                child: ClipRect(
+                  child: SizedBox(
+                    height: 40,
+                    width: MediaQuery.of(context).size.width * 0.95,
+                    child: TextButton(
+                      onPressed: () {
+                        _unstakeCoins(0);
+                        // Dialogs.openUserQR(context);
+                      },
+                      style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.resolveWith((states) => getColorAll(states)),
+                          shape:
+                              MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0), side: const BorderSide(color: Colors.transparent)))),
+                      child: Text(
+                        AppLocalizations.of(context)!.mn_manage,
+                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ]),
@@ -1117,14 +1009,60 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     ]);
   }
 
-  String _formatCountdownTime(int? time) {
-    if (time == null || time == 0) {
-      return "00";
-    } else if (time < 10) {
-      var s = time.toString();
-      return '0$s';
-    } else {
-      return time.toString();
+  _createWithdrawal() async {
+    Dialogs.openWaitBox(context);
+
+    if (_mnInfo == null) {
+      Navigator.of(context).pop();
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "Data error");
+      _keyStake.currentState?.reset();
+      return;
+    }
+
+    var amt = _collateral;
+
+    if (amt > (double.parse(_balance) + 0.01)) {
+      Navigator.of(context).pop();
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.dl_not_enough_coins);
+      _keyStake.currentState?.reset();
+      return;
+    }
+
+    try {
+      await _getMasternodeDetails();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+    MasternodeLock? mnLock;
+    try {
+      ComInterface interface = ComInterface();
+      Map<String, dynamic> queryLock = {"idCoin": 0};
+      final responseLock = await interface.post("/masternode/lock", body: queryLock, serverType: ComInterface.serverGoAPI, debug: true);
+      mnLock = MasternodeLock.fromJson(responseLock);
+      if (mnLock.node?.address == null) {
+        if (mounted) Navigator.of(context).pop();
+        if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "Data err");
+        _keyStake.currentState?.reset();
+        return;
+      }
+      if (mnLock.node?.id == null) {
+        if (mounted) Navigator.of(context).pop();
+        if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "Node err");
+        _keyStake.currentState?.reset();
+        return;
+      }
+
+      await interface.post("/masternode/start", body: {"idCoin": 0, "node_id": mnLock.node!.id!}, serverType: ComInterface.serverGoAPI, debug: true);
+      _getBalance();
+      if (mounted) Navigator.of(context).pop();
+      _keyStake.currentState?.reset();
+    } catch (e) {
+      ComInterface interface = ComInterface();
+      Map<String, dynamic> queryLock = {"idNode": mnLock?.node?.id};
+      await interface.post("/masternode/unlock", body: queryLock, serverType: ComInterface.serverGoAPI, debug: true);
+      if (mounted) Navigator.of(context).pop();
+      _keyStake.currentState?.reset();
+      if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
     }
   }
 
@@ -1175,7 +1113,7 @@ Color getColorAll(Set<MaterialState> states) {
   if (states.any(interactiveStates.contains)) {
     return Colors.white.withOpacity(0.8);
   }
-  return const Color(0xFFa85454);
+  return Colors.blueAccent;
 }
 
 Color qrColors(Set<MaterialState> states) {

@@ -104,3 +104,34 @@ type MNInfoResponse struct {
 	CollateralTiers     []int64      `json:"collateral_tiers"`
 	NodeRewards         []MNList     `json:"node_rewards"`
 }
+
+type MNInfoStruct struct {
+	IdCoin int `json:"idCoin"`
+}
+
+type MasternodeClient struct {
+	ID         int            `db:"id"`
+	WalletUser string         `db:"wallet_usr"`
+	WalletPass string         `db:"wallet_pass"`
+	WalletPort int            `db:"wallet_port"`
+	NodeIP     string         `db:"node_ip"`
+	IP         string         `db:"ip"`
+	CoinID     int            `db:"coin_id"`
+	Address    string         `db:"address"`
+	PrivKey    string         `db:"priv_key"`
+	Folder     string         `db:"folder"`
+	Conf       string         `db:"conf"`
+	Active     int            `db:"active"`
+	Locked     int            `db:"locked"`
+	LastSeen   sql.NullString `db:"last_seen"`
+	ActiveTime sql.NullInt64  `db:"active_time"`
+}
+
+type MNUnlockStruct struct {
+	IdNode int `json:"idNode"`
+}
+
+type SetMN struct {
+	CoinID int64 `json:"idCoin"`
+	NodeID int   `json:"node_id"`
+}

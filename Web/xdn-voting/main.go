@@ -13,6 +13,7 @@ import (
 	_ "github.com/gofiber/fiber/v2/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/pquerna/otp/totp"
+	gpc "google.golang.org/grpc"
 	"gopkg.in/guregu/null.v4"
 	"io"
 	"log"
@@ -32,7 +33,8 @@ import (
 	"xdn-voting/daemons"
 	"xdn-voting/database"
 	"xdn-voting/errs"
-	"xdn-voting/grpc"
+	grpc "xdn-voting/grpc"
+	"xdn-voting/grpcModels"
 	"xdn-voting/html"
 	"xdn-voting/models"
 	"xdn-voting/utils"
@@ -101,6 +103,9 @@ func main() {
 	app.Get("api/v1/staking/info", utils.Authorized(getStakeInfo))
 
 	app.Get("api/v1/masternode/info", utils.Authorized(getMNInfo))
+	app.Post("api/v1/masternode/lock", utils.Authorized(lockMN))
+	app.Post("api/v1/masternode/unlock", utils.Authorized(unlockMN))
+	app.Post("api/v1/masternode/start", utils.Authorized(startMN))
 
 	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
@@ -158,12 +163,14 @@ func main() {
 			utils.STATUS: utils.ERROR,
 		})
 	})
-	daemons.DaemonStatus()
+	go daemons.DaemonStatus()
+	go daemons.MNStatistic()
 	utils.ScheduleFunc(daemons.SaveTokenTX, time.Minute*10)
 	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
 	utils.ScheduleFunc(daemons.PriceData, time.Minute*5)
 	utils.ScheduleFunc(daemons.MNTransaction, time.Minute*1)
 	utils.ScheduleFunc(daemons.ScoopMasternode, time.Minute*30)
+	utils.ScheduleFunc(daemons.MNStatistic, time.Hour*12)
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
 	if err != nil {
@@ -203,6 +210,157 @@ func main() {
 	os.Exit(0)
 
 	// Start server with https/ssl enabled on http://localhost:443
+}
+
+func startMN(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+
+	var request models.SetMN
+	errJson := c.BodyParser(&request)
+	if errJson != nil {
+		return utils.ReportError(c, errJson.Error(), http.StatusBadRequest)
+	}
+
+	nodeAddr := database.ReadValueEmpty[sql.NullString]("SELECT address FROM mn_clients WHERE id = ?", request.NodeID)
+	if !nodeAddr.Valid {
+		return utils.ReportError(c, "Node not found", http.StatusBadRequest)
+	}
+	usedAddr := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", userID)
+	if !usedAddr.Valid {
+		return utils.ReportError(c, "User not found", http.StatusBadRequest)
+	}
+	tx, err := coind.SendCoins(nodeAddr.String, usedAddr.String, 2000000.01, false)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusConflict)
+	}
+	if len(tx) == 0 {
+		return utils.ReportError(c, "TX id is missing", http.StatusBadRequest)
+	}
+	_, errInsert := database.InsertSQl("INSERT INTO mn_incoming_tx(idUser, idCoin, idNode, tx_id, amount) VALUES(?, ?, ?, ?,?)",
+		userID, request.CoinID, request.NodeID, tx, 2000000)
+	if errInsert != nil {
+		return utils.ReportError(c, fmt.Sprintf("TX id already submitted %s", errInsert.Error()), http.StatusBadRequest)
+	}
+	_, errUpdate := database.InsertSQl("UPDATE mn_clients SET locked = 1 WHERE id = ?", request.NodeID)
+	if errUpdate != nil {
+		return utils.ReportError(c, errUpdate.Error(), http.StatusBadRequest)
+	}
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func unlockMN(c *fiber.Ctx) error {
+	var mnInfoReq models.MNUnlockStruct
+	errJson := c.BodyParser(&mnInfoReq)
+	if errJson != nil {
+		return utils.ReportError(c, "JSON Request Body empty", http.StatusBadRequest)
+
+	}
+
+	type ActiveMN struct {
+		ID     sql.NullInt64 `json:"id"`
+		Active sql.NullInt64 `json:"active"`
+	}
+
+	freeMN, err := database.ReadStruct[ActiveMN]("SELECT id, active FROM masternode_clients WHERE id = ?", mnInfoReq.IdNode)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+
+	}
+
+	if !freeMN.ID.Valid {
+		return utils.ReportError(c, "Node was not found", http.StatusForbidden)
+
+	} else if freeMN.Active.Int64 == 1 {
+		return utils.ReportError(c, "Node is active!", http.StatusConflict)
+
+	} else {
+		_, errUpdate := database.InsertSQl("UPDATE masternode_clients SET locked = 0 WHERE id = ? ", freeMN.ID.Int64)
+		if errUpdate != nil {
+			utils.WrapErrorLog(errUpdate.Error())
+			return utils.ReportError(c, errUpdate.Error(), http.StatusConflict)
+
+		}
+	}
+
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func lockMN(c *fiber.Ctx) error {
+	//userID := c.Get("User_id")
+	var mnInfoReq models.MNInfoStruct
+	errJson := c.BodyParser(&mnInfoReq)
+	if errJson != nil {
+		return utils.ReportError(c, "JSON Request Body empty", fiber.StatusBadRequest)
+
+	}
+	var empty models.MasternodeClient
+	var idNode int64
+
+	for {
+		freeMN := database.ReadStructEmpty[models.MasternodeClient]("SELECT * FROM mn_clients WHERE coin_id = ? AND locked = 0 AND active = 0 LIMIT 1", mnInfoReq.IdCoin)
+		if freeMN == empty {
+			return utils.ReportError(c, "No free MNs left for this coin", fiber.StatusConflict)
+		} else {
+			//token, _ := database.ReadValue[string]("SELECT token FROM mn_server WHERE url = ?", freeMN.NodeIP)
+			utils.ReportMessage(fmt.Sprintf("NODE FREE: %d", freeMN.ID))
+			creds, err := grpcModels.LoadTLSCredentials()
+			if err != nil {
+				utils.WrapErrorLog("cannot load TLS credentials: " + err.Error())
+				return utils.ReportError(c, "cannot load TLS credentials: "+err.Error(), fiber.StatusInternalServerError)
+			}
+			grpcCon, err := gpc.Dial(fmt.Sprintf("%s:6810", freeMN.NodeIP), gpc.WithTransportCredentials(creds))
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+			}
+			tx := &grpcModels.CheckMasternodeRequest{NodeID: uint32(freeMN.ID)}
+			cc := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+			resp, err := cc.CheckMasternode(context.Background(), tx)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+			}
+
+			if resp.Code != 200 {
+				utils.ReportMessage(fmt.Sprintf("Somethings wrong on node %s", freeMN.NodeIP))
+
+				_, _ = database.InsertSQl("UPDATE mn_clients SET locked = 1 WHERE id = ? ", freeMN.ID)
+				//sendWarningMessage(68857, "Error Node", fmt.Sprintf("Error Node %d", freeMN.ID)) //TODO: Send message to admin
+				continue
+			}
+			_, errUpdate := database.InsertSQl("UPDATE mn_clients SET locked = 1 WHERE id = ? ", freeMN.ID)
+			if errUpdate != nil {
+				utils.WrapErrorLog(errUpdate.Error())
+			}
+			_ = grpcCon.Close()
+			idNode = int64(freeMN.ID)
+			break
+		}
+	}
+
+	freeMasternodesQuery := "SELECT id, address FROM masternode_clients WHERE id=?"
+	type listMN struct {
+		ID   int    `db:"id" json:"id"`
+		Addr string `db:"address" json:"address"`
+	}
+
+	readStruct, err := database.ReadStruct[listMN](freeMasternodesQuery, idNode)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+
+	}
+
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"node":       readStruct,
+	})
 }
 
 func getGithubRelease(c *fiber.Ctx) error {
@@ -291,12 +449,11 @@ func getMNInfo(c *fiber.Ctx) error {
 		})
 	}
 	averageTimeToStart := ""
-
-	//for _, element := range stats {
-	//	if len(element[mnInfoReq.IdCoin]) != 0 {
-	//		averageTimeToStart = element[mnInfoReq.IdCoin]
-	//	}
-	//}
+	for _, element := range daemons.GetMNStatistic() {
+		if len(element[0]) != 0 {
+			averageTimeToStart = element[0]
+		}
+	}
 
 	pendingMNList, _ := database.ReadArrayStruct[models.PendingMN]("SELECT idNode FROM mn_incoming_tx WHERE idUser = ? AND idCoin = ? AND processed = 0", userID, 0)
 	mnInfo, err := database.ReadValue[int]("SELECT collateral FROM mn_info WHERE idCoin = ?", 0)

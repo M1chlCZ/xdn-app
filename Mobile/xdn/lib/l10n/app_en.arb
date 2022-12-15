@@ -238,5 +238,8 @@
   "mn_roi" : "Annual ROI",
   "mn_free" : "Available MN nodes to start",
   "settings_socials": "Social Media",
-  "mn_withdraw_box" : "Do you really want to withdraw MN #{1}?"
+  "mn_withdraw_box" : "Do you really want to withdraw MN #{1}?",
+  "mn_coins_month": "Coins earned this month",
+  "mn_coins_year": "Coins earned this year",
+  "mn_withdraw_reward": "Withdraw reward"
 }

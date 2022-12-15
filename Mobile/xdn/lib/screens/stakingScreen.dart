@@ -6,6 +6,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:decimal/decimal.dart';
 import 'package:digitalnote/bloc/stake_graph_bloc.dart';
+import 'package:digitalnote/generated/phone.pb.dart';
 import 'package:digitalnote/models/StakeCheck.dart';
 import 'package:digitalnote/models/staking_data.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
@@ -418,7 +419,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     child: SizedBox(
                                         height: MediaQuery.of(context).size.height * 0.2,
                                         width: MediaQuery.of(context).size.width * 0.92,
-                                        child: StreamBuilder<ApiResponse<StakingData>>(
+                                        child: StreamBuilder<ApiResponse<StakeGraphResponse>>(
                                             stream: _stakeBloc!.coinsListStream,
                                             builder: (context, snapshot) {
                                               if (snapshot.hasData) {

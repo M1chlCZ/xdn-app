@@ -239,5 +239,8 @@
   "mn_roi" : "Roční ROI",
   "mn_free" : "Dostupné masternody",
   "settings_socials": "Socialní Media",
-  "mn_withdraw_box" : "Opravdu chcete zrušit MN #{1}?"
+  "mn_withdraw_box" : "Opravdu chcete zrušit MN #{1}?",
+  "mn_coins_month": "Mince získané tento měsíc",
+  "mn_coins_year": "Mince získané tento row",
+  "mn_withdraw_reward": "Vybrat odměnu"
 }

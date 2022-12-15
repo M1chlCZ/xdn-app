@@ -10,6 +10,7 @@ import (
 	"time"
 	"xdn-voting/database"
 	"xdn-voting/grpcModels"
+	"xdn-voting/models"
 	"xdn-voting/utils"
 )
 
@@ -82,13 +83,7 @@ func (s *ServerApp) MasternodeGraph(ctx context.Context, request *grpcModels.Mas
 		return nil, errDB
 	}
 
-	type StakeGetEntry struct {
-		Hours  int64   `db:"hour" json:"hour default 0"`
-		Amount float64 `db:"amount" json:"amount"`
-		Day    string  `db:"day" json:"day"`
-	}
-
-	ra := database.ParseArrayStruct[StakeGetEntry](rows)
+	ra := database.ParseArrayStruct[models.StakeGetEntry](rows)
 	returnArray := make([]*grpcModels.MasternodeGraphResponse_Rewards, 0)
 	for _, v := range ra {
 		returnArray = append(returnArray, &grpcModels.MasternodeGraphResponse_Rewards{
@@ -140,14 +135,8 @@ func (s *ServerApp) StakeGraph(ctx context.Context, request *grpcModels.StakeGra
 	if errDB != nil {
 		return nil, errDB
 	}
-
-	type StakeGetEntry struct {
-		Hours  int64   `db:"hour" json:"hour default 0"`
-		Amount float64 `db:"amount" json:"amount"`
-		Day    string  `db:"day" json:"day"`
-	}
-
-	ra := database.ParseArrayStruct[StakeGetEntry](rows)
+	
+	ra := database.ParseArrayStruct[models.StakeGetEntry](rows)
 	returnArray := make([]*grpcModels.StakeGraphResponse_Rewards, 0)
 	for _, v := range ra {
 		returnArray = append(returnArray, &grpcModels.StakeGraphResponse_Rewards{

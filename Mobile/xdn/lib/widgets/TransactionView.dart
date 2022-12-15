@@ -27,17 +27,13 @@ class TransactionView extends StatelessWidget {
   Widget _checkContactName(BuildContext context) {
     return Container(
       padding: const EdgeInsets.only(bottom: 2.0, left: 0.0),
-      child: Center(
-        child: SizedBox(
-          width: 150,
-          child: AutoSizeText(
-            _getText(transaction!.contactName, context),
-            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.white70),
-            minFontSize: 14,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+      child: AutoSizeText(
+        _getText(transaction!.contactName, context),
+        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white70),
+        minFontSize: 8,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.left,
       ),
     );
   }
@@ -94,9 +90,8 @@ class TransactionView extends StatelessWidget {
             child: Container(
               alignment: Alignment.centerLeft,
               width: 280.0,
-              height: 64.0,
+              height: 75.0,
               decoration: const BoxDecoration(
-
                 gradient: LinearGradient(
                   colors: [Color(0xFF222D52),
                     Color(0xFF384F91)],
@@ -109,7 +104,7 @@ class TransactionView extends StatelessWidget {
                 direction: Axis.horizontal,
                 children: [
                   Expanded(
-                      flex: 2,
+                      flex: 1,
                       child: Container(
                         margin: const EdgeInsets.fromLTRB(5.0, 5.0, 6.0, 5.0),
                         decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10.0)), color: Colors.white10),
@@ -119,43 +114,52 @@ class TransactionView extends StatelessWidget {
                     flex: 4,
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start, children: [
                         _checkContactName(context),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 0.0, top: 5.0),
-                          child: SizedBox(
-                            width: 120,
-                            child: AutoSizeText(
-                              _getMeDate(transaction!.datetime),
-                              // style: Theme.of(context).textTheme.headline51!.copyWith(color: Colors.white70),
-                              style: GoogleFonts.montserrat(fontSize: 11.0, fontWeight: FontWeight.w300, color: Colors.white54),
-                              textAlign: TextAlign.start,
-                              minFontSize: 8,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 5.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 0.0, top: 5.0),
+                              child: SizedBox(
+                                width: 120,
+                                child: AutoSizeText(
+                                  _getMeDate(transaction!.datetime),
+                                  // style: Theme.of(context).textTheme.headline51!.copyWith(color: Colors.white70),
+                                  style: GoogleFonts.montserrat(fontSize: 11.0, fontWeight: FontWeight.w300, color: Colors.white54),
+                                  textAlign: TextAlign.start,
+                                  minFontSize: 8,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             ),
-                          ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+                              child: SizedBox(
+                                width: 125,
+                                child: AutoSizeText(
+                                  transaction!.category == "receive" ? "+ ${Utils.formatAmount(transaction!.amount!)} XDN" : "- ${transaction!.amount!.replaceFirst('-', '')} XDN",
+                                  style: GoogleFonts.montserrat(fontWeight: FontWeight.w300, fontSize: 14, color: transaction!.category! == "receive" ? Colors.white.withOpacity(0.9) : Colors.white30),
+                                  minFontSize: 8,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ]),
                     ),
                   ),
-                  Expanded(
-                    flex: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: SizedBox(
-                        width: 125,
-                        child: AutoSizeText(
-                          transaction!.category == "receive" ? "+ ${Utils.formatAmount(transaction!.amount!)} XDN" : "- ${transaction!.amount!.replaceFirst('-', '')} XDN",
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w300, fontSize: 16, color: transaction!.category! == "receive" ? Colors.white70 : Colors.white30),
-                          minFontSize: 8,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
-                    ),
-                  )
+                  // Expanded(
+                  //   flex: 4,
+                  //   child:
+                  // )
                 ],
               ),
             ),

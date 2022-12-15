@@ -35,3 +35,9 @@ type CheckStakeDBStruct struct {
 	Amount  sql.NullFloat64 `db:"amount"`
 	Session int             `db:"session"`
 }
+
+type StakeGetEntry struct {
+	Hours  int64   `db:"hour" json:"hour default 0"`
+	Amount float64 `db:"amount" json:"amount"`
+	Day    string  `db:"day" json:"day"`
+}

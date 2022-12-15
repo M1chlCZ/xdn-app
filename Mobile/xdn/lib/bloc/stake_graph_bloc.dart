@@ -1,25 +1,25 @@
 import 'dart:async';
 
 import 'package:digitalnote/endpoints/get_stake_graph.dart';
-import 'package:digitalnote/models/staking_data.dart';
+import 'package:digitalnote/generated/phone.pb.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:rxdart/rxdart.dart' show BehaviorSubject;
 
 class StakeGraphBloc {
   final StakeList _coinsList = StakeList();
-  StakingData? _stakingData;
+  StakeGraphResponse? _stakingData;
   int typeBack = 0;
 
-  StreamController<ApiResponse<StakingData>>? _coinListController;
+  StreamController<ApiResponse<StakeGraphResponse>>? _coinListController;
 
-  StreamSink<ApiResponse<StakingData>> get coinsListSink =>
+  StreamSink<ApiResponse<StakeGraphResponse>> get coinsListSink =>
       _coinListController!.sink;
 
-  Stream<ApiResponse<StakingData>> get coinsListStream =>
+  Stream<ApiResponse<StakeGraphResponse>> get coinsListStream =>
       _coinListController!.stream;
 
   stakeBloc() {
-    _coinListController = BehaviorSubject<ApiResponse<StakingData>>();
+    _coinListController = BehaviorSubject<ApiResponse<StakeGraphResponse>>();
   }
 
   fetchStakeData(int type) async {
@@ -30,10 +30,10 @@ class StakeGraphBloc {
       typeBack = type;
       if (_stakingData == null) {
         coinsListSink.add(ApiResponse.loading('Fetching All Stakes'));
-        _stakingData = await _coinsList.getStakingData(type);
+        _stakingData = await _coinsList.getStakingData(0, type);
         coinsListSink.add(ApiResponse.completed(_stakingData));
       } else {
-        _stakingData = await _coinsList.getStakingData(type);
+        _stakingData = await _coinsList.getStakingData(0, type);
         coinsListSink.add(ApiResponse.completed(_stakingData));
       }
       // _stakingData = await _coinsList.getStakingData(type);
