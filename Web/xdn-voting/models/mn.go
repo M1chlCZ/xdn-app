@@ -139,3 +139,27 @@ type SetMN struct {
 type MNWithStruct struct {
 	IdNode int `json:"idNode"`
 }
+
+type Client struct {
+	Id          int64          `db:"id"`
+	IdCoin      int64          `db:"idCoin"`
+	Url         string         `db:"url"`
+	Token       string         `db:"token"`
+	Encrypt     string         `db:"encryptKey"`
+	DepositAddr string         `db:"depositAddr"`
+	Masternode  int            `db:"masternode"`
+	PrivKey     string         `db:"privkey"`
+	PassPhrase  sql.NullString `db:"passphrase"`
+}
+
+type MNUsers struct {
+	Id          int    `db:"id"`
+	IdUser      int    `db:"idUser"`
+	IdCoin      int    `db:"idCoin"`
+	Tier        int    `db:"tier"`
+	IdNode      int    `db:"idNode"`
+	Session     int    `db:"session"`
+	Active      int    `db:"active"`
+	DateStart   string `db:"dateStart"`
+	DateChanged string `db:"dateChanged"`
+}

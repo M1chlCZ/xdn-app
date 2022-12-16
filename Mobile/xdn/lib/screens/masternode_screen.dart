@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
@@ -7,6 +8,7 @@ import 'package:digitalnote/generated/phone.pb.dart';
 import 'package:digitalnote/models/MasternodeInfo.dart';
 import 'package:digitalnote/models/MasternodeLock.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
+import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/mn_manage_screen.dart';
 import 'package:digitalnote/support/Utils.dart';
@@ -60,6 +62,8 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   bool _imatureVisible = false;
   bool _pendingVisible = false;
   bool _hideLoad = false;
+  bool _loadingReward = false;
+  bool _loadingCoins = false;
   int _countNot = 0;
   bool _awaitingNot = false;
   double _estimated = 0.0;
@@ -107,11 +111,8 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     _stakeBloc!.fetchStakeData(0, _typeGraph);
 
     _fcmSubscription = FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // print('Got a message whilst in the foreground!');
-      // print('Message data: ${message.data}');
       _not();
       if (message.notification != null) {
-        // print('Message also contained a notification: ${message.notification}');
       }
     });
   }
@@ -174,33 +175,33 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     }
   }
 
-  void _unstakeCoins(int type) async {
-    Dialogs.openWaitBox(context);
-    var i = await NetInterface.unstakeCoins(type);
-    _awaitingNot = true;
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (_awaitingNot) {
-        setState(() {
-          _awaitingNot = false;
-          _countNot = 0;
-          _getBalance();
-
-          // Navigator.of(context).pop();
-        });
-        Navigator.of(context).pop();
-        Future.delayed(const Duration(milliseconds: 50), () {
-          FocusScope.of(context).unfocus();
-        });
-      }
-    });
-    if (i == 2) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_24h_timeout);
-      }
-      return;
-    }
-  }
+  // void _unstakeCoins(int type) async {
+  //   Dialogs.openWaitBox(context);
+  //   var i = await NetInterface.unstakeCoins(type);
+  //   _awaitingNot = true;
+  //   Future.delayed(const Duration(milliseconds: 1000), () {
+  //     if (_awaitingNot) {
+  //       setState(() {
+  //         _awaitingNot = false;
+  //         _countNot = 0;
+  //         _getBalance();
+  //
+  //         // Navigator.of(context).pop();
+  //       });
+  //       Navigator.of(context).pop();
+  //       Future.delayed(const Duration(milliseconds: 50), () {
+  //         FocusScope.of(context).unfocus();
+  //       });
+  //     }
+  //   });
+  //   if (i == 2) {
+  //     if (mounted) {
+  //       Navigator.of(context).pop();
+  //       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_24h_timeout);
+  //     }
+  //     return;
+  //   }
+  // }
 
   void _getBalance() async {
     _getBalanceFuture = NetInterface.getBalance(details: true);
@@ -443,7 +444,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                             children: [
                               SizedBox(
                                 width: 150,
-                                child: AutoSizeText(AppLocalizations.of(context)!.available, maxLines: 1, minFontSize: 8.0, style: Theme.of(context).textTheme.headline5),
+                                child: AutoSizeText(AppLocalizations.of(context)!.available, maxLines: 1, minFontSize: 8.0, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white70)),
                               ),
                               FutureBuilder(
                                   future: _getBalanceFuture,
@@ -470,14 +471,14 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                           maxLines: 1,
                                           overflow: TextOverflow.fade,
                                           textAlign: TextAlign.right,
-                                          style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 20.0),
+                                          style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 16.0),
                                         ),
                                       );
                                     } else if (snapshot.hasError) {
                                       return Center(
                                           child: Text(
                                         snapshot.error.toString(),
-                                        style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 24, color: Colors.red),
+                                        style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 12, color: Colors.red),
                                       ));
                                     } else {
                                       return Center(
@@ -513,6 +514,9 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                             ]),
                           ),
                         ),
+                        const SizedBox(
+                          height: 5,
+                        ),
                         Visibility(
                           visible: _pendingVisible,
                           child: Padding(
@@ -536,7 +540,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(AppLocalizations.of(context)!.mn_collateral, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 20.0, color: Colors.white70)),
+                              Text(AppLocalizations.of(context)!.mn_collateral, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white70)),
                               Expanded(
                                 child: AutoSizeText(
                                   "${Utils.formatBalance(_collateral.toDouble())} XDN",
@@ -544,7 +548,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
                                   textAlign: TextAlign.right,
-                                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 20.0),
+                                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 16.0),
                                 ),
                               )
                             ],
@@ -968,7 +972,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                         width: MediaQuery.of(context).size.width * 0.95,
                         child: TextButton(
                           onPressed: () {
-                            _unstakeCoins(1);
+                            _unStake(1);
                             // Dialogs.openUserQR(context);
                           },
                           style: ButtonStyle(
@@ -1072,6 +1076,45 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
       if (mounted) Navigator.of(context).pop();
       _keyStake.currentState?.reset();
       if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
+    }
+  }
+
+  _unStake(int rewardParam) async {
+    final interface = ComInterface();
+    if (_loadingReward || _loadingCoins) {
+      return;
+    }
+    Dialogs.openWaitBox(context);
+    if (rewardParam == 1) {
+      _loadingReward = true;
+    } else {
+      _loadingCoins = true;
+    }
+    setState(() {});
+    try {
+      if (rewardParam == 1) {
+        Map<String, dynamic> m = {"idCoin": 0};
+        await interface.post("/masternode/reward", body: m, serverType: ComInterface.serverGoAPI, debug: true);
+      }
+
+      _getBalance();
+      if (rewardParam == 1) {
+        _loadingReward = false;
+      } else {
+        _loadingCoins = false;
+      }
+      await _getMasternodeDetails();
+      setState(() {});
+      if (mounted) {
+        Navigator.of(context).pop();
+        await _getMasternodeDetails();
+      }
+    } on ConflictDataException catch (e) {
+      var err = json.decode(e.toString());
+      if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, err['errorMessage'].toString());
+    } catch (e) {
+      Navigator.of(context).pop();
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
     }
   }
 

@@ -108,6 +108,7 @@ func main() {
 	app.Post("api/v1/masternode/unlock", utils.Authorized(unlockMN))
 	app.Post("api/v1/masternode/start", utils.Authorized(startMN))
 	app.Post("api/v1/masternode/withdraw", utils.Authorized(withdrawMN))
+	app.Post("api/v1/masternode/reward", utils.Authorized(rewardMN))
 
 	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
@@ -211,6 +212,36 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func rewardMN(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+
+	var mnInfoReq models.MNInfoStruct
+	amountToSend, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM payouts_masternode WHERE idUser = ? AND credited = 0 AND idCoin = ?", userID, mnInfoReq.IdCoin)
+	if amountToSend == 0.0 {
+		return utils.ReportError(c, "No rewards to send", fiber.StatusBadRequest)
+	}
+	server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+	userAddr, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+	tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusConflict)
+	}
+	user, err := database.ReadStruct[models.MNUsers]("SELECT * FROM users_mn WHERE idUser = ? AND active = ?", userID, 1)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	_, _ = database.InsertSQl("UPDATE payouts_masternode SET credited = ? WHERE idUser = ? AND session = ? AND id <> 0", 1, userID, user.Session)
+	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode Reward", tx, "receive")
+	time.Sleep(time.Millisecond * 200)
+
+	j := simplejson.New()
+	j.Set(utils.STATUS, utils.OK)
+	j.Set("hasError", false)
+	j.Set("tx_id", tx)
+	payload, err := j.MarshalJSON()
+	return c.Status(fiber.StatusOK).Send(payload)
 }
 
 func withdrawMN(c *fiber.Ctx) error {

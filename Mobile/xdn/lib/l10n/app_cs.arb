@@ -115,7 +115,7 @@
   "st_reward" : "Odměna",
   "st_total_coins": "Celkem mincí v sázení",
   "st_contribution" : "Váš podíl mincí v sázení",
-  "st_estimated" : "Odhadovaný zisk mincí za den",
+  "st_estimated" : "Denní odhadovaný zisk",
   "st_24h_lock" : "Vaše mince budou uzamknuty po dobu 24 hodin od odeslání",
   "st_enter_amount" :"Zadejte množství mincí k sázení",
   "st_time_until_unlock" : "Čas než budou mince odemknuté",
@@ -225,8 +225,8 @@
   "unlink" : "Odpojit {1}",
   "fully_funded" : "Cíl dosažen",
   "mn_your_mns" : "Vaše masternody",
-  "mn_total" : "Celkový počet aktivních {1} MN",
-  "mn_day_reward" : "Denní odměna 1 aktivní {1} MN",
+  "mn_total" : "Celkový počet aktivních MN",
+  "mn_day_reward" : "Denní odměna za 1 XDN MN",
   "mn_average_payrate" : "Průměrný čas odměny",
   "mn_average_start" : "Průměrný čas odstartování MN",
   "mn_time_to_start" : "Průměrný čas pro získání 1. odměny",
@@ -241,6 +241,6 @@
   "settings_socials": "Socialní Media",
   "mn_withdraw_box" : "Opravdu chcete zrušit MN #{1}?",
   "mn_coins_month": "Mince získané tento měsíc",
-  "mn_coins_year": "Mince získané tento row",
+  "mn_coins_year": "Mince získané tento rok",
   "mn_withdraw_reward": "Vybrat odměnu"
 }

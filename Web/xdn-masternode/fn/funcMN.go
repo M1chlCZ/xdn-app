@@ -20,6 +20,12 @@ import (
 
 func StartMasternode(nodeID int) {
 	daemon, err := database.GetDaemon(nodeID)
+	pathConf := utils.GetHomeDir() + "/." + daemon.Folder + "/" + daemon.Conf
+	pathMn := utils.GetHomeDir() + "/." + daemon.Folder + "/masternode.conf"
+	_, errScript := exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternode=", pathConf)).Output()
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternodeprivkey=", pathConf)).Output()
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
+	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.bak", daemon.Folder)).Output()
 
 	utils.ReportMessage(fmt.Sprintf(" -| Setting up node id: %d |-", daemon.NodeID))
 
@@ -139,15 +145,15 @@ func StartMasternode(nodeID int) {
 	p, _ := coind.WrapDaemon(*daemon, 5, "masternode", "genkey")
 
 	mnKey := string(p)
-	pathConf := utils.GetHomeDir() + "/." + folder + "/" + conf
-	pathMn := utils.GetHomeDir() + "/." + folder + "/masternode.conf"
+	pathConf = utils.GetHomeDir() + "/." + folder + "/" + conf
+	pathMn = utils.GetHomeDir() + "/." + folder + "/masternode.conf"
 	regex := regexp.MustCompile(`-?\d[\d,]*[.]?[\d{2}]*`)
 	subNum := regex.FindAllString(folder, -1)
 	num := subNum[0]
 
 	time.Sleep(10 * time.Second)
 
-	_, errScript := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s.service", folder)).Output()
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s.service", folder)).Output()
 	if errScript != nil {
 		utils.ReportMessage(errScript.Error())
 		return
@@ -172,7 +178,7 @@ func StartMasternode(nodeID int) {
 	time.Sleep(5 * time.Second)
 	if daemon.CoinID == 2 {
 		utils.ReportMessage("Starting daemon")
-		_, errScript = exec.Command("bash", "-c", fmt.Sprintf("/home/m1chl/Snap %s", folder)).Output()
+		_, errScript = exec.Command("bash", "-c", fmt.Sprintf("/home/m1chl/snap %s", folder)).Output()
 		if errScript != nil {
 			log.Println(errScript.Error())
 			utils.ReportMessage(errScript.Error())
@@ -229,6 +235,11 @@ func Snap(folder string, coinID int) {
 		corruptCheck(dm)
 		pp, errr := coind.WrapDaemon(*dm, 1, "masternode", "start")
 		if errr != nil {
+			pathConf := utils.GetHomeDir() + "/." + folder + "/" + dm.Conf
+			pathMn := utils.GetHomeDir() + "/." + folder + "/masternode.conf"
+			_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternode=", pathConf)).Output()
+			_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternodeprivkey=", pathConf)).Output()
+			_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
 			StartMasternode(dm.NodeID)
 			return
 		} else {
@@ -359,7 +370,7 @@ func ScanMasternodes() {
 		}
 
 		var ing, check models.MasternodeStatusXDN
-		p, err := coind.WrapDaemon(daemon, 1, "masternode", "status")
+		p, err := coind.WrapDaemon(daemon, 3, "masternode", "status")
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			utils.ReportMessage(fmt.Sprintf("error status masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))

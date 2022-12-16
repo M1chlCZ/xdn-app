@@ -102,12 +102,10 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
       var response = await stub.userPermission(UserPermissionRequest()..code = 200, options: CallOptions(metadata: {'authorization': token ?? ""}));
 
       if (response.mnPermission) {
-        await Future.delayed(const Duration(milliseconds: 500), () {
-          setState(() {
+        setState(() {
             mnActive = true;
           });
         _controller.forward();
-        });
       }
     } catch (e) {
       print('Caught error: ${e.toString()}');

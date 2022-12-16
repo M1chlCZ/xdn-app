@@ -27,6 +27,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 	}
 	wrapDaemon, err := WrapDaemon(wallet, 3, "listunspent")
 	if err != nil {
+
 		utils.ReportMessage(err.Error())
 		return "", err
 	}

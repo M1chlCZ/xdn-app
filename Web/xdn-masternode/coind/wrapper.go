@@ -3,6 +3,7 @@ package coind
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 	"sync"
 	"time"
 	"xdn-masternode/models"
@@ -64,20 +65,20 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 		p, er := client.Call(command, params)
 
 		if er != nil {
+			_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart %s.service", daemon.Folder)).Output()
 			utils.ReportMessage("Daemon unreachable " + er.Error())
 			time.Sleep(30 * time.Second)
 			continue
 		}
 		if string(p) != "null" {
 			if len(p) != 0 {
-				if command == "getmasternodeoutputs" && string(p) == string([]byte("[]")) {
+				if command == "getmasternodestatus" && string(p) == string([]byte("[]")) {
 					//utils.ReportMessage("empty array")
 					time.Sleep(30 * time.Second)
 					continue
 				}
 				if command == "masternode" {
 					pa := params.([]interface{})
-					utils.ReportMessage(fmt.Sprintf("params %s", pa[0]))
 					if pa[0] == "start" {
 						if string(p) == "\"successfully started masternode\"" {
 							utils.ReportMessage("MN success!!")
@@ -85,6 +86,13 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 							return
 						} else {
 							utils.ReportMessage(string(p))
+							time.Sleep(30 * time.Second)
+							continue
+						}
+					}
+					if pa[0] == "outputs" {
+						if string(p) == string([]byte("[]")) {
+							utils.ReportMessage("MN outputs empty")
 							time.Sleep(30 * time.Second)
 							continue
 						}

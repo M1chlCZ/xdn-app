@@ -13,7 +13,6 @@ class StakeList {
     Future<StakeGraphResponse?> getStakingData(int coinID, int type) async {
       final channel = ClientChannel('194.60.201.213', port: 6805, options: const ChannelOptions(credentials: ChannelCredentials.insecure()));
       final stub = AppServiceClient(channel);
-
       try {
         String? token = await SecureStorage.read(key: globals.TOKEN_DAO);
         var response = await stub.stakeGraph(
