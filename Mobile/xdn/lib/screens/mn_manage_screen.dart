@@ -267,7 +267,7 @@ class _MasternodeManageScreenState extends State<MasternodeManageScreen> {
   _withdrawNode(int id) async {
     try {
       Map<String, dynamic> m = {"idNode": id};
-      await interface.post("/masternode/withdraw", serverType: ComInterface.serverGoAPI, debug: true);
+      await interface.post("/masternode/withdraw", body: m, serverType: ComInterface.serverGoAPI, debug: true);
       if (mounted) Dialogs.openAlertBox(context, "Info", "Tokens are on the way!");
     } catch (ee) {
       try {

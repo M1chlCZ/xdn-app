@@ -1633,7 +1633,7 @@ class Dialogs {
                                   errorCorrectionLevel: QrErrorCorrectLevel.H,
                                   data: qrData.toString(),
                                   embeddedImage: const AssetImage('images/logo_qr.png'),
-                                  embeddedImageStyle: QrEmbeddedImageStyle(size: const Size(75, 75)),
+                                  embeddedImageStyle: QrEmbeddedImageStyle(size: const Size(40, 40)),
                                   foregroundColor: Colors.black87,
                                   version: QrVersions.auto,
                                   size: 240,
