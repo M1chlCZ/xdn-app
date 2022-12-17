@@ -608,41 +608,35 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                           children: [
                                             Column(
                                               children: [
-                                                const SizedBox(
-                                                  height: 5.0,
-                                                ),
                                                 Opacity(
                                                   opacity: 0.6,
-                                                  child: Align(
-                                                    alignment: Alignment.centerLeft,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(top: 5.0, right: 5.0, left: 10.0),
-                                                      child: Row(
-                                                        children: [
-                                                          Text(
-                                                            "${AppLocalizations.of(context)!.mn_uncofirmed}:",
-                                                            // textAlign: TextAlign.end,
-                                                            style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
-                                                          ),
-                                                          Expanded(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(right: 4.0),
-                                                              child: AutoSizeText(
-                                                                _pendingMasternodes.toString(),
-                                                                maxLines: 1,
-                                                                minFontSize: 8.0,
-                                                                textAlign: TextAlign.end,
-                                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.white70),
-                                                              ),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
+                                                    child: Row(
+                                                      children: [
+                                                        Text(
+                                                          "${AppLocalizations.of(context)!.mn_uncofirmed}:",
+                                                          // textAlign: TextAlign.end,
+                                                          style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w500, fontSize: 12.0, color: Colors.white.withOpacity(0.4)),
+                                                        ),
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(right: 4.0),
+                                                            child: AutoSizeText(
+                                                              _pendingMasternodes.toString(),
+                                                              maxLines: 1,
+                                                              minFontSize: 8.0,
+                                                              textAlign: TextAlign.end,
+                                                              style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.white70),
                                                             ),
                                                           ),
-                                                          Text(
-                                                            _pendingMasternodes == 1 ? "MN" : "MNs",
-                                                            // textAlign: TextAlign.end,
-                                                            style: const TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
-                                                          ),
-                                                        ],
-                                                      ),
+                                                        ),
+                                                        Text(
+                                                          _pendingMasternodes == 1 ? "MN" : "MNs",
+                                                          // textAlign: TextAlign.end,
+                                                          style: const TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 12.0, color: Colors.white70),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
                                                 ),
@@ -1064,18 +1058,17 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
         _keyStake.currentState?.reset();
         return;
       }
-
       await interface.post("/masternode/start", body: {"idCoin": 0, "node_id": mnLock.node!.id!}, serverType: ComInterface.serverGoAPI, debug: true);
       _getBalance();
       if (mounted) Navigator.of(context).pop();
       _keyStake.currentState?.reset();
     } catch (e) {
-      ComInterface interface = ComInterface();
-      Map<String, dynamic> queryLock = {"idNode": mnLock?.node?.id};
-      await interface.post("/masternode/unlock", body: queryLock, serverType: ComInterface.serverGoAPI, debug: true);
       if (mounted) Navigator.of(context).pop();
       _keyStake.currentState?.reset();
       if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
+      ComInterface interface = ComInterface();
+      Map<String, dynamic> queryLock = {"idNode": mnLock?.node?.id};
+      await interface.post("/masternode/unlock", body: queryLock, serverType: ComInterface.serverGoAPI, debug: true);
     }
   }
 

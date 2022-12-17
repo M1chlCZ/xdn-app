@@ -14,10 +14,6 @@ func init() {
 
 }
 
-func init() {
-
-}
-
 func SendCoins(addressReceive string, addressSend string, amount float64, stakeWallet bool) (string, error) {
 	var wallet models.Daemon
 	if stakeWallet {

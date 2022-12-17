@@ -253,17 +253,13 @@ func withdrawMN(c *fiber.Ctx) error {
 
 	}
 
-	userNode, _ := database.ReadValue[int64]("SELECT COUNT(*) FROM users_masternode WHERE idUser = ? AND idNode = ? AND active = 1", userID, stakeReq.IdNode)
+	userNode, _ := database.ReadValue[int64]("SELECT COUNT(*) FROM users_mn WHERE idUser = ? AND idNode = ? AND active = 1", userID, stakeReq.IdNode)
 	if userNode == 0 {
 		return utils.ReportError(c, "Selected node does not belong to the user", http.StatusConflict)
 
 	}
 
-	dateStarted, err := database.ReadValue[sql.NullTime]("SELECT dateStart FROM users_masternode WHERE idUser = ? AND idNode = ? AND active = 1", userID, stakeReq.IdNode)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-
-	}
+	dateStarted := database.ReadValueEmpty[sql.NullTime]("SELECT dateStart FROM users_mn WHERE idUser = ? AND idNode = ? AND active = 1", userID, stakeReq.IdNode)
 
 	if dateStarted.Valid == false {
 		return utils.ReportError(c, "Coins are still locked", http.StatusConflict)
@@ -277,8 +273,8 @@ func withdrawMN(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Coins are locked for week", http.StatusConflict)
 	}
 
-	ur, errCrypt := database.ReadValue[string]("SELECT node_ip FROM masternode_clients WHERE id = ?", stakeReq.IdNode)
-	coinID, errCrypt := database.ReadValue[string]("SELECT coin_id FROM masternode_clients WHERE id = ?", stakeReq.IdNode)
+	ur, errCrypt := database.ReadValue[string]("SELECT node_ip FROM mn_clients WHERE id = ?", stakeReq.IdNode)
+	//coinID, errCrypt := database.ReadValue[string]("SELECT coin_id FROM mn_clients WHERE id = ?", stakeReq.IdNode)
 	if errCrypt != nil {
 		utils.ReportMessage("1")
 		return utils.ReportError(c, errCrypt.Error(), http.StatusInternalServerError)
@@ -288,7 +284,7 @@ func withdrawMN(c *fiber.Ctx) error {
 
 	//var amount float64
 
-	addr, errCrypt := database.ReadValue[string]("SELECT addr FROM deposit_addr WHERE idUser = ? and idCoin = ?", userID, coinID)
+	addr, errCrypt := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
 	if errCrypt != nil {
 		utils.ReportMessage("3")
 		return utils.ReportError(c, errCrypt.Error(), http.StatusInternalServerError)
@@ -377,7 +373,7 @@ func unlockMN(c *fiber.Ctx) error {
 		Active sql.NullInt64 `json:"active"`
 	}
 
-	freeMN, err := database.ReadStruct[ActiveMN]("SELECT id, active FROM masternode_clients WHERE id = ?", mnInfoReq.IdNode)
+	freeMN, err := database.ReadStruct[ActiveMN]("SELECT id, active FROM mn_clients WHERE id = ?", mnInfoReq.IdNode)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 
@@ -390,7 +386,7 @@ func unlockMN(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Node is active!", http.StatusConflict)
 
 	} else {
-		_, errUpdate := database.InsertSQl("UPDATE masternode_clients SET locked = 0 WHERE id = ? ", freeMN.ID.Int64)
+		_, errUpdate := database.InsertSQl("UPDATE mn_clients SET locked = 0 WHERE id = ? ", freeMN.ID.Int64)
 		if errUpdate != nil {
 			utils.WrapErrorLog(errUpdate.Error())
 			return utils.ReportError(c, errUpdate.Error(), http.StatusConflict)
@@ -447,6 +443,7 @@ func lockMN(c *fiber.Ctx) error {
 				//sendWarningMessage(68857, "Error Node", fmt.Sprintf("Error Node %d", freeMN.ID)) //TODO: Send message to admin
 				continue
 			}
+			utils.ReportMessage(fmt.Sprintf("NODE OK: %d", freeMN.ID))
 			_, errUpdate := database.InsertSQl("UPDATE mn_clients SET locked = 1 WHERE id = ? ", freeMN.ID)
 			if errUpdate != nil {
 				utils.WrapErrorLog(errUpdate.Error())
@@ -457,7 +454,7 @@ func lockMN(c *fiber.Ctx) error {
 		}
 	}
 
-	freeMasternodesQuery := "SELECT id, address FROM masternode_clients WHERE id=?"
+	freeMasternodesQuery := "SELECT id, address FROM mn_clients WHERE id=?"
 	type listMN struct {
 		ID   int    `db:"id" json:"id"`
 		Addr string `db:"address" json:"address"`

@@ -117,8 +117,6 @@ func ReadStruct[T any](SQL string, params ...interface{}) (T, error) {
 	go func(data chan T, err chan error) {
 		rows, errDB := Database.Queryx(SQL, params...)
 		if errDB != nil {
-			//i := getZero[T]()
-			_ = rows.Close()
 			err <- errDB
 			//data <- i
 			//return i, err
@@ -155,7 +153,6 @@ func ReadStructEmpty[T any](SQL string, params ...interface{}) T {
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			i := getZero[T]()
-			_ = rows.Close()
 			data <- i
 			//return i
 		} else {

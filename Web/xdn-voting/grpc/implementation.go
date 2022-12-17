@@ -152,7 +152,7 @@ func (s *Server) WithdrawConfirm(_ context.Context, txDaemon *grpcModels.Withdra
 		utils.ReportMessage(fmt.Sprintf("! Full Withdraw: Updating DB | Node id: %d !", txDaemon.NodeID))
 		userid, _ := database.ReadValue[int64]("SELECT idUser FROM users_mn WHERE idNode = ? AND active = 1", txDaemon.NodeID)
 		coinid, _ := database.ReadValue[int64]("SELECT idCoin FROM users_mn WHERE idNode = ? AND active = 1", txDaemon.NodeID)
-		depAddr, _ := database.ReadValue[string]("SELECT addr FROM deposit_addr WHERE idUser = ? AND idCoin = ?", userid, coinid) //todo check if this is correct
+		depAddr, _ := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userid) //todo check if this is correct
 		amnt, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM payouts_masternode WHERE idNode = ? AND credited = 0", txDaemon.NodeID)
 		collateral, _ := database.ReadValue[int]("SELECT collateral FROM mn_info WHERE idCoin = ?", coinid)
 
