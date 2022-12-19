@@ -1,4 +1,3 @@
-import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,15 +17,15 @@ class SendDialogQR extends StatefulWidget {
 
 class SendDialogQRState extends State<SendDialogQR> {
   Map<String, String?> mapData = {};
-  NumberFormat nf = NumberFormat("#,###.##", "en_US");
+  NumberFormat? nf;
   double amountXDN = 0.0;
   String? error;
 
   @override
   void initState() {
     super.initState();
+    nf  = NumberFormat("#,###.##", "en_US");
     mapData = widget.data;
-    print(mapData["label"].toString());
     num? currencyAmount = widget.priceData?[mapData["label"]?.toLowerCase()];
     if (mapData["amount"] == null) {
       mapData["amountCrypto"] = "0.0";
@@ -74,7 +73,7 @@ class SendDialogQRState extends State<SendDialogQR> {
                   height: 5,
                 ),
                 Text(
-                  "${mapData["amount"] ?? ''} ${mapData["label"] == null ? 'XDN' : mapData["label"]!.toUpperCase()}",
+                  "${nf!.format(double.parse(mapData["amount"] ?? '0.0'))} ${mapData["label"] == null ? 'XDN' : mapData["label"]!.toUpperCase()}",
                   style: GoogleFonts.aBeeZee(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black.withOpacity(0.8)),
                 ),
                 const SizedBox(
@@ -87,7 +86,7 @@ class SendDialogQRState extends State<SendDialogQR> {
                 ),
                 if (mapData["label"] != null)
                 Text(
-                  "${nf.format(amountXDN)} XDN",
+                  "${nf!.format(amountXDN)} XDN",
                   style: GoogleFonts.aBeeZee(fontSize: 14, fontWeight: FontWeight.w200, color: Colors.black.withOpacity(0.8)),
                 ),
                 const SizedBox(

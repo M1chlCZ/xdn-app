@@ -864,7 +864,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                     SizedBox(
                                       width: 200,
                                       child: AutoSizeText(
-                                        "${AppLocalizations.of(context)!.mn_time_to_start}  |",
+                                        "${AppLocalizations.of(context)!.mn_time_to_start}  | ",
                                         textAlign: TextAlign.center,
                                         maxLines: 1,
                                         minFontSize: 8,

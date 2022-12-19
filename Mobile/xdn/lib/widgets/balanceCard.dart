@@ -125,7 +125,7 @@ class BalanceCardState extends State<BalanceCard> {
                               _priceData != null &&  _priceData!.isNotEmpty && textImature == '' && textPending == ''
                                   ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
-                                child: AutoSizeText("${price.toStringAsFixed(2)} \$",
+                                child: AutoSizeText("\$ ${price.toStringAsFixed(2)}",
                                     minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
                               )
                                   : Container(),

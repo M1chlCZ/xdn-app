@@ -34,7 +34,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:get_it/get_it.dart';
 import 'package:grpc/grpc.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
@@ -103,8 +102,8 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
       if (response.mnPermission) {
         setState(() {
-            mnActive = true;
-          });
+          mnActive = true;
+        });
         _controller.forward();
       }
     } catch (e) {
@@ -171,8 +170,8 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void _getLocale() async {
-    var timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
-    await SecureStorage.write(key: globals.LOCALE, value: timeZoneName);
+    // var timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+    // await SecureStorage.write(key: globals.LOCALE, value: timeZoneName);
   }
 
   refreshBalance() {
@@ -630,41 +629,43 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void sendCoints(Map<String, String?> data) {
-    String method = "/user/send";
-    Map<String, dynamic>? m;
-    ComInterface interface = ComInterface();
+    try {
+      String method = "/user/send";
+      Map<String, dynamic>? m;
+      ComInterface interface = ComInterface();
+      Dialogs.openWaitBox(context);
+      var addr = data["address"]!;
+      var recipient = data["message"];
+      var amnt = data["amountCrypto"]!;
 
-    var addr = data["address"]!;
-    var recipient = data["message"];
-    var amnt = data["amountCrypto"]!;
-
-    if (!RegExp(r"^\b(d)[a-zA-Z0-9]{33}$").hasMatch(addr)) {
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.konj_addr_invalid);
-      return;
-    }
-
-    if (recipient == null) {
-      m = {
-        "address": addr,
-        "amount": double.parse(double.parse(amnt).toStringAsFixed(8)),
-      };
-    } else {
-      method = "/user/send/contact";
-      m = {
-        "address": addr,
-        "amount": double.parse(double.parse(amnt).toStringAsFixed(8)),
-        "contact": recipient,
-      };
-    }
-    Dialogs.openWaitBox(context);
-    Future.delayed(const Duration(milliseconds: 500), () async {
-      try {
-        await interface.post(method, body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
-      } catch (e) {
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
+      if (!RegExp(r"^\b(d)[a-zA-Z0-9]{33}$").hasMatch(addr)) {
+        throw Exception("Invalid address");
       }
-    });
-    Navigator.of(context).pop();
+
+      if (recipient == null) {
+        m = {
+          "address": addr,
+          "amount": double.parse(double.parse(amnt).toStringAsFixed(8)),
+        };
+      } else {
+        method = "/user/send/contact";
+        m = {
+          "address": addr,
+          "amount": double.parse(double.parse(amnt).toStringAsFixed(8)),
+          "contact": recipient,
+        };
+      }
+      Future.delayed(const Duration(milliseconds: 100), () async {
+        await interface.post(method, body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+        if (mounted) {
+          Navigator.of(context).pop();
+          Dialogs.displayDialog(context, AppLocalizations.of(context)!.notice_warn, AppLocalizations.of(context)!.succ);
+        }
+      });
+    } catch (e) {
+      Navigator.of(context).pop();
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
+    }
   }
 
   Map<String, String?> _splitString(String string) {
@@ -700,7 +701,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
       }
     }
 
-    if (data["name"] != "DigitalNote") {
+    if (data["name"]?.toLowerCase() != "digitalnote") {
       return {"error": "Invalid QR code"};
     }
     if (data["address"] == null || data["address"]!.isEmpty) {

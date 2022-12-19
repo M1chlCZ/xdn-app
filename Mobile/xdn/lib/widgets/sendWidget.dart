@@ -249,7 +249,7 @@ class SendWidgetState extends State<SendWidget> {
       }
     }
 
-    if (data["name"] != "DigitalNote") {
+    if (data["name"]?.toLowerCase() != "digitalnote") {
       processData({"error": "Invalid QR code"});
       return {"error": "Invalid QR code"};
     }

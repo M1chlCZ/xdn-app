@@ -461,13 +461,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.2.16"
-  flutter_native_timezone:
-    dependency: "direct main"
-    description:
-      name: flutter_native_timezone
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.0"
   flutter_phoenix:
     dependency: "direct main"
     description:
@@ -652,7 +645,7 @@ packages:
       name: image_picker_android
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.5+3"
+    version: "0.8.5+4"
   image_picker_for_web:
     dependency: transitive
     description:
@@ -666,7 +659,7 @@ packages:
       name: image_picker_ios
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.6+1"
+    version: "0.8.6+2"
   image_picker_platform_interface:
     dependency: transitive
     description:
@@ -736,14 +729,14 @@ packages:
       name: local_auth_android
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.15"
+    version: "1.0.16"
   local_auth_ios:
     dependency: transitive
     description:
       name: local_auth_ios
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.10"
+    version: "1.0.11"
   local_auth_platform_interface:
     dependency: transitive
     description:
