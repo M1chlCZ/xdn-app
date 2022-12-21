@@ -33,7 +33,7 @@ class LockScreen extends StatefulWidget {
   /// Wrong password dialog content
   final String? wrongPassContent;
 
-  /// Wrong password dialog button text
+  /// Wrong password dialog labelLarge text
   final String? wrongPassCancelButtonText;
 
   /// Background image
@@ -327,7 +327,7 @@ class LockScreenState extends State<LockScreen> {
                 child: Center(
                   child: Text(
                     number.toString(),
-                    style: Theme.of(context).textTheme.headline4!.copyWith(
+                    style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                         color: widget.numColor,
                         fontSize: 22.0,
                         fontWeight: FontWeight.bold),

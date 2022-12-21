@@ -169,7 +169,7 @@ class AutoSizeTextField extends StatefulWidget {
   /// if it's not showing already.
   ///
   /// On Android, the user can hide the keyboard - without changing the focus -
-  /// with the system back button. They can restore the keyboard's visibility
+  /// with the system back labelLarge. They can restore the keyboard's visibility
   /// by tapping on a text field.  The user might hide the keyboard and
   /// switch to a physical keyboard, or they might just need to get it
   /// out of the way for a moment, to expose something it's
@@ -192,7 +192,7 @@ class AutoSizeTextField extends StatefulWidget {
   /// {@macro flutter.widgets.editableText.keyboardType}
   final TextInputType keyboardType;
 
-  /// The type of action button to use for the keyboard.
+  /// The type of action labelLarge to use for the keyboard.
   ///
   /// Defaults to [TextInputAction.newline] if [keyboardType] is
   /// [TextInputType.multiline] and [TextInputAction.done] otherwise.

@@ -84,7 +84,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               textAlign: TextAlign.right,
-                                              style: Theme.of(context).textTheme.headline5!.copyWith(fontWeight: FontWeight.w200, fontSize: 28.0)),
+                                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w200, fontSize: 28.0)),
                                         ),
                                       ),
                                       const SizedBox(
@@ -97,7 +97,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                               child: Text(
                                             "XDN",
                                             textAlign: TextAlign.right,
-                                            style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 24.0, fontWeight: FontWeight.w800),
+                                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 24.0, fontWeight: FontWeight.w800),
                                           ))),
                                       const SizedBox(
                                         width: 0.0,
@@ -113,7 +113,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                   child: SizedBox(
                                       width: MediaQuery.of(context).size.width * 0.8,
                                       child: AutoSizeText(textImature,
-                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white54)),
                                     ),
                                 )
                                 : Container(),
@@ -123,7 +123,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                                   child: SizedBox(
                                       width: MediaQuery.of(context).size.width * 0.8,
                                       child: AutoSizeText(textPending,
-                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white54)),
                                     ),
                                 )
                                 : Container(),
@@ -133,7 +133,7 @@ class _BalanceCardMainMenuState extends State<BalanceCardMainMenu> {
                           ],
                         );
                       } else if (snapshot.hasError) {
-                        return Center(child: Text("There was an error retrieving you balance", style: Theme.of(context).textTheme.headline1!.copyWith(color: Colors.white, fontSize: 14)));
+                        return Center(child: Text("There was an error retrieving you balance", style: Theme.of(context).textTheme.displayLarge!.copyWith(color: Colors.white, fontSize: 14)));
                       } else {
                         return Center(
                           child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[

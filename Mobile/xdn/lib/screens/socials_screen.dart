@@ -86,7 +86,7 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
                   Text(
                     AppLocalizations.of(context)!.social_accounts,
                     textAlign: TextAlign.start,
-                    style: Theme.of(context).textTheme.subtitle1!.copyWith(fontSize: 14.0, color: Colors.white24),
+                    style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 14.0, color: Colors.white24),
                   ),
                   const SizedBox(
                     height: 5.0,

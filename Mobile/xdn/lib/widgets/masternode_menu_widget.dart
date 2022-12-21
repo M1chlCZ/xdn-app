@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class MasternodeMenuWidget extends StatefulWidget {
   final VoidCallback goto;
@@ -39,7 +38,7 @@ class _MasternodeMenuWidgetState extends State<MasternodeMenuWidget> {
                     children: [
                       Text(
                         "Masternode",
-                        style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.w300),
+                        style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.w300),
                       ),
                     ],
                   ),

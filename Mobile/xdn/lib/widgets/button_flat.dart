@@ -30,12 +30,12 @@ class FlatCustomButton extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.all(Radius.circular(radius)),
         child: Material(
-          color: color, // button color
+          color: color, // labelLarge color
           child: InkWell(
             // highlightColor: splashColor!.withOpacity(0.5),
             splashColor: splashColor ?? Colors.white30,
             highlightColor: splashColor ?? Colors.white30,// splash color
-            onTap: onTap, // button pressed
+            onTap: onTap, // labelLarge pressed
             child: Container(
               padding: padding,
               child: Column(

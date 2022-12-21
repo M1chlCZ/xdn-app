@@ -265,7 +265,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                                           padding: const EdgeInsets.all(15.0),
                                                           child: Text(
                                                             mNode.lastMessage!,
-                                                            style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white70, fontSize: 14.0),
+                                                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white70, fontSize: 14.0),
                                                           ),
                                                         ),
                                                       ),
@@ -334,7 +334,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             Expanded(
                                               child: AutoSizeText(
                                                 '${AppLocalizations.of(context)!.message_reply_to}: ${_replyMessage == null ? '' : _replyMessage!}',
-                                                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                                style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0),
                                                 maxLines: 1,
                                                 minFontSize: 12.0,
                                                 overflow: TextOverflow.ellipsis,
@@ -348,7 +348,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                             //   height: 16.0,
                                             //   child: AutoSizeText(
                                             //     _replyMessage == null ? '' : _replyMessage!,
-                                            //     style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, letterSpacing: 0.2),
+                                            //     style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, letterSpacing: 0.2),
                                             //     maxLines: 1,
                                             //     minFontSize: 12.0,
                                             //     overflow: TextOverflow.ellipsis,
@@ -372,11 +372,11 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                                     _replyMessage = null;
                                                     _replyHeight = 0;
                                                   });
-                                                }, // button pressed
+                                                }, // labelLarge pressed
                                                 child: SizedBox(
                                                   height: _replyHeight,
                                                   child: Center(
-                                                    child: Text('x', style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 20.0)),
+                                                    child: Text('x', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 20.0)),
                                                   ),
                                                 ),
                                               ),
@@ -402,7 +402,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                           ],
                                           textAlign: TextAlign.left,
                                           cursorColor: Colors.white70,
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, fontWeight: FontWeight.w600, color: Colors.white),
+                                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 16.0, fontWeight: FontWeight.w600, color: Colors.white),
                                           decoration: const InputDecoration(
                                             contentPadding: EdgeInsets.all(15.0),
                                             enabledBorder: UnderlineInputBorder(
@@ -485,7 +485,7 @@ class MessageDetailScreenState extends LifecycleWatcherState<MessageDetailScreen
                                   overflow: TextOverflow.ellipsis,
                                   minFontSize: 16.0,
                                   textAlign: TextAlign.start,
-                                  style: Theme.of(context).textTheme.headline1!.copyWith(
+                                  style: Theme.of(context).textTheme.displayLarge!.copyWith(
                                         fontSize: 24.0,
                                         color: Colors.white.withOpacity(0.85),
                                       )),

@@ -1,8 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
-import 'package:digitalnote/support/NetInterface.dart';
-import 'package:digitalnote/models/get_info.dart';
-import 'package:digitalnote/models/summary.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
@@ -55,12 +52,12 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
       Theme(
         data: Theme.of(context).copyWith(
             textTheme: TextTheme(
-          headline5: GoogleFonts.montserrat(
+          headlineSmall: GoogleFonts.montserrat(
             color: Colors.black54,
             fontSize: 14.0,
             fontWeight: FontWeight.w300,
           ),
-          bodyText2: GoogleFonts.montserrat(
+          bodyMedium: GoogleFonts.montserrat(
             color: Colors.black54,
             fontWeight: FontWeight.w300,
           ),
@@ -85,7 +82,7 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                               AutoSizeText(
                                 'Client version: ',
                                 textAlign: TextAlign.start,
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                               ),
                               const SizedBox(height: 5.0,),
                               const Divider(height: 0.5, color: Colors.white30,),
@@ -95,14 +92,14 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                                 child: AutoSizeText(
                                   dm?.version ?? '',
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white),
                                 ),
                               ),
                               const SizedBox(height: 20.0,),
                               AutoSizeText(
                                 'Block count: ',
                                 textAlign: TextAlign.start,
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                               ),
                               const SizedBox(height: 5.0,),
                               const Divider(height: 0.5, color: Colors.white30,),
@@ -112,14 +109,14 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                                 child: AutoSizeText(
                                   dm?.blockCount.toString() ?? '',
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white),
                                 ),
                               ),
                               const SizedBox(height: 20.0,),
                               AutoSizeText(
                                 'Masternode count: ',
                                 textAlign: TextAlign.start,
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                               ),
                               const SizedBox(height: 5.0,),
                               const Divider(height: 0.5, color: Colors.white30,),
@@ -129,14 +126,14 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                                 child: AutoSizeText(
                                   dm?.masternodeCount.toString() ?? '',
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white),
                                 ),
                               ),
                               const SizedBox(height: 15.0,),
                               AutoSizeText(
                                 'POW difficulty: ',
                                 textAlign: TextAlign.start,
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                               ),
                               const SizedBox(height: 5.0,),
                               const Divider(height: 0.5, color: Colors.white30,),
@@ -146,14 +143,14 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                                 child: AutoSizeText(
                                   dm?.difficulty.toString() ?? '',
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white),
                                 ),
                               ),
                               const SizedBox(height: 15.0,),
                               AutoSizeText(
                                 'Hashrate: ',
                                 textAlign: TextAlign.start,
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                               ),
                               const SizedBox(height: 5.0,),
                               const Divider(height: 0.5, color: Colors.white30,),
@@ -163,13 +160,13 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                                 child: AutoSizeText(
                                   "${dm?.hashrate} GH/s",
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white),
                                 ),
                               ), const SizedBox(height: 15.0,),
                               AutoSizeText(
                                 'Coin supply: ',
                                 textAlign: TextAlign.start,
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                               ),
                               const SizedBox(height: 5.0,),
                               const Divider(height: 0.5, color: Colors.white30,),
@@ -179,7 +176,7 @@ class _BlockInfoScreenState extends State<BlockInfoScreen> {
                                 child: AutoSizeText(
                                   "${Utils.formatBalance(dm?.coinSupply ?? 0)} XDN",
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white),
                                 ),
                               ),
                               const SizedBox(height: 20.0,),

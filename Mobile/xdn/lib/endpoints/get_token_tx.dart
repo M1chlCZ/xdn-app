@@ -9,7 +9,7 @@ class TokenTxList {
     Map<String, dynamic> m = {
       "timestamp": 0
     };
-    var rs = await _interface.post("/user/token/tx", serverType: ComInterface.serverGoAPI, body: m);
+    var rs = await _interface.post("/user/token/tx", serverType: ComInterface.serverGoAPI, body: m, debug: true);
     TokenTx st = TokenTx.fromJson(rs);
     return st;
   }

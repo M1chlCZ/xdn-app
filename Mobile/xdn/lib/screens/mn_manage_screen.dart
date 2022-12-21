@@ -210,27 +210,27 @@ class _MasternodeManageScreenState extends State<MasternodeManageScreen> {
                                   // const SizedBox(
                                   //   width: 20.0,
                                   // ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(right:2.0),
-                                    child: FlatCustomButton(
-                                        onTap: () {
-                                          Dialogs.openMNWithdrawBox(context, sortedList[index].id!, () {
-                                            _withdrawNode(sortedList[index].id!);
-                                          });
-                                          // Dialogs.openAlertBox(context, "Info", "Not implemented");
-                                        },
-                                        color: Colors.transparent,
-                                        child: const Padding(
-                                          padding: EdgeInsets.all(5.0),
-                                          child: Text(
-                                            "INFO",
-                                            style: TextStyle(fontFamily: 'JosefinSans',color: Colors.lime, fontSize: 14, fontWeight: FontWeight.w600),
-                                          ),
-                                        )),
-                                  ),
-                                  const SizedBox(
-                                    width: 10.0,
-                                  ),
+                                  // Padding(
+                                  //   padding: const EdgeInsets.only(right:2.0),
+                                  //   child: FlatCustomButton(
+                                  //       onTap: () {
+                                  //         Dialogs.openMNWithdrawBox(context, sortedList[index].id!, () {
+                                  //           _withdrawNode(sortedList[index].id!);
+                                  //         });
+                                  //         // Dialogs.openAlertBox(context, "Info", "Not implemented");
+                                  //       },
+                                  //       color: Colors.transparent,
+                                  //       child: const Padding(
+                                  //         padding: EdgeInsets.all(5.0),
+                                  //         child: Text(
+                                  //           "INFO",
+                                  //           style: TextStyle(fontFamily: 'JosefinSans',color: Colors.lime, fontSize: 14, fontWeight: FontWeight.w600),
+                                  //         ),
+                                  //       )),
+                                  // ),
+                                  // const SizedBox(
+                                  //   width: 10.0,
+                                  // ),
                                   Padding(
                                     padding: const EdgeInsets.only(right:2.0),
                                     child: FlatCustomButton(

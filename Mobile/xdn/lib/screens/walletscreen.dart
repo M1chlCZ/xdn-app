@@ -106,10 +106,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
     animateButton();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -107,7 +107,7 @@ class SecurityScreenState extends State<SecurityScreen> {
                         Text(
                           "Security",
                           textAlign: TextAlign.start,
-                          style: Theme.of(context).textTheme.subtitle1!.copyWith(fontSize: 14.0, color: Colors.white54),
+                          style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 14.0, color: Colors.white54),
                         ),
                         const SizedBox(
                           height: 5.0,
@@ -123,7 +123,7 @@ class SecurityScreenState extends State<SecurityScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text("Authentication type", style: Theme.of(context).textTheme.headline4!.copyWith(fontSize: 14.0, color: Colors.white)),
+                            Text("Authentication type", style: Theme.of(context).textTheme.headlineMedium!.copyWith(fontSize: 14.0, color: Colors.white)),
                             // SizedBox(
                             //   width: MediaQuery.of(context).size.width * 0.4,
                             // ),
@@ -172,7 +172,7 @@ class SecurityScreenState extends State<SecurityScreen> {
                         Text(
                           "PIN settings",
                           textAlign: TextAlign.start,
-                          style: Theme.of(context).textTheme.subtitle1!.copyWith(fontSize: 14.0, color: Colors.white54),
+                          style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 14.0, color: Colors.white54),
                         ),
                         const SizedBox(
                           height: 5.0,
@@ -208,7 +208,7 @@ class SecurityScreenState extends State<SecurityScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     const SizedBox(width: 10.0),
-                                    Text("Remove PIN", style: Theme.of(context).textTheme.headline4!.copyWith(fontSize: 14.0, color: Colors.white)),
+                                    Text("Remove PIN", style: Theme.of(context).textTheme.headlineMedium!.copyWith(fontSize: 14.0, color: Colors.white)),
                                     const Expanded(
                                       child: SizedBox(),
                                     ),

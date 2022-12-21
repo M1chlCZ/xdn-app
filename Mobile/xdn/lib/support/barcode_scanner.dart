@@ -38,7 +38,7 @@ class BarcodeScannerState extends State<BarcodeScanner> {
     return Scaffold(
           appBar: AppBar(
             backgroundColor: const Color(0xFF2D344E),
-            title: Text('Scan QR code', style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),),
+            title: Text('Scan QR code', style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),),
             actions: [
               IconButton(
                 color: Colors.white,

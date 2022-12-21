@@ -199,7 +199,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                 style: Theme
                                     .of(context)
                                     .textTheme
-                                    .bodyText1!
+                                    .bodyLarge!
                                     .copyWith(fontSize: 16.0),
                               ),
                               FlatCustomButton(
@@ -234,7 +234,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                       style: Theme
                                           .of(context)
                                           .textTheme
-                                          .bodyText1!
+                                          .bodyLarge!
                                           .copyWith(fontSize: 14.0, color: Colors.black87),
                                     ),
                                     Text(
@@ -242,7 +242,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                       style: Theme
                                           .of(context)
                                           .textTheme
-                                          .headline1!
+                                          .displayLarge!
                                           .copyWith(fontSize: 14.0, color: Colors.black87),
                                     ),
                                   ],
@@ -278,7 +278,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                     style: Theme
                                                         .of(context)
                                                         .textTheme
-                                                        .bodyText1!
+                                                        .bodyLarge!
                                                         .copyWith(fontSize: 14.0),
                                                   ),
                                                   Row(
@@ -290,7 +290,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         style: Theme
                                                             .of(context)
                                                             .textTheme
-                                                            .headline1!
+                                                            .displayLarge!
                                                             .copyWith(fontSize: 14.0),
                                                       ),
                                                       const SizedBox(
@@ -312,7 +312,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                     style: Theme
                                                         .of(context)
                                                         .textTheme
-                                                        .bodyText1!
+                                                        .bodyLarge!
                                                         .copyWith(fontSize: 14.0),
                                                   ),
                                                   Row(
@@ -324,7 +324,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         style: Theme
                                                             .of(context)
                                                             .textTheme
-                                                            .headline1!
+                                                            .displayLarge!
                                                             .copyWith(fontSize: 14.0),
                                                       ),
                                                       const SizedBox(
@@ -346,7 +346,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                     style: Theme
                                                         .of(context)
                                                         .textTheme
-                                                        .bodyText1!
+                                                        .bodyLarge!
                                                         .copyWith(fontSize: 14.0),
                                                   ),
                                                   Row(
@@ -358,7 +358,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         style: Theme
                                                             .of(context)
                                                             .textTheme
-                                                            .headline1!
+                                                            .displayLarge!
                                                             .copyWith(fontSize: 14.0),
                                                       ),
                                                       const SizedBox(
@@ -398,7 +398,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                     style: Theme
                                                         .of(context)
                                                         .textTheme
-                                                        .bodyText1!
+                                                        .bodyLarge!
                                                         .copyWith(fontSize: 9.0, color: Colors.white70),
                                                   ),
                                                   const SizedBox(
@@ -475,7 +475,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                     child: Center(child: Text(snapshot.error.toString().capitalize(), textAlign: TextAlign.center, style: Theme
                                         .of(context)
                                         .textTheme
-                                        .headline1!
+                                        .displayLarge!
                                         .copyWith(fontSize: 24.0, color: Colors.white30),)));
                               } else if (snapshot.hasData) {
                                 var contest = snapshot.data;
@@ -508,7 +508,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                               style: Theme
                                                   .of(context)
                                                   .textTheme
-                                                  .bodyText1!
+                                                  .bodyLarge!
                                                   .copyWith(fontSize: 16.0, fontWeight: FontWeight.bold),
                                             )),
                                         Container(
@@ -529,7 +529,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         style: Theme
                                                             .of(context)
                                                             .textTheme
-                                                            .bodyText1!
+                                                            .bodyLarge!
                                                             .copyWith(fontSize: 15.0, color: Colors.white),
                                                       ),
                                                       Row(
@@ -541,7 +541,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                             style: Theme
                                                                 .of(context)
                                                                 .textTheme
-                                                                .headline1!
+                                                                .displayLarge!
                                                                 .copyWith(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),
                                                           ),
                                                           const SizedBox(width: 5),
@@ -571,7 +571,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                         style: Theme
                                                             .of(context)
                                                             .textTheme
-                                                            .bodyText1!
+                                                            .bodyLarge!
                                                             .copyWith(fontSize: 15.0, color: Colors.white),
                                                       ),
                                                       Row(
@@ -583,7 +583,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                             style: Theme
                                                                 .of(context)
                                                                 .textTheme
-                                                                .headline1!
+                                                                .displayLarge!
                                                                 .copyWith(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),
                                                           ),
                                                           const SizedBox(width: 5),
@@ -613,12 +613,12 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                     style: Theme
                                                         .of(context)
                                                         .textTheme
-                                                        .bodyText1!
+                                                        .bodyLarge!
                                                         .copyWith(fontSize: 12.0),
                                                   ),
                                                   // Text(
                                                   //   DateFormat('dd/MM/yyyy').format(date),
-                                                  //   style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0),
+                                                  //   style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12.0),
                                                   // ),
                                                 ],
                                               ),
@@ -645,7 +645,7 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                   style: Theme
                                                       .of(context)
                                                       .textTheme
-                                                      .headline5!
+                                                      .headlineSmall!
                                                       .copyWith(fontSize: 12.0, fontWeight: FontWeight.w300, color: Colors.white70),
                                                 ),
                                                 const SizedBox(
@@ -833,7 +833,7 @@ class VotingLegend extends StatelessWidget {
                   style: Theme
                       .of(context)
                       .textTheme
-                      .bodyText1!
+                      .bodyLarge!
                       .copyWith(fontSize: 8.0),
                 ),
               ],
@@ -856,7 +856,7 @@ class VotingLegend extends StatelessWidget {
                   style: Theme
                       .of(context)
                       .textTheme
-                      .bodyText1!
+                      .bodyLarge!
                       .copyWith(fontSize: 8.0),
                 ),
               ],

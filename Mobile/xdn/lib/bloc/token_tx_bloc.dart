@@ -1,9 +1,7 @@
 import 'dart:async';
 
-import 'package:digitalnote/endpoints/get_stake_graph.dart';
 import 'package:digitalnote/endpoints/get_token_tx.dart';
 import 'package:digitalnote/models/TokenTx.dart';
-import 'package:digitalnote/models/staking_data.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
 import 'package:rxdart/rxdart.dart' show BehaviorSubject;
 
@@ -35,6 +33,7 @@ class TokenTxBloc {
         coinsListSink.add(ApiResponse.completed(_stakingData));
       }
     } catch (e) {
+      print(e);
       coinsListSink.add(ApiResponse.error(e.toString()));
       // print(e);
     }

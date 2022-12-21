@@ -97,7 +97,7 @@ class MessageGroupTileState extends State<MessageGroupTile> {
                             ),
                             Text(
                               getDate(widget.mgroup.lastReceivedMessage!),
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0),
                             ),
                           ],
                         ),
@@ -113,7 +113,7 @@ class MessageGroupTileState extends State<MessageGroupTile> {
                                     utf8convert(widget.mgroup.text!.replaceAll("&TIP#", AppLocalizations.of(context)!.message_tipped.capitalize())),
                                     maxLines: 1,
                                     textOverflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0),
                                   )
                                   ),
                               Opacity(
@@ -137,7 +137,7 @@ class MessageGroupTileState extends State<MessageGroupTile> {
                                     child: Center(
                                       child: Text(
                                         widget.mgroup.unread.toString(),
-                                        style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16.0),
+                                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 16.0),
                                       ),
                                     ),
                                   ),

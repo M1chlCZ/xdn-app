@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -26,7 +25,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:open_file_safe/open_file_safe.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -113,7 +112,7 @@ class _SettingsState extends State<SettingsScreen> {
       }
     } else if (Platform.isAndroid) {
       var androidInfo = await deviceInfo.androidInfo;
-      bool andr = androidInfo.isPhysicalDevice ?? false;
+      bool andr = androidInfo.isPhysicalDevice;
       if (andr) {
         return true;
       } else {
@@ -199,7 +198,7 @@ class _SettingsState extends State<SettingsScreen> {
 
       var f = await File(filePath).writeAsBytes(buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
       if (mounted) Navigator.of(context).pop();
-      var result = await OpenFile.open(f.path);
+      var result = await OpenFilex.open(f.path);
       if (result.type == ResultType.noAppToOpen) {
         if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_csv_no_app);
       }
@@ -246,12 +245,12 @@ class _SettingsState extends State<SettingsScreen> {
       Theme(
         data: Theme.of(context).copyWith(
             textTheme: TextTheme(
-          headline5: GoogleFonts.montserrat(
+          headlineSmall: GoogleFonts.montserrat(
             color: Colors.black54,
             fontSize: 14.0,
             fontWeight: FontWeight.w300,
           ),
-          bodyText2: GoogleFonts.montserrat(
+          bodyMedium: GoogleFonts.montserrat(
             color: Colors.black54,
             fontWeight: FontWeight.w300,
           ),
@@ -287,7 +286,7 @@ class _SettingsState extends State<SettingsScreen> {
                                               Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "This section is not allowed while running app  in vm or emulator");
                                             }
                                           },
-                                          // button pressed
+                                          // labelLarge pressed
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.start,
                                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -343,7 +342,7 @@ class _SettingsState extends State<SettingsScreen> {
                                         onTap: () async {
                                           _handlePIN();
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -400,7 +399,7 @@ class _SettingsState extends State<SettingsScreen> {
                                             _get2FACode();
                                           }
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -454,7 +453,7 @@ class _SettingsState extends State<SettingsScreen> {
                                           var name = await SecureStorage.read(key: globals.NICKNAME);
                                           if (mounted) Dialogs.openRenameBox(context, name!, _renameboxCallback);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -507,7 +506,7 @@ class _SettingsState extends State<SettingsScreen> {
                                         onTap: () {
                                           Dialogs.openPasswordChangeBox(context, _passCheck);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -560,7 +559,7 @@ class _SettingsState extends State<SettingsScreen> {
                                         onTap: () {
                                           Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -614,7 +613,7 @@ class _SettingsState extends State<SettingsScreen> {
                                           Navigator.of(context).pushNamed(BlockInfoScreen.route);
                                           // Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -668,7 +667,7 @@ class _SettingsState extends State<SettingsScreen> {
                                           // Navigator.of(context).pushNamed(BlockInfoScreen.route);
                                           // Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -693,15 +692,14 @@ class _SettingsState extends State<SettingsScreen> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                            Theme(
-                                              data: Theme.of(context).copyWith(
-                                                unselectedWidgetColor: Colors.white70,
-                                                selectedRowColor: Colors.amber,
-                                              ),
+                                            SizedBox(
+                                              width: 80,
                                               child: Switch(
                                                   value: switchValue,
                                                   activeColor: Colors.lightBlueAccent,
-                                                  inactiveThumbColor: Colors.black,
+                                                  inactiveThumbColor: Colors.grey.withOpacity(0.5),
+                                                  inactiveTrackColor: Colors.transparent,
+
                                                   onChanged: (b) {
                                                     setState(() {
                                                       switchValue = b;
@@ -736,7 +734,7 @@ class _SettingsState extends State<SettingsScreen> {
                                         onTap: () async {
                                           _saveFile();
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -789,7 +787,7 @@ class _SettingsState extends State<SettingsScreen> {
                                         onTap: () {
                                           Dialogs.openLanguageDialog(context, (value) => null, (save) => null, 0);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -853,44 +851,44 @@ class _SettingsState extends State<SettingsScreen> {
                                               children: [
                                                 Text(
                                                   'Daemon version:',
-                                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 Text(
                                                   getInfo!.version ?? 'unknown',
-                                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 const SizedBox(
                                                   height: 10,
                                                 ),
                                                 Text(
                                                   'Developed by:',
-                                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 Text(
                                                   'M1chlCZ, Nessie',
-                                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 const SizedBox(
                                                   height: 10,
                                                 ),
                                                 Text(
                                                   'App version:',
-                                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 Text(
                                                   packageInfo!.version,
-                                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 const SizedBox(
                                                   height: 10,
                                                 ),
                                                 Text(
                                                   '©DigitalNote Team 2022',
-                                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                               ]);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -943,7 +941,7 @@ class _SettingsState extends State<SettingsScreen> {
                                         onTap: () {
                                           Dialogs.openLogoutConfirmationBox(context);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -995,7 +993,7 @@ class _SettingsState extends State<SettingsScreen> {
                                         onTap: () {
                                           Dialogs.openDeleteAccountFirstBox(context, _removeCheck);
                                         },
-                                        // button pressed
+                                        // labelLarge pressed
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -1037,13 +1035,13 @@ class _SettingsState extends State<SettingsScreen> {
     ]);
   }
 
-  void _restartApp() async {
-    Phoenix.rebirth(context);
-  }
-
-  _onPasscodeCancelled() {
-    Navigator.maybePop(context);
-  }
+  // void _restartApp() async {
+  //   Phoenix.rebirth(context);
+  // }
+  //
+  // _onPasscodeCancelled() {
+  //   Navigator.maybePop(context);
+  // }
 
   @override
   void dispose() {
@@ -1272,6 +1270,9 @@ class _SettingsState extends State<SettingsScreen> {
 
   void sslPin(bool b) async {
     String? sslEnable = await SecureStorage.read(key: "SSL");
+    if (sslEnable == null) {
+      await SecureStorage.write(key: "SSL", value: 'true');
+    }
     bool ssl = sslEnable == "true";
     if (b == ssl) {
       return;

@@ -264,7 +264,7 @@ class AddressScreenState extends State<AddressScreen> {
                               _searchUsers(text);
                             },
                             cursorColor: Colors.white30,
-                            style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                            style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                             decoration: InputDecoration(
                                 floatingLabelBehavior: FloatingLabelBehavior.always,
                                 contentPadding: const EdgeInsets.only(bottom: 5.0),
@@ -273,9 +273,9 @@ class AddressScreenState extends State<AddressScreen> {
                                 focusColor: Theme.of(context).cardColor,
                                 fillColor: const Color(0xFF22283A).withOpacity(0.5),
                                 labelText: "",
-                                labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
+                                labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white54, fontSize: 18.0),
                                 hintText: AppLocalizations.of(context)!.search_contact,
-                                hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 18.0),
+                                hintStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white54, fontSize: 18.0),
                                 prefixIcon: const Padding(
                                   padding: EdgeInsets.only(top: 4.0),
                                   child: Icon(

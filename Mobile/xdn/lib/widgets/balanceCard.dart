@@ -126,7 +126,7 @@ class BalanceCardState extends State<BalanceCard> {
                                   ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
                                 child: AutoSizeText("\$ ${price.toStringAsFixed(2)}",
-                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
+                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
                               )
                                   : Container(),
                               const SizedBox(
@@ -136,14 +136,14 @@ class BalanceCardState extends State<BalanceCard> {
                                   ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
                                 child: AutoSizeText(textImature,
-                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white54)),
                               )
                                   : Container(),
                               textPending != ''
                                   ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
                                 child: AutoSizeText(textPending,
-                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white54)),
                               )
                                   : Container(),
                               const SizedBox(
@@ -152,7 +152,7 @@ class BalanceCardState extends State<BalanceCard> {
                             ],
                           );
                         } else if (snapshot.hasError) {
-                          return Center(child: Text(snapshot.error.toString(), style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 12.0, color: Colors.redAccent)));
+                          return Center(child: Text(snapshot.error.toString(), style: Theme.of(context).textTheme.displayLarge!.copyWith(fontSize: 12.0, color: Colors.redAccent)));
                         } else {
                           return Center(
                             child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
@@ -200,7 +200,7 @@ class BalanceCardState extends State<BalanceCard> {
                             )),
                         child: Text(
                           AppLocalizations.of(context)!.receive,
-                          style: Theme.of(context).textTheme.bodyText2!.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.5),
                         ),
                       ),
                     ),
@@ -224,7 +224,7 @@ class BalanceCardState extends State<BalanceCard> {
                             )),
                         child: Text(
                           AppLocalizations.of(context)!.send,
-                          style: Theme.of(context).textTheme.bodyText2!.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.5),
                         ),
                       ),
                     ),

@@ -324,7 +324,7 @@ class _LoginState extends State<LoginPage> {
                                     hintText:
                                         "${AppLocalizations.of(context)!.username} | ${AppLocalizations.of(context)!.email}",
                                     hintStyle:
-                                        Theme.of(context).textTheme.subtitle1,
+                                        Theme.of(context).textTheme.titleMedium,
                                     contentPadding: const EdgeInsets.fromLTRB(
                                         20.0, 10.0, 20.0, 10.0),
                                     focusedBorder: OutlineInputBorder(
@@ -343,7 +343,7 @@ class _LoginState extends State<LoginPage> {
                                         borderRadius:
                                             BorderRadius.circular(10.0)),
                                   ),
-                                  style: Theme.of(context).textTheme.bodyText2,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                   onEditingComplete: () {},
                                 ),
                               ),
@@ -363,7 +363,7 @@ class _LoginState extends State<LoginPage> {
                                     hintText:
                                         AppLocalizations.of(context)!.password,
                                     hintStyle:
-                                        Theme.of(context).textTheme.subtitle1,
+                                        Theme.of(context).textTheme.titleMedium,
                                     contentPadding: const EdgeInsets.fromLTRB(
                                         20.0, 10.0, 20.0, 10.0),
                                     focusedBorder: OutlineInputBorder(
@@ -382,7 +382,7 @@ class _LoginState extends State<LoginPage> {
                                         borderRadius:
                                             BorderRadius.circular(10.0)),
                                   ),
-                                  style: Theme.of(context).textTheme.bodyText2,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                               const SizedBox(
@@ -434,7 +434,7 @@ class _LoginState extends State<LoginPage> {
                                                   textAlign: TextAlign.center,
                                                   style: Theme.of(context)
                                                       .textTheme
-                                                      .bodyText1!
+                                                      .bodyLarge!
                                                       .copyWith(
                                                           color:
                                                               Colors.black)))),
@@ -481,7 +481,7 @@ class _LoginState extends State<LoginPage> {
                                                             TextAlign.center,
                                                         style: Theme.of(context)
                                                             .textTheme
-                                                            .bodyText1!
+                                                            .bodyLarge!
                                                             .copyWith(
                                                                 color: Colors
                                                                     .white70,
@@ -504,7 +504,7 @@ class _LoginState extends State<LoginPage> {
                                         "Server status",
                                         style: Theme.of(context)
                                             .textTheme
-                                            .headline5!
+                                            .headlineSmall!
                                             .copyWith(
                                                 fontSize: 8.0,
                                                 letterSpacing: 0.5),

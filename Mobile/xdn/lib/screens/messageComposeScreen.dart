@@ -127,7 +127,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                           overflow: TextOverflow.ellipsis,
                           minFontSize: 16.0,
                           textAlign: TextAlign.start,
-                          style: Theme.of(context).textTheme.headline1!.copyWith(
+                          style: Theme.of(context).textTheme.displayLarge!.copyWith(
                                 fontSize: 24.0,
                                 color: Colors.white.withOpacity(0.85),
                               )),
@@ -164,7 +164,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                           maxLines: 1,
                           controller: _controllerAddress,
                           autofocus: false,
-                          style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                          style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                           decoration: InputDecoration(
                               filled: true,
                               hoverColor: Theme.of(context).cardColor,
@@ -172,7 +172,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                               fillColor: const Color(0xFF22283A).withOpacity(0.5),
                               hintStyle: GoogleFonts.montserrat(fontStyle: FontStyle.normal, color: Colors.white70),
                               labelText: AppLocalizations.of(context)!.message_choose_recipient,
-                              labelStyle: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                              labelStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0),
                               prefixIcon: const Icon(
                                 Icons.person,
                                 color: Colors.white,
@@ -199,7 +199,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                                     cont!.getName()!,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                                           color: Colors.white70,
                                         ),
                                   ),
@@ -210,7 +210,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                                     cont.getAddr()!,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                                           color: Colors.white.withOpacity(0.5),
                                         ),
                                   ),
@@ -273,7 +273,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                         ],
                         textAlign: TextAlign.left,
                         textAlignVertical: TextAlignVertical.top,
-                        style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16.0),
                         decoration: const InputDecoration(
                           hintText: "Type your message here",
                           hintStyle: TextStyle(color: Colors.white70),

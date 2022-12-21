@@ -246,17 +246,17 @@ class AuthScreenState extends State<AuthScreen> {
                 Container(
                   margin: const EdgeInsets.only(top: 80.0, left: 20.0),
                   child: SizedBox.fromSize(
-                    size: const Size(40, 40), // button width and height
+                    size: const Size(40, 40), // labelLarge width and height
 
                     child: ClipOval(
                       child: Material(
-                        color: Colors.black12, // button color
+                        color: Colors.black12, // labelLarge color
                         child: InkWell(
                           splashColor: Colors.white.withOpacity(0.8), // splash color
                           onTap: () {
                             SecureStorage.deleteStorage(key:"PIN");
                             Navigator.pop(context);
-                          }, // button pressed
+                          }, // labelLarge pressed
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const <Widget>[

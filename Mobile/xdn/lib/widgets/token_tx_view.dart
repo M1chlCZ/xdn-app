@@ -32,7 +32,7 @@ class TokenTxView extends StatelessWidget {
           width: 150,
           child: AutoSizeText(
             _getText(transaction!.fromAddr, context),
-            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.white70),
+            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, color: Colors.white70),
             minFontSize: 14,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

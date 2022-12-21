@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/bsc_connector.dart';
 import 'package:digitalnote/support/notification_helper.dart';
-import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/support/wallet_connector.dart';
 import 'package:digitalnote/support/wxdn_connector.dart';
 import 'package:flutter/cupertino.dart';

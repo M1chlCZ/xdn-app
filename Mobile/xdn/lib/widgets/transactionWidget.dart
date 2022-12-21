@@ -81,7 +81,7 @@ class TransactionWidgetState extends State<TransactionWidget> {
           children: [
             Padding(
               padding: const EdgeInsets.only(left: 20, bottom: 10.0),
-              child: Text(AppLocalizations.of(context)!.rec_tx, textAlign: TextAlign.start, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 20.0)),
+              child: Text(AppLocalizations.of(context)!.rec_tx, textAlign: TextAlign.start, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20.0)),
             ),
             Visibility(
               visible: _circleVisible,

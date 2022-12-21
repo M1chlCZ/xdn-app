@@ -294,7 +294,7 @@ class SendWidgetState extends State<SendWidget> {
               width: MediaQuery.of(context).size.width - 80,
               child: AutoSizeText(
                 '${AppLocalizations.of(context)!.succ}!',
-                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 48.0),
                 minFontSize: 8,
                 maxLines: 1,
                 textAlign: TextAlign.center,
@@ -318,7 +318,7 @@ class SendWidgetState extends State<SendWidget> {
               width: MediaQuery.of(context).size.width - 80,
               child: AutoSizeText(
                 AppLocalizations.of(context)!.send_wait,
-                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 48.0),
                 minFontSize: 8,
                 maxLines: 1,
                 textAlign: TextAlign.center,
@@ -342,7 +342,7 @@ class SendWidgetState extends State<SendWidget> {
               width: MediaQuery.of(context).size.width - 80,
               child: AutoSizeText(
                 '${AppLocalizations.of(context)!.st_insufficient}!',
-                style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 48.0),
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 48.0),
                 minFontSize: 8,
                 maxLines: 1,
                 textAlign: TextAlign.center,
@@ -399,7 +399,7 @@ class SendWidgetState extends State<SendWidget> {
                                   maxLines: 1,
                                   controller: _controllerAddress,
                                   autofocus: false,
-                                  style: Theme.of(context).textTheme.headline5,
+                                  style: Theme.of(context).textTheme.headlineSmall,
                                   decoration: InputDecoration(
                                     counterText: "",
                                     focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white60, width: 1.0), borderRadius: BorderRadius.circular(15.0)),
@@ -410,9 +410,9 @@ class SendWidgetState extends State<SendWidget> {
                                     fillColor: Colors.transparent,
                                     hoverColor: Colors.white60,
                                     focusColor: Colors.white60,
-                                    labelStyle: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white),
+                                    labelStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white),
                                     hintText: '${AppLocalizations.of(context)!.address} / ${AppLocalizations.of(context)!.contact}',
-                                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white),
+                                    hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 16.0, color: Colors.white),
                                   ),
                                 ),
                                 suggestionsCallback: (pattern) async {
@@ -430,7 +430,7 @@ class SendWidgetState extends State<SendWidget> {
                                             cont!.getName()!,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                                            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                                                   color: Colors.white70,
                                                 ),
                                           ),
@@ -441,7 +441,7 @@ class SendWidgetState extends State<SendWidget> {
                                             cont.getAddr()!,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                                            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                                                   color: Colors.white.withOpacity(0.5),
                                                 ),
                                           ),
@@ -476,7 +476,7 @@ class SendWidgetState extends State<SendWidget> {
                                     color: Colors.white,
                                   ),
                                 ),
-                                label: Text('QR  ', style: Theme.of(context).textTheme.bodyText2),
+                                label: Text('QR  ', style: Theme.of(context).textTheme.bodyMedium),
                                 style: ButtonStyle(
                                     backgroundColor: MaterialStateProperty.resolveWith((states) => qrColors(states)),
                                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -504,16 +504,16 @@ class SendWidgetState extends State<SendWidget> {
                                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                                 ],
                                 autofocus: false,
-                                style: Theme.of(context).textTheme.headline5,
+                                style: Theme.of(context).textTheme.headlineSmall,
                                 decoration: InputDecoration(
                                   counterText: "",
                                   enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white12, width: 1.0), borderRadius: BorderRadius.circular(15.0)),
                                   focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1.0), borderRadius: BorderRadius.circular(15.0)),
                                   floatingLabelBehavior: FloatingLabelBehavior.always,
                                   contentPadding: const EdgeInsets.only(left: 14.0),
-                                  labelStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white),
+                                  labelStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white),
                                   hintText: AppLocalizations.of(context)!.amount,
-                                  hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16.0, color: Colors.white),
+                                  hintStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16.0, color: Colors.white),
                                 ),
                               ),
                             ),
@@ -529,7 +529,7 @@ class SendWidgetState extends State<SendWidget> {
                                 ),
                                 label: Text(
                                   'MAX   ',
-                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16.0),
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 16.0),
                                 ),
                                 style: ButtonStyle(
                                     backgroundColor: MaterialStateProperty.resolveWith((states) => amountColors(states)),
@@ -570,7 +570,7 @@ class SendWidgetState extends State<SendWidget> {
                                       AppLocalizations.of(context)!.cancel.toUpperCase(),
                                       maxLines: 1,
                                       minFontSize: 8,
-                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0),
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => cancelColors(states)),
@@ -598,7 +598,7 @@ class SendWidgetState extends State<SendWidget> {
                                       AppLocalizations.of(context)!.send.toUpperCase(),
                                       maxLines: 1,
                                       minFontSize: 8,
-                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0),
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),

@@ -50,8 +50,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   List<FlSpot>? values = [];
 
   int endTime = 0;
-  String _lockedText = '';
-  int _serverStatus = 0;
 
   MasternodeInfo? _mnInfo;
   String _balance = "";
@@ -314,7 +312,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                     value: item.key + 1,
                                     child: Padding(
                                       padding: const EdgeInsets.all(10.0),
-                                      child: Text(item.value, style: Theme.of(context).textTheme.button!.copyWith(fontSize: 16.0, color: Colors.white70)),
+                                      child: Text(item.value, style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: 16.0, color: Colors.white70)),
                                     ),
                                   ),
                                 )
@@ -371,7 +369,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                                           padding: const EdgeInsets.all(8.0),
                                                           child: Text(
                                                             AppLocalizations.of(context)!.graph_no_data,
-                                                            style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.red),
+                                                            style: Theme.of(context).textTheme.titleSmall!.copyWith(color: Colors.red),
                                                           ),
                                                         ),
                                                       ),
@@ -411,7 +409,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                     ),
                                     Text(
                                       AppLocalizations.of(context)!.st_live.toUpperCase(),
-                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, fontWeight: FontWeight.w300, color: Colors.white54),
+                                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 8.0, fontWeight: FontWeight.w300, color: Colors.white54),
                                     ),
                                   ],
                                 ),
@@ -444,7 +442,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                             children: [
                               SizedBox(
                                 width: 150,
-                                child: AutoSizeText(AppLocalizations.of(context)!.available, maxLines: 1, minFontSize: 8.0, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white70)),
+                                child: AutoSizeText(AppLocalizations.of(context)!.available, maxLines: 1, minFontSize: 8.0, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 16.0, color: Colors.white70)),
                               ),
                               FutureBuilder(
                                   future: _getBalanceFuture,
@@ -471,7 +469,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                           maxLines: 1,
                                           overflow: TextOverflow.fade,
                                           textAlign: TextAlign.right,
-                                          style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 16.0),
+                                          style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 16.0),
                                         ),
                                       );
                                     } else if (snapshot.hasError) {
@@ -502,14 +500,14 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                           child: Padding(
                             padding: const EdgeInsets.only(top: 5, left: 17.0, right: 25.0),
                             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                              Text(AppLocalizations.of(context)!.immature, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                              Text(AppLocalizations.of(context)!.immature, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.white38)),
                               Expanded(
                                 child: AutoSizeText("$_imature XDN",
                                     minFontSize: 8.0,
                                     maxLines: 1,
                                     overflow: TextOverflow.fade,
                                     textAlign: TextAlign.right,
-                                    style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                                    style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 14.0, color: Colors.white38)),
                               )
                             ]),
                           ),
@@ -522,14 +520,14 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                           child: Padding(
                             padding: const EdgeInsets.only(top: 5, left: 17.0, right: 25.0),
                             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                              Text(AppLocalizations.of(context)!.immature, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                              Text(AppLocalizations.of(context)!.immature, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.white38)),
                               Expanded(
                                 child: AutoSizeText("$_pending XDN",
                                     minFontSize: 8.0,
                                     maxLines: 1,
                                     overflow: TextOverflow.fade,
                                     textAlign: TextAlign.right,
-                                    style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0, color: Colors.white38)),
+                                    style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 14.0, color: Colors.white38)),
                               )
                             ]),
                           ),
@@ -540,7 +538,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(AppLocalizations.of(context)!.mn_collateral, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white70)),
+                              Text(AppLocalizations.of(context)!.mn_collateral, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 16.0, color: Colors.white70)),
                               Expanded(
                                 child: AutoSizeText(
                                   "${Utils.formatBalance(_collateral.toDouble())} XDN",
@@ -548,7 +546,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
                                   textAlign: TextAlign.right,
-                                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 16.0),
+                                  style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 16.0),
                                 ),
                               )
                             ],
@@ -588,7 +586,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                             maxLines: 1,
                                             minFontSize: 8.0,
                                             textAlign: TextAlign.end,
-                                            style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white70),
                                           ),
                                         ),
                                       ),
@@ -627,7 +625,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                                               maxLines: 1,
                                                               minFontSize: 8.0,
                                                               textAlign: TextAlign.end,
-                                                              style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12.0, color: Colors.white70),
+                                                              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12.0, color: Colors.white70),
                                                             ),
                                                           ),
                                                         ),
@@ -661,7 +659,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                                   maxLines: 1,
                                                   minFontSize: 8.0,
                                                   textAlign: TextAlign.end,
-                                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white70),
                                                 ),
                                               ),
                                             ),
@@ -690,7 +688,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                                   maxLines: 1,
                                                   minFontSize: 8.0,
                                                   textAlign: TextAlign.end,
-                                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white70),
                                                 ),
                                               ),
                                             ),
@@ -724,13 +722,13 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text("${AppLocalizations.of(context)!.mn_total.replaceAll("{1}", "XDN")}:", style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                        Text("${AppLocalizations.of(context)!.all_mn("XDN")}:", style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0)),
                                         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                           Text(
                                             "$_activeNodes",
-                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0),
                                           ),
-                                          // SizedBox(width: 35, height: 14, child: Text('XDN', textAlign: TextAlign.end, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),))
+                                          // SizedBox(width: 35, height: 14, child: Text('XDN', textAlign: TextAlign.end, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0),))
                                           // Container(width: 12, height: 12, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('images/logo_send.png'), fit: BoxFit.fitWidth))),
                                         ])
                                       ],
@@ -747,10 +745,10 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(AppLocalizations.of(context)!.mn_free, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                        Text(AppLocalizations.of(context)!.mn_free, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0)),
                                         Text(
                                           _freeMN.toString(),
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0),
                                         ),
                                       ],
                                     ),
@@ -772,11 +770,11 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                             children: [
                                               Expanded(
                                                 child: AutoSizeText(AppLocalizations.of(context)!.mn_day_reward,
-                                                    minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                                    minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0)),
                                               ),
                                               Text(
                                                 "${Utils.formatBalance(_averagePayDay)} XDN",
-                                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                                style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0),
                                               ),
                                               const SizedBox(
                                                 height: 10,
@@ -797,11 +795,11 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
-                                          child: AutoSizeText("APY", minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0)),
+                                          child: AutoSizeText("APY", minFontSize: 8.0, maxLines: 1, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0)),
                                         ),
                                         Text(
                                           "${_roi.toStringAsFixed(2)} %",
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0),
+                                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0),
                                         ),
                                       ],
                                     ),
@@ -858,29 +856,13 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                               alignment: Alignment.centerLeft,
                               child: SizedBox(
                                 width: MediaQuery.of(context).size.width,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: 200,
-                                      child: AutoSizeText(
-                                        "${AppLocalizations.of(context)!.mn_time_to_start}  | ",
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        minFontSize: 8,
-                                        overflow: TextOverflow.fade,
-                                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 10.0, color: Colors.white54),
-                                      ),
-                                    ),
-                                    AutoSizeText(
-                                      _averateTimeStart,
-                                      textAlign: TextAlign.left,
-                                      maxLines: 1,
-                                      minFontSize: 8,
-                                      overflow: TextOverflow.fade,
-                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 10.0, color: Colors.white54),
-                                    ),
-                                  ],
+                                child: AutoSizeText(
+                                  "${AppLocalizations.of(context)!.mn_time_to_start}  | $_averateTimeStart",
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  minFontSize: 8,
+                                  overflow: TextOverflow.fade,
+                                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 10.0, color: Colors.white54),
                                 ),
                               ),
                             ),
@@ -897,7 +879,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                   maxLines: 1,
                                   minFontSize: 8,
                                   overflow: TextOverflow.fade,
-                                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 12.0, color: Colors.white54),
+                                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0, color: Colors.white54),
                                 ),
                               ),
                             ),
@@ -910,7 +892,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                 width: MediaQuery.of(context).size.width,
                                 child: Center(
                                   child: AutoSizeText(AppLocalizations.of(context)!.mn_lock,
-                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 13.0, color: Colors.white70),
+                                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 13.0, color: Colors.white70),
                                       textAlign: TextAlign.start,
                                       maxLines: 1,
                                       minFontSize: 8,
@@ -975,7 +957,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0), side: BorderSide(color: Theme.of(context).konjHeaderColor)))),
                           child: Text(
                             AppLocalizations.of(context)!.mn_withdraw_reward,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0),
                           ),
                         ),
                       ),
@@ -1003,7 +985,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                               MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0), side: const BorderSide(color: Colors.transparent)))),
                       child: Text(
                         AppLocalizations.of(context)!.mn_manage,
-                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                        style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0),
                       ),
                     ),
                   ),

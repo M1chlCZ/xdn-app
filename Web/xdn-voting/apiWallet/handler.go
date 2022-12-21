@@ -1,6 +1,7 @@
 package apiWallet
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
@@ -135,6 +136,36 @@ func submitTransaction(c *fiber.Ctx) error {
 			utils.ReportMessage(err.Error())
 		}
 	}
+	go func() {
+		d := map[string]string{
+			"fn": "sendTransaction",
+		}
+		trans, err := database.ReadArrayStruct[models.Transaction]("SELECT * FROM transaction WHERE notified = 0")
+		if err != nil {
+			utils.ReportMessage(err.Error())
+			return
+		}
+		for _, data := range trans {
+			userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.Address)
+			if userTo.Valid {
+				type Token struct {
+					Token string `json:"token"`
+				}
+				tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", userTo.Int64)
+				if err != nil {
+					utils.WrapErrorLog(err.Error())
+				}
+
+				if len(tk) > 0 {
+					for _, v := range tk {
+						utils.SendMessage(v.Token, fmt.Sprintf("Incoming transaction: "), fmt.Sprintf("%3f XDN", data.Amount), d)
+					}
+				}
+
+			}
+			_, err = database.InsertSQl("UPDATE transaction SET notified = 1 WHERE txid = ?", data.Txid)
+		}
+	}()
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,

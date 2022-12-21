@@ -37,7 +37,7 @@ class Header extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   minFontSize: 16.0,
                   textAlign: TextAlign.start,
-                  style: Theme.of(context).textTheme.headline1!.copyWith(
+                  style: Theme.of(context).textTheme.displayLarge!.copyWith(
                     fontSize: 24.0,
                     color: Colors.white.withOpacity(0.85),
                   )),

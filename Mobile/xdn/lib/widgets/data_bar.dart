@@ -132,7 +132,7 @@ class _DataBarState extends State<DataBar> with TickerProviderStateMixin {
                                 children: [
                                   Text(
                                     '${widget.amount.toInt()}',
-                                    style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white70),
+                                    style: Theme.of(context).textTheme.displayLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white70),
                                   ),
                                   const SizedBox(
                                     width: 5,
@@ -203,7 +203,7 @@ class _DataBarState extends State<DataBar> with TickerProviderStateMixin {
                                           stepGranularity: 0.1,
                                           style: Theme.of(context)
                                               .textTheme
-                                              .headline1!
+                                              .displayLarge!
                                               .copyWith(color: widget.index == 0 ? Colors.black.withOpacity(0.4) : Colors.white54, fontSize: 12, fontWeight: FontWeight.w800),
                                         ),
                                         const SizedBox(
@@ -251,7 +251,7 @@ class _DataBarState extends State<DataBar> with TickerProviderStateMixin {
                                               minFontSize: 0.1,
                                               stepGranularity: 0.1,
                                               textAlign: TextAlign.start,
-                                              style: Theme.of(context).textTheme.headline1!.copyWith(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800),
+                                              style: Theme.of(context).textTheme.displayLarge!.copyWith(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800),
                                             ),
                                             const SizedBox(
                                               width: 5,
@@ -306,7 +306,7 @@ class _DataBarState extends State<DataBar> with TickerProviderStateMixin {
                                   children: [
                                     Text(
                                       formatNumber(widget.goal),
-                                      style: Theme.of(context).textTheme.headline1!.copyWith(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white70),
+                                      style: Theme.of(context).textTheme.displayLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white70),
                                     ),
                                     const SizedBox(
                                       width: 5,
@@ -356,11 +356,11 @@ class _DataBarState extends State<DataBar> with TickerProviderStateMixin {
               child: Center(child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(widget.title, textAlign:TextAlign.center, style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.black87, fontSize: 16.0, fontWeight: FontWeight.w800),),
+                  Text(widget.title, textAlign:TextAlign.center, style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.black87, fontSize: 16.0, fontWeight: FontWeight.w800),),
                   const SizedBox(height: 5,),
-                  Text("${formatNumber(widget.goal)} 2XDN", textAlign:TextAlign.center, style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.black87, fontSize: 14.0, fontWeight: FontWeight.w800),),
+                  Text("${formatNumber(widget.goal)} 2XDN", textAlign:TextAlign.center, style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.black87, fontSize: 14.0, fontWeight: FontWeight.w800),),
                   const SizedBox(height: 5,),
-                  Text(AppLocalizations.of(context)!.fully_funded, style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12, fontWeight: FontWeight.w200, color: Colors.black87),),
+                  Text(AppLocalizations.of(context)!.fully_funded, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12, fontWeight: FontWeight.w200, color: Colors.black87),),
                 ],
               )),
             ),

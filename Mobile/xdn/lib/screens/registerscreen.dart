@@ -107,7 +107,7 @@ class _RegisterState extends State<RegisterScreen> {
                   type: MaterialType.transparency,
                   child: Text(
                     AppLocalizations.of(context)!.registration,
-                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 24.0),
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 24.0),
                   ),
                 ),
               ),
@@ -143,13 +143,13 @@ class _RegisterState extends State<RegisterScreen> {
                                     fillColor: Colors.black26,
                                     filled: true,
                                     hintText: AppLocalizations.of(context)!.username,
-                                    hintStyle: Theme.of(context).textTheme.subtitle1,
+                                    hintStyle: Theme.of(context).textTheme.titleMedium,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                                     focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
                                     enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
                                     border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
-                                  style: Theme.of(context).textTheme.bodyText2,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                               Padding(
@@ -163,13 +163,13 @@ class _RegisterState extends State<RegisterScreen> {
                                     fillColor: Colors.black26,
                                     filled: true,
                                     hintText: AppLocalizations.of(context)!.first_last_name,
-                                    hintStyle: Theme.of(context).textTheme.subtitle1,
+                                    hintStyle: Theme.of(context).textTheme.titleMedium,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                                     focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
                                     enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
                                     border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
-                                  style: Theme.of(context).textTheme.bodyText2,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                               Padding(
@@ -180,13 +180,13 @@ class _RegisterState extends State<RegisterScreen> {
                                     fillColor: Colors.black26,
                                     filled: true,
                                     hintText: AppLocalizations.of(context)!.email,
-                                    hintStyle: Theme.of(context).textTheme.subtitle1,
+                                    hintStyle: Theme.of(context).textTheme.titleMedium,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                                     focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
                                     enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
                                     border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
-                                  style: Theme.of(context).textTheme.bodyText2,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                               Padding(
@@ -198,13 +198,13 @@ class _RegisterState extends State<RegisterScreen> {
                                     fillColor: Colors.black26,
                                     filled: true,
                                     hintText: AppLocalizations.of(context)!.password,
-                                    hintStyle: Theme.of(context).textTheme.subtitle1,
+                                    hintStyle: Theme.of(context).textTheme.titleMedium,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                                     focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
                                     enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
                                     border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
-                                  style: Theme.of(context).textTheme.bodyText2,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                               Padding(
@@ -216,13 +216,13 @@ class _RegisterState extends State<RegisterScreen> {
                                     fillColor: Colors.black26,
                                     filled: true,
                                     hintText: AppLocalizations.of(context)!.conf_password,
-                                    hintStyle: Theme.of(context).textTheme.subtitle1,
+                                    hintStyle: Theme.of(context).textTheme.titleMedium,
                                     contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                                     focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white, width: 1.0), borderRadius: BorderRadius.circular(10.0)),
                                     enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 0.5), borderRadius: BorderRadius.circular(10.0)),
                                     border: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white30, width: 1), borderRadius: BorderRadius.circular(10.0)),
                                   ),
-                                  style: Theme.of(context).textTheme.bodyText2,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                               const SizedBox(
@@ -274,7 +274,7 @@ class _RegisterState extends State<RegisterScreen> {
                                         },
                                         child: Text(
                                           AppLocalizations.of(context)!.sign_up,
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.black87),
+                                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, color: Colors.black87),
                                         )),
                                   )),
                               const SizedBox(
@@ -290,16 +290,16 @@ class _RegisterState extends State<RegisterScreen> {
         Container(
           margin: const EdgeInsets.only(top: 80.0, left: 20.0),
           child: SizedBox.fromSize(
-            size: const Size(40, 40), // button width and height
+            size: const Size(40, 40), // labelLarge width and height
 
             child: ClipOval(
               child: Material(
-                color: const Color(0xFF22283A).withOpacity(0.5), // button color
+                color: const Color(0xFF22283A).withOpacity(0.5), // labelLarge color
                 child: InkWell(
                   splashColor: Colors.white.withOpacity(0.8), // splash color
                   onTap: () {
                     Navigator.pop(context);
-                  }, // button pressed
+                  }, // labelLarge pressed
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const <Widget>[

@@ -56,9 +56,9 @@ class Dialogs {
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                     ],
-                    style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.titleLarge!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.amount,
                       border: InputBorder.none,
                     ),
@@ -97,10 +97,10 @@ class Dialogs {
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                   ],
-                  style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.all(5.0),
-                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                    hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                     hintText: AppLocalizations.of(context)!.amount,
                     border: InputBorder.none,
                   ),
@@ -140,10 +140,10 @@ class Dialogs {
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                   ],
-                  style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.all(5.0),
-                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                    hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                     hintText: AppLocalizations.of(context)!.amount,
                     border: InputBorder.none,
                   ),
@@ -183,9 +183,9 @@ class Dialogs {
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+')),
                     ],
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.new_name,
                       border: InputBorder.none,
                     ),
@@ -226,9 +226,9 @@ class Dialogs {
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+')),
                     ],
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.dl_enter_pin,
                       border: InputBorder.none,
                     ),
@@ -264,7 +264,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -294,7 +294,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -328,7 +328,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -362,7 +362,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -396,7 +396,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -445,7 +445,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -479,7 +479,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 10,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.red.shade700),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.red.shade700),
                 ),
               ),
             ),
@@ -541,7 +541,7 @@ class Dialogs {
                             decoration: InputDecoration(
                               isDense: false,
                               contentPadding: const EdgeInsets.only(bottom: 0.0),
-                              hintStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.white54, fontSize: 18.0),
+                              hintStyle: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.white54, fontSize: 18.0),
                               hintText: "Google 2FA",
                               enabledBorder: const UnderlineInputBorder(
                                 borderSide: BorderSide(color: Colors.transparent),
@@ -550,7 +550,7 @@ class Dialogs {
                                 borderSide: BorderSide(color: Colors.transparent),
                               ),
                             ),
-                            style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 24.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 24.0, color: Colors.white70),
                           ),
                         ),
                       ),
@@ -637,7 +637,7 @@ class Dialogs {
                                 padding: const EdgeInsets.all(15.0),
                                 child: Text(
                                   "Copy the code provided to the Google Authetificator and paste 2FA code from it",
-                                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 18.0, color: Colors.white70),
+                                  style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 18.0, color: Colors.white70),
                                 ),
                               )))),
                   const SizedBox(
@@ -663,7 +663,7 @@ class Dialogs {
                                         maxLines: 1,
                                         minFontSize: 8.0,
                                         textAlign: TextAlign.center,
-                                        style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                        style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 14.0, color: Colors.white70),
                                       ),
                                     ),
                                     const SizedBox(height: 5.0),
@@ -715,7 +715,7 @@ class Dialogs {
                                 decoration: InputDecoration(
                                   isDense: false,
                                   contentPadding: const EdgeInsets.only(bottom: 0.0),
-                                  hintStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.white54, fontSize: 18.0),
+                                  hintStyle: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.white54, fontSize: 18.0),
                                   hintText: "Google 2FA",
                                   enabledBorder: const UnderlineInputBorder(
                                     borderSide: BorderSide(color: Colors.transparent),
@@ -724,7 +724,7 @@ class Dialogs {
                                     borderSide: BorderSide(color: Colors.transparent),
                                   ),
                                 ),
-                                style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 24.0, color: Colors.white70),
+                                style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 24.0, color: Colors.white70),
                               ),
                             ),
                           ),
@@ -797,7 +797,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -833,7 +833,7 @@ class Dialogs {
                     overflow: TextOverflow.ellipsis,
                     maxLines: 8,
                     minFontSize: 8.0,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.white70, letterSpacing: 1.0),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, color: Colors.white70, letterSpacing: 1.0),
                   ),
                 ),
               ),
@@ -869,7 +869,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -934,9 +934,9 @@ class Dialogs {
                   autofocus: true,
                   controller: textController,
                   keyboardType: TextInputType.text,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                   decoration: InputDecoration(
-                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                    hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                     hintText: AppLocalizations.of(context)!.email,
                     border: InputBorder.none,
                   ),
@@ -977,9 +977,9 @@ class Dialogs {
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+')),
                     ],
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.name,
                       border: InputBorder.none,
                     ),
@@ -1012,9 +1012,9 @@ class Dialogs {
                     autofocus: true,
                     controller: textControllerName,
                     keyboardType: TextInputType.text,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.name,
                       border: InputBorder.none,
                     ),
@@ -1033,9 +1033,9 @@ class Dialogs {
                     autofocus: false,
                     controller: textControllerAddr,
                     keyboardType: TextInputType.text,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.address,
                       border: InputBorder.none,
                     ),
@@ -1057,7 +1057,7 @@ class Dialogs {
                     ),
                     label: Text(
                       'QR',
-                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.white54),
+                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, color: Colors.white54),
                     ),
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.resolveWith((states) => qrColors(states)),
@@ -1110,9 +1110,9 @@ class Dialogs {
                     autofocus: true,
                     controller: textControllerName,
                     keyboardType: TextInputType.text,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.name,
                       border: InputBorder.none,
                     ),
@@ -1135,7 +1135,7 @@ class Dialogs {
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                       minFontSize: 24,
-                      style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
+                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 32),
                     ),
                   ),
                 ),
@@ -1175,9 +1175,9 @@ class Dialogs {
                     textAlignVertical: TextAlignVertical.center,
                     textAlign: TextAlign.left,
                     controller: textController,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.dl_enter_pass,
                       border: InputBorder.none,
                     ),
@@ -1214,9 +1214,9 @@ class Dialogs {
                     textAlignVertical: TextAlignVertical.center,
                     textAlign: TextAlign.left,
                     controller: textController,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 48),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.dl_enter_pass,
                       border: InputBorder.none,
                     ),
@@ -1254,7 +1254,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.txid,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1279,7 +1279,7 @@ class Dialogs {
                               tx.txid!,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1304,7 +1304,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.amount,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1319,7 +1319,7 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1343,7 +1343,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.date,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1358,7 +1358,7 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1382,7 +1382,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               AppLocalizations.of(context)!.confirmations.capitalize(),
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                             ),
                           ),
                         ),
@@ -1397,7 +1397,7 @@ class Dialogs {
                             textAlign: TextAlign.end,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
                           ),
                         ),
                       ],
@@ -1444,9 +1444,9 @@ class Dialogs {
                       textAlignVertical: TextAlignVertical.center,
                       textAlign: TextAlign.left,
                       controller: textController,
-                      style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 22),
+                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 22),
                       decoration: InputDecoration(
-                        hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
+                        hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
                         hintText: AppLocalizations.of(context)!.dl_new_enter_pass,
                         border: InputBorder.none,
                       ),
@@ -1465,9 +1465,9 @@ class Dialogs {
                     textAlignVertical: TextAlignVertical.center,
                     textAlign: TextAlign.left,
                     controller: textController2,
-                    style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 22),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white.withOpacity(0.8), fontSize: 22),
                     decoration: InputDecoration(
-                      hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
+                      hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.white54),
                       hintText: AppLocalizations.of(context)!.dl_conf_new_pass,
                       border: InputBorder.none,
                     ),
@@ -1501,14 +1501,14 @@ class Dialogs {
                     color: Colors.black38,
                     padding: const EdgeInsets.all(15.0),
                     child: AutoSizeText(
-                      AppLocalizations.of(context)!.mn_withdraw_box.replaceAll("{1}", id.toString()),
+                      AppLocalizations.of(context)!.mn_withdraw_box(id.toString()),
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 8,
                       minFontSize: 8.0,
                       style: Theme.of(context)
                           .textTheme
-                          .headline6!
+                          .titleLarge!
                           .copyWith(fontSize: 16.0, color: Colors.white70),
                     ),
                   ),
@@ -1580,7 +1580,7 @@ class Dialogs {
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
                                 minFontSize: 8.0,
-                                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.black87),
+                                style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.black87),
                               ),
                             ),
                           ),
@@ -1589,7 +1589,7 @@ class Dialogs {
                             child: Text(
                           '(${AppLocalizations.of(context)!.dl_share})',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.black54),
+                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.black54),
                         )),
                         const SizedBox(
                           height: 5.0,
@@ -1653,7 +1653,7 @@ class Dialogs {
                         const SizedBox(
                           height: 2.0,
                         ),
-                        Text("Request Payment", textAlign: TextAlign.center, style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, color: Colors.black87)),
+                        Text("Request Payment", textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, color: Colors.black87)),
                         const SizedBox(
                           height: 0.0,
                         ),
@@ -1672,9 +1672,9 @@ class Dialogs {
                                 inputFormatters: <TextInputFormatter>[
                                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                                 ],
-                                style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.black87, fontSize: 22),
+                                style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.black87, fontSize: 22),
                                 decoration: InputDecoration(
-                                  hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.black54),
+                                  hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 22.0, color: Colors.black54),
                                   hintText: "0.0",
                                   focusedBorder: const UnderlineInputBorder(
                                     borderSide: BorderSide(color: Colors.black87),
@@ -1693,7 +1693,7 @@ class Dialogs {
                                       curr,
                                       DropdownMenuItem<String>(
                                         value: curr.toString(),
-                                        child: Text(curr.toUpperCase(), style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.black87, fontSize: 22),),
+                                        child: Text(curr.toUpperCase(), style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.black87, fontSize: 22),),
                                       ));
                                 }).values.toList(),
                                 onChanged: onChangeDrop,
@@ -1740,7 +1740,7 @@ class Dialogs {
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                               minFontSize: 8.0,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.black87),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.black87),
                             ),
                           ),
                         ),
@@ -1749,7 +1749,7 @@ class Dialogs {
                           child: Text(
                         '(${AppLocalizations.of(context)!.dl_share})',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.black54),
+                        style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.black54),
                       )),
                       const SizedBox(
                         height: 5.0,
@@ -1827,7 +1827,7 @@ class Dialogs {
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                               minFontSize: 8.0,
-                              style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.black87),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.black87),
                             ),
                           ),
                         ),
@@ -1836,7 +1836,7 @@ class Dialogs {
                           child: Text(
                         '(${AppLocalizations.of(context)!.dl_share})',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0, color: Colors.black87),
+                        style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.black87),
                       )),
                       const SizedBox(
                         height: 5.0,
@@ -1926,7 +1926,7 @@ class Dialogs {
                               child: Center(
                                 child: Text(
                                   AppLocalizations.of(context)!.dl_send_message,
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 20.0),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20.0),
                                 ),
                               ),
                             ),
@@ -1953,7 +1953,7 @@ class Dialogs {
                               child: Center(
                                 child: Text(
                                   '${AppLocalizations.of(context)!.dl_send_konj} $name',
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 20.0),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20.0),
                                 ),
                               ),
                             ),
@@ -1980,7 +1980,7 @@ class Dialogs {
                               child: Center(
                                 child: Text(
                                   '${AppLocalizations.of(context)!.share} $name ${AppLocalizations.of(context)!.contact.toLowerCase()}',
-                                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 20.0),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20.0),
                                 ),
                               ),
                             ),
@@ -2061,7 +2061,7 @@ class Dialogs {
                                                     cont.getName()!,
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
-                                                    style: Theme.of(context).textTheme.headline5!.copyWith(
+                                                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                                                           color: Colors.white70,
                                                         ),
                                                   ),
@@ -2072,7 +2072,7 @@ class Dialogs {
                                                     cont.getAddr()!,
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
-                                                    style: Theme.of(context).textTheme.headline5!.copyWith(
+                                                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                                                           color: Colors.white.withOpacity(0.5),
                                                         ),
                                                   ),
@@ -2130,7 +2130,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 22.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -2207,7 +2207,7 @@ class Dialogs {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 8,
                   minFontSize: 8.0,
-                  style: Theme.of(context).textTheme.headline6!.copyWith(fontSize: 16.0, color: Colors.white70),
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 16.0, color: Colors.white70),
                 ),
               ),
             ),
@@ -2295,7 +2295,7 @@ class Dialogs {
                       ),
                       TextField(
                         controller: controller,
-                        style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                         decoration: InputDecoration(
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                           contentPadding: const EdgeInsets.all(8.0),
@@ -2304,9 +2304,9 @@ class Dialogs {
                           focusColor: Colors.white24,
                           fillColor: const Color(0xFF303850),
                           labelText: "",
-                          labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 18.0),
+                          labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white54, fontSize: 18.0),
                           hintText: AppLocalizations.of(context)!.name,
-                          hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 22.0),
+                          hintStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white54, fontSize: 22.0),
                           prefixIcon: const Icon(
                             Icons.person,
                             color: Colors.white70,
@@ -2326,7 +2326,7 @@ class Dialogs {
                               height: 45,
                               child: TextField(
                                 controller: controllerAddr,
-                                style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                                 decoration: InputDecoration(
                                   floatingLabelBehavior: FloatingLabelBehavior.always,
                                   contentPadding: const EdgeInsets.only(left: 8.0),
@@ -2335,9 +2335,9 @@ class Dialogs {
                                   focusColor: Colors.white24,
                                   fillColor: const Color(0xFF303850),
                                   labelText: "",
-                                  labelStyle: Theme.of(context).textTheme.bodyText2!.copyWith(color: Colors.white54, fontSize: 10.0),
+                                  labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white54, fontSize: 10.0),
                                   hintText: AppLocalizations.of(context)!.address,
-                                  hintStyle: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white54, fontSize: 22.0),
+                                  hintStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white54, fontSize: 22.0),
                                   prefixIcon: const Icon(
                                     Icons.person,
                                     color: Colors.white70,
@@ -2385,7 +2385,7 @@ class Dialogs {
                                     ),
                                     label: Text(
                                       AppLocalizations.of(context)!.contact_add,
-                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white70),
+                                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
                                     ),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith((states) => sendColors(states)),
@@ -2442,10 +2442,10 @@ class Dialogs {
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+')),
                   ],
-                  style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white.withOpacity(0.8)),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.all(5.0),
-                    hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
+                    hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 32.0, color: Colors.white54),
                     hintText: AppLocalizations.of(context)!.amount,
                     border: InputBorder.none,
                   ),
@@ -2513,10 +2513,10 @@ class Dialogs {
                         inputFormatters: <TextInputFormatter>[
                           FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+')),
                         ],
-                        style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white.withOpacity(0.8)),
+                        style: Theme.of(context).textTheme.titleLarge!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white.withOpacity(0.8)),
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.all(5.0),
-                          hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white54),
+                          hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white54),
                           hintText: AppLocalizations.of(context)!.amount,
                           border: InputBorder.none,
                         ),
@@ -2540,10 +2540,10 @@ class Dialogs {
                         inputFormatters: <TextInputFormatter>[
                           FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+')),
                         ],
-                        style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white.withOpacity(0.8)),
+                        style: Theme.of(context).textTheme.titleLarge!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white.withOpacity(0.8)),
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.all(5.0),
-                          hintStyle: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white54),
+                          hintStyle: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 24.0, color: Colors.white54),
                           hintText: "${AppLocalizations.of(context)!.address} (ERC-20)",
                           border: InputBorder.none,
                         ),
@@ -2557,7 +2557,7 @@ class Dialogs {
                       ),
                       Text(
                         addrLegit ? "${AppLocalizations.of(context)!.address} OK" : "${AppLocalizations.of(context)!.address} ${AppLocalizations.of(context)!.invalid}",
-                        style: Theme.of(context).textTheme.headline6!.copyWith(fontStyle: FontStyle.normal, fontSize: 16.0, color: addrLegit ? Colors.green : Colors.red),
+                        style: Theme.of(context).textTheme.titleLarge!.copyWith(fontStyle: FontStyle.normal, fontSize: 16.0, color: addrLegit ? Colors.green : Colors.red),
                       ),
                       const SizedBox(
                         height: 5.0,

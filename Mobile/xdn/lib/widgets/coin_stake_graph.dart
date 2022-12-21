@@ -448,7 +448,7 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
                         children: [
                           TextSpan(
                             text: "${flSpot.y.toStringAsFixed(3)} XDN",
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontWeight: FontWeight.bold, fontSize: 14.0, color: Colors.white),
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontWeight: FontWeight.bold, fontSize: 14.0, color: Colors.white),
                           ),
                         ],
                       );
@@ -466,7 +466,7 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
                 padding: const EdgeInsets.only(top: 200.0),
                 child: Text(
                   AppLocalizations.of(context)!.graph_no_data,
-                  style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white24),
+                  style: Theme.of(context).textTheme.titleSmall!.copyWith(color: Colors.white24),
                 ),
               )),
             )
@@ -512,7 +512,7 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
         }
         return Text(
           text,
-          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white54, fontSize: 10.0),
+          style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white54, fontSize: 10.0),
         );
       },
       interval: _dropdownValue == 2 ? 4 : 300,
@@ -526,7 +526,7 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
       getTitlesWidget: (value, meta) {
         return Text(
           _formatTitles(value.toInt()),
-          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 10.0),
+          style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 10.0),
         );
       },
       reservedSize: _dropdownValue == 0 ? 19 : 27,

@@ -150,7 +150,7 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
                               overflow: TextOverflow.ellipsis,
                               minFontSize: 16.0,
                               textAlign: TextAlign.start,
-                              style: Theme.of(context).textTheme.headline1!.copyWith(
+                              style: Theme.of(context).textTheme.displayLarge!.copyWith(
                                 fontSize: 24.0,
                                 color: Colors.white.withOpacity(0.85),
                               )),
@@ -186,7 +186,7 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
                                   fillColor: const Color(0xFF22283A).withOpacity(0.5),
                                   hintStyle: GoogleFonts.montserrat(fontStyle: FontStyle.normal, color: Colors.white70),
                                   labelText: AppLocalizations.of(context)!.message_search,
-                                  labelStyle: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                  labelStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0),
                                   prefixIcon: const Icon(
                                     Icons.search,
                                     color: Colors.white,

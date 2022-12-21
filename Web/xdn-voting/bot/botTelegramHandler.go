@@ -43,12 +43,12 @@ func StartTelegramBot() {
 
 	for update := range updates {
 		if update.Message != nil {
-			go func(update *tgbotapi.Update) {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-				switch update.Message.Command() {
+			go func(update *tgbotapi.Message) {
+				msg := tgbotapi.NewMessage(update.Chat.ID, "")
+				switch update.Command() {
 				case "status":
 					Running = true
-					utils.ReportMessage(fmt.Sprintf("Message from %d", update.Message.Chat.ID))
+					utils.ReportMessage(fmt.Sprintf("Message from %d", update.Chat.ID))
 					msg.Text = statusMessage[rand.Intn(len(statusMessage))]
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
@@ -88,7 +88,7 @@ func StartTelegramBot() {
 					return
 				case "ask":
 					Running = true
-					tx, err := ask(update.Message)
+					tx, err := ask(update)
 					if err != nil {
 						msg.Text = "Error: " + err.Error()
 					} else {
@@ -101,7 +101,7 @@ func StartTelegramBot() {
 					return
 				case "tip":
 					Running = true
-					tx, err := tip(update.Message.From.UserName, update.Message)
+					tx, err := tip(update.From.UserName, update)
 					if err != nil {
 						msg.Text = "Error: " + err.Error()
 					} else {
@@ -114,7 +114,7 @@ func StartTelegramBot() {
 					return
 				case "rain":
 					Running = true
-					tx, errr, data := rain(update.Message.From.UserName, update.Message)
+					tx, errr, data := rain(update.From.UserName, update)
 					if errr != nil {
 						msg.Text = "Error: " + errr.Error()
 						_, _ = bot.Send(msg)
@@ -124,7 +124,7 @@ func StartTelegramBot() {
 					msg.Text = tx
 					mmm, err := bot.Send(msg)
 					if err != nil {
-						m := tgbotapi.NewMessage(update.Message.Chat.ID, "Error: "+err.Error())
+						m := tgbotapi.NewMessage(update.Chat.ID, "Error: "+err.Error())
 						_, _ = bot.Send(m)
 						utils.WrapErrorLog(err.Error())
 						Running = false
@@ -189,8 +189,8 @@ func StartTelegramBot() {
 					return
 				case "thunder":
 					Running = true
-					utils.ReportMessage(fmt.Sprintf("Thunder %s", update.Message.From.UserName))
-					tx, errr, data := thunderTelegram(update.Message.From.UserName, update.Message)
+					utils.ReportMessage(fmt.Sprintf("Thunder %s", update.From.UserName))
+					tx, errr, data := thunderTelegram(update.From.UserName, update)
 					if errr != nil {
 						msg.Text = "Error: " + errr.Error()
 						_, _ = bot.Send(msg)
@@ -200,7 +200,7 @@ func StartTelegramBot() {
 					msg.Text = tx
 					mmm, err := bot.Send(msg)
 					if err != nil {
-						m := tgbotapi.NewMessage(update.Message.Chat.ID, "Error: "+err.Error())
+						m := tgbotapi.NewMessage(update.Chat.ID, "Error: "+err.Error())
 						_, _ = bot.Send(m)
 						utils.WrapErrorLog(err.Error())
 						Running = false
@@ -263,7 +263,7 @@ func StartTelegramBot() {
 					return
 				case "register":
 					Running = true
-					err := register(update.Message.CommandArguments(), update.Message.From)
+					err := register(update.CommandArguments(), update.From)
 					if err != nil {
 						msg.Text = "Error: " + err.Error()
 					} else {
@@ -276,7 +276,7 @@ func StartTelegramBot() {
 					return
 				case "unlink":
 					Running = true
-					err := unlink(update.Message.From)
+					err := unlink(update.From)
 					if err != nil {
 						msg.Text = "Error: " + err.Error()
 					} else {
@@ -291,7 +291,7 @@ func StartTelegramBot() {
 					Running = false
 					return
 				}
-			}(&update)
+			}(update.Message)
 		} else if update.CallbackQuery != nil {
 			utils.ReportMessage("CallbackQuery")
 			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)

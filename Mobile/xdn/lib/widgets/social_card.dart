@@ -99,7 +99,7 @@ class SocialMediaCardState extends State<SocialMediaCard> with TickerProviderSta
                             )),
                         Padding(
                           padding: const EdgeInsets.only(left: 10.0, bottom: 0.0),
-                          child: Text(widget.name!, style: Theme.of(context).textTheme.headline4!.copyWith(fontSize: 18.0, color: Colors.white)),
+                          child: Text(widget.name!, style: Theme.of(context).textTheme.headlineMedium!.copyWith(fontSize: 18.0, color: Colors.white)),
                         ),
                         const Expanded(
                           child: SizedBox(),
@@ -167,7 +167,7 @@ class SocialMediaCardState extends State<SocialMediaCard> with TickerProviderSta
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(AppLocalizations.of(context)!.unlink.replaceAll("{1}", ""), style: Theme.of(context).textTheme.headline4!.copyWith(fontSize: 18.0, color: Colors.white)),
+                                  Text(AppLocalizations.of(context)!.unlink(""), style: Theme.of(context).textTheme.headlineMedium!.copyWith(fontSize: 18.0, color: Colors.white)),
                                   const SizedBox(
                                     width: 0.0,
                                   ),
@@ -203,7 +203,7 @@ class SocialMediaCardState extends State<SocialMediaCard> with TickerProviderSta
                                   children: [
                                     Text(
                                       '- ${AppLocalizations.of(context)!.join_discord}',
-                                      style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0),
                                     ),
                                     const SizedBox(
                                       width: 5.0,
@@ -226,7 +226,7 @@ class SocialMediaCardState extends State<SocialMediaCard> with TickerProviderSta
                                 children: [
                                   Text(
                                     '- ${AppLocalizations.of(context)!.send_discord}',
-                                    style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14.0),
+                                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0),
                                   ),
                                 ],
                               ),
@@ -251,7 +251,7 @@ class SocialMediaCardState extends State<SocialMediaCard> with TickerProviderSta
                                       child: AutoSizeTextField(
                                         maxLines: 1,
                                         minFontSize: 8.0,
-                                        style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Colors.white, fontSize: 14.0),
+                                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white, fontSize: 14.0),
                                         autocorrect: false,
                                         readOnly: true,
                                         controller: _textController,
@@ -259,7 +259,7 @@ class SocialMediaCardState extends State<SocialMediaCard> with TickerProviderSta
                                         decoration: InputDecoration(
                                           contentPadding: const EdgeInsets.only(left: 4.0, right: 4.0),
                                           isDense: true,
-                                          hintStyle: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white54, fontSize: 14.0),
+                                          hintStyle: Theme.of(context).textTheme.titleSmall!.copyWith(color: Colors.white54, fontSize: 14.0),
                                           hintText: '',
                                           enabledBorder: const UnderlineInputBorder(
                                             borderSide: BorderSide(color: Colors.transparent),

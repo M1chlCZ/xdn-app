@@ -18,7 +18,6 @@ import (
 	"gopkg.in/guregu/null.v4"
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -34,7 +33,7 @@ import (
 	"xdn-voting/daemons"
 	"xdn-voting/database"
 	"xdn-voting/errs"
-	grpc "xdn-voting/grpc"
+	"xdn-voting/grpc"
 	"xdn-voting/grpcModels"
 	"xdn-voting/html"
 	"xdn-voting/models"
@@ -141,8 +140,12 @@ func main() {
 	app.Post("api/v1/user/rename", utils.Authorized(renameUser))
 	app.Post("api/v1/user/delete", utils.Authorized(deleteUser))
 
+	app.Get("api/v1/user/token/addr", utils.Authorized(getTokenAddr))
 	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
 	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
+
+	app.Get("api/v1/user/stealth/balance", utils.Authorized(getStealthBalance))
+	app.Get("api/v1/user/stealth/tx", utils.Authorized(getStealthTX))
 
 	app.Get("api/v1/status", utils.Authorized(getStatus))
 
@@ -212,6 +215,75 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func getStealthTX(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	var txReq models.GetTokenTxReq
+	if err := c.BodyParser(&txReq); err != nil {
+		return err
+	}
+
+	addr, err := database.ReadArrayStruct[models.Stealth]("SELECT * FROM stealth_addr WHERE idUser = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	type TX struct {
+		Addr    string               `json:"addr"`
+		Balance float64              `json:"bal"`
+		TX      []models.Transaction `json:"tx"`
+	}
+	var txArr []TX
+	if len(addr) > 0 {
+		for _, v := range addr {
+			address := v.Addr
+			if len(address) == 0 {
+				continue
+			}
+
+			balance, err := web3.GetContractBalance(address)
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+			}
+
+			db, err := database.ReadArrayStruct[models.Transaction]("SELECT * FROM transaction WHERE account = ?", v.AddrName)
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+			}
+			txArr = append(txArr, TX{
+				Addr:    address,
+				Balance: balance,
+				TX:      db,
+			})
+		}
+	} else {
+		return utils.ReportError(c, "No user addresses in the db", http.StatusConflict)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"rest":       txArr,
+	})
+}
+
+func getTokenAddr(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	}
+	type AddrStruct struct {
+		Addr string `json:"addr" db:"addr"`
+	}
+	addr := database.ReadStructEmpty[AddrStruct]("SELECT addr FROM users WHERE id = ?", userID)
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"addr":       addr,
+	})
 }
 
 func rewardMN(c *fiber.Ctx) error {
@@ -616,8 +688,7 @@ func getPicture(c *fiber.Ctx) error {
 
 func getFile(c *fiber.Ctx) error {
 	picture := []string{"thunder.png", "thunder2.jpg"}
-	rand.Seed(time.Now().UnixNano())
-	pic := picture[rand.Intn(len(picture))]
+	pic := picture[utils.RandNum(len(picture))]
 	return c.Status(fiber.StatusOK).SendFile("./Files/" + pic)
 }
 
@@ -1644,6 +1715,69 @@ func getBalance(c *fiber.Ctx) error {
 	})
 }
 
+func getStealthBalance(c *fiber.Ctx) error {
+	name := "XDN balance request"
+	start := time.Now()
+	userID, er := strconv.Atoi(c.Get("User_id"))
+	if er != nil {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	addrAll, err := database.ReadArrayStruct[models.Stealth]("SELECT * FROM stealth_addr WHERE idUser = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	if len(addrAll) == 0 {
+		return utils.ReportError(c, err.Error(), http.StatusConflict)
+	}
+	var all []models.StealthBalance
+	for _, v := range addrAll {
+		imm := 0.0
+		bl := 0.0
+		immature := database.ReadValueEmpty[sql.NullFloat64]("SELECT IFNULL(SUM(amount),0) as immature FROM transaction WHERE account = ? AND confirmation < 2 AND category = 'receive'", v.AddrName)
+		bal := database.ReadValueEmpty[sql.NullFloat64](`SELECT SUM(amount) as amount FROM transaction WHERE account = ?`, v.AddrName)
+		if immature.Valid {
+			imm = immature.Float64
+		}
+		if bal.Valid {
+			bl = bal.Float64
+		}
+
+		daemon := utils.GetDaemon()
+		unspent, err := coind.WrapDaemon(*daemon, 5, "listunspent", 1, 9999999, []string{v.Addr})
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+
+		var ing []models.ListUnspent
+		spendable := 0.0
+		errJson := json.Unmarshal(unspent, &ing)
+		if errJson != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+
+		for _, v := range ing {
+			if v.Spendable == true {
+				spendable += v.Amount
+			}
+		}
+		pending := bl - spendable
+		elapsed := time.Since(start)
+		if debugTime {
+			utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
+		}
+		all = append(all, models.StealthBalance{
+			Immature:  float32(pending),
+			Balance:   float32(imm),
+			Spendable: float32(spendable),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"balances":   all,
+	})
+}
+
 func getTransactions(c *fiber.Ctx) error {
 	userID, er := strconv.Atoi(c.Get("User_id"))
 	if er != nil {
@@ -2152,20 +2286,11 @@ func getStakeGraph(c *fiber.Ctx) error {
 
 func getTokenBalance(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
-	if debugTime {
-		utils.ReportMessage(fmt.Sprint("===== Get Token Balance for user ", userID, " ====="))
-	}
-	name := "Token balance request"
-	start := time.Now()
 
 	//make database call below in goroutine
 	acc, err := database.ReadArrayStruct[models.UsersTokenAddr]("SELECT * FROM users_addr WHERE idUser = ? AND addr IS NOT NULL", userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-	}
-	elapsed := time.Since(start)
-	if debugTime {
-		utils.ReportMessage(fmt.Sprintf("%s took %s", "DB Query", elapsed))
 	}
 	blc := 0.0
 	for _, v := range acc {
@@ -2179,11 +2304,6 @@ func getTokenBalance(c *fiber.Ctx) error {
 			continue
 		}
 		blc += balance
-	}
-	elapsed = time.Since(start)
-	if debugTime {
-		utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
-		utils.ReportMessage(fmt.Sprint("=====////====="))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -2200,17 +2320,16 @@ func getTokenTX(c *fiber.Ctx) error {
 		return err
 	}
 
-	db, err := database.ReadArrayStruct[models.TokenTX]("SELECT * FROM bsc_tx WHERE idUser = ? AND timestampTX > ? AND tokenSymbol = 'WXDN' ORDER BY timestampTX DESC", userID, txReq.Timestamp)
+	addr, err := database.ReadArrayStruct[models.UsersTokenAddr]("SELECT * FROM users_addr WHERE idUser = ?", userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
-
-	addr, err := database.ReadArrayStruct[models.UsersTokenAddr]("SELECT addr FROM users_addr WHERE idUser = ?", userID)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	type TX struct {
+		Addr    string           `json:"addr"`
+		Balance float64          `json:"bal"`
+		TX      []models.TokenTX `json:"tx"`
 	}
-	blc := 0.0
-	add := ""
+	var txArr []TX
 	if len(addr) > 0 {
 		for _, v := range addr {
 			address := v.Addr
@@ -2222,8 +2341,16 @@ func getTokenTX(c *fiber.Ctx) error {
 			if err != nil {
 				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 			}
-			blc += balance
-			add = address
+
+			db, err := database.ReadArrayStruct[models.TokenTX]("SELECT hash, timestampTX, fromAddr, toAddr, contractDecimal, amount, confirmations FROM bsc_tx WHERE timestampTX > ? AND tokenSymbol = 'WXDN' AND (toAddr = ? OR fromAddr = ?) ORDER BY timestampTX DESC", txReq.Timestamp, address, address)
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+			}
+			txArr = append(txArr, TX{
+				Addr:    address,
+				Balance: balance,
+				TX:      db,
+			})
 		}
 	} else {
 		return utils.ReportError(c, "No user addresses in the db", http.StatusConflict)
@@ -2232,9 +2359,7 @@ func getTokenTX(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
-		"addr":       add,
-		"bal":        blc,
-		"tx":         db,
+		"rest":       txArr,
 	})
 }
 

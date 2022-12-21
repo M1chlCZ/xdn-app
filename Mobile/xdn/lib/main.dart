@@ -15,6 +15,7 @@ import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/socials_screen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
+import 'package:digitalnote/screens/stealth_screen.dart';
 import 'package:digitalnote/screens/token_screen.dart';
 import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
@@ -26,7 +27,6 @@ import 'package:digitalnote/support/notification_service.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
@@ -299,36 +299,36 @@ class MyAppState extends State<MyApp> {
                 primaryColor: generateMaterialColor(Colors.white),
                 primarySwatch: generateMaterialColor(const Color.fromRGBO(44, 44, 53, 1.0)),
                 textTheme: TextTheme(
-                    headline6: GoogleFonts.montserrat(
+                    titleLarge: GoogleFonts.montserrat(
                       color: Colors.white70,
                       fontWeight: FontWeight.w200,
                     ),
-                    headline5: GoogleFonts.montserrat(color: Colors.white70, fontWeight: FontWeight.w300, letterSpacing: 1.0),
-                    subtitle1: GoogleFonts.montserrat(
+                    headlineSmall: GoogleFonts.montserrat(color: Colors.white70, fontWeight: FontWeight.w300, letterSpacing: 1.0),
+                    titleMedium: GoogleFonts.montserrat(
                       color: Colors.white70,
                       fontWeight: FontWeight.normal,
                     ),
-                    subtitle2: GoogleFonts.montserrat(
+                    titleSmall: GoogleFonts.montserrat(
                       color: const Color(0xFFC6C6C6),
                       fontSize: 14.0,
                       fontWeight: FontWeight.normal,
                     ),
-                    headline1: GoogleFonts.montserrat(
+                    displayLarge: GoogleFonts.montserrat(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
                       fontSize: 40.0,
                     ),
-                    bodyText1: GoogleFonts.montserrat(
+                    bodyLarge: GoogleFonts.montserrat(
                       color: Colors.white,
                       fontWeight: FontWeight.w300,
                       fontSize: 24.0,
                     ),
-                    bodyText2: GoogleFonts.montserrat(
+                    bodyMedium: GoogleFonts.montserrat(
                       color: Colors.white,
                       fontWeight: FontWeight.w300,
                       fontSize: 18.0,
                     ),
-                    button: GoogleFonts.montserrat(
+                    labelLarge: GoogleFonts.montserrat(
                       color: Colors.white,
                       fontWeight: FontWeight.w200,
                       fontSize: 18.0,
@@ -381,6 +381,8 @@ class MyAppState extends State<MyApp> {
         return MaterialPageRoute(builder: (_) => const TokenScreen());
       case SocialScreen.route:
         return MaterialPageRoute(builder: (_) => const SocialScreen());
+      case StealthScreen.route:
+        return MaterialPageRoute(builder: (_) => const StealthScreen());
       case AuthScreen.route:
         Object? args = settings.arguments;
         if (args != null) {

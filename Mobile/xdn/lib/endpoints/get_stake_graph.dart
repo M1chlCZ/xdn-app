@@ -1,6 +1,5 @@
 import 'package:digitalnote/globals.dart' as globals;
 import 'package:digitalnote/generated/phone.pbgrpc.dart';
-import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -8,8 +7,6 @@ import 'package:grpc/grpc.dart';
 import 'package:intl/intl.dart';
 
 class StakeList {
-  final ComInterface _interface = ComInterface();
-
     Future<StakeGraphResponse?> getStakingData(int coinID, int type) async {
       final channel = ClientChannel('194.60.201.213', port: 6805, options: const ChannelOptions(credentials: ChannelCredentials.insecure()));
       final stub = AppServiceClient(channel);

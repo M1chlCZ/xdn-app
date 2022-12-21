@@ -77,7 +77,7 @@ class DialogBodyState extends State<DialogBody> {
                                 minFontSize: 8.0,
                                 style: Theme.of(context)
                                     .textTheme
-                                    .bodyText1!
+                                    .bodyLarge!
                                     .copyWith(fontSize: 22.0, color: Colors.white70, fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -119,7 +119,7 @@ class DialogBodyState extends State<DialogBody> {
                               'OK',
                               style: Theme.of(context)
                                   .textTheme
-                                  .bodyText1!
+                                  .bodyLarge!
                                   .copyWith(color: Colors.white, fontWeight: FontWeight.normal),
                               textAlign: TextAlign.start,
                               maxLines: 1,
@@ -155,7 +155,7 @@ class DialogBodyState extends State<DialogBody> {
                              widget.buttonLabel ?? AppLocalizations.of(context)!.yes,
                               style: Theme.of(context)
                                   .textTheme
-                                  .bodyText1!
+                                  .bodyLarge!
                                   .copyWith(color: Colors.white70, fontWeight: FontWeight.normal),
                               textAlign: TextAlign.start,
                               maxLines: 1,
@@ -183,7 +183,7 @@ class DialogBodyState extends State<DialogBody> {
                               AppLocalizations.of(context)!.cancel,
                               style: Theme.of(context)
                                   .textTheme
-                                  .bodyText1!
+                                  .bodyLarge!
                                   .copyWith(color: Colors.white70, fontWeight: FontWeight.normal),
                               textAlign: TextAlign.start,
                               maxLines: 1,

@@ -41,7 +41,7 @@ class _VotingMenuWidgetState extends State<VotingMenuWidget> {
                     children: [
                       Text(
                         AppLocalizations.of(context)!.voting,
-                          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.w300),
+                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.w300),
                       ),
                     ],
                   ),

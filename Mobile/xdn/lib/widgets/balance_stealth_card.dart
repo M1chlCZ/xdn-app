@@ -5,17 +5,17 @@ import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class BalanceTokenCardMenu extends StatefulWidget {
+class BalanceStealthCardMenu extends StatefulWidget {
   final Future<Map<String, dynamic>>? getBalanceFuture;
   final VoidCallback goto;
 
-  const BalanceTokenCardMenu({Key? key, required this.getBalanceFuture, required this.goto}) : super(key: key);
+  const BalanceStealthCardMenu({Key? key, required this.getBalanceFuture, required this.goto}) : super(key: key);
 
   @override
-  State<BalanceTokenCardMenu> createState() => _BalanceTokenCardMenuState();
+  State<BalanceStealthCardMenu> createState() => _BalanceStealthCardMenuState();
 }
 
-class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
+class _BalanceStealthCardMenuState extends State<BalanceStealthCardMenu> {
   bool _tokenConnected = false;
   @override
   Widget build(BuildContext context) {

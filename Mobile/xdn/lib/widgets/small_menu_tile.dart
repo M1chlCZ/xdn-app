@@ -39,7 +39,7 @@ class SmallMenuTile extends StatelessWidget {
               Center(
                   child: AutoSizeText(
                 name,
-                style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0),
+                style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0),
                     minFontSize: 8.0,
                     maxLines: 1,
               )),

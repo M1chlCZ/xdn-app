@@ -159,12 +159,12 @@ class BSCConnector implements WalletConnector {
   @override
   Future<void> openWalletApp() async => await _connector.openWalletApp();
 
+
   @override
   Future<Map<String, dynamic>?> getData() async {
     try {
       final abiCode = await rootBundle.loadString('assets/abi.json');
       // final abiCode = await abiFile!.readAsString();
-      print('${abiCode.length}abi code length');
       contract =
           DeployedContract(ContractAbi.fromJson(abiCode, '2XDN'), contractAddr);
       final address =

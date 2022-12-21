@@ -64,10 +64,10 @@ class ComInterface {
         var timeLapsed = 0;
         if (serverType == serverDAO || serverType == serverGoAPI) {
           try {
-            while (_refreshingToken == true && timeLapsed < 30) {
+            while (_refreshingToken == true && timeLapsed < 300) {
               debugPrint("Waiting for token refresh");
               timeLapsed++;
-              await Future.delayed(const Duration(seconds: 1));
+              await Future.delayed(const Duration(milliseconds: 100));
             }
             timeLapsed = 0;
             await refreshToken();
@@ -137,10 +137,10 @@ class ComInterface {
     if (response.statusCode == 401) {
       var timeLapsed = 0;
       if (serverType == serverDAO || serverType == serverGoAPI) {
-        while (_refreshingToken == true && timeLapsed < 30) {
+        while (_refreshingToken == true && timeLapsed < 300) {
           debugPrint("Waiting for token refresh");
           timeLapsed++;
-          await Future.delayed(const Duration(seconds: 1));
+          await Future.delayed(const Duration(milliseconds: 100));
         }
         timeLapsed = 0;
         await refreshToken();

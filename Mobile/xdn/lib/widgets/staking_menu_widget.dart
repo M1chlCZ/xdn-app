@@ -39,7 +39,7 @@ class _StakingMenuWidgetState extends State<StakingMenuWidget> {
                     children: [
                       Text(
                         AppLocalizations.of(context)!.st_headline,
-                        style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.w300),
+                        style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.w300),
                       ),
                     ],
                   ),

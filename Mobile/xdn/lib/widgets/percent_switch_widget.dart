@@ -44,7 +44,7 @@ class PercentSwitchWidgetState extends State<PercentSwitchWidget> {
                       child: AutoSizeText("25 %",
                           minFontSize: 12,
                           maxLines: 1,
-                          style:  Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold)
+                          style:  Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold)
                       )),),
               ),
               SizedBox(
@@ -65,7 +65,7 @@ class PercentSwitchWidgetState extends State<PercentSwitchWidget> {
                           "50 %",
                           minFontSize: 6,
                           maxLines: 1,
-                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold)
+                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold)
                       )),),
               ),
               SizedBox(
@@ -85,7 +85,7 @@ class PercentSwitchWidgetState extends State<PercentSwitchWidget> {
                       child: AutoSizeText("75 %",
                           minFontSize: 6,
                           maxLines: 1,
-                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold))),
+                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold))),
                 ),
               ),
               SizedBox(
@@ -106,7 +106,7 @@ class PercentSwitchWidgetState extends State<PercentSwitchWidget> {
                         "MAX",
                         minFontSize: 6,
                         maxLines: 1,
-                        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold),
                       )),
                 ),
               )

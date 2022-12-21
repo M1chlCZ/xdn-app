@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class DrownDownMenu<T> extends StatefulWidget {
-  /// the child widget for the button, this will be ignored if text is supplied
+  /// the child widget for the labelLarge, this will be ignored if text is supplied
   final Widget child;
 
   /// onChange is called when the selected option is changed.;
@@ -16,7 +16,7 @@ class DrownDownMenu<T> extends StatefulWidget {
   /// dropdownButtonStyles passes styles to OutlineButton.styleFrom()
   final DropdownButtonStyle dropdownButtonStyle;
 
-  /// dropdown button icon defaults to caret
+  /// dropdown labelLarge icon defaults to caret
   final Icon? icon;
   final bool hideIcon;
 
@@ -71,7 +71,7 @@ class DrownDownMenuState<T> extends State<DrownDownMenu<T>>
   @override
   Widget build(BuildContext context) {
     var style = widget.dropdownButtonStyle;
-    // link the overlay to the button
+    // link the overlay to the labelLarge
     return CompositedTransformTarget(
       link: _layerLink,
       child: SizedBox(
@@ -83,7 +83,7 @@ class DrownDownMenuState<T> extends State<DrownDownMenu<T>>
             padding: style.padding,
             backgroundColor: style.backgroundColor,
             elevation: style.elevation,
-            primary: style.primaryColor,
+            foregroundColor: style.primaryColor,
             shape: style.shape,
           ),
           onPressed: _toggleDropdown,
@@ -192,7 +192,7 @@ class DrownDownMenuState<T> extends State<DrownDownMenu<T>>
       });
     } else {
       _overlayEntry = _createOverlayEntry();
-      Overlay.of(context)!.insert(_overlayEntry!);
+      Overlay.of(context).insert(_overlayEntry!);
       setState(() => _isOpen = true);
       _animationController!.forward();
     }
@@ -242,10 +242,10 @@ class DropdownStyle {
   final EdgeInsets? padding;
   final BoxConstraints? constraints;
 
-  /// position of the top left of the dropdown relative to the top left of the button
+  /// position of the top left of the dropdown relative to the top left of the labelLarge
   final Offset? offset;
 
-  ///button width must be set for this to take effect
+  ///labelLarge width must be set for this to take effect
   final double? width;
 
   const DropdownStyle({

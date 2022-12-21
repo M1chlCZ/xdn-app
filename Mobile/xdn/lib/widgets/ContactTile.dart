@@ -51,7 +51,7 @@ class ContactTile extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 5.0),
                           child: Text(
                             contact!.name!,
-                            style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 18.0, fontWeight: FontWeight.w800),
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 18.0, fontWeight: FontWeight.w800),
                           ),
                         ),
                         Row(
@@ -105,7 +105,7 @@ class ContactTile extends StatelessWidget {
                       contact!.addr!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 16.0),
+                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 16.0),
                     ),
                   ),
                 ),

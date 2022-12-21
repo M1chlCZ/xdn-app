@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:digitalnote/generated/phone.pb.dart';
 import 'package:digitalnote/models/StakeData.dart';
-import 'package:digitalnote/models/staking_data.dart';
 import 'package:digitalnote/support/duration_extension.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
@@ -449,7 +448,7 @@ class CoinMNGraphState extends State<CoinMNGraph> {
                         children: [
                           TextSpan(
                             text: "${flSpot.y.toStringAsFixed(3)} XDN",
-                            style: Theme.of(context).textTheme.headline5!.copyWith(fontStyle: FontStyle.normal, fontWeight: FontWeight.bold, fontSize: 14.0, color: Colors.white),
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontWeight: FontWeight.bold, fontSize: 14.0, color: Colors.white),
                           ),
                         ],
                       );
@@ -467,7 +466,7 @@ class CoinMNGraphState extends State<CoinMNGraph> {
                 padding: const EdgeInsets.only(top: 200.0),
                 child: Text(
                   AppLocalizations.of(context)!.graph_no_data,
-                  style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white24),
+                  style: Theme.of(context).textTheme.titleSmall!.copyWith(color: Colors.white24),
                 ),
               )),
             )
@@ -513,7 +512,7 @@ class CoinMNGraphState extends State<CoinMNGraph> {
         }
         return Text(
           text,
-          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white54, fontSize: 10.0),
+          style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white54, fontSize: 10.0),
         );
       },
       interval: getInterval(_dropdownValue),
@@ -539,7 +538,7 @@ class CoinMNGraphState extends State<CoinMNGraph> {
       getTitlesWidget: (value, meta) {
         return Text(
           _formatTitles(value.toInt()),
-          style: Theme.of(context).textTheme.headline5!.copyWith(color: Colors.white70, fontSize: 10.0),
+          style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 10.0),
         );
       },
       reservedSize: _dropdownValue == 0 ? 19 : 27,

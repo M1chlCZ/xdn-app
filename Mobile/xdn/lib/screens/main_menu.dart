@@ -31,7 +31,6 @@ import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:digitalnote/widgets/voting_menu_widget.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get_it/get_it.dart';
@@ -270,7 +269,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                             alignment: Alignment.center,
                             child: Text(
                               "\$${_priceData?['usd'].toString() ?? "0.0"}",
-                              style: Theme.of(context).textTheme.subtitle2!.copyWith(color: Colors.white54),
+                              style: Theme.of(context).textTheme.titleSmall!.copyWith(color: Colors.white54),
                             )),
                         const SizedBox(
                           height: 20,
@@ -288,9 +287,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                   children: [
                                     Text(
                                       _getDatetimeHeadline(),
-                                      style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 14.0),
+                                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0),
                                     ),
-                                    Text(name ?? '', style: Theme.of(context).textTheme.headline5),
+                                    Text(name ?? '', style: Theme.of(context).textTheme.headlineSmall),
                                     const SizedBox(
                                       height: 2.0,
                                     ),
@@ -444,7 +443,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                         children: [
                                           AutoSizeText(
                                             "Wallet daemon status",
-                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                             minFontSize: 2.0,
                                           ),
                                           const SizedBox(
@@ -464,7 +463,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                         children: [
                                           AutoSizeText(
                                             "Staking daemon status",
-                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                             minFontSize: 2.0,
                                           ),
                                           const SizedBox(
@@ -484,7 +483,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                         children: [
                                           AutoSizeText(
                                             "Staking active",
-                                            style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                             minFontSize: 2.0,
                                           ),
                                           const SizedBox(
@@ -516,7 +515,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                       children: [
                                         AutoSizeText(
                                           "Blockcount: ${snapshot.data?.blockCount ?? 0}",
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                           minFontSize: 2.0,
                                         ),
                                         const SizedBox(
@@ -524,7 +523,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                         ),
                                         AutoSizeText(
                                           "| Masternode count: ${snapshot.data?.masternodeCount ?? 0}",
-                                          style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
+                                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 8.0, letterSpacing: 0.5),
                                           minFontSize: 2.0,
                                         ),
                                       ],

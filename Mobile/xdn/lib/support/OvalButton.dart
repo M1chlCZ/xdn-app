@@ -17,14 +17,14 @@ class OvalButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox.fromSize(
-      size: Size(height, width), // button width and height
+      size: Size(height, width), // labelLarge width and height
 
       child: ClipOval(
         child: Material(
-          color: color, // button color
+          color: color, // labelLarge color
           child: InkWell(
             splashColor: splashColor, // splash color
-            onTap: onTap, // button pressed
+            onTap: onTap, // labelLarge pressed
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(

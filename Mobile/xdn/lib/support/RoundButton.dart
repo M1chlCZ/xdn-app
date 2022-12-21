@@ -17,15 +17,15 @@ class RoundButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox.fromSize(
-      size: Size(width, height), // button width and height
+      size: Size(width, height), // labelLarge width and height
 
       child: ClipRRect(
         borderRadius: BorderRadius.all(Radius.circular(radius)),
         child: Material(
-          color: color, // button color
+          color: color, // labelLarge color
           child: InkWell(
             splashColor: splashColor, // splash color
-            onTap: onTap, // button pressed
+            onTap: onTap, // labelLarge pressed
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[

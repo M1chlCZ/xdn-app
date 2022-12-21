@@ -29,7 +29,7 @@ class TransactionView extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 2.0, left: 0.0),
       child: AutoSizeText(
         _getText(transaction!.contactName, context),
-        style: Theme.of(context).textTheme.headline5!.copyWith(fontSize: 16.0, color: Colors.white70),
+        style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 16.0, color: Colors.white70),
         minFontSize: 8,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
