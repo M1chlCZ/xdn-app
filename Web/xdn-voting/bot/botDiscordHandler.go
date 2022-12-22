@@ -182,6 +182,38 @@ func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 				return
 			}
 			Running = false
+		} else if command == "grant" {
+			Running = true
+			discord, err := grantDiscord(m)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				_, err = s.ChannelMessageSend(m.ChannelID, err.Error())
+				Running = false
+				return
+			}
+			_, err = s.ChannelMessageSend(m.ChannelID, discord)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				Running = false
+				return
+			}
+			Running = false
+		} else if command == "deny" {
+			Running = true
+			discord, err := denyDiscord(m)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				_, err = s.ChannelMessageSend(m.ChannelID, err.Error())
+				Running = false
+				return
+			}
+			_, err = s.ChannelMessageSend(m.ChannelID, discord)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				Running = false
+				return
+			}
+			Running = false
 		} else if command == "ask" {
 			Running = true
 			discord, err := askDiscord(m)
@@ -413,6 +445,98 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 	}
 	utils.ReportMessage(fmt.Sprintf("User @%s tipped @%s%s XDN on Discord", from.Author.Username, from.Mentions[0].Username, amount[len(amount)-1]))
 	return returnMap, nil
+}
+
+func grantDiscord(from *discordgo.MessageCreate) (string, error) {
+	//check if user is bot
+	if from.Author.Bot {
+		return "", errors.New("Bot can't tip")
+	}
+	if from.Author.Username == "" {
+		return "", errors.New("UserID is required")
+	}
+	if len(from.Mentions) == 0 {
+		return "", errors.New("No user mentioned in grand command")
+	}
+	if len(from.Mentions) > 1 {
+		return "", errors.New("You can grant only one user")
+	}
+
+	author := from.Author.ID
+	tippedUser := from.Mentions[0].ID
+
+	utils.ReportMessage(fmt.Sprintf("Granting access to user %s on Discord", from.Mentions[0].Username))
+
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db")
+	}
+	ustPermission := database.ReadValueEmpty[sql.NullInt64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if !ustPermission.Valid {
+		return "", errors.New("You don't have permission to grant other users access to MN service")
+	}
+	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ? AND typeBot = ?", strings.TrimSpace(tippedUser), 2)
+	if !usrTo.Valid {
+		return "", errors.New("Mentioned user is not registered in the Discord bot db")
+	}
+	//check if user is in users_permission
+
+	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
+	if !check.Valid {
+		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn) VALUES (?, ?)", usrTo.Int64, 1)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("User %s has been granted with access to MN service", from.Mentions[0].Username), nil
+	} else {
+		return fmt.Sprintf("User %s has already been granted with access to MN service", from.Mentions[0].Username), nil
+	}
+}
+
+func denyDiscord(from *discordgo.MessageCreate) (string, error) {
+	//check if user is bot
+	if from.Author.Bot {
+		return "", errors.New("Bot can't tip")
+	}
+	if from.Author.Username == "" {
+		return "", errors.New("UserID is required")
+	}
+	if len(from.Mentions) == 0 {
+		return "", errors.New("No user mentioned in grand command")
+	}
+	if len(from.Mentions) > 1 {
+		return "", errors.New("You can grant only one user")
+	}
+
+	author := from.Author.ID
+	tippedUser := from.Mentions[0].ID
+
+	utils.ReportMessage(fmt.Sprintf("Deniyng access to user %s on Discord", from.Mentions[0].Username))
+
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db")
+	}
+	ustPermission := database.ReadValueEmpty[sql.NullInt64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if !ustPermission.Valid {
+		return "", errors.New("You don't have permission to deny other users access to MN service")
+	}
+	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ? AND typeBot = ?", strings.TrimSpace(tippedUser), 2)
+	if !usrTo.Valid {
+		return "", errors.New("Mentioned user is not registered in the Discord bot db")
+	}
+	//check if user is in users_permission
+
+	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
+	if check.Valid {
+		_, err := database.InsertSQl("DELETE FROM users_permission WHERE idUser = ?", usrTo.Int64)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("User %s has been denied with access to MN service", from.Mentions[0].Username), nil
+	} else {
+		return fmt.Sprintf("User %s does not have privileges for MN service", from.Mentions[0].Username), nil
+	}
 }
 
 func rainDiscord(from *discordgo.MessageCreate) (string, error, RainReturnStruct) {

@@ -112,6 +112,32 @@ func StartTelegramBot() {
 					}
 					Running = false
 					return
+				case "grant":
+					Running = true
+					tx, err := grant(update.From.UserName, update)
+					if err != nil {
+						msg.Text = "Error: " + err.Error()
+					} else {
+						msg.Text = tx
+					}
+					if _, err := bot.Send(msg); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					Running = false
+					return
+				case "deny":
+					Running = true
+					tx, err := deny(update.From.UserName, update)
+					if err != nil {
+						msg.Text = "Error: " + err.Error()
+					} else {
+						msg.Text = tx
+					}
+					if _, err := bot.Send(msg); err != nil {
+						utils.WrapErrorLog(err.Error())
+					}
+					Running = false
+					return
 				case "rain":
 					Running = true
 					tx, errr, data := rain(update.From.UserName, update)
@@ -604,6 +630,122 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	mes := fmt.Sprintf("User @%s tipped @%s%sXDN", username, ut, amount[len(amount)-1])
 	utils.ReportMessage(fmt.Sprintf("User @%s tipped @%s%s XDN on Telegram", username, ut, amount[len(amount)-1]))
 	return mes, nil
+	//return nil
+}
+
+func grant(username string, from *tgbotapi.Message) (string, error) {
+	if from.From.IsBot {
+		return "", errors.New("Bots are not allowed")
+	}
+
+	r := regexp.MustCompile(`(?i)help`)
+	if r.MatchString(from.Text) {
+		return "Grant user access to MN \n\nUsage: /grant @<username>", nil
+	}
+
+	str1 := strings.ReplaceAll(from.Text, "@", "")
+	str2 := from.Text
+	utils.ReportMessage(fmt.Sprintf("Tip from %s text %s", username, from.Text))
+	if (len(str2) - len(str1)) > 1 {
+		return "", errors.New("You can tip only one user per command")
+	}
+	re := regexp.MustCompile("\\B@[a-zA-z0-9]+")
+	m := re.FindSubmatch([]byte(from.Text))
+	usr := ""
+	if len(m) == 0 {
+		return "", errors.New("Invalid username")
+	}
+	for _, match := range m {
+		s := string(match)
+		usr = strings.Trim(s, "\n") + " "
+	}
+	if usr == "" {
+		return "", errors.New("No user to grant access")
+	}
+	ut := strings.Trim(usr, "@")
+	utils.ReportMessage(fmt.Sprintf("Grant from %s to %s", username, ut))
+
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db")
+	}
+	ustPermission := database.ReadValueEmpty[sql.NullInt64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if !ustPermission.Valid {
+		return "", errors.New("You don't have permission to grant other users access to MN service")
+	}
+	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 1)
+	if !usrTo.Valid {
+		return "", errors.New("Mentioned user not registered in the bot db")
+	}
+
+	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
+	if !check.Valid {
+		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn) VALUES (?, ?)", usrTo.Int64, 1)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("User %s has been granted with access to MN service", strings.TrimSpace(ut)), nil
+	} else {
+		return fmt.Sprintf("User %s has already been granted with access to MN service", strings.TrimSpace(ut)), nil
+	}
+	//return nil
+}
+
+func deny(username string, from *tgbotapi.Message) (string, error) {
+	if from.From.IsBot {
+		return "", errors.New("Bots are not allowed")
+	}
+
+	r := regexp.MustCompile(`(?i)help`)
+	if r.MatchString(from.Text) {
+		return "Deny user access to MN \n\nUsage: /deny @<username>", nil
+	}
+
+	str1 := strings.ReplaceAll(from.Text, "@", "")
+	str2 := from.Text
+	utils.ReportMessage(fmt.Sprintf("Deny from %s text %s", username, from.Text))
+	if (len(str2) - len(str1)) > 1 {
+		return "", errors.New("You can only modify one user's permissions per command")
+	}
+	re := regexp.MustCompile("\\B@[a-zA-z0-9]+")
+	m := re.FindSubmatch([]byte(from.Text))
+	usr := ""
+	if len(m) == 0 {
+		return "", errors.New("Invalid username")
+	}
+	for _, match := range m {
+		s := string(match)
+		usr = strings.Trim(s, "\n") + " "
+	}
+	if usr == "" {
+		return "", errors.New("No user to deny access")
+	}
+	ut := strings.Trim(usr, "@")
+	utils.ReportMessage(fmt.Sprintf("Grant from %s to %s", username, ut))
+
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db")
+	}
+	ustPermission := database.ReadValueEmpty[sql.NullInt64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if !ustPermission.Valid {
+		return "", errors.New("You don't have permission to deny other users access to MN service")
+	}
+	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 1)
+	if !usrTo.Valid {
+		return "", errors.New("Mentioned user not registered in the bot db")
+	}
+
+	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
+	if !check.Valid {
+		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn) VALUES (?, ?)", usrTo.Int64, 1)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("User %s has been granted with access to MN service", strings.TrimSpace(ut)), nil
+	} else {
+		return fmt.Sprintf("User %s has already been granted with access to MN service", strings.TrimSpace(ut)), nil
+	}
 	//return nil
 }
 
