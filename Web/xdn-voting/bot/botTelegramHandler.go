@@ -669,8 +669,8 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db")
 	}
-	ustPermission := database.ReadValueEmpty[sql.NullInt64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
-	if !ustPermission.Valid {
+	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if ustPermission == 0 {
 		return "", errors.New("You don't have permission to grant other users access to MN service")
 	}
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 1)
@@ -727,8 +727,8 @@ func deny(username string, from *tgbotapi.Message) (string, error) {
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db")
 	}
-	ustPermission := database.ReadValueEmpty[sql.NullInt64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
-	if !ustPermission.Valid {
+	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if ustPermission == 0 {
 		return "", errors.New("You don't have permission to deny other users access to MN service")
 	}
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 1)
