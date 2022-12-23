@@ -30,7 +30,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 	}
 	if txDaemon.Generated == true {
 		amountMain := txDaemon.Amount + txDaemon.Fee
-		amount := amountMain * 0.95
+		amount := amountMain * 1.0
 		amountFee := amountMain - amount
 		id, errUpdate = database.InsertSQl("INSERT INTO masternode_tx(tx_id, idCoin, idNode, amount, mn_tx) VALUES(?, ?, ?, ?, ?)", txDaemon.TxId, idCoin, txDaemon.NodeId, amount, txDaemon.Generated)
 		if errUpdate != nil {

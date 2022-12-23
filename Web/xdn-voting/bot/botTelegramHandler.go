@@ -651,6 +651,16 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 	}
 	re := regexp.MustCompile("\\B@[a-zA-z0-9]+")
 	m := re.FindSubmatch([]byte(from.Text))
+
+	reg := regexp.MustCompile("\\S[a-zA-Z]+[^a-zA-Z]?$")
+	tier := reg.FindAllString(from.Text, -1)
+	if len(tier) == 0 {
+		return "", errors.New("You must specify tier")
+	}
+	if len(tier) > 1 {
+		return "", errors.New("You can specify only one tier")
+	}
+
 	usr := ""
 	if len(m) == 0 {
 		return "", errors.New("Invalid username")
@@ -678,15 +688,33 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 		return "", errors.New("Mentioned user not registered in the bot db")
 	}
 
-	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
-	if !check.Valid {
-		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn) VALUES (?, ?)", usrTo.Int64, 1)
+	tierNum := 0
+	numAddr := 0
+	switch tier[0] {
+	case "bronze":
+		tierNum = 2
+		numAddr = 2
+	case "silver":
+		tierNum = 5
+		numAddr = 5
+	case "gold":
+		tierNum = 10
+		numAddr = 1000
+	default:
+		return "", errors.New("Invalid tier")
+	}
+
+	check := database.ReadValueEmpty[bool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
+	if check == false {
+		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn, stealth) VALUES (?, ?, ?)", usrTo.Int64, tierNum, numAddr)
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("User %s has been granted with access to MN service", strings.TrimSpace(ut)), nil
+		return fmt.Sprintf("User %s has been granted with access to MN service", usr), nil
 	} else {
-		return fmt.Sprintf("User %s has already been granted with access to MN service", strings.TrimSpace(ut)), nil
+		_, _ = database.InsertSQl("UPDATE users_permission SET mn = ? WHERE idUser = ?", tierNum, usrTo.Int64)
+		_, _ = database.InsertSQl("UPDATE users_permission SET stealth = ? WHERE idUser = ?", numAddr, usrTo.Int64)
+		return fmt.Sprintf("User %s got changed MN tier to %s", usr, tier[0]), nil
 	}
 	//return nil
 }
@@ -736,8 +764,8 @@ func deny(username string, from *tgbotapi.Message) (string, error) {
 		return "", errors.New("Mentioned user not registered in the bot db")
 	}
 
-	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
-	if !check.Valid {
+	check := database.ReadValueEmpty[bool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
+	if check == false {
 		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn) VALUES (?, ?)", usrTo.Int64, 1)
 		if err != nil {
 			return "", err

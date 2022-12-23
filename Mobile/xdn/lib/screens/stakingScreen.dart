@@ -156,7 +156,12 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   }
 
   _changePercentage(double d) {
-    _controller.text = _formatPriceString(((double.parse(_balance)) * d).toString());
+    if (d == 1.0) {
+      _controller.text = _formatPriceString(((double.parse(_balance)) * d - 0.01).toString());
+    }else{
+      _controller.text = _formatPriceString(((double.parse(_balance)) * d).toString());
+    }
+
     setState(() {});
   }
 

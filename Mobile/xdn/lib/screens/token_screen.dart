@@ -205,56 +205,55 @@ class _TokenScreenState extends State<TokenScreen> {
                                 Card(
                                   elevation: 0,
                                   color: Colors.black12,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 2.0, right: 2.0),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DrownDownMenu<String>(
-                                        currentIndex: listPos,
-                                        items: addrList.map((String value) {
-                                          return DropdownItem<String>(
-                                            value: value,
-                                            child: SizedBox(
-                                              width: MediaQuery.of(context).size.width *0.82,
-                                                height: 40,
-                                                child: Center(
-                                                  child: AutoSizeText(
-                                                    value,
-                                                    maxLines: 1,
-                                                    minFontSize: 8.0,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    stepGranularity: 0.1,
-                                                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white70, fontWeight: FontWeight.w500, fontFamily: 'RobotoMono'),
-                                                  ),
-                                                )
-                                            ),
-                                          );
-                                        }).toList(),
-                                        onChange: (value, index) {
-                                          setState(() {
-                                            listPos = addrList.indexOf(value);
-                                          });
-                                        },
-                                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-                                        dropdownButtonStyle: const DropdownButtonStyle(
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          height: 40,
-                                          elevation: 0,
-                                          backgroundColor: Colors.transparent,
-                                          primaryColor: Colors.white70,
-                                        ),
-                                        dropdownStyle: DropdownStyle(
-                                          borderRadius: BorderRadius.circular(8),
-                                          elevation: 6,
-                                          padding: const EdgeInsets.all(10),
-                                          color: const Color(0xFF2B3752),
-                                        ),
-                                        child: const Text(
-                                          '',
-                                        ),
+                                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DrownDownMenu<String>(
+                                      currentIndex: listPos,
+                                      items: addrList.map((String value) {
+                                        return DropdownItem<String>(
+                                          value: value,
+                                          child: SizedBox(
+                                            width: MediaQuery.of(context).size.width *0.80,
+                                              height: 40,
+                                              child: Center(
+                                                child: AutoSizeText(
+                                                  value,
+                                                  maxLines: 1,
+                                                  minFontSize: 6.0,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  stepGranularity: 0.1,
+                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white70, fontWeight: FontWeight.w500, fontFamily: 'RobotoMono'),
+                                                ),
+                                              )
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChange: (value, index) {
+                                        setState(() {
+                                          listPos = addrList.indexOf(value);
+                                        });
+                                      },
+                                      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                                      dropdownButtonStyle: const DropdownButtonStyle(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        height: 40,
+                                        elevation: 0,
+                                        backgroundColor: Colors.transparent,
+                                        primaryColor: Colors.white70,
+                                      ),
+                                      dropdownStyle: DropdownStyle(
+                                        borderRadius: BorderRadius.circular(8),
+                                        elevation: 6,
+                                        padding: const EdgeInsets.all(10),
+                                        color: const Color(0xFF2B3752),
+                                      ),
+                                      child: const Text(
+                                        '',
                                       ),
                                     ),
                                   ),
                                 ),
+                                const SizedBox(height: 5),
                                 TokenBalanceCard(
                                   balance: snapshot.data?.data?.rest?[listPos].bal?.toDouble(),
                                   send: () {

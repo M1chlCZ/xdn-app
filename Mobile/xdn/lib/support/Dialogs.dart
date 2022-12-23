@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/models/StealthTX.dart';
 import 'package:digitalnote/support/RoundButton.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/barcode_scanner.dart';
@@ -1408,6 +1409,188 @@ class Dialogs {
         });
   }
 
+  static void openTransactionStealthBox(context, Tx tx) async {
+    return showDialog(
+        barrierDismissible: true,
+        context: context,
+        builder: (BuildContext context) {
+          var link = "https://xdn-explorer.com/tx/${tx.txid!}";
+          return DialogBody(
+            header: AppLocalizations.of(context)!.dl_tx_detail,
+            buttonLabel: AppLocalizations.of(context)!.dl_explorer,
+            buttonCancelLabel: AppLocalizations.of(context)!.close,
+            oneButton: false,
+            onTap: () async {
+              Utils.openLink(link);
+            },
+            child: Padding(
+                padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 10.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              AppLocalizations.of(context)!.txid,
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: tx.txid));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(AppLocalizations.of(context)!.dl_tx_copy),
+                              duration: const Duration(seconds: 3),
+                              backgroundColor: Colors.green,
+                              behavior: SnackBarBehavior.fixed,
+                              elevation: 5.0,
+                            ));
+                          },
+                          child: SizedBox(
+                            width: 350,
+                            height: 20,
+                            child: AutoSizeText(
+                              tx.txid!,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 5.0,
+                    ),
+                    const Divider(
+                      color: Colors.grey,
+                      height: 4.0,
+                    ),
+                    const SizedBox(
+                      height: 5.0,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              AppLocalizations.of(context)!.amount,
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        SizedBox(
+                          width: 350,
+                          height: 20,
+                          child: AutoSizeText(
+                            "${tx.amount!} XDN",
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 5.0,
+                    ),
+                    const Divider(
+                      color: Colors.grey,
+                      height: 4.0,
+                    ),
+                    const SizedBox(
+                      height: 5.0,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              AppLocalizations.of(context)!.date,
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        SizedBox(
+                          width: 350,
+                          height: 20,
+                          child: AutoSizeText(
+                            Utils.convertDate(tx.date),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 5.0,
+                    ),
+                    const Divider(
+                      color: Colors.grey,
+                      height: 4.0,
+                    ),
+                    const SizedBox(
+                      height: 5.0,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              AppLocalizations.of(context)!.confirmations.capitalize(),
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        SizedBox(
+                          width: 350,
+                          height: 20,
+                          child: AutoSizeText(
+                            tx.confirmation.toString(),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontStyle: FontStyle.normal, fontSize: 18.0, color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )),
+          );
+        });
+  }
+
   static void openPasswordConfirmBox(context, Function(String password) func) async {
     TextEditingController textController = TextEditingController();
     TextEditingController textController2 = TextEditingController();
@@ -1751,6 +1934,93 @@ class Dialogs {
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.black54),
                       )),
+                      const SizedBox(
+                        height: 5.0,
+                      ),
+                      const Divider(
+                        color: Colors.grey,
+                        height: 4.0,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: qr));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(AppLocalizations.of(context)!.dl_qr_copy),
+                              duration: const Duration(seconds: 3),
+                              backgroundColor: Colors.green,
+                              behavior: SnackBarBehavior.fixed,
+                              elevation: 5.0,
+                            ));
+                            Navigator.pop(context);
+                          },
+                          onLongPress: () {
+                            Vibration.vibrate(duration: 200);
+                            Share.share(qr);
+                            Navigator.pop(context);
+                          },
+                          child: QrImage(
+                            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
+                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
+                            errorCorrectionLevel: QrErrorCorrectLevel.H,
+                            data: qr.toString(),
+                            foregroundColor: Colors.black87,
+                            version: QrVersions.auto,
+                            // size: 250,
+                            gapless: false,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ]),
+            ),
+          );
+        });
+  }
+
+  static void openUserQRStealth(context, String address) async {
+    var qr = address;
+    showDialog(
+        context: context,
+        builder: (context) {
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
+            child: Dialog(
+              backgroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(side: BorderSide(color: Color(0xFF9F9FA4)), borderRadius: BorderRadius.all(Radius.circular(20.0))),
+              child: Wrap(children: [
+                Container(
+                  width: 400.0,
+                  padding: const EdgeInsets.all(15.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0, bottom: 2.0),
+                          child: SizedBox(
+                            width: 380,
+                            child: AutoSizeText(
+                              "Stealth XDN Address",
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              minFontSize: 8.0,
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.black87),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Center(
+                          child: Text(
+                            '(${AppLocalizations.of(context)!.dl_share})',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.black54),
+                          )),
                       const SizedBox(
                         height: 5.0,
                       ),

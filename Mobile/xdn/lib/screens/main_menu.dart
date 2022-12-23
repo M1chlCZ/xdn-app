@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/generated/phone.pbgrpc.dart';
+import 'package:digitalnote/models/StealhBalance.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/masternode_screen.dart';
@@ -9,6 +10,7 @@ import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
+import 'package:digitalnote/screens/stealth_screen.dart';
 import 'package:digitalnote/screens/token_screen.dart';
 import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
@@ -23,6 +25,7 @@ import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
 import 'package:digitalnote/widgets/balance_card.dart';
+import 'package:digitalnote/widgets/balance_stealth_card.dart';
 import 'package:digitalnote/widgets/balance_token_card.dart';
 import 'package:digitalnote/widgets/masternode_menu_widget.dart';
 import 'package:digitalnote/widgets/send_qr_dialog.dart';
@@ -53,11 +56,14 @@ class MainMenuNew extends StatefulWidget {
 class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
   final GlobalKey<BalanceCardState> _keyTokenBal = GlobalKey();
+  final GlobalKey<BalanceStealthCardMenuState> _keyStealthBal = GlobalKey();
   ComInterface cm = ComInterface();
 
   FutureOr<Map<String, dynamic>>? _getBalance;
 
   Future<Map<String, dynamic>>? _getTokenBalance;
+
+  Future<StealthBalance?>? _getStealthBalance;
 
   String? name;
 
@@ -67,6 +73,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   bool contestActive = false;
   bool mnActive = false;
+  bool stealthActive = false;
 
   Future<DaemonStatus>? daemonStatus;
 
@@ -78,6 +85,15 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   );
   late final Animation<double> _animation = CurvedAnimation(
     parent: _controller,
+    curve: Curves.fastOutSlowIn,
+  );
+
+  late final AnimationController _controller2 = AnimationController(
+    duration: const Duration(seconds: 1),
+    vsync: this,
+  );
+  late final Animation<double> _animation2 = CurvedAnimation(
+    parent: _controller2,
     curve: Curves.fastOutSlowIn,
   );
 
@@ -104,6 +120,12 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
           mnActive = true;
         });
         _controller.forward();
+      }
+      if (response.stealthPermission) {
+        setState(() {
+          stealthActive = true;
+        });
+        _controller2.forward();
       }
     } catch (e) {
       print('Caught error: ${e.toString()}');
@@ -176,6 +198,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   refreshBalance() {
     _getBalance = NetInterface.getBalance(details: true);
     _getTokenBalance = NetInterface.getTokenBalance();
+    _getStealthBalance = NetInterface.getStealthBalance();
     setState(() {});
   }
 
@@ -201,6 +224,10 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   void gotoTokenScreen() {
     Navigator.of(context).pushNamed(TokenScreen.route, arguments: "nothing");
+  }
+
+  void gotoStealthScreen() {
+    Navigator.of(context).pushNamed(StealthScreen.route, arguments: "nothing");
   }
 
   void gotoSettingsScreen() {
@@ -336,6 +363,20 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                           getBalanceFuture: _getBalance,
                           goto: gotoBalanceScreen,
                           scan: scanQR,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        SizeTransition(
+                          sizeFactor: _animation,
+                          child: SizedBox(
+                            height: mnActive ? 90.0 : 0.0,
+                            child: BalanceStealthCardMenu(
+                              key: _keyStealthBal,
+                              getBalanceFuture: _getStealthBalance,
+                              goto: gotoStealthScreen,
+                            ),
+                          ),
                         ),
                         const SizedBox(
                           height: 10,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:digitalnote/models/StealhBalance.dart';
 import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Utils.dart';
@@ -163,6 +164,17 @@ class NetInterface {
       ComInterface ci = ComInterface();
     Map<String, dynamic> rt = await ci.get("/user/token/wxdn", serverType: ComInterface.serverGoAPI, debug: false);
     return rt;
+  }
+
+  static Future<StealthBalance?> getStealthBalance() async {
+    try {
+      ComInterface ci = ComInterface();
+      Map<String, dynamic> rt = await ci.get("/user/stealth/balance", serverType: ComInterface.serverGoAPI, debug: true);
+      return StealthBalance.fromJson(rt);
+    } catch (e) {
+      print(e);
+      return null;
+    }
   }
 
   static Future<Map<String, dynamic>>? getPriceData({bool details = false}) async {

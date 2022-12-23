@@ -70,7 +70,13 @@ func main() {
 	go grpc.NewServer()
 	go grpc.NewAppServer()
 
-	app := fiber.New(fiber.Config{AppName: "XDN DAO API", StrictRouting: true})
+	app := fiber.New(fiber.Config{
+		AppName:       "XDN DAO API",
+		StrictRouting: true,
+		WriteTimeout:  time.Second * 35,
+		ReadTimeout:   time.Second * 35,
+		IdleTimeout:   time.Second * 65,
+	})
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
 	// ================== DAO ==================
 	app.Post("dao/v1/login", login)
@@ -146,6 +152,8 @@ func main() {
 
 	app.Get("api/v1/user/stealth/balance", utils.Authorized(getStealthBalance))
 	app.Get("api/v1/user/stealth/tx", utils.Authorized(getStealthTX))
+	app.Get("api/v1/user/stealth/addr", utils.Authorized(getStealthAddr))
+	app.Post("api/v1/user/stealth/send", utils.Authorized(sendStealthTX))
 
 	app.Get("api/v1/status", utils.Authorized(getStatus))
 
@@ -217,12 +225,80 @@ func main() {
 
 }
 
+func sendStealthTX(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if len(userID) == 0 {
+		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
+	}
+	type dataReq struct {
+		StealthAddr string  `json:"stealth_addr"`
+		Address     string  `json:"address"`
+		Amount      float64 `json:"amount"`
+	}
+	var data dataReq
+	if err := c.BodyParser(&data); err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+
+	if data.Address == "" || data.Amount == 0 {
+		return utils.ReportError(c, "All fields has to be populated", fiber.StatusBadRequest)
+	}
+
+	belongToUser := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM stealth_addr WHERE addr = ? AND idUser = ?", data.StealthAddr, userID)
+	if !belongToUser.Valid {
+		return utils.ReportError(c, "Stealth address does not belong to user", fiber.StatusBadRequest)
+	}
+
+	//addrSend, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+
+	_, err := coind.SendCoins(data.Address, data.StealthAddr, data.Amount, false)
+	if err != nil {
+		return utils.ReportError(c, "Wallet problem, try again later", fiber.StatusConflict)
+	}
+
+	return c.JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func getStealthAddr(c *fiber.Ctx) error {
+	// Get user
+	userID := c.Get("User_id")
+	user := database.ReadValueEmpty[sql.NullString]("SELECT username FROM users WHERE id = ?", userID)
+	if user.Valid == false {
+		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
+	}
+
+	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
+	if admin == 0 {
+		tier := database.ReadValueEmpty[int64]("SELECT stealth FROM users_permission WHERE idUser = ?", userID)
+		count := database.ReadValueEmpty[int64]("SELECT COUNT(*) FROM stealth_addr WHERE idUser = ?", userID)
+		if count >= tier {
+			return utils.ReportError(c, "You have reached the maximum number of stealth addresses with your plan", http.StatusConflict)
+		}
+	}
+
+	count := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(*),0) as count FROM stealth_addr WHERE idUser = ?", userID)
+	addrName := fmt.Sprintf("%s@%d", user.String, count+1)
+	// Get stealth address
+	address, err := coind.WrapDaemon(utils.DaemonWallet, 2, "getnewaddress", addrName)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+	}
+	_, _ = database.InsertSQl("INSERT INTO stealth_addr (idUser, addr, addrName) VALUES (?,?, ?)", userID, strings.Trim(string(address), "\""), addrName)
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
 func getStealthTX(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
-	var txReq models.GetTokenTxReq
-	if err := c.BodyParser(&txReq); err != nil {
-		return err
-	}
+	//var txReq models.GetTokenTxReq
+	//if err := c.BodyParser(&txReq); err != nil {
+	//	return err
+	//}
 
 	addr, err := database.ReadArrayStruct[models.Stealth]("SELECT * FROM stealth_addr WHERE idUser = ?", userID)
 	if err != nil {
@@ -241,10 +317,26 @@ func getStealthTX(c *fiber.Ctx) error {
 				continue
 			}
 
-			balance, err := web3.GetContractBalance(address)
+			unspent, err := coind.WrapDaemon(utils.DaemonWallet, 5, "listunspent", 1, 9999999, []string{v.Addr})
 			if err != nil {
 				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 			}
+			var ing []models.ListUnspent
+			spendable := 0.0
+			errJson := json.Unmarshal(unspent, &ing)
+			if errJson != nil {
+				return utils.ReportError(c, errJson.Error(), http.StatusInternalServerError)
+			}
+			for _, v := range ing {
+				if v.Spendable == true {
+					spendable += v.Amount
+				}
+			}
+
+			//balance, err := web3.GetContractBalance(address)
+			//if err != nil {
+			//	return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+			//}
 
 			db, err := database.ReadArrayStruct[models.Transaction]("SELECT * FROM transaction WHERE account = ?", v.AddrName)
 			if err != nil {
@@ -252,7 +344,7 @@ func getStealthTX(c *fiber.Ctx) error {
 			}
 			txArr = append(txArr, TX{
 				Addr:    address,
-				Balance: balance,
+				Balance: spendable,
 				TX:      db,
 			})
 		}
@@ -342,7 +434,7 @@ func withdrawMN(c *fiber.Ctx) error {
 	dateDiff := dateNow - dateChanged
 
 	if dateDiff < 604800000 {
-		return utils.ReportError(c, "Coins are locked for week", http.StatusConflict)
+		return utils.ReportError(c, "Coins are locked", http.StatusConflict)
 	}
 
 	ur, errCrypt := database.ReadValue[string]("SELECT node_ip FROM mn_clients WHERE id = ?", stakeReq.IdNode)
@@ -400,6 +492,15 @@ func startMN(c *fiber.Ctx) error {
 	errJson := c.BodyParser(&request)
 	if errJson != nil {
 		return utils.ReportError(c, errJson.Error(), http.StatusBadRequest)
+	}
+
+	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
+	if admin == 0 {
+		tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
+		count := database.ReadValueEmpty[int64]("SELECT COUNT(*) FROM users_mn WHERE idUser = ? AND active = 1", userID)
+		if count >= tier {
+			return utils.ReportError(c, "You have reached the maximum number of nodes", http.StatusConflict)
+		}
 	}
 
 	nodeAddr := database.ReadValueEmpty[sql.NullString]("SELECT address FROM mn_clients WHERE id = ?", request.NodeID)
@@ -1727,7 +1828,7 @@ func getStealthBalance(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	if len(addrAll) == 0 {
-		return utils.ReportError(c, err.Error(), http.StatusConflict)
+		return utils.ReportError(c, "No balance", http.StatusConflict)
 	}
 	var all []models.StealthBalance
 	for _, v := range addrAll {

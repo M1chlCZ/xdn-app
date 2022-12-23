@@ -106,6 +106,7 @@ class ComInterface {
 
   Future<dynamic> post(String url, {Map<String, dynamic>? request, int serverType = serverAPI, dynamic body, int type = typeJson, bool debug = false, bool bandwidth = false}) async {
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
+   print(daoJWT);
     var ioClient = await GetIt.I.getAsync<IOClient>();
     String bearer = "";
     String payload = "";

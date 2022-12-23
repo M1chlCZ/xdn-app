@@ -107,10 +107,10 @@ func ThunderFinishEmbed(message, avatar, username string) *discordgo.MessageEmbe
 	return &genericEmbed
 }
 
-func GenericEmbed(message, avatar, username, picture string) *discordgo.MessageEmbed {
+func GenericEmbed(title, message, avatar, username string) *discordgo.MessageEmbed {
 	timeString := time.Now().Format(time.RFC3339)
 	genericEmbed := discordgo.MessageEmbed{
-		URL:         "https://t.me/XDNDN",
+		URL:         "",
 		Type:        "",
 		Title:       "This is a test",
 		Description: message,
@@ -120,9 +120,6 @@ func GenericEmbed(message, avatar, username, picture string) *discordgo.MessageE
 			Text:         "This is a test",
 			IconURL:      "",
 			ProxyIconURL: "",
-		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: picture,
 		},
 		Thumbnail: nil,
 		Video:     nil,

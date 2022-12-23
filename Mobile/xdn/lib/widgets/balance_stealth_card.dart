@@ -1,22 +1,23 @@
-
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/models/StealhBalance.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class BalanceStealthCardMenu extends StatefulWidget {
-  final Future<Map<String, dynamic>>? getBalanceFuture;
+  final Future<StealthBalance?>? getBalanceFuture;
   final VoidCallback goto;
 
   const BalanceStealthCardMenu({Key? key, required this.getBalanceFuture, required this.goto}) : super(key: key);
 
   @override
-  State<BalanceStealthCardMenu> createState() => _BalanceStealthCardMenuState();
+  State<BalanceStealthCardMenu> createState() => BalanceStealthCardMenuState();
 }
 
-class _BalanceStealthCardMenuState extends State<BalanceStealthCardMenu> {
+class BalanceStealthCardMenuState extends State<BalanceStealthCardMenu> {
   bool _tokenConnected = false;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -28,7 +29,7 @@ class _BalanceStealthCardMenuState extends State<BalanceStealthCardMenu> {
           }
         },
         child: Container(
-          decoration:  BoxDecoration(
+          decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(15.0)),
             boxShadow: [
               BoxShadow(
@@ -44,14 +45,20 @@ class _BalanceStealthCardMenuState extends State<BalanceStealthCardMenu> {
           child: Stack(
             children: [
               Center(
-                child: FutureBuilder<Map<String, dynamic>>(
+                child: FutureBuilder<StealthBalance?>(
                     future: widget.getBalanceFuture,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        Map<String, dynamic> m = snapshot.data!;
-                        var balance = double.parse(m['balance'].toString());
-                        var immature = '0.000';
-                        var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
+                        StealthBalance m = snapshot.data!;
+                        var balance = 0.0;
+                        var immature = 0.0;
+                        if (m.balances!.isNotEmpty) {
+                          for (var element in m.balances!) {
+                            balance += double.parse(element.spendable.toString());
+                            immature += double.parse(element.immature.toString());
+                          }
+                        }
+                        var textImature = immature == 0.0 ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
                         _tokenConnected = true;
                         return Center(
                           child: Column(
@@ -83,50 +90,52 @@ class _BalanceStealthCardMenuState extends State<BalanceStealthCardMenu> {
                                         margin: const EdgeInsets.only(right: 10.0, bottom: 2.0),
                                         child: Center(
                                             child: Text(
-                                              "WXDN",
-                                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70,  fontSize: 24.0, fontWeight: FontWeight.w800),
-                                            ))),
+                                          "XDN",
+                                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.white70, fontSize: 24.0, fontWeight: FontWeight.w800),
+                                        ))),
                                   ],
                                 ),
                               ),
                               textImature != ''
                                   ? SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.8,
-                                child: AutoSizeText(textImature,
-                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white54)),
-                              )
+                                      width: MediaQuery.of(context).size.width * 0.8,
+                                      child: AutoSizeText(textImature,
+                                          minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white54)),
+                                    )
                                   : Container(),
-
                             ],
                           ),
                         );
                       } else if (snapshot.hasError) {
                         _tokenConnected = false;
-                        return Center(child: Container(
-                          padding: const EdgeInsets.all(5.0),
-
-                            decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              spreadRadius: 2,
-                              blurRadius: 3,
-                              offset: const Offset(0, 2), // changes position of shadow
-                            ),
-                            BoxShadow(
-                              color: const Color(0xFF233261).withOpacity(0.1),
-                              spreadRadius: 2,
-                              blurRadius: 3,
-                              offset: const Offset(3, 5), // changes position of shadow
-                            )
-                          ],
-                          image: const DecorationImage(image: AssetImage("images/test_pattern.png"), fit: BoxFit.cover, opacity: 1.0),
-                        ), child: Text('Connect your BSC wallet in Voting section'.capitalize(), style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0,
-                            color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.w800),)));
+                        return Center(
+                            child: Container(
+                                padding: const EdgeInsets.all(5.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      spreadRadius: 2,
+                                      blurRadius: 3,
+                                      offset: const Offset(0, 2), // changes position of shadow
+                                    ),
+                                    BoxShadow(
+                                      color: const Color(0xFF233261).withOpacity(0.1),
+                                      spreadRadius: 2,
+                                      blurRadius: 3,
+                                      offset: const Offset(3, 5), // changes position of shadow
+                                    )
+                                  ],
+                                  image: const DecorationImage(image: AssetImage("images/test_pattern.png"), fit: BoxFit.cover, opacity: 1.0),
+                                ),
+                                child: Text(
+                                  'Connect your BSC wallet in Voting section'.capitalize(),
+                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.w800),
+                                )));
                       } else {
                         return Center(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.center,mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
                             SizedBox(
                                 height: 25.0,
                                 width: 25.0,
@@ -141,10 +150,8 @@ class _BalanceStealthCardMenuState extends State<BalanceStealthCardMenu> {
                     }),
               ),
               Padding(
-                padding: const EdgeInsets.only(left:2.0, top: 2.0, bottom: 2.0),
-                child: SizedBox(
-                    width: 90,
-                    child: Image.asset("images/wallet_bsc.png")),
+                padding: const EdgeInsets.only(left: 2.0, top: 2.0, bottom: 2.0),
+                child: SizedBox(width: 75, child: Image.asset("images/stealth.png")),
               )
             ],
           ),

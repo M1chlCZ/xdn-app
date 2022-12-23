@@ -32,16 +32,22 @@ func (s *ServerApp) AppPing(ctx context.Context, request *grpcModels.AppPingRequ
 func (s *ServerApp) UserPermission(ctx context.Context, _ *grpcModels.UserPermissionRequest) (*grpcModels.UserPermissionResponse, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return &grpcModels.UserPermissionResponse{MnPermission: false}, nil
+		return &grpcModels.UserPermissionResponse{MnPermission: false, StealthPermission: false}, nil
 	}
 	uID := md.Get("user_id")
 	userID := uID[0]
 
-	value := database.ReadValueEmpty[sql.NullBool]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
+	mnPermission := false
+	stealthPermission := false
+	value := database.ReadValueEmpty[sql.NullInt64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
 	if value.Valid {
-		return &grpcModels.UserPermissionResponse{MnPermission: value.Bool}, nil
+		mnPermission = true
 	}
-	return &grpcModels.UserPermissionResponse{MnPermission: false}, nil
+	value2 := database.ReadValueEmpty[sql.NullInt64]("SELECT stealth FROM users_permission WHERE idUser = ?", userID)
+	if value2.Valid {
+		stealthPermission = true
+	}
+	return &grpcModels.UserPermissionResponse{MnPermission: mnPermission, StealthPermission: stealthPermission}, nil
 }
 
 func (s *ServerApp) MasternodeGraph(ctx context.Context, request *grpcModels.MasternodeGraphRequest) (*grpcModels.MasternodeGraphResponse, error) {

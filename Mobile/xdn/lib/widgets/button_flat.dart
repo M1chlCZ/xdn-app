@@ -5,6 +5,7 @@ class FlatCustomButton extends StatelessWidget {
   final Color? color;
   final Color? borderColor;
   final VoidCallback?  onTap;
+  final VoidCallback?  onLongPress;
   final Icon? icon;
   final AnimatedIcon? animIcon;
   final Color? splashColor;
@@ -15,7 +16,7 @@ class FlatCustomButton extends StatelessWidget {
   final EdgeInsets? padding;
   final double? borderWidth;
 
-  const FlatCustomButton({Key? key, this.color, this.onTap, this.icon, this.imageIcon, this.splashColor, this.animIcon, this.radius = 4.0, this.child, this.borderColor, this.height, this.width, this.padding, this.borderWidth}) : super(key: key);
+  const FlatCustomButton({Key? key, this.color, this.onTap, this.icon, this.imageIcon, this.splashColor, this.animIcon, this.radius = 4.0, this.child, this.borderColor, this.height, this.width, this.padding, this.borderWidth, this.onLongPress}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +36,8 @@ class FlatCustomButton extends StatelessWidget {
             // highlightColor: splashColor!.withOpacity(0.5),
             splashColor: splashColor ?? Colors.white30,
             highlightColor: splashColor ?? Colors.white30,// splash color
-            onTap: onTap, // labelLarge pressed
+            onTap: onTap,
+            onLongPress: onLongPress,// labelLarge pressed
             child: Container(
               padding: padding,
               child: Column(

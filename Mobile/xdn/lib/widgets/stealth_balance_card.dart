@@ -1,4 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:digitalnote/widgets/coin_badge.dart';
@@ -6,18 +7,18 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class TokenBalanceCard extends StatefulWidget {
+class StealthBalanceCard extends StatefulWidget {
   final double? balance;
   final VoidCallback send;
   final String address;
 
-  const TokenBalanceCard({Key? key, this.balance, required this.send, required this.address}) : super(key: key);
+  const StealthBalanceCard({Key? key, this.balance, required this.send, required this.address}) : super(key: key);
 
   @override
-  State<TokenBalanceCard> createState() => _TokenBalanceCardState();
+  State<StealthBalanceCard> createState() => _StealthBalanceCardState();
 }
 
-class _TokenBalanceCardState extends State<TokenBalanceCard> {
+class _StealthBalanceCardState extends State<StealthBalanceCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -66,7 +67,7 @@ class _TokenBalanceCardState extends State<TokenBalanceCard> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: const [
                     Expanded(
-                      child: Align(alignment: Alignment.centerRight, child: CoinBadge(text: "WXDN")),
+                      child: Align(alignment: Alignment.centerRight, child: CoinBadge(text: "XDN")),
                     ),
                     SizedBox(width: 10),
                   ],
@@ -80,11 +81,12 @@ class _TokenBalanceCardState extends State<TokenBalanceCard> {
             children: [
               const SizedBox(width: 30),
               FlatCustomButton(
-                height: 40,
+                  height: 40,
                   width: 100,
                   radius: 10,
                   onTap: () {
-                    Dialogs.openUserQRStealth(context, widget.address);
+                    Dialogs.openUserQRToken(context, widget.address);
+                    // getAddr();
                   },
                   color: Colors.transparent,
                   borderColor: Colors.white38,
@@ -93,7 +95,7 @@ class _TokenBalanceCardState extends State<TokenBalanceCard> {
                       maxLines: 1,
                       minFontSize: 8,
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white))),
-             const Spacer(),
+              const Spacer(),
               FlatCustomButton(
                   height: 40,
                   width: 100,
@@ -113,4 +115,5 @@ class _TokenBalanceCardState extends State<TokenBalanceCard> {
       ),
     );
   }
+
 }

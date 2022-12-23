@@ -465,6 +465,14 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 	author := from.Author.ID
 	tippedUser := from.Mentions[0].ID
 
+	reg := regexp.MustCompile("\\S[a-zA-Z]+[^a-zA-Z]?$")
+	tier := reg.FindAllString(from.Message.Content, -1)
+	if len(tier) == 0 {
+		return "", errors.New("You must specify tier")
+	}
+	if len(tier) > 1 {
+		return "", errors.New("You can specify only one tier")
+	}
 	utils.ReportMessage(fmt.Sprintf("Granting access to user %s on Discord", from.Mentions[0].Username))
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
@@ -480,16 +488,32 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 		return "", errors.New("Mentioned user is not registered in the Discord bot db")
 	}
 	//check if user is in users_permission
-
-	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
-	if !check.Valid {
-		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn) VALUES (?, ?)", usrTo.Int64, 1)
+	tierNum := 0
+	numAddr := 0
+	switch tier[0] {
+	case "bronze":
+		tierNum = 2
+		numAddr = 2
+	case "silver":
+		tierNum = 5
+		numAddr = 5
+	case "gold":
+		tierNum = 10
+		numAddr = 1000
+	default:
+		return "", errors.New("Invalid tier")
+	}
+	check := database.ReadValueEmpty[bool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
+	if check == false {
+		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn, stealth) VALUES (?, ?, ?)", usrTo.Int64, tierNum, numAddr)
 		if err != nil {
 			return "", err
 		}
 		return fmt.Sprintf("User %s has been granted with access to MN service", from.Mentions[0].Username), nil
 	} else {
-		return fmt.Sprintf("User %s has already been granted with access to MN service", from.Mentions[0].Username), nil
+		_, _ = database.InsertSQl("UPDATE users_permission SET mn = ? WHERE idUser = ?", tierNum, usrTo.Int64)
+		_, _ = database.InsertSQl("UPDATE users_permission SET stealth = ? WHERE idUser = ?", numAddr, usrTo.Int64)
+		return fmt.Sprintf("User %s got changed MN tier to %s", from.Mentions[0].Username, tier[0]), nil
 	}
 }
 
@@ -526,9 +550,8 @@ func denyDiscord(from *discordgo.MessageCreate) (string, error) {
 		return "", errors.New("Mentioned user is not registered in the Discord bot db")
 	}
 	//check if user is in users_permission
-
-	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
-	if check.Valid {
+	check := database.ReadValueEmpty[bool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
+	if check == true {
 		_, err := database.InsertSQl("DELETE FROM users_permission WHERE idUser = ?", usrTo.Int64)
 		if err != nil {
 			return "", err
