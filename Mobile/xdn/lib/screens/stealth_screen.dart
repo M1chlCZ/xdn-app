@@ -72,8 +72,9 @@ class _StealthScreenState extends State<StealthScreen> with TickerProviderStateM
   }
 
   Widget _tab1(List<String> addrList) {
-    if (addrList.isEmpty) {
-      addrList = ["No addresses found"];
+    if (addrList.length == 1 && addrList[0] == "") {
+      addrList.clear();
+      addrList = ["No stealth addresses added"];
     }
     return Row(
       key: const ValueKey(1),

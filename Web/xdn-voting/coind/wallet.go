@@ -127,6 +127,15 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 				utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", addressReceive, errInsert.Error()))
 				//return "", errInsert
 			}
+		} else {
+			userSendStealth := database.ReadValueEmpty[sql.NullString]("SELECT addrName FROM stealth_addr WHERE addr = ?", addressSend)
+			if userSendStealth.Valid {
+				_, errInsert := database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", tx, userSendStealth.String, amount*-1, 0, addressSend, "send")
+				if errInsert != nil {
+					utils.WrapErrorLog(fmt.Sprintf("insert transaction error, addr: %s error %s", addressReceive, errInsert.Error()))
+					//return "", errInsert
+				}
+			}
 		}
 		if wallet.PassPhrase.Valid {
 			_, _ = WrapDaemon(wallet, 1, "walletlock")

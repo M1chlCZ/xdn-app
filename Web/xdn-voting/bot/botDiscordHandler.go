@@ -3,6 +3,7 @@ package bot
 import (
 	"database/sql"
 	"fmt"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"gopkg.in/errgo.v2/errors"
 	"hash/maphash"
 	"math/rand"
@@ -12,6 +13,7 @@ import (
 	"time"
 	"xdn-voting/coind"
 	"xdn-voting/database"
+	"xdn-voting/models"
 	"xdn-voting/utils"
 
 	"github.com/bwmarrin/discordgo"
@@ -369,7 +371,7 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 	reg := regexp.MustCompile("\\s[0-9.]+")
 	amount := reg.FindAllString(from.Message.Content, -1)
 
-	utils.ReportMessage(fmt.Sprintf("Tipping user %s %s XDN on Discord", from.Mentions[0].Username, strings.TrimSpace(amount[len(amount)-1])))
+	utils.ReportMessage(fmt.Sprintf("Tipping user %s %s XDN on Discord in channel %s", from.Mentions[0].Username, strings.TrimSpace(amount[len(amount)-1]), from.ChannelID))
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
 	if !usrFrom.Valid {
@@ -394,7 +396,13 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 		return nil, errors.New("Invalid amount")
 	}
 	tx, err := coind.SendCoins(addrTo.String, addrFrom.String, amnt, false)
-	_, _ = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 0, 1, from.ChannelID)
+	if err != nil {
+		return nil, err
+	}
+	_, err = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amnt, 2, 1, from.ChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 
 	if err != nil {
 		return nil, err
@@ -653,6 +661,10 @@ func rainDiscord(from *discordgo.MessageCreate) (string, error, RainReturnStruct
 		return "", err, RainReturnStruct{}
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
+	_, err = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 0, 1, from.ChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 
 	return fmt.Sprintf("Raining %.2f XDN on %d users", amount, numOfUsers), nil, RainReturnStruct{
 		UsrList:  usersToTip,
@@ -884,6 +896,10 @@ func thunderDiscord(from *discordgo.MessageCreate) (string, error, ThunderReturn
 	}
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain", tx, "send")
 
+	_, err = database.InsertSQl("INSERT INTO uses_bot_activity (idUser, amount, type, idSocial, idChannel) VALUES (?, ?, ?, ?, ?)", usrFrom.Int64, amount, 1, 1, from.ChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 	return fmt.Sprintf("Raining %.2f XDN on %d users", amount, numOfUsers), nil, ThunderReturnStruct{
 		UsrListDiscord:  discordFinalSlice,
 		UsrListTelegram: telegramFinalSlice,
@@ -1022,6 +1038,80 @@ func AnnouncementDiscord() {
 	}
 }
 
+func AnnouncementOtherDiscord() {
+	LoadPictures()
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	for _, channel := range channels {
+		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+
+			if lastPost.Id != 0 {
+				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+				_, err := bot.Send(dl)
+				if err != nil {
+					utils.ReportMessage(err.Error())
+				}
+			}
+		}
+		post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 0 ORDER BY RAND() LIMIT 1")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		messageBold := strings.ReplaceAll(post.Message, "*", "**")
+
+		url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 0)
+		buttons := []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Emoji: discordgo.ComponentEmoji{
+							Name: "👍🏻",
+						},
+						Label:    "Like",
+						Style:    discordgo.SuccessButton,
+						CustomID: "annBot",
+					},
+				},
+			},
+		}
+		//
+		messageSend := discordgo.MessageSend{
+			Content:         "",
+			Embeds:          []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)},
+			TTS:             false,
+			Components:      buttons,
+			Files:           nil,
+			AllowedMentions: nil,
+			Reference:       nil,
+			File:            nil,
+			Embed:           nil,
+		}
+
+		msg, err := goBot.ChannelMessageSendComplex(fmt.Sprintf("%d", channel.IdChannel), &messageSend)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+
+		channelID, ko := strconv.Atoi(msg.ChannelID)
+		messageID, ko := strconv.Atoi(msg.ID)
+		if ko != nil {
+			utils.WrapErrorLog("Error converting string to int")
+		} else {
+			_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+		}
+	}
+}
+
 func AnnouncementNFTDiscord() {
 	LoadPictures()
 	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 1) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
@@ -1073,6 +1163,68 @@ func AnnouncementNFTDiscord() {
 		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
+		}
+	}
+}
+
+func AnnouncementOtherNFTDiscord() {
+	LoadPictures()
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	for _, channel := range channels {
+		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 1) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		if lastPost.Id != 0 {
+			err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+
+		}
+		post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 1 ORDER BY RAND() LIMIT 1")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		messageBold := strings.ReplaceAll(post.Message, "*", "**")
+
+		url := ""
+		if post.Picture.Valid {
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+		} else {
+			randNum := utils.RandNum(len(PictureNFT))
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=2", randNum)
+		}
+
+		msg, err := goBot.ChannelMessageSendEmbeds(fmt.Sprintf("%d", channel.IdChannel), []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)})
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		//_, err = goBot.ChannelMessageSendEmbeds(MainChannelID, []*discordgo.MessageEmbed{AnnEmbed("", "If you want to be notified when we post a new announcement, please react with :white_check_mark: to this message.", "XDN Announce Bot", url)})
+
+		go func(cID, mID string) {
+			time.Sleep(2 * time.Second)
+			err := goBot.MessageReactionAdd(cID, mID, "👍")
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+		}(msg.ChannelID, msg.ID)
+
+		channelID, ko := strconv.Atoi(msg.ChannelID)
+		messageID, ko := strconv.Atoi(msg.ID)
+		if ko != nil {
+			utils.WrapErrorLog("Error converting string to int")
+		} else {
+			_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
 		}
 	}
 }
@@ -1170,6 +1322,106 @@ func GiftDiscordBot() {
 	}
 }
 
+func GiftAnotherDiscordBot() {
+	LoadPictures()
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	for _, channel := range channels {
+		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		if lastPost.Id != 0 {
+			err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+
+		}
+		post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 2 ORDER BY RAND() LIMIT 1")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		usrTL := database.ReadValueEmpty[int64](`SELECT count(id) FROM users_bot WHERE typeBot = 1`)
+		luckyNumber := utils.RandNum(int(usrTL / 2))
+		text := ""
+		if luckyNumber == 0 {
+			luckyNumber++
+		}
+		if luckyNumber == 1 {
+			text = "first"
+		} else if luckyNumber == 2 {
+			text = "second"
+		} else if luckyNumber == 3 {
+			text = "third"
+		} else {
+			text = strconv.FormatInt(int64(luckyNumber), 10) + "th"
+		}
+		message := fmt.Sprintf(post.Message, text)
+		messageBold := strings.ReplaceAll(message, "*", "**")
+
+		url := ""
+		if post.Picture.Valid {
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+		} else {
+			randNum := utils.RandNum(len(PictureNFT))
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=2", randNum)
+		}
+
+		buttons := []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Emoji: discordgo.ComponentEmoji{
+							Name: "🎁",
+						},
+						Label:    "Try your luck",
+						Style:    discordgo.SuccessButton,
+						CustomID: "giftBot",
+					},
+				},
+			},
+		}
+		//
+		messageSend := discordgo.MessageSend{
+			Content:         "",
+			Embeds:          []*discordgo.MessageEmbed{GiftEmbed(messageBold, url)},
+			TTS:             false,
+			Components:      buttons,
+			Files:           nil,
+			AllowedMentions: nil,
+			Reference:       nil,
+			File:            nil,
+			Embed:           nil,
+		}
+
+		msg, err := goBot.ChannelMessageSendComplex(fmt.Sprintf("%d", channel.IdChannel), &messageSend)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+
+		channelID, ko := strconv.Atoi(msg.ChannelID)
+		messageID, ko := strconv.Atoi(msg.ID)
+		if ko != nil {
+			utils.WrapErrorLog("Error converting string to int")
+		} else {
+			_, err = database.InsertSQl("INSERT INTO gift_bot_numbers (idMessage, luckyNumber, idChannel) VALUES (?,?,?)", messageID, luckyNumber, channelID)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+			_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+		}
+	}
+}
+
 func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	utils.ReportMessage("giftBotHandler", i.Message.ChannelID, i.Message.ID, i.Member.User.ID)
 	idU := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", i.Member.User.ID)
@@ -1224,7 +1476,6 @@ func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
-		utils.ReportMessage("Already participated")
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 		}
@@ -1324,21 +1575,7 @@ func annBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.WrapErrorLog(err.Error())
 	}
 	countUsers := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(*), 0) FROM users_activity WHERE idMessage = ? AND idChannel = ?", i.Message.ID, i.Message.ChannelID)
-	if countUsers != 50 {
-		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Thank you for your participation! ",
-				Flags:   discordgo.MessageFlagsEphemeral,
-			},
-		})
-		utils.ReportMessage("Already participated")
-		if err != nil {
-			utils.WrapErrorLog(err.Error())
-		}
-		Running = false
-		return
-	} else {
+	if countUsers == 50 {
 		addressTo := database.ReadValueEmpty[string]("SELECT addr FROM users WHERE id = ?", idU.Int64)
 		addressFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
 		if !addressFrom.Valid {
@@ -1389,6 +1626,23 @@ func annBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			utils.WrapErrorLog(err.Error())
 		}
 		Running = false
+		return
+	} else if countUsers == 75 {
+
+	} else {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Thank you for your participation! ",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		utils.ReportMessage("Already participated")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		Running = false
+		return
 	}
 }
 

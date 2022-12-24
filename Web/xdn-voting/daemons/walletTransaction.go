@@ -61,7 +61,7 @@ func SaveTransactions() {
 }
 
 func SaveAllTransactions() {
-	tx, err := coind.WrapDaemon(utils.DaemonWallet, 5, "listtransactions", "*", 99999999)
+	tx, err := coind.WrapDaemon(utils.DaemonWallet, 5, "listtransactions", "*", 1000)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return

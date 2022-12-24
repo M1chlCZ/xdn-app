@@ -271,26 +271,24 @@ func getStealthAddr(c *fiber.Ctx) error {
 	}
 
 	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
-	if admin == 0 {
-		tier := database.ReadValueEmpty[int64]("SELECT stealth FROM users_permission WHERE idUser = ?", userID)
-		count := database.ReadValueEmpty[int64]("SELECT COUNT(*) FROM stealth_addr WHERE idUser = ?", userID)
-		if count >= tier {
-			return utils.ReportError(c, "You have reached the maximum number of stealth addresses with your plan", http.StatusConflict)
+	tier := database.ReadValueEmpty[int64]("SELECT stealth FROM users_permission WHERE idUser = ?", userID)
+	count := database.ReadValueEmpty[int64]("SELECT COUNT(*) FROM stealth_addr WHERE idUser = ?", userID)
+	if count < tier || admin == 0 {
+		count := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(*),0) as count FROM stealth_addr WHERE idUser = ?", userID)
+		addrName := fmt.Sprintf("%s@%d", user.String, count+1)
+		// Get stealth address
+		address, err := coind.WrapDaemon(utils.DaemonWallet, 2, "getnewaddress", addrName)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
 		}
+		_, _ = database.InsertSQl("INSERT INTO stealth_addr (idUser, addr, addrName) VALUES (?,?, ?)", userID, strings.Trim(string(address), "\""), addrName)
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			utils.ERROR:  false,
+			utils.STATUS: utils.OK,
+		})
+	} else {
+		return utils.ReportError(c, "You have reached the maximum number of stealth addresses with your plan", http.StatusConflict)
 	}
-
-	count := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(*),0) as count FROM stealth_addr WHERE idUser = ?", userID)
-	addrName := fmt.Sprintf("%s@%d", user.String, count+1)
-	// Get stealth address
-	address, err := coind.WrapDaemon(utils.DaemonWallet, 2, "getnewaddress", addrName)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
-	}
-	_, _ = database.InsertSQl("INSERT INTO stealth_addr (idUser, addr, addrName) VALUES (?,?, ?)", userID, strings.Trim(string(address), "\""), addrName)
-	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-		utils.ERROR:  false,
-		utils.STATUS: utils.OK,
-	})
 }
 
 func getStealthTX(c *fiber.Ctx) error {
@@ -349,7 +347,17 @@ func getStealthTX(c *fiber.Ctx) error {
 			})
 		}
 	} else {
-		return utils.ReportError(c, "No user addresses in the db", http.StatusConflict)
+		txArr = append(txArr, TX{
+			Addr:    "",
+			Balance: 0.0,
+			TX:      []models.Transaction{},
+		})
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			utils.ERROR:  false,
+			utils.STATUS: utils.OK,
+			"rest":       txArr,
+		})
+		//return utils.ReportError(c, "No user addresses in the db", http.StatusConflict)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -495,42 +503,41 @@ func startMN(c *fiber.Ctx) error {
 	}
 
 	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
-	if admin == 0 {
-		tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
-		count := database.ReadValueEmpty[int64]("SELECT COUNT(*) FROM users_mn WHERE idUser = ? AND active = 1", userID)
-		if count >= tier {
-			return utils.ReportError(c, "You have reached the maximum number of nodes", http.StatusConflict)
+	tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
+	count := database.ReadValueEmpty[int64]("SELECT COUNT(id) FROM users_mn WHERE idUser = ? AND active = 1", userID)
+	if count < tier || admin == 0 {
+		nodeAddr := database.ReadValueEmpty[sql.NullString]("SELECT address FROM mn_clients WHERE id = ?", request.NodeID)
+		if !nodeAddr.Valid {
+			return utils.ReportError(c, "Node not found", fiber.StatusBadRequest)
 		}
+		usedAddr := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", userID)
+		if !usedAddr.Valid {
+			return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
+		}
+		tx, err := coind.SendCoins(nodeAddr.String, usedAddr.String, 2000000.01, false)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), fiber.StatusConflict)
+		}
+		if len(tx) == 0 {
+			return utils.ReportError(c, "TX id is missing", fiber.StatusBadRequest)
+		}
+		_, errInsert := database.InsertSQl("INSERT INTO mn_incoming_tx(idUser, idCoin, idNode, tx_id, amount) VALUES(?, ?, ?, ?,?)",
+			userID, request.CoinID, request.NodeID, tx, 2000000)
+		if errInsert != nil {
+			return utils.ReportError(c, fmt.Sprintf("TX id already submitted %s", errInsert.Error()), fiber.StatusBadRequest)
+		}
+		_, errUpdate := database.InsertSQl("UPDATE mn_clients SET locked = 1 WHERE id = ?", request.NodeID)
+		if errUpdate != nil {
+			return utils.ReportError(c, errUpdate.Error(), fiber.StatusBadRequest)
+		}
+		return c.Status(http.StatusOK).JSON(&fiber.Map{
+			utils.ERROR:  false,
+			utils.STATUS: utils.OK,
+		})
+	} else {
+		return utils.ReportError(c, "You have reached the maximum number of nodes", fiber.StatusConflict)
 	}
 
-	nodeAddr := database.ReadValueEmpty[sql.NullString]("SELECT address FROM mn_clients WHERE id = ?", request.NodeID)
-	if !nodeAddr.Valid {
-		return utils.ReportError(c, "Node not found", http.StatusBadRequest)
-	}
-	usedAddr := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", userID)
-	if !usedAddr.Valid {
-		return utils.ReportError(c, "User not found", http.StatusBadRequest)
-	}
-	tx, err := coind.SendCoins(nodeAddr.String, usedAddr.String, 2000000.01, false)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusConflict)
-	}
-	if len(tx) == 0 {
-		return utils.ReportError(c, "TX id is missing", http.StatusBadRequest)
-	}
-	_, errInsert := database.InsertSQl("INSERT INTO mn_incoming_tx(idUser, idCoin, idNode, tx_id, amount) VALUES(?, ?, ?, ?,?)",
-		userID, request.CoinID, request.NodeID, tx, 2000000)
-	if errInsert != nil {
-		return utils.ReportError(c, fmt.Sprintf("TX id already submitted %s", errInsert.Error()), http.StatusBadRequest)
-	}
-	_, errUpdate := database.InsertSQl("UPDATE mn_clients SET locked = 1 WHERE id = ?", request.NodeID)
-	if errUpdate != nil {
-		return utils.ReportError(c, errUpdate.Error(), http.StatusBadRequest)
-	}
-	return c.Status(http.StatusOK).JSON(&fiber.Map{
-		utils.ERROR:  false,
-		utils.STATUS: utils.OK,
-	})
 }
 
 func unlockMN(c *fiber.Ctx) error {
@@ -1817,20 +1824,28 @@ func getBalance(c *fiber.Ctx) error {
 }
 
 func getStealthBalance(c *fiber.Ctx) error {
-	name := "XDN balance request"
-	start := time.Now()
+	var all []models.StealthBalance
 	userID, er := strconv.Atoi(c.Get("User_id"))
 	if er != nil {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
 	}
-	addrAll, err := database.ReadArrayStruct[models.Stealth]("SELECT * FROM stealth_addr WHERE idUser = ?", userID)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-	}
+	addrAll, _ := database.ReadArrayStruct[models.Stealth]("SELECT * FROM stealth_addr WHERE idUser = ?", userID)
+	//if err != nil {
+	//	return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	//}
 	if len(addrAll) == 0 {
-		return utils.ReportError(c, "No balance", http.StatusConflict)
+		all = append(all, models.StealthBalance{
+			Immature:  float32(0.0),
+			Balance:   float32(0.0),
+			Spendable: float32(0.0),
+		})
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			utils.ERROR:  false,
+			utils.STATUS: utils.OK,
+			"balances":   all,
+		})
 	}
-	var all []models.StealthBalance
+
 	for _, v := range addrAll {
 		imm := 0.0
 		bl := 0.0
@@ -1862,10 +1877,6 @@ func getStealthBalance(c *fiber.Ctx) error {
 			}
 		}
 		pending := bl - spendable
-		elapsed := time.Since(start)
-		if debugTime {
-			utils.ReportMessage(fmt.Sprintf("%s took %s", name, elapsed))
-		}
 		all = append(all, models.StealthBalance{
 			Immature:  float32(pending),
 			Balance:   float32(imm),

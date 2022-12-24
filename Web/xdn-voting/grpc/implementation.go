@@ -21,7 +21,6 @@ type Server struct {
 }
 
 func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest) (*grpcModels.Response, error) {
-	utils.ReportMessage(fmt.Sprintf("TX %s", txDaemon.TxId))
 	var id int64
 	var errUpdate error
 	idCoin := 0
@@ -78,7 +77,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				idUser := ru.IdUser.Int64
 				session := ru.Session.Int64
 
-				if idUser != 0 && idCoin != 0 {
+				if idUser != 0 {
 					dt := time.Now().UTC().Format("2006-01-02 15:04:05")
 					_, errUpdate := database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime) VALUES (?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt)
 					if errUpdate != nil {
