@@ -116,16 +116,20 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
       var response = await stub.userPermission(UserPermissionRequest()..code = 200, options: CallOptions(metadata: {'authorization': token ?? ""}));
 
       if (response.mnPermission) {
-        setState(() {
-          mnActive = true;
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          setState(() {
+            mnActive = true;
+          });
+          _controller.forward();
         });
-        _controller.forward();
       }
       if (response.stealthPermission) {
-        setState(() {
-          stealthActive = true;
+        Future.delayed(const Duration(milliseconds: 1200), () {
+          setState(() {
+            stealthActive = true;
+          });
+          _controller2.forward();
         });
-        _controller2.forward();
       }
     } catch (e) {
       print('Caught error: ${e.toString()}');
@@ -367,18 +371,22 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                           goto: gotoBalanceScreen,
                           scan: scanQR,
                         ),
-                        const SizedBox(
-                          height: 10,
-                        ),
                         SizeTransition(
-                          sizeFactor: _animation,
-                          child: SizedBox(
-                            height: mnActive ? 90.0 : 0.0,
-                            child: BalanceStealthCardMenu(
-                              key: _keyStealthBal,
-                              getBalanceFuture: _getStealthBalance,
-                              goto: gotoStealthScreen,
-                            ),
+                          sizeFactor: _animation2,
+                          child: Column(
+                            children: [
+                              const SizedBox(
+                                height: 10.0,
+                              ),
+                              SizedBox(
+                                height: mnActive ? 90.0 : 0.0,
+                                child: BalanceStealthCardMenu(
+                                  key: _keyStealthBal,
+                                  getBalanceFuture: _getStealthBalance,
+                                  goto: gotoStealthScreen,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(

@@ -696,8 +696,8 @@ class _SettingsState extends State<SettingsScreen> {
                                               width: 80,
                                               child: Switch(
                                                   value: switchValue,
-                                                  activeColor: Colors.lightBlueAccent,
-                                                  inactiveThumbColor: Colors.grey.withOpacity(0.5),
+                                                  activeColor: const Color(0xFF37467C),
+                                                  inactiveThumbColor: Colors.red.withOpacity(0.8),
                                                   inactiveTrackColor: Colors.transparent,
 
                                                   onChanged: (b) {
@@ -1284,6 +1284,9 @@ class _SettingsState extends State<SettingsScreen> {
 
   void _getSSLPin() async {
     String? sslEnable = await SecureStorage.read(key: "SSL");
+    if (sslEnable == null) {
+      await SecureStorage.write(key: "SSL", value: 'true');
+    }
     if (sslEnable == "true") {
       setState(() {
         switchValue = true;

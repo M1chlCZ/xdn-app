@@ -43,7 +43,7 @@ class TransactionBloc {
       if (!_coinListController!.isClosed) {
         coinsListSink.add(ApiResponse.error(e.toString()));
       }
-      // print(e);
+      print(e);
     }
   }
 

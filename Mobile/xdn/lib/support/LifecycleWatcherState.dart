@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 abstract class LifecycleWatcherState<T extends StatefulWidget> extends State<T>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin  {
+    with WidgetsBindingObserver, TickerProviderStateMixin  {
   @override
   Widget build(BuildContext context) {
     return Container();

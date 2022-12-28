@@ -79,85 +79,90 @@ class _StealthScreenState extends State<StealthScreen> with TickerProviderStateM
     return Row(
       key: const ValueKey(1),
       children: [
-        Card(
-          elevation: 0,
-          color: Colors.black12,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 2.0, right: 2.0),
-            child: DropdownButtonHideUnderline(
-              child: DrownDownMenu<String>(
-                currentIndex: listPos,
-                items: addrList.map((String value) {
-                  return DropdownItem<String>(
-                    value: value,
-                    child: SizedBox(
-                        width: MediaQuery
-                            .of(context)
-                            .size
-                            .width * 0.72,
-                        height: 40,
-                        child: Center(
-                          child: AutoSizeText(
-                            value,
-                            maxLines: 1,
-                            minFontSize: 8.0,
-                            overflow: TextOverflow.ellipsis,
-                            stepGranularity: 0.1,
-                            style: Theme
-                                .of(context)
-                                .textTheme
-                                .bodyLarge!
-                                .copyWith(fontSize: 14.0, color: Colors.white70, fontWeight: FontWeight.w500, fontFamily: 'RobotoMono'),
-                          ),
-                        )),
-                  );
-                }).toList(),
-                onChange: (value, index) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {
-                    listPos = index;
-                  }));
-                },
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-                dropdownButtonStyle: const DropdownButtonStyle(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  height: 40,
-                  elevation: 0,
-                  backgroundColor: Colors.transparent,
-                  primaryColor: Colors.white70,
-                ),
-                dropdownStyle: DropdownStyle(
-                  borderRadius: BorderRadius.circular(8),
-                  elevation: 6,
-                  padding: const EdgeInsets.all(10),
-                  color: const Color(0xFF2B3752),
-                ),
-                child: const Text(
-                  '',
+        Expanded(
+          child: Card(
+            elevation: 0,
+            color: Colors.black12,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2.0, right: 2.0),
+              child: DropdownButtonHideUnderline(
+                child: DrownDownMenu<String>(
+                  currentIndex: listPos,
+                  items: addrList.map((String value) {
+                    return DropdownItem<String>(
+                      value: value,
+                      child: SizedBox(
+                          width: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.72,
+                          height: 40,
+                          child: Center(
+                            child: AutoSizeText(
+                              value,
+                              maxLines: 1,
+                              minFontSize: 8.0,
+                              overflow: TextOverflow.ellipsis,
+                              stepGranularity: 0.1,
+                              style: Theme
+                                  .of(context)
+                                  .textTheme
+                                  .bodyLarge!
+                                  .copyWith(fontSize: 14.0, color: Colors.white70, fontWeight: FontWeight.w500, fontFamily: 'RobotoMono'),
+                            ),
+                          )),
+                    );
+                  }).toList(),
+                  onChange: (value, index) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {
+                      listPos = index;
+                    }));
+                  },
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                  dropdownButtonStyle: const DropdownButtonStyle(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    height: 40,
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    primaryColor: Colors.white70,
+                  ),
+                  dropdownStyle: DropdownStyle(
+                    borderRadius: BorderRadius.circular(8),
+                    elevation: 6,
+                    padding: const EdgeInsets.all(10),
+                    color: const Color(0xFF2B3752),
+                  ),
+                  child: const Text(
+                    '',
+                  ),
                 ),
               ),
             ),
           ),
         ),
-        FlatCustomButton(
-          height: 35,
-          width: 35,
-          onLongPress: () {
-            getAddr();
-          },
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Long press for new stealth address'),
-                duration: Duration(seconds: 2),
-                backgroundColor: Colors.blue,
-              ),
-            );
-          },
-          radius: 8,
-          color: const Color(0xFF43864C),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white70,
+        Padding(
+          padding: const EdgeInsets.only(right: 6.0),
+          child: FlatCustomButton(
+            height: 35,
+            width: 35,
+            onLongPress: () {
+              getAddr();
+            },
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Long press for new stealth address'),
+                  duration: Duration(seconds: 2),
+                  backgroundColor: Colors.blue,
+                ),
+              );
+            },
+            radius: 8,
+            color: const Color(0xFF43864C),
+            child: const Icon(
+              Icons.add,
+              color: Colors.white70,
+            ),
           ),
         ),
       ],

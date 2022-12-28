@@ -32,37 +32,12 @@ class TransactionWidgetState extends State<TransactionWidget> {
 
   Future<void> _getShit() async {
     tb.fetchTransactions();
-    // _transactions = AppDatabase().getTransactions();
-    // var i = await NetInterface.getTranData();
-    // try {
-    //   if (i > 0) {
-    //     setState(() {
-    //       _transactions = AppDatabase().getTransactions();
-    //       _circleVisible = false;
-    //     });
-    //   }
-    // } catch (e) {
-    //   if (kDebugMode) {
-    //     print(e);
-    //   }
-    // }
-    //
-    // await AppDatabase().getLastTransactionDate();
   }
 
-  Future<void> refreshTransaction() async {
-    await NetInterface.getTranData();
-    tb.fetchTransactions();
-    // if (_circleVisible == true) return;
-    // setState(() {
-    //   _circleVisible = true;
-    // });
-    //
-    // _transactions = AppDatabase().getTransactions();
-    // setState(() {
-    //   _circleVisible = false;
-    // });
-  }
+  // Future<void> refreshTransaction() async {
+  //   await NetInterface.getTranData();
+  //   tb.fetchTransactions();
+  // }
 
   @override
   Widget build(BuildContext context) {

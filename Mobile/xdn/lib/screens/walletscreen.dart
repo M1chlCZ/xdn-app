@@ -48,11 +48,11 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
 
   void notif() {
     refreshBalance();
-    Future.delayed(const Duration(milliseconds: 200), () {
-      if (_keyTran.currentState != null) {
-        _keyTran.currentState!.refreshTransaction();
-      }
-    });
+    // Future.delayed(const Duration(milliseconds: 200), () {
+    //   if (_keyTran.currentState != null) {
+    //     _keyTran.currentState!.refreshTransaction();
+    //   }
+    // });
   }
 
   @override

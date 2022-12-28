@@ -58,7 +58,11 @@ class BalanceStealthCardMenuState extends State<BalanceStealthCardMenu> {
                             immature += double.parse(element.immature.toString());
                           }
                         }
-                        var textImature = immature == 0.0 ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
+                        var textImature = immature.toInt() == 0 ? '' : "${AppLocalizations.of(context)!.immature}: ${Utils.formatBalance(immature)} XDN";
+                        if (textImature != '') {
+                          textImature = '';
+                        }
+                        // var textImature = immature == 0.0 ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
                         _tokenConnected = true;
                         return Center(
                           child: Column(
