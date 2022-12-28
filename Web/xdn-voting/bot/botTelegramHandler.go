@@ -567,6 +567,9 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	if !usrTo.Valid {
 		return "", errors.New("Mentioned user not registered in the bot db")
 	}
+	if usrFrom.Int64 == usrTo.Int64 {
+		return "", errors.New("You can't tip yourself")
+	}
 	contactTO := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = (SELECT addr FROM users WHERE id = (SELECT idUser FROM users_bot WHERE idSocial = ? ))", usrFrom, ut)
 	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)
 	if !addrFrom.Valid {
@@ -802,7 +805,11 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	}
 	amount, err := strconv.ParseFloat(strings.TrimSpace(am[len(am)-1]), 32)
 	if err != nil {
-		return "", errors.New("Invalid amount to tip"), RainReturnStruct{}
+		return "", errors.New("Invalid amount to rain"), RainReturnStruct{}
+	}
+
+	if amount < 0 {
+		return "", errors.New("Invalid amount to rain"), RainReturnStruct{}
 	}
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
@@ -896,7 +903,7 @@ func finishRain(data RainReturnStruct) (string, error) {
 		}
 		finalUsrs = append(finalUsrs, v)
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain by: "+data.UserID, tx, "receive")
-		utils.ReportMessage("Rain", fmt.Sprintf("Sent %f XDN to %s", amountToUser, v.Addr))
+		utils.ReportMessage(fmt.Sprintf("Rain: Sent %f XDN to %s", amountToUser, v.Addr))
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", v.Addr)
 		if userTo.Valid {
 			nameFrom := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, data.AddrSend)
@@ -968,7 +975,11 @@ func thunderTelegram(username string, from *tgbotapi.Message) (string, error, Th
 	}
 	amount, err := strconv.ParseFloat(strings.TrimSpace(am[0]), 32)
 	if err != nil {
-		return "", errors.New("Invalid amount to tip"), ThunderReturnStruct{}
+		return "", errors.New("Invalid amount to rain"), ThunderReturnStruct{}
+	}
+
+	if amount < 0 {
+		return "", errors.New("Invalid amount to rain"), ThunderReturnStruct{}
 	}
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
@@ -1406,11 +1417,10 @@ func GiftOtherChannelsTelegram() {
 				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
 				_, err := bot.Send(dl)
 				if err != nil {
-					utils.ReportMessage(err.Error())
+					utils.ReportMessage(fmt.Sprintf("BOT DELETE PROBLEMO %s", err.Error()))
 				}
 			}
 		}
-		utils.ReportMessage(fmt.Sprintf("GIFT url: %s", url))
 		msg := tgbotapi.NewPhoto(channel.IdChannel, tgbotapi.FileURL(url))
 		var rows []tgbotapi.InlineKeyboardButton
 		rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("🎁", "giftBot"))

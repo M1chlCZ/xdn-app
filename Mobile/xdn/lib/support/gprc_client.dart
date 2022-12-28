@@ -57,4 +57,9 @@ class AppService extends AppServiceBase {
   Future<StakeGraphResponse> stakeGraph(ServiceCall call, StakeGraphRequest request) async {
     return StakeGraphResponse();
   }
+
+  @override
+  Future<RefreshTokenResponse> refreshToken(ServiceCall call, RefreshTokenRequest request) async {
+    return RefreshTokenResponse();
+  }
 }

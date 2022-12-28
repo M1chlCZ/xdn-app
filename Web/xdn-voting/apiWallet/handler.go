@@ -54,14 +54,18 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 	}
 
 	if txID.Generated == true {
-		utils.ReportMessage("Transaction is stake")
+		//utils.ReportMessage("Transaction is stake")
 		_, err = database.InsertSQl("INSERT INTO transaction_stake(txid, amount) VALUES (?, ?)", txID.Txid, 90)
-		_, err = database.InsertSQl("INSERT INTO treasury(txid, amount) VALUES (?, ?)", txID.Txid, 10)
 		if err != nil {
-			utils.ReportMessage(err.Error())
+			//utils.ReportMessage(err.Error())
 			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
 		}
-		utils.ReportMessage(fmt.Sprintf("Stake transaction added %s", txID.Txid))
+		_, err = database.InsertSQl("INSERT INTO treasury(txid, amount) VALUES (?, ?)", txID.Txid, 10)
+		if err != nil {
+			//utils.ReportMessage(err.Error())
+			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
+		}
+		//utils.ReportMessage(fmt.Sprintf("Stake transaction added %s", txID.Txid))
 		total, err := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM users_stake WHERE active = 1")
 		if err != nil {
 			utils.ReportMessage(err.Error())

@@ -49,13 +49,13 @@ func SaveTransactions() {
 		if address == "dW8VEXurvxeJ1dMer6JoR6RSb3u3MnmMQW" {
 			continue
 		}
-		_, err = database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", txinfo.Txid, txinfo.Account, txinfo.Amount, txinfo.Confirmations, txinfo.Address, "receive")
+		_, err = database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE confirmation = ?", txinfo.Txid, txinfo.Account, txinfo.Amount, txinfo.Confirmations, txinfo.Address, "receive", txinfo.Confirmations)
 		if err != nil {
-			//utils.ReportMessage(err.Error())
-			_, err = database.InsertSQl("UPDATE transaction SET confirmation = ? WHERE txid = ?", txinfo.Confirmations, txinfo.Txid)
-			if err != nil {
-				utils.ReportMessage(err.Error())
-			}
+			utils.ReportMessage(err.Error())
+			//_, err = database.InsertSQl("UPDATE transaction SET confirmation = ? WHERE txid = ?", txinfo.Confirmations, txinfo.Txid)
+			//if err != nil {
+			//	utils.ReportMessage(err.Error())
+			//}
 		}
 	}
 }
@@ -102,13 +102,13 @@ func SaveAllTransactions() {
 		if address == "dW8VEXurvxeJ1dMer6JoR6RSb3u3MnmMQW" {
 			continue
 		}
-		_, err = database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", txinfo.Txid, txinfo.Account, txinfo.Amount, txinfo.Confirmations, txinfo.Address, "receive")
+		_, err = database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE confirmation = ?", txinfo.Txid, txinfo.Account, txinfo.Amount, txinfo.Confirmations, txinfo.Address, "receive", txinfo.Confirmations)
 		if err != nil {
-			//utils.ReportMessage(err.Error())
-			_, err = database.InsertSQl("UPDATE transaction SET confirmation = ? WHERE txid = ?", txinfo.Confirmations, txinfo.Txid)
-			if err != nil {
-				utils.ReportMessage(err.Error())
-			}
+			utils.ReportMessage(err.Error())
+			//_, err = database.InsertSQl("UPDATE transaction SET confirmation = ? WHERE txid = ?", txinfo.Confirmations, txinfo.Txid)
+			//if err != nil {
+			//	utils.ReportMessage(err.Error())
+			//}
 		}
 	}
 }

@@ -129,6 +129,9 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
       }
     } catch (e) {
       print('Caught error: ${e.toString()}');
+      Future.delayed(const Duration(seconds: 5), () {
+        getMNPermission();
+      });
     }
     await channel.shutdown();
   }

@@ -162,3 +162,50 @@ func (s *ServerApp) StakeGraph(ctx context.Context, request *grpcModels.StakeGra
 		Status:   utils.OK,
 	}, nil
 }
+
+func (s *ServerApp) RefreshToken(_ context.Context, request *grpcModels.RefreshTokenRequest) (*grpcModels.RefreshTokenResponse, error) {
+	//md, ok := metadata.FromIncomingContext(ctx)
+	//if !ok {
+	//	return nil, errors.New("no metadata")
+	//}
+	//uID := md.Get("user_id")
+
+	readSql, errSelect := database.ReadStruct[models.RefreshTokenStruct]("SELECT * FROM refresh_token WHERE refreshToken = ?", request.Token)
+	if errSelect != nil {
+		utils.WrapErrorLog(fmt.Sprintf("err: %v\n", errSelect))
+		return nil, errSelect
+	}
+
+	if len(readSql.RefToken) != 0 && readSql.Used == 0 {
+		_, errUpdate := database.InsertSQl("UPDATE refresh_token SET used = 1 WHERE refreshToken = ?", request.Token)
+		if errUpdate != nil {
+			utils.WrapErrorLog(fmt.Sprintf("err: %v\n", errUpdate))
+			return nil, errUpdate
+
+		}
+		token, errToken := utils.CreateKeyToken(uint64(readSql.IdUser))
+		if errToken != nil {
+			utils.WrapErrorLog(fmt.Sprintf("err: %v\n", errToken))
+			return nil, errToken
+		}
+
+		rf := utils.GenerateSecureToken(32)
+		_, errInsertToken := database.InsertSQl("INSERT INTO refresh_token(idUser, refreshToken) VALUES(?, ?)", readSql.IdUser, rf)
+		if errInsertToken != nil {
+			utils.WrapErrorLog(fmt.Sprintf("err: %v\n", errInsertToken))
+			return nil, errInsertToken
+		}
+
+		_, errInsertToken = database.InsertSQl("DELETE FROM refresh_token WHERE used = 1")
+
+		return &grpcModels.RefreshTokenResponse{
+			Token:        token,
+			RefreshToken: rf,
+		}, nil
+
+	} else {
+		return nil, errors.New("Invalid refresh token")
+
+	}
+
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=XDN MN
+StartLimitIntervalSec=0
+After=network.target
+After=systemd-user-sessions.service
+After=network-online.target
+
+[Service]
+WorkingDirectory=/home/XDNService/api
+ExecStart=/home/XDNService/api/api
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

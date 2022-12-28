@@ -273,7 +273,7 @@ func getStealthAddr(c *fiber.Ctx) error {
 	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
 	tier := database.ReadValueEmpty[int64]("SELECT stealth FROM users_permission WHERE idUser = ?", userID)
 	count := database.ReadValueEmpty[int64]("SELECT COUNT(*) FROM stealth_addr WHERE idUser = ?", userID)
-	if count < tier || admin == 0 {
+	if count < tier || admin == 1 {
 		count := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(*),0) as count FROM stealth_addr WHERE idUser = ?", userID)
 		addrName := fmt.Sprintf("%s@%d", user.String, count+1)
 		// Get stealth address
@@ -504,8 +504,8 @@ func startMN(c *fiber.Ctx) error {
 
 	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
 	tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
-	count := database.ReadValueEmpty[int64]("SELECT COUNT(id) FROM users_mn WHERE idUser = ? AND active = 1", userID)
-	if count < tier || admin == 0 {
+	count := database.ReadValueEmpty[int64]("SELECT COUNT(id) FROM users_mn WHERE idUser = ?", userID)
+	if count < tier || admin == 1 {
 		nodeAddr := database.ReadValueEmpty[sql.NullString]("SELECT address FROM mn_clients WHERE id = ?", request.NodeID)
 		if !nodeAddr.Valid {
 			return utils.ReportError(c, "Node not found", fiber.StatusBadRequest)
@@ -1787,6 +1787,10 @@ func getBalance(c *fiber.Ctx) error {
 	if immature.Valid {
 		imm = immature.Float64
 	}
+	if imm < 0 {
+		imm = 0
+	}
+
 	if bal.Valid {
 		bl = bal.Float64
 	}
@@ -1946,7 +1950,7 @@ func addUserAddress(c *fiber.Ctx) error {
 	}
 	_, err := database.InsertSQl("INSERT INTO users_addr (idUser, addr) VALUES (?, ?)", userID, payload.Address)
 	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		return utils.ReportErrorSilent(c, err.Error(), http.StatusInternalServerError)
 	}
 	utils.ReportMessage(fmt.Sprint("User ", userID, " added address ", payload.Address))
 

@@ -22,8 +22,11 @@ func InitCron() {
 		//other channel
 		err = gocron.Every(1).Day().At("22:00").Do(RunBotAnnOtherChannel)
 		err = gocron.Every(1).Day().At("02:00").Do(GiftBotOtherChannel)
-		err = gocron.Every(1).Day().At("10:00").Do(GiftBotOtherChannel)
-		err = gocron.Every(1).Day().At("18:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("08:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("14:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("20:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("04:00").Do(AnnNFTBotOtherChannel)
+		err = gocron.Every(1).Day().At("08:00").Do(AnnNFTBotOtherChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			return

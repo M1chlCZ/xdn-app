@@ -26,6 +26,7 @@ var (
 const (
 	MainChannelID = "469466166642081792"
 	TestChannelID = "1033753700721754172"
+	VIPChannelID  = "1033520774935498812"
 )
 
 type configStruct struct {
@@ -368,6 +369,9 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 
 	author := from.Author.ID
 	tippedUser := from.Mentions[0].ID
+	if author == tippedUser {
+		return nil, errors.New("You can't tip yourself")
+	}
 	reg := regexp.MustCompile("\\s[0-9.]+")
 	amount := reg.FindAllString(from.Message.Content, -1)
 
@@ -596,6 +600,9 @@ func rainDiscord(from *discordgo.MessageCreate) (string, error, RainReturnStruct
 	if err != nil {
 		return "", errors.New("Invalid amount to tip"), RainReturnStruct{}
 	}
+	if amount < 0.0001 {
+		return "", errors.New("Amount is too small"), RainReturnStruct{}
+	}
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", from.Author.ID, 2)
 	if !usrFrom.Valid {
@@ -690,7 +697,7 @@ func finishRainDiscord(data RainReturnStruct, m *discordgo.Message) (string, *di
 		}
 		finalUsrs = append(finalUsrs, v)
 		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE (txid = ? AND category = ? AND id > 0) LIMIT 1", "Tip Bot Rain by: "+m.Author.Username+" on Discord", tx, "receive")
-		utils.ReportMessage("Rain", fmt.Sprintf("Sent %f XDN to %s", amountToUser, v.Addr))
+		utils.ReportMessage(fmt.Sprintf("Rain, Sent %f XDN to %s", amountToUser, v.Addr))
 		userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", v.Addr)
 		if userTo.Valid {
 			nameFrom := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = ?", userTo.Int64, data.AddrSend)
@@ -780,6 +787,9 @@ func thunderDiscord(from *discordgo.MessageCreate) (string, error, ThunderReturn
 	amount, err := strconv.ParseFloat(strings.TrimSpace(am[len(am)-1]), 32)
 	if err != nil {
 		return "", errors.New("Invalid amount to tip"), ThunderReturnStruct{}
+	}
+	if amount < 0.0001 {
+		return "", errors.New("Amount is too small"), ThunderReturnStruct{}
 	}
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", from.Author.ID, 2)
@@ -1040,7 +1050,7 @@ func AnnouncementDiscord() {
 
 func AnnouncementOtherDiscord() {
 	LoadPictures()
-	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID)
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID, VIPChannelID)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return
@@ -1169,7 +1179,7 @@ func AnnouncementNFTDiscord() {
 
 func AnnouncementOtherNFTDiscord() {
 	LoadPictures()
-	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID)
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID, VIPChannelID)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return
@@ -1324,7 +1334,7 @@ func GiftDiscordBot() {
 
 func GiftAnotherDiscordBot() {
 	LoadPictures()
-	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID)
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID, VIPChannelID)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return
@@ -1423,7 +1433,7 @@ func GiftAnotherDiscordBot() {
 }
 
 func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	utils.ReportMessage("giftBotHandler", i.Message.ChannelID, i.Message.ID, i.Member.User.ID)
+	utils.ReportMessage(fmt.Sprintf("giftBotHandler %s, %s, %s", i.Message.ChannelID, i.Message.ID, i.Member.User.ID))
 	idU := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", i.Member.User.ID)
 	if !idU.Valid {
 		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -1536,7 +1546,7 @@ func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func annBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	utils.ReportMessage("annBotHandler", i.Message.ChannelID, i.Message.ID, i.Member.User.ID)
+	utils.ReportMessage(fmt.Sprintf("annBotHandler %s, %s, %s", i.Message.ChannelID, i.Message.ID, i.Member.User.ID))
 	idU := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", i.Member.User.ID)
 	if !idU.Valid {
 		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

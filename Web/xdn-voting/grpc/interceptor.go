@@ -18,8 +18,8 @@ func serverInterceptor(ctx context.Context,
 	id := ""
 	var err error
 	//utils.ReportMessage(info.FullMethod)
-	// Skip authorize when GetJWT is requested
-	if info.FullMethod != "/proto.EventStoreService/GetJWT" {
+	// Skip authorize when RefreshToken is requested
+	if info.FullMethod != "/proto.AppService/RefreshToken" {
 		if id, err = authorize(ctx); err != nil {
 			return nil, err
 		}

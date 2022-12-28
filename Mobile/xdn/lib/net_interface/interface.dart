@@ -1,8 +1,9 @@
 import 'dart:convert';
 
-import 'package:digitalnote/models/RefreshToken.dart';
+import 'package:digitalnote/generated/phone.pbgrpc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
+import 'package:grpc/grpc.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
@@ -35,7 +36,7 @@ class ComInterface {
       mUrl = url;
     }
 
-     if (serverType == serverDAO) {
+    if (serverType == serverDAO) {
       mUrl = globals.DAO_URL + url;
       bearer = "Bearer ${daoJWT ?? ""}";
     } else if (serverType == serverGoAPI) {
@@ -53,7 +54,7 @@ class ComInterface {
       response = await ioClient.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
       if (debug) {
         debugPrint(mUrl);
-         if (serverType == serverDAO || serverType == serverGoAPI) {
+        if (serverType == serverDAO || serverType == serverGoAPI) {
           debugPrint(response.body.toString());
         } else if (serverType == serverGoAPI) {
           debugPrint(response.body.toString());
@@ -67,7 +68,7 @@ class ComInterface {
             while (_refreshingToken == true && timeLapsed < 300) {
               debugPrint("Waiting for token refresh");
               timeLapsed++;
-              await Future.delayed(const Duration(milliseconds: 100));
+              await Future.delayed(const Duration(milliseconds: 50));
             }
             timeLapsed = 0;
             await refreshToken();
@@ -106,7 +107,7 @@ class ComInterface {
 
   Future<dynamic> post(String url, {Map<String, dynamic>? request, int serverType = serverAPI, dynamic body, int type = typeJson, bool debug = false, bool bandwidth = false}) async {
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
-   print(daoJWT);
+    // print(daoJWT);
     var ioClient = await GetIt.I.getAsync<IOClient>();
     String bearer = "";
     String payload = "";
@@ -114,7 +115,7 @@ class ComInterface {
     http.Response response;
 
     var mUrl = globals.API_URL + url;
-     if (serverType == serverDAO) {
+    if (serverType == serverDAO) {
       mUrl = globals.DAO_URL + url;
       bearer = "Bearer ${daoJWT ?? ""}";
     } else if (serverType == serverGoAPI) {
@@ -174,40 +175,33 @@ class ComInterface {
     return responseJson;
   }
 
-  static Future<void> refreshToken() async {
-    debugPrint("/// RefreshToken ///");
+  Future<void> refreshToken() async {
+    if (_refreshingToken) {
+      return;
+    }
+    final channel = ClientChannel('194.60.201.213', port: 6805, options: const ChannelOptions(credentials: ChannelCredentials.insecure()));
+    final stub = AppServiceClient(channel);
+    debugPrint('/////Refreshing token/////');
+    _refreshingToken = true;
     try {
-      if (_refreshingToken) {
-        return;
-      }
-      _refreshingToken = true;
+      String refreshToken = await SecureStorage.read(key: globals.TOKEN_REFRESH) ?? '';
+      var response = await stub.refreshToken(RefreshTokenRequest()..token = refreshToken, options: CallOptions());
 
-      await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
-      String? enc = await SecureStorage.read(key: globals.TOKEN_REFRESH);
-      Map request = {
-        "token": enc,
-      };
-      final resp = await http
-          .post(Uri.parse("${globals.API_URL}/login/refresh"), body: json.encode(request), headers: {"accept": "application/json", "content-type": "application/json", "Auth-Type": "rsa"}).timeout(
-        const Duration(seconds: 20),
-        onTimeout: () {
-          return http.Response('ErrorTimeOut', 500); // Request Timeout response status code
-        },
-      );
-
-      TokenRefresh? res = TokenRefresh.fromJson(json.decode(resp.body));
-      if (res.data!.token != null) {
-        await SecureStorage.write(key: globals.TOKEN_DAO, value: res.data!.token!);
-        await SecureStorage.write(key: globals.TOKEN_REFRESH, value: res.data!.refreshToken!);
-        _refreshingToken = false;
+      if (response.token.isNotEmpty) {
+        await SecureStorage.write(key: globals.TOKEN_DAO, value: response.token);
+        await SecureStorage.write(key: globals.TOKEN_REFRESH, value: response.refreshToken);
+      } else {
+        debugPrint('refreshToken: empty token');
+        await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
+        await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);
       }
-      _refreshingToken = false;
     } catch (e) {
+      debugPrint('refreshTokenError: $e');
       await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
       await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);
-      _refreshingToken = false;
-      debugPrint(e.toString());
     }
+    await channel.shutdown();
+    _refreshingToken = false;
   }
 
   dynamic _returnResponse(http.Response response) {

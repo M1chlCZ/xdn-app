@@ -1,0 +1,9 @@
+#!/bin/zsh
+set -e
+cd ..
+/bin/zsh ./compile.sh
+ssh -i ~/.ssh/xdnMN XDNService@"$1" "mkdir -p /home/XDNService/msXDN"
+ssh -i ~/.ssh/xdnMN XDNService@"$1" "mkdir -p /home/XDNService/api"
+ssh -i ~/.ssh/xdnMN XDNService@"$1" "touch /home/XDNService/api/api"
+sftp -i ~/.ssh/xdnMN XDNService@"$1":/home/XDNService/api/ <<< $'put ../api apiu'
+cd scripts

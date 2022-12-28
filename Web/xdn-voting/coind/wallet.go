@@ -29,6 +29,10 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		return "", err
 	}
 
+	if addressReceive == addressSend {
+		return "", errors.New("addressReceive and addressSend are the same")
+	}
+
 	var ing []models.ListUnspent
 	errJson := json.Unmarshal(wrapDaemon, &ing)
 	if errJson != nil {

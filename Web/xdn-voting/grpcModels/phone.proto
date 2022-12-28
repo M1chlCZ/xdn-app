@@ -7,6 +7,7 @@ service AppService {
   rpc UserPermission(UserPermissionRequest) returns (UserPermissionResponse) {}
   rpc MasternodeGraph(MasternodeGraphRequest) returns (MasternodeGraphResponse) {}
   rpc StakeGraph(StakeGraphRequest) returns (StakeGraphResponse) {}
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {}
 }
 
 message AppPingRequest {
@@ -62,4 +63,13 @@ message StakeGraphResponse {
   bool hasError = 1;
   repeated Rewards rewards = 2;
   string status = 3;
+}
+
+message RefreshTokenRequest {
+  string token = 1;
+}
+
+message RefreshTokenResponse {
+  string token = 1;
+  string refresh_token = 2;
 }

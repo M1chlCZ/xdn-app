@@ -213,9 +213,9 @@ func WrapErrorLog(message string) {
 	}
 }
 
-func ReportMessage(message ...string) {
+func ReportMessage(message string) {
 	go func() {
-		logToFile(fmt.Sprintf("%s", message))
+		logToFile(message)
 		logToFile("")
 	}()
 }

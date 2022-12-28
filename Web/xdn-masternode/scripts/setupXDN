@@ -91,12 +91,13 @@ After=network-online.target
 
 [Service]
 Type=forking
-ExecStart=$HOME/Digitalnoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN}
-ExecStop=$HOME/Digitalnoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN} stop
-TimeoutStartSec=180
-Restart=on-failure
+ExecStart=$HOME/DigitalNoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN}
+ExecStop=$HOME/DigitalNoted -conf=$HOME/${folderXDN}/DigitalNote.conf -datadir=$HOME/${folderXDN} stop
+TimeoutSec=10
 Restart=on-failure
 RestartSec=10
+StartLimitInterval=350
+StartLimitBurst=10
 
 [Install]
 WantedBy=default.target
