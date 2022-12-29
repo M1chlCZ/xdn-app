@@ -643,7 +643,7 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 
 	r := regexp.MustCompile(`(?i)help`)
 	if r.MatchString(from.Text) {
-		return "Grant user access to MN \n\nUsage: /grant @<username>", nil
+		return "Grant user access to MN \n\nUsage: /grant @<username> <tier> <lenghts days | months | years>", nil
 	}
 
 	str1 := strings.ReplaceAll(from.Text, "@", "")
@@ -655,13 +655,56 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 	re := regexp.MustCompile("\\B@[a-zA-z0-9]+")
 	m := re.FindSubmatch([]byte(from.Text))
 
+	textAfterTime := ""
+
+	regLength := 0
+
+	regdays := regexp.MustCompile(`\S+(?i)days`)
+	days := regdays.FindAllString(from.Text, -1)
+	if len(days) != 0 {
+		s := strings.ReplaceAll(days[0], "days", "")
+		regLength, _ = strconv.Atoi(s)
+		textAfterTime = strings.ReplaceAll(from.Text, days[0], "")
+	}
+
+	regMonths := regexp.MustCompile(`\S+(?i)months`)
+	months := regMonths.FindAllString(from.Text, -1)
+	if len(months) != 0 {
+		s := strings.ReplaceAll(months[0], "months", "")
+		regLength, _ = strconv.Atoi(s)
+		regLength = regLength * 30
+		textAfterTime = strings.ReplaceAll(from.Text, months[0], "")
+	}
+
+	regYear := regexp.MustCompile(`\S+(?i)years`)
+	years := regYear.FindAllString(from.Text, -1)
+	if len(years) != 0 {
+		s := strings.ReplaceAll(years[0], "years", "")
+		regLength, _ = strconv.Atoi(s)
+		regLength = regLength * 365
+		textAfterTime = strings.ReplaceAll(from.Text, years[0], "")
+	}
+
+	if regLength == 0 {
+		return "", errors.New("Invalid subscription period")
+	}
+
+	//calculate date for subscription in SQL format
+	t := time.Now()
+	t = t.AddDate(0, 0, regLength)
+	date := t.Format("2006-01-02 15:04:05")
+
 	reg := regexp.MustCompile("\\S[a-zA-Z]+[^a-zA-Z]?$")
-	tier := reg.FindAllString(from.Text, -1)
+	tier := reg.FindAllString(textAfterTime, -1)
 	if len(tier) == 0 {
 		return "", errors.New("You must specify tier")
 	}
 	if len(tier) > 1 {
 		return "", errors.New("You can specify only one tier")
+	}
+	tierName := strings.TrimSpace(tier[0])
+	if tierName != "bronze" && tierName != "silver" && tierName != "gold" {
+		return "", errors.New("Invalid tier name")
 	}
 
 	usr := ""
@@ -701,7 +744,7 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 		tierNum = 5
 		numAddr = 5
 	case "gold":
-		tierNum = 10
+		tierNum = 25
 		numAddr = 1000
 	default:
 		return "", errors.New("Invalid tier")
@@ -709,15 +752,16 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 
 	check := database.ReadValueEmpty[bool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
 	if check == false {
-		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn, stealth) VALUES (?, ?, ?)", usrTo.Int64, tierNum, numAddr)
+		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn, stealth, dateEnd) VALUES (?, ?, ?, ?)", usrTo.Int64, tierNum, numAddr, date)
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("User %s has been granted with access to MN service", usr), nil
+		return fmt.Sprintf("User %s has been granted with access to MN service with %s tier for %d days", usr, tierName, regLength), nil
 	} else {
 		_, _ = database.InsertSQl("UPDATE users_permission SET mn = ? WHERE idUser = ?", tierNum, usrTo.Int64)
 		_, _ = database.InsertSQl("UPDATE users_permission SET stealth = ? WHERE idUser = ?", numAddr, usrTo.Int64)
-		return fmt.Sprintf("User %s got changed MN tier to %s", usr, tier[0]), nil
+		_, _ = database.InsertSQl("UPDATE users_permission SET dateEnd = ? WHERE idUser = ?", date, usrTo.Int64)
+		return fmt.Sprintf("User %s got changed MN tier to %s for lenght of %d days", usr, tierName, regLength), nil
 	}
 	//return nil
 }
@@ -1167,7 +1211,13 @@ func AnnouncementTelegram() {
 	}
 
 	postID := post.PostID
-	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 1)
+	url := ""
+	if post.Picture.Valid {
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+	} else {
+		randNum := utils.RandNum(len(PictureANN))
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", randNum)
+	}
 	utils.ReportMessage(fmt.Sprintf("Announcement url: %s", url))
 	msg := tgbotapi.NewPhoto(MainChannel, tgbotapi.FileURL(url))
 	var rows []tgbotapi.InlineKeyboardButton
@@ -1366,7 +1416,13 @@ func AnnOtherChannelTelegram() {
 			}
 		}
 		postID := post.PostID
-		url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 1)
+		url := ""
+		if post.Picture.Valid {
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+		} else {
+			randNum := utils.RandNum(len(PictureANN))
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", randNum)
+		}
 		utils.ReportMessage(fmt.Sprintf("Announcement url: %s", url))
 		msg := tgbotapi.NewPhoto(channel.IdChannel, tgbotapi.FileURL(url))
 		var rows []tgbotapi.InlineKeyboardButton

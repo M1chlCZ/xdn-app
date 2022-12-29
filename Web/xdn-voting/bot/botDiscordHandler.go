@@ -476,16 +476,60 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 
 	author := from.Author.ID
 	tippedUser := from.Mentions[0].ID
+	textAfterTime := ""
 
-	reg := regexp.MustCompile("\\S[a-zA-Z]+[^a-zA-Z]?$")
-	tier := reg.FindAllString(from.Message.Content, -1)
+	regLength := 0
+
+	regdays := regexp.MustCompile(`\S+(?i)days`)
+	days := regdays.FindAllString(from.Content, -1)
+	if len(days) != 0 {
+		s := strings.ReplaceAll(days[0], "days", "")
+		regLength, _ = strconv.Atoi(s)
+		textAfterTime = strings.ReplaceAll(from.Content, days[0], "")
+	}
+
+	regMonths := regexp.MustCompile(`\S+(?i)months`)
+	months := regMonths.FindAllString(from.Content, -1)
+	if len(months) != 0 {
+		s := strings.ReplaceAll(months[0], "months", "")
+		regLength, _ = strconv.Atoi(s)
+		regLength = regLength * 30
+		textAfterTime = strings.ReplaceAll(from.Content, months[0], "")
+	}
+
+	regYear := regexp.MustCompile(`\S+(?i)years`)
+	years := regYear.FindAllString(from.Content, -1)
+	if len(years) != 0 {
+		s := strings.ReplaceAll(years[0], "years", "")
+		regLength, _ = strconv.Atoi(s)
+		regLength = regLength * 365
+		utils.ReportMessage(years[0])
+		textAfterTime = strings.ReplaceAll(from.Content, years[0], "")
+	}
+
+	if regLength == 0 {
+		return "", errors.New("Invalid subscription period")
+	}
+
+	//calculate date for subscription in SQL format
+	t := time.Now()
+	t = t.AddDate(0, 0, regLength)
+	date := t.Format("2006-01-02 15:04:05")
+	utils.ReportMessage(strings.TrimSpace(textAfterTime))
+	reg := regexp.MustCompile(`\S[a-zA-Z]+[^a-zA-Z]?$`)
+	tier := reg.FindAllString(textAfterTime, -1)
 	if len(tier) == 0 {
 		return "", errors.New("You must specify tier")
 	}
 	if len(tier) > 1 {
 		return "", errors.New("You can specify only one tier")
 	}
-	utils.ReportMessage(fmt.Sprintf("Granting access to user %s on Discord", from.Mentions[0].Username))
+	tierName := strings.TrimSpace(tier[0])
+	if tierName != "bronze" && tierName != "silver" && tierName != "gold" {
+		return "", errors.New("Invalid tier name")
+	}
+
+	utils.ReportMessage(fmt.Sprintf("Granting access to user %s on Discord with tier %s for %d days", from.Mentions[0].Username, tierName, regLength))
 
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
 	if !usrFrom.Valid {
@@ -502,7 +546,7 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 	//check if user is in users_permission
 	tierNum := 0
 	numAddr := 0
-	switch tier[0] {
+	switch tierName {
 	case "bronze":
 		tierNum = 2
 		numAddr = 2
@@ -510,22 +554,23 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 		tierNum = 5
 		numAddr = 5
 	case "gold":
-		tierNum = 10
+		tierNum = 25
 		numAddr = 1000
 	default:
 		return "", errors.New("Invalid tier")
 	}
 	check := database.ReadValueEmpty[bool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
 	if check == false {
-		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn, stealth) VALUES (?, ?, ?)", usrTo.Int64, tierNum, numAddr)
+		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn, stealth, dateEnd) VALUES (?, ?, ?, ?)", usrTo.Int64, tierNum, numAddr, date)
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("User %s has been granted with access to MN service", from.Mentions[0].Username), nil
+		return fmt.Sprintf("User %s has been granted with access to MN service with %s tier for %d days", from.Mentions[0].Username, tierName, regLength), nil
 	} else {
 		_, _ = database.InsertSQl("UPDATE users_permission SET mn = ? WHERE idUser = ?", tierNum, usrTo.Int64)
 		_, _ = database.InsertSQl("UPDATE users_permission SET stealth = ? WHERE idUser = ?", numAddr, usrTo.Int64)
-		return fmt.Sprintf("User %s got changed MN tier to %s", from.Mentions[0].Username, tier[0]), nil
+		_, _ = database.InsertSQl("UPDATE users_permission SET dateEnd = ? WHERE idUser = ?", date, usrTo.Int64)
+		return fmt.Sprintf("User %s got changed MN tier to %s for lenght of %d days", from.Mentions[0].Username, tierName, regLength), nil
 	}
 }
 
@@ -987,7 +1032,13 @@ func AnnouncementDiscord() {
 	}
 	messageBold := strings.ReplaceAll(post.Message, "*", "**")
 
-	url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 0)
+	url := ""
+	if post.Picture.Valid {
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+	} else {
+		randNum := utils.RandNum(len(PictureANN))
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", randNum)
+	}
 	buttons := []discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
@@ -1075,7 +1126,13 @@ func AnnouncementOtherDiscord() {
 		}
 		messageBold := strings.ReplaceAll(post.Message, "*", "**")
 
-		url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", 0)
+		url := ""
+		if post.Picture.Valid {
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+		} else {
+			randNum := utils.RandNum(len(PictureANN))
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", randNum)
+		}
 		buttons := []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
