@@ -8,21 +8,49 @@ class IndexPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(color:Colors.red);
+    return Container(color: Colors.red);
   }
 }
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
   @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  AppService? _appService;
+  @override
+  void initState() {
+    super.initState();
+    _appService = Provider.of<AppService>(context);
+  }
+
+  login() {
+    _appService!.loginState = true;
+  }
+
+
+  @override
   Widget build(BuildContext context) {
-    return Container(color:Colors.blue);
+
+    return Scaffold(
+        body: Container(
+            color: Colors.blue,
+            child: Center(
+              child: TextButton(
+                onPressed: () {
+                  login();
+                },
+                child: Container(color: Colors.red,child: const Text("Done")),
+              ),
+            )));
   }
 }
 
 class OnBoardingPage extends StatelessWidget {
-  const OnBoardingPage({ Key? key }) : super(key: key);
+  const OnBoardingPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +64,7 @@ class OnBoardingPage extends StatelessWidget {
           onPressed: () {
             appService.onboarding = true;
           },
-          child: const Text(
-              "Done"
-          ),
+          child: const Text("Done"),
         ),
       ),
     );

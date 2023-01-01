@@ -20,7 +20,7 @@ class HomePage extends StatelessWidget {
             TextButton(
               onPressed: () {
                 authService.login("lojza", "something"); //TODO
-                authService.logOut();
+                // authService.logOut();
               },
               child: const Text(
                   "Log out"

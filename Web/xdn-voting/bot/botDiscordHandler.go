@@ -475,6 +475,15 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 	}
 
 	author := from.Author.ID
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db")
+	}
+	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if ustPermission == 0 {
+		return "", errors.New("You don't have permission to grant other users access to MN service")
+	}
+
 	tippedUser := from.Mentions[0].ID
 	textAfterTime := ""
 
@@ -531,14 +540,6 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 
 	utils.ReportMessage(fmt.Sprintf("Granting access to user %s on Discord with tier %s for %d days", from.Mentions[0].Username, tierName, regLength))
 
-	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
-	if !usrFrom.Valid {
-		return "", errors.New("You are not registered in the bot db")
-	}
-	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
-	if ustPermission == 0 {
-		return "", errors.New("You don't have permission to grant other users access to MN service")
-	}
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ? AND typeBot = ?", strings.TrimSpace(tippedUser), 2)
 	if !usrTo.Valid {
 		return "", errors.New("Mentioned user is not registered in the Discord bot db")
@@ -590,10 +591,6 @@ func denyDiscord(from *discordgo.MessageCreate) (string, error) {
 	}
 
 	author := from.Author.ID
-	tippedUser := from.Mentions[0].ID
-
-	utils.ReportMessage(fmt.Sprintf("Deniyng access to user %s on Discord", from.Mentions[0].Username))
-
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db")
@@ -602,6 +599,11 @@ func denyDiscord(from *discordgo.MessageCreate) (string, error) {
 	if ustPermission == 0 {
 		return "", errors.New("You don't have permission to deny other users access to MN service")
 	}
+
+	tippedUser := from.Mentions[0].ID
+
+	utils.ReportMessage(fmt.Sprintf("Deniyng access to user %s on Discord", from.Mentions[0].Username))
+
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ? AND typeBot = ?", strings.TrimSpace(tippedUser), 2)
 	if !usrTo.Valid {
 		return "", errors.New("Mentioned user is not registered in the Discord bot db")

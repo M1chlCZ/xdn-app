@@ -319,7 +319,7 @@ func StartTelegramBot() {
 				}
 			}(update.Message)
 		} else if update.CallbackQuery != nil {
-			utils.ReportMessage("CallbackQuery")
+			utils.ReportMessage("CallbackQuery: " + update.CallbackQuery.From.UserName)
 			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
 			_, err := bot.Request(callback)
 			if err != nil {
@@ -641,6 +641,15 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 		return "", errors.New("Bots are not allowed")
 	}
 
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db")
+	}
+	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if ustPermission == 0 {
+		return "", errors.New("You don't have permission to grant other users access to MN service")
+	}
+
 	r := regexp.MustCompile(`(?i)help`)
 	if r.MatchString(from.Text) {
 		return "Grant user access to MN \n\nUsage: /grant @<username> <tier> <lenghts days | months | years>", nil
@@ -721,14 +730,6 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 	ut := strings.Trim(usr, "@")
 	utils.ReportMessage(fmt.Sprintf("Grant from %s to %s", username, ut))
 
-	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
-	if !usrFrom.Valid {
-		return "", errors.New("You are not registered in the bot db")
-	}
-	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
-	if ustPermission == 0 {
-		return "", errors.New("You don't have permission to grant other users access to MN service")
-	}
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 1)
 	if !usrTo.Valid {
 		return "", errors.New("Mentioned user not registered in the bot db")
@@ -771,6 +772,15 @@ func deny(username string, from *tgbotapi.Message) (string, error) {
 		return "", errors.New("Bots are not allowed")
 	}
 
+	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
+	if !usrFrom.Valid {
+		return "", errors.New("You are not registered in the bot db")
+	}
+	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
+	if ustPermission == 0 {
+		return "", errors.New("You don't have permission to grant other users access to MN service")
+	}
+
 	r := regexp.MustCompile(`(?i)help`)
 	if r.MatchString(from.Text) {
 		return "Deny user access to MN \n\nUsage: /deny @<username>", nil
@@ -798,14 +808,6 @@ func deny(username string, from *tgbotapi.Message) (string, error) {
 	ut := strings.Trim(usr, "@")
 	utils.ReportMessage(fmt.Sprintf("Grant from %s to %s", username, ut))
 
-	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
-	if !usrFrom.Valid {
-		return "", errors.New("You are not registered in the bot db")
-	}
-	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
-	if ustPermission == 0 {
-		return "", errors.New("You don't have permission to deny other users access to MN service")
-	}
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 1)
 	if !usrTo.Valid {
 		return "", errors.New("Mentioned user not registered in the bot db")
@@ -1435,6 +1437,7 @@ func AnnOtherChannelTelegram() {
 		mess, err := bot.Send(msg)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
+			return
 		}
 
 		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)

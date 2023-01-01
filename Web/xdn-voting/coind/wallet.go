@@ -51,6 +51,11 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 			}
 		}
 	}
+
+	if amount == 2000000 {
+		amount += 0.01
+	}
+
 	fee := 0.01
 	inputs := make([]models.ListUnspent, 0)
 	inputsAmount := 0.0

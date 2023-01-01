@@ -54,7 +54,7 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 
 		tries++
 		if client == nil {
-			client, errClient = New("127.0.0.1", daemon.WalletPort, daemon.WalletUser, daemon.WalletPass, false, 60)
+			client, errClient = New("127.0.0.1", daemon.WalletPort, daemon.WalletUser, daemon.WalletPass, false, 90)
 			if errClient != nil {
 				utils.ReportMessage(errClient.Error())
 				time.Sleep(30 * time.Second)

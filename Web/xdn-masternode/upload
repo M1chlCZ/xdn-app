@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 /bin/bash ./compile.sh
-#sftp -i ~/.ssh/xdnMN XDNService@109.123.254.106:/home/XDNService/api/ <<< $'put api apiu'
-#ssh -i ~/.ssh/xdnMN XDNService@109.123.254.106 "/home/XDNService/api/update"
+sftp -i ~/.ssh/xdnMN XDNService@109.123.254.106:/home/XDNService/api/ <<< $'put api apiu'
+ssh -i ~/.ssh/xdnMN XDNService@109.123.254.106 "/home/XDNService/api/update"
 sftp -i ~/.ssh/xdnMN XDNService@38.242.205.91:/home/XDNService/api/ <<< $'put api apiu'
 ssh -i ~/.ssh/xdnMN XDNService@38.242.205.91 "/home/XDNService/api/update"
