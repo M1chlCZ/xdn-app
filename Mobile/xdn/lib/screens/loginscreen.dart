@@ -92,7 +92,7 @@ class _LoginState extends State<LoginPage> {
         return null;
       }
     } catch (e) {
-      print(e.toString());
+      // print(e.toString());
       if (mounted) {
         Navigator.of(context).pop();
         Dialogs.openAlertBox(context, "Failure!",

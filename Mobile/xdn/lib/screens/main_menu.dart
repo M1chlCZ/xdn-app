@@ -116,7 +116,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
       var response = await stub.userPermission(UserPermissionRequest()..code = 200, options: CallOptions(metadata: {'authorization': token ?? ""}));
 
       if (response.mnPermission) {
-        Future.delayed(const Duration(milliseconds: 1000), () {
+        Future.delayed(const Duration(milliseconds: 200), () {
           setState(() {
             mnActive = true;
           });
@@ -124,7 +124,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         });
       }
       if (response.stealthPermission) {
-        Future.delayed(const Duration(milliseconds: 1200), () {
+        Future.delayed(const Duration(milliseconds: 400), () {
           setState(() {
             stealthActive = true;
           });

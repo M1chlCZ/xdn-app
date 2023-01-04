@@ -186,14 +186,21 @@ class ComInterface {
     try {
       String refreshToken = await SecureStorage.read(key: globals.TOKEN_REFRESH) ?? '';
       var response = await stub.refreshToken(RefreshTokenRequest()..token = refreshToken, options: CallOptions());
-
       if (response.token.isNotEmpty) {
         await SecureStorage.write(key: globals.TOKEN_DAO, value: response.token);
         await SecureStorage.write(key: globals.TOKEN_REFRESH, value: response.refreshToken);
       } else {
-        debugPrint('refreshToken: empty token');
-        await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
-        await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);
+        await Future.delayed(const Duration(seconds: 1));
+        debugPrint('Second chance');
+        response = await stub.refreshToken(RefreshTokenRequest()..token = refreshToken, options: CallOptions());
+        if (response.token.isNotEmpty) {
+          await SecureStorage.write(key: globals.TOKEN_DAO, value: response.token);
+          await SecureStorage.write(key: globals.TOKEN_REFRESH, value: response.refreshToken);
+        }else {
+          debugPrint('refreshToken: empty token');
+          await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
+          await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);
+        }
       }
     } catch (e) {
       debugPrint('refreshTokenError: $e');

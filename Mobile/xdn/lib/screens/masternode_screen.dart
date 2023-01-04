@@ -1045,12 +1045,13 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
       if (mounted) Navigator.of(context).pop();
       _keyStake.currentState?.reset();
     } catch (e) {
-      if (mounted) Navigator.of(context).pop();
-      _keyStake.currentState?.reset();
-      if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
       ComInterface interface = ComInterface();
       Map<String, dynamic> queryLock = {"idNode": mnLock?.node?.id};
       await interface.post("/masternode/unlock", body: queryLock, serverType: ComInterface.serverGoAPI, debug: true);
+      if (mounted) Navigator.of(context).pop();
+      _keyStake.currentState?.reset();
+      var err = json.decode(e.toString());
+      if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, err['errorMessage'].toString());
     }
   }
 

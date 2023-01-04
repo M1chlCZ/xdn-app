@@ -14,9 +14,9 @@ GetIt locator = GetIt.instance;
 
 void setupLocator() async {
   SecurityContext(withTrustedRoots: false);
-  ByteData data = await rootBundle.load("assets/cert.pem");
+  // ByteData data = await rootBundle.load("assets/cert.pem");
   SecurityContext context = SecurityContext.defaultContext;
-  context.setTrustedCertificatesBytes(data.buffer.asUint8List());
+  // context.setTrustedCertificatesBytes(data.buffer.asUint8List());
   final httpClient = HttpClient(context: context);
 
 
