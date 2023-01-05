@@ -67,7 +67,7 @@ func MNTransaction() {
 					tier = int(t.Int64)
 				}
 
-				_, errUpdate := database.InsertSQl("INSERT INTO users_mn(idUser, idCoin, tier, idNode, session) VALUES (?, ?, ?, ?, ?)", idUser, idCoin, tier, idNode, smax)
+				_, errUpdate := database.InsertSQl("INSERT INTO users_mn(idUser, idCoin, tier, idNode, session, custodial) VALUES (?, ?, ?, ?, ?,?)", idUser, idCoin, tier, idNode, smax, 1)
 
 				_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", idUser, wallettxid)
 				_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET processed = 1 WHERE id = ?", wallettxid)
@@ -81,6 +81,7 @@ func MNTransaction() {
 				utils.ReportMessage(fmt.Sprintf("Starting masternode for CoinID: %d & User: %s (id: %d) NODE id: %d", idCoin, user, idUser, idNode))
 
 				_, errUpdate = database.InsertSQl("UPDATE mn_clients SET active = 1 WHERE id = ?", idNode)
+				_, errUpdate = database.InsertSQl("UPDATE mn_clients SET custodial = 1 WHERE id = ?", idNode)
 				if errUpdate != nil {
 					utils.WrapErrorLog(errUpdate.Error())
 					return

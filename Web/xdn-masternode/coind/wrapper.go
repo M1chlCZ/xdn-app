@@ -80,7 +80,7 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 				if command == "masternode" {
 					pa := params.([]interface{})
 					if pa[0] == "start" {
-						if string(p) == "\"successfully started masternode\"" {
+						if string(p) == "\"successfully started masternode\"" || string(p) == "\"masternode started remotely\"" {
 							utils.ReportMessage("MN success!!")
 							c <- p
 							return

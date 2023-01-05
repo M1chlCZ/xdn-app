@@ -68,7 +68,10 @@ func DaemonStatus() {
 		return
 	}
 	var stakeInfo models.StakingInfo
-	_ = json.Unmarshal(stake, &stakeInfo)
+	err := json.Unmarshal(stake, &stakeInfo)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 
 	daemonStatus.WalletStake = stakeInfo.Staking
 
@@ -87,7 +90,7 @@ func DaemonStatus() {
 	}(blkReqXDN.Body)
 
 	var sum models.Summary
-	err := json.Unmarshal(bodySummary, &sum)
+	err = json.Unmarshal(bodySummary, &sum)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return

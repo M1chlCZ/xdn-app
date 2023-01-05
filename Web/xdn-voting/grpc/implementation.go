@@ -59,14 +59,15 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				return &grpcModels.Response{Code: 400}, errUpdate
 			}
 
-			readUsers, errDB := database.ReadSql("SELECT idUser, session FROM users_mn WHERE active = 1 AND idCoin = ? AND idNode = ?", idCoin, txRes.IdNode)
+			readUsers, errDB := database.ReadSql("SELECT idUser, session, custodial FROM users_mn WHERE active = 1 AND idCoin = ? AND idNode = ?", idCoin, txRes.IdNode)
 			if errDB != nil {
 				utils.WrapErrorLog(errDB.Error())
 				return &grpcModels.Response{Code: 400}, errUpdate
 			}
 			type ReadUsers struct {
-				IdUser  sql.NullInt64 `db:"idUser"`
-				Session sql.NullInt64 `db:"session"`
+				IdUser    sql.NullInt64 `db:"idUser"`
+				Session   sql.NullInt64 `db:"session"`
+				Custodial int64         `db:"custodial"`
 			}
 			for readUsers.Next() {
 				var ru ReadUsers
@@ -76,6 +77,12 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				}
 				idUser := ru.IdUser.Int64
 				session := ru.Session.Int64
+				custodial := ru.Custodial
+
+				if custodial == 0 {
+					utils.ReportMessage(fmt.Sprintf("NON-CUSTODIAL | uid: %d node: %d", idUser, txDaemon.NodeId))
+					continue
+				}
 
 				if idUser != 0 {
 					dt := time.Now().UTC().Format("2006-01-02 15:04:05")
@@ -158,6 +165,7 @@ func (s *Server) WithdrawConfirm(_ context.Context, txDaemon *grpcModels.Withdra
 		_, errUpdate := database.InsertSQl("UPDATE mn_clients SET locked = 0, active = 0 WHERE id = ?", txDaemon.NodeID)
 		_, errUpdate = database.InsertSQl("UPDATE mn_clients SET last_seen = NULL, active_time = NULL WHERE id = ?", txDaemon.NodeID)
 		_, errUpdate = database.InsertSQl("UPDATE users_mn SET active = 0 WHERE idNode = ? AND id <> 0", txDaemon.NodeID)
+		_, errUpdate = database.InsertSQl("UPDATE mn_clients SET custodial = 0 WHERE id = ? AND id <> 0", txDaemon.NodeID)
 
 		amountToSend := amnt - (txDaemon.Amount - float64(collateral))
 		if amountToSend <= 0.0 {
@@ -202,18 +210,19 @@ func (s *Server) WithdrawConfirm(_ context.Context, txDaemon *grpcModels.Withdra
 
 func (s *Server) MasternodeActive(_ context.Context, request *grpcModels.MasternodeActiveRequest) (*grpcModels.MasternodeActiveResponse, error) {
 	type ActiveMN struct {
-		ID     int64 `json:"id"`
-		Active int   `json:"active"`
+		ID        int64 `json:"id"`
+		Active    int   `json:"active"`
+		Custodial int   `json:"custodial"`
 	}
 
-	returnListArr, err := database.ReadArrayStruct[ActiveMN]("SELECT id, active FROM mn_clients WHERE node_ip = ?", request.Url)
+	returnListArr, err := database.ReadArrayStruct[ActiveMN]("SELECT id, active, custodial FROM mn_clients WHERE node_ip = ?", request.Url)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return &grpcModels.MasternodeActiveResponse{Mn: nil}, err
 	}
 	active := make([]*grpcModels.MasternodeActiveResponse_Mn, 0)
 	for _, mn := range returnListArr {
-		active = append(active, &grpcModels.MasternodeActiveResponse_Mn{Id: uint32(mn.ID), Active: uint32(mn.Active)})
+		active = append(active, &grpcModels.MasternodeActiveResponse_Mn{Id: uint32(mn.ID), Active: uint32(mn.Active), Custodial: uint32(mn.Custodial)})
 	}
 	return &grpcModels.MasternodeActiveResponse{Mn: active}, nil
 }
@@ -249,4 +258,13 @@ func (s *Server) RemoveMasternode(_ context.Context, request *grpcModels.RemoveM
 		return &grpcModels.RemoveMasternodeResponse{Code: 400}, err
 	}
 	return &grpcModels.RemoveMasternodeResponse{Code: 200}, nil
+}
+
+func (s *Server) MasternodeStarted(_ context.Context, request *grpcModels.MasternodeStartedRequest) (*grpcModels.MasternodeStartedResponse, error) {
+	_, err := database.InsertSQl("UPDATE mn_clients SET active = 1 WHERE id = ?", request.NodeID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return &grpcModels.MasternodeStartedResponse{Code: 400}, err
+	}
+	return &grpcModels.MasternodeStartedResponse{Code: 200}, nil
 }

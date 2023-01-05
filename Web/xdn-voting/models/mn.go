@@ -123,6 +123,7 @@ type MasternodeClient struct {
 	Conf       string         `db:"conf"`
 	Active     int            `db:"active"`
 	Locked     int            `db:"locked"`
+	Custodial  int            `db:"custodial"`
 	LastSeen   sql.NullString `db:"last_seen"`
 	ActiveTime sql.NullInt64  `db:"active_time"`
 }
@@ -134,6 +135,11 @@ type MNUnlockStruct struct {
 type SetMN struct {
 	CoinID int64 `json:"idCoin"`
 	NodeID int   `json:"node_id"`
+}
+
+type SetNonMN struct {
+	CoinID  int64  `json:"idCoin"`
+	Address string `json:"address"`
 }
 
 type MNWithStruct struct {
@@ -160,6 +166,19 @@ type MNUsers struct {
 	IdNode      int    `db:"idNode"`
 	Session     int    `db:"session"`
 	Active      int    `db:"active"`
+	Custodial   int    `db:"custodial"`
 	DateStart   string `db:"dateStart"`
 	DateChanged string `db:"dateChanged"`
+}
+
+type MNAddressCheck struct {
+	Address  string    `json:"address"`
+	Sent     float64   `json:"sent"`
+	Received float64   `json:"received"`
+	Balance  string    `json:"balance"`
+	LastTxs  []LastTxs `json:"last_txs"`
+}
+type LastTxs struct {
+	Addresses string `json:"addresses"`
+	Type      string `json:"type"`
 }

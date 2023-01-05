@@ -82,7 +82,7 @@ func initTables(db *sql.DB) {
 		"conf" TEXT NOT NULL,
 		"mn_port" INT NOT NULL,
 		"ip" TEXT NOT NULL,
-		"wallet_passphrase" TEXT
+		"wallet_passphrase" TEXT                                    
 	  );`
 
 	createStakingDeamonTable := `CREATE TABLE IF NOT EXISTS STAKING_DAEMON_TABLE (

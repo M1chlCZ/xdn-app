@@ -1,15 +1,15 @@
 import 'dart:convert';
 
 import 'package:digitalnote/generated/phone.pbgrpc.dart';
+import 'package:digitalnote/net_interface/app_exception.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:grpc/grpc.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
+import 'package:digitalnote/globals.dart' as globals;
 
-import '../globals.dart' as globals;
-import '../support/secure_storage.dart';
-import 'app_exception.dart';
 
 class ComInterface {
   static const int serverAPI = 0;

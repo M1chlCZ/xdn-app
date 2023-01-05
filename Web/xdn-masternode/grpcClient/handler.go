@@ -176,3 +176,19 @@ func RemoveMasternode(tx *grpcModels.RemoveMasternodeRequest) (*grpcModels.Remov
 	defer cancel()
 	return c.RemoveMasternode(ctx, tx)
 }
+
+func MasternodeStart(tx *grpcModels.MasternodeStartedRequest) (*grpcModels.MasternodeStartedResponse, error) {
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer grpcCon.Close()
+	c := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return c.MasternodeStarted(ctx, tx)
+}

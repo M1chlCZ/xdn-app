@@ -221,6 +221,68 @@ func StartMasternode(nodeID int) {
 	utils.ReportMessage("-| Finished MN setup |-")
 }
 
+func StartRemoteMasternode(nodeID int, mnKey string) {
+	daemon, err := database.GetDaemon(nodeID)
+	pathConf := utils.GetHomeDir() + "/." + daemon.Folder + "/" + daemon.Conf
+	pathMn := utils.GetHomeDir() + "/." + daemon.Folder + "/masternode.conf"
+	_, errScript := exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternode=", pathConf)).Output()
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternodeprivkey=", pathConf)).Output()
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
+	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.bak", daemon.Folder)).Output()
+
+	utils.ReportMessage(fmt.Sprintf(" -| Setting up node id: %d |-", daemon.NodeID))
+
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	folder := daemon.Folder
+	conf := daemon.Conf
+
+	pathConf = utils.GetHomeDir() + "/." + folder + "/" + conf
+
+	time.Sleep(10 * time.Second)
+
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s.service", folder)).Output()
+	if errScript != nil {
+		utils.ReportMessage(errScript.Error())
+		return
+	}
+	utils.ReportMessage("Daemon stopped")
+
+	//CLEAN UP
+	_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternode=", pathConf)).Output()
+	_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternodeprivkey=", pathConf)).Output()
+	_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
+
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("echo \"masternode=1\" >> %s", pathConf)).Output()
+	utils.ReportMessage(fmt.Sprintf("Editing %s", conf))
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("echo \"masternodeprivkey=%s\" >> %s", mnKey, pathConf)).Output()
+	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user start %s.service", folder)).Output()
+	if errScript != nil {
+		utils.ReportMessage(errScript.Error())
+		return
+	}
+
+	time.Sleep(60 * time.Second)
+
+	//XDN
+	res, errMNstart := coind.WrapDaemon(*daemon, 50, "masternode", "start")
+	utils.ReportMessage(fmt.Sprintf("%s", res))
+	if errMNstart != nil {
+		utils.WrapErrorLog(errMNstart.Error())
+		return
+	}
+	utils.ReportMessage("< - Masternode Started - >")
+	_, err = grpcClient.MasternodeStart(&grpcModels.MasternodeStartedRequest{NodeID: uint32(nodeID)})
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	utils.ReportMessage("-| Finished MN setup |-")
+}
+
 func Snap(folder string, coinID int) {
 	utils.ReportMessage(fmt.Sprintf("Snapping active %s", folder))
 	go func(folder string) {
@@ -303,11 +365,14 @@ func ScanMasternodes() {
 
 	var daemonFinal = make([]models.Daemon, 0)
 	var daemonFinalInactive = make([]models.Daemon, 0)
+	var daemonNonCustodial = make([]models.Daemon, 0)
 	for _, daemon := range *daemonList {
 		for _, nodeInfo := range mnListServer.Mn {
 			if int(nodeInfo.Id) == daemon.NodeID {
-				if nodeInfo.Active == 1 {
+				if nodeInfo.Active == 1 && nodeInfo.Custodial == 1 {
 					daemonFinal = append(daemonFinal, daemon)
+				} else if nodeInfo.Active == 1 && nodeInfo.Custodial == 0 {
+					daemonNonCustodial = append(daemonNonCustodial, daemon)
 				} else {
 					daemonFinalInactive = append(daemonFinalInactive, daemon)
 				}
@@ -330,6 +395,100 @@ func ScanMasternodes() {
 			utils.WrapErrorLog(err.Error())
 		}
 	}(blkReqXDN.Body)
+
+	for _, daemon := range daemonNonCustodial {
+		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip", daemon.Folder)).Output()
+		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip.1", daemon.Folder)).Output()
+
+		blk, errBlock := coind.WrapDaemon(daemon, 1, "getblockcount")
+		bnm, errBlock := strconv.Atoi(strings.Trim(string(blk), "\""))
+		if errBlock != nil {
+			utils.WrapErrorLog(errBlock.Error())
+			go snapInactive(daemon.Folder, daemon.CoinID)
+			continue
+		}
+
+		if !(blockhashXDN < (bnm + 10)) || !(blockhashXDN > (bnm - 10)) {
+			utils.ReportMessage(fmt.Sprintf("SHIT BLOCK COUNT: Have %d, should have %d", bnm, blockhashXDN))
+			go snapInactive(daemon.Folder, daemon.CoinID)
+			continue
+		}
+
+		var ing models.MasternodeStatusXDN
+		p, err := coind.WrapDaemon(daemon, 3, "masternode", "status")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			utils.ReportMessage(fmt.Sprintf("error status masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
+			go snapInactive(daemon.Folder, daemon.CoinID)
+			continue
+		}
+		errJson := json.Unmarshal(p, &ing)
+		if errJson != nil {
+			utils.WrapErrorLog(errJson.Error())
+			utils.ReportMessage(fmt.Sprintf("Masternode status sucks, restarting %s", daemon.Folder))
+			pp, errr := coind.WrapDaemon(daemon, 1, "masternode", "start")
+			if errr != nil {
+				utils.WrapErrorLog(errr.Error())
+				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
+				go snapInactive(daemon.Folder, daemon.CoinID)
+				continue
+			} else {
+				utils.ReportMessage(string(pp))
+				go func(dm models.Daemon) {
+					utils.ReportMessage("Starting goroutine restart service")
+					time.Sleep(12 * time.Minute)
+					//
+					utils.ReportMessage("Restarting daemon: " + dm.Folder)
+					_, errScript := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart %s.service", dm.Folder)).Output()
+					if errScript != nil {
+						utils.ReportMessage(errScript.Error())
+						return
+					}
+				}(daemon)
+				continue
+			}
+		}
+		if ing.Status != 9 {
+			utils.ReportMessage(fmt.Sprintf("Masternode status is not 1, restarting %s", daemon.Folder))
+			s, errr := coind.WrapDaemon(daemon, 1, "masternode", "start")
+			if errr != nil {
+				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
+				go snapInactive(daemon.Folder, daemon.CoinID)
+				continue
+			}
+			if string(s) != "Masternode successfully started" {
+				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
+				go snapInactive(daemon.Folder, daemon.CoinID)
+				continue
+			}
+		}
+		bytes, err := coind.WrapDaemon(daemon, 1, "masternode", "list", "full")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			go Snap(daemon.Folder, daemon.CoinID)
+			continue
+		}
+
+		var mnList40 models.MasternodeList
+		errJson = json.Unmarshal(bytes, &mnList40)
+		if errJson != nil {
+			utils.WrapErrorLog(errJson.Error())
+			go Snap(daemon.Folder, daemon.CoinID)
+			continue
+		}
+
+		for _, mnListNode := range mnList40 {
+			if mnListNode.Addr == ing.Pubkey {
+				m := &grpcModels.LastSeenRequest_LastSeen{
+					Id:         uint32(daemon.NodeID),
+					LastSeen:   uint32(mnListNode.Lastseen),
+					ActiveTime: uint32(mnListNode.Activetime),
+				}
+				lastSeen = append(lastSeen, m)
+				utils.ReportMessage(fmt.Sprintf("NC OK @ %s!", daemon.Folder))
+			}
+		}
+	}
 
 	for _, daemon := range daemonFinal {
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip", daemon.Folder)).Output()
@@ -446,11 +605,10 @@ func ScanMasternodes() {
 						ActiveTime: uint32(mnListNode.Activetime),
 					}
 					lastSeen = append(lastSeen, m)
-					utils.ReportMessage(fmt.Sprintf("All OKAY @ %s!", daemon.Folder))
+					utils.ReportMessage(fmt.Sprintf("OK @ %s!", daemon.Folder))
 				}
 			}
 		}
-		utils.ReportMessage(fmt.Sprintf("END CHECK @ %s!", daemon.Folder))
 		continue
 		//}
 
@@ -509,7 +667,7 @@ func ScanMasternodes() {
 				go snapInactive(daemon.Folder, daemon.CoinID)
 				continue
 			}
-			utils.ReportMessage(fmt.Sprintf("All OKAY @ %s!", daemon.Folder))
+			utils.ReportMessage(fmt.Sprintf("OK @ %s!", daemon.Folder))
 			continue
 		}
 
@@ -528,7 +686,7 @@ func ScanMasternodes() {
 			go snapInactive(daemon.Folder, daemon.CoinID)
 			continue
 		}
-		utils.ReportMessage(fmt.Sprintf("All OKAY @ %s!", daemon.Folder))
+		utils.ReportMessage(fmt.Sprintf("OK @ %s!", daemon.Folder))
 	}
 
 	_, err = grpcClient.LastSeen(&grpcModels.LastSeenRequest{

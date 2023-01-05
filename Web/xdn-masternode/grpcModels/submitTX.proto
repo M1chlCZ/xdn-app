@@ -36,6 +36,7 @@ message RegisterResponse {
 service RegisterMasternodeService {
   rpc RegisterMasternode(RegisterMasternodeRequest) returns (RegisterMasternodeResponse) {}
   rpc StartMasternode (StartMasternodeRequest) returns (StartMasternodeResponse) {}
+  rpc StartNonMasternode (StartNonMasternodeRequest) returns (StartNonMasternodeResponse) {}
   rpc GetPrivateKey (GetPrivateKeyRequest) returns (GetPrivateKeyResponse) {}
   rpc Withdraw (WithdrawRequest) returns (WithdrawResponse) {}
   rpc WithdrawConfirm (WithdrawConfirmRequest) returns (WithdrawConfirmResponse) {}
@@ -44,6 +45,7 @@ service RegisterMasternodeService {
   rpc Ping (PingRequest) returns (PingResponse) {}
   rpc CheckMasternode (CheckMasternodeRequest) returns (CheckMasternodeResponse) {}
   rpc RemoveMasternode (RemoveMasternodeRequest) returns (RemoveMasternodeResponse) {}
+  rpc MasternodeStarted (MasternodeStartedRequest) returns (MasternodeStartedResponse) {}
 }
 
 message RegisterMasternodeRequest {
@@ -70,6 +72,15 @@ message StartMasternodeRequest {
 }
 
 message StartMasternodeResponse {
+  uint32 code = 1;
+}
+
+message StartNonMasternodeRequest {
+  uint32 nodeID = 1;
+  string walletKey = 2;
+}
+
+message StartNonMasternodeResponse {
   uint32 code = 1;
 }
 
@@ -109,6 +120,7 @@ message MasternodeActiveResponse {
   message Mn {
     uint32 id = 1;
     uint32 active = 2;
+    uint32 custodial = 3;
   }
   repeated Mn mn = 1;
 }
@@ -152,5 +164,13 @@ message RemoveMasternodeRequest {
 }
 
 message RemoveMasternodeResponse {
+  uint32 code = 1;
+}
+
+message MasternodeStartedRequest {
+  uint32 nodeID = 1;
+}
+
+message MasternodeStartedResponse {
   uint32 code = 1;
 }

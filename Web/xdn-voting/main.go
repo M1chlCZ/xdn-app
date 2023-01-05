@@ -11,6 +11,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/go-gomail/gomail"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	_ "github.com/gofiber/fiber/v2/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/pquerna/otp/totp"
@@ -77,6 +78,7 @@ func main() {
 		ReadTimeout:   time.Second * 35,
 		IdleTimeout:   time.Second * 65,
 	})
+	app.Use(cors.New())
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
 	// ================== DAO ==================
 	app.Post("dao/v1/login", login)
@@ -114,6 +116,8 @@ func main() {
 	app.Post("api/v1/masternode/start", utils.Authorized(startMN))
 	app.Post("api/v1/masternode/withdraw", utils.Authorized(withdrawMN))
 	app.Post("api/v1/masternode/reward", utils.Authorized(rewardMN))
+
+	app.Post("api/v1/masternode/non/start", utils.Authorized(startNonMN))
 
 	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
@@ -222,6 +226,175 @@ func main() {
 	_ = ln.Close()
 	_ = app.Shutdown()
 	os.Exit(0)
+
+}
+
+func startNonMN(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+
+	var request models.SetNonMN
+	errJson := c.BodyParser(&request)
+	if errJson != nil {
+		return utils.ReportError(c, errJson.Error(), http.StatusBadRequest)
+	}
+
+	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
+	tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
+	count := database.ReadValueEmpty[int64]("SELECT COUNT(id) FROM users_mn WHERE idUser = ? AND (active = 1 OR dateStart between NOW() - INTERVAL 10 HOUR AND NOW())", userID)
+	utils.ReportMessage(fmt.Sprintf("User %s has %d MNs with tier %d (admin: %d)", userID, count, tier, admin))
+
+	if admin == 0 && tier <= count {
+		return utils.ReportError(c, "You are not allowed to start more masternodes", http.StatusConflict)
+	}
+
+	var empty models.MasternodeClient
+	var idNode int64
+
+	for {
+		freeMN := database.ReadStructEmpty[models.MasternodeClient]("SELECT * FROM mn_clients WHERE coin_id = ? AND locked = 0 AND active = 0 LIMIT 1", request.CoinID)
+		if freeMN == empty {
+			return utils.ReportError(c, "No free MNs left for this coin", fiber.StatusConflict)
+		} else {
+			//token, _ := database.ReadValue[string]("SELECT token FROM mn_server WHERE url = ?", freeMN.NodeIP)
+			utils.ReportMessage(fmt.Sprintf("NODE FREE: %d", freeMN.ID))
+			creds, err := grpcModels.LoadTLSCredentials()
+			if err != nil {
+				utils.WrapErrorLog("cannot load TLS credentials: " + err.Error())
+				return utils.ReportError(c, "cannot load TLS credentials: "+err.Error(), fiber.StatusInternalServerError)
+			}
+			grpcCon, err := gpc.Dial(fmt.Sprintf("%s:6810", freeMN.NodeIP), gpc.WithTransportCredentials(creds))
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+			}
+			tx := &grpcModels.CheckMasternodeRequest{NodeID: uint32(freeMN.ID)}
+			cc := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+			resp, err := cc.CheckMasternode(context.Background(), tx)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+			}
+
+			if resp.Code != 200 {
+				utils.ReportMessage(fmt.Sprintf("Somethings wrong on node %s", freeMN.NodeIP))
+
+				_, _ = database.InsertSQl("UPDATE mn_clients SET locked = 1 WHERE id = ? ", freeMN.ID)
+				//sendWarningMessage(68857, "Error Node", fmt.Sprintf("Error Node %d", freeMN.ID)) //TODO: Send message to admin
+				continue
+			}
+			utils.ReportMessage(fmt.Sprintf("NODE OK: %d", freeMN.ID))
+			_, errUpdate := database.InsertSQl("UPDATE mn_clients SET locked = 1 WHERE id = ? ", freeMN.ID)
+			if errUpdate != nil {
+				utils.WrapErrorLog(errUpdate.Error())
+			}
+			_ = grpcCon.Close()
+			idNode = int64(freeMN.ID)
+			break
+		}
+	}
+
+	nodeIP := database.ReadValueEmpty[sql.NullString]("SELECT ip FROM mn_clients WHERE id = ?", idNode)
+	if nodeIP.Valid == false {
+		return utils.ReportError(c, "Node not found", http.StatusNotFound)
+	}
+
+	addrCheck, errNet := utils.GETAny(fmt.Sprintf("https://xdn-explorer.com/ext/getaddress/%s", request.Address))
+	if errNet != nil {
+		utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
+		return utils.ReportError(c, errNet.ErrorMessage(), errNet.StatusCode())
+	}
+
+	bodyXDN, _ := io.ReadAll(addrCheck.Body)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}(addrCheck.Body)
+
+	var sum models.MNAddressCheck
+	err := json.Unmarshal(bodyXDN, &sum)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	if sum.Balance != "2000000" {
+		return utils.ReportError(c, "Address balance is not 2 mil XDN", http.StatusConflict)
+	}
+
+	if len(sum.LastTxs) == 0 {
+		return utils.ReportError(c, "Address has no transactions", http.StatusConflict)
+	}
+
+	tx := sum.LastTxs[0].Addresses
+
+	var ing models.MNTX
+	p, _ := coind.WrapDaemon(utils.DaemonWallet, 5, "gettransaction", tx)
+	err = json.Unmarshal(p, &ing)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	var vout int
+	txid := ing.Txid
+	for _, v := range ing.Vout {
+		if v.Value == 2000000.0 {
+			vout = v.N
+			break
+		}
+	}
+
+	s, err := coind.WrapDaemon(utils.DaemonWallet, 5, "masternode", "genkey")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	mnKey := strings.Trim(string(s), "\"")
+
+	str := fmt.Sprintf("MN%s [%s]:%d %s %s %d", "1", nodeIP.String, 18092, mnKey, txid, vout)
+	nIP := database.ReadValueEmpty[sql.NullString]("SELECT node_ip FROM mn_clients WHERE id = ?", idNode)
+	if nodeIP.Valid == false {
+		return utils.ReportError(c, "Node not found", http.StatusNotFound)
+	}
+	creds, err := grpcModels.LoadTLSCredentials()
+	if err != nil {
+		utils.WrapErrorLog("cannot load TLS credentials: " + err.Error())
+		return utils.ReportError(c, "cannot load TLS credentials: "+err.Error(), fiber.StatusInternalServerError)
+	}
+	grpcCon, err := gpc.Dial(fmt.Sprintf("%s:6810", nIP.String), gpc.WithTransportCredentials(creds))
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+	}
+	cc := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+	txGRPC := &grpcModels.StartNonMasternodeRequest{
+		NodeID:    uint32(idNode),
+		WalletKey: mnKey,
+	}
+	resp, err := cc.StartNonMasternode(context.Background(), txGRPC)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
+	}
+	if resp.Code == 200 {
+		var smax int64 = 0
+		nodeSession := database.ReadValueEmpty[sql.NullInt64]("SELECT MAX(session) as smax FROM users_mn WHERE idNode = ?", idNode)
+		if nodeSession.Valid {
+			smax = nodeSession.Int64 + 1
+		}
+		_, _ = database.InsertSQl("INSERT INTO users_mn(idUser, idCoin, tier, idNode, session, custodial) VALUES (?, ?, ?, ?, ?,?)", userID, 0, 1, idNode, smax, 0)
+		utils.ReportMessage(fmt.Sprintf("Start non-custodial wallet on node %s", nIP.String))
+	} else {
+		utils.ReportMessage(fmt.Sprintf("Somethings wrong on node %s", nIP.String))
+	}
+	_ = grpcCon.Close()
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"data":       str,
+	})
 
 }
 

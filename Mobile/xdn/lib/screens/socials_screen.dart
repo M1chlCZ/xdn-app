@@ -42,12 +42,11 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
         _discord = token['discord'];
       });
     }
-
   }
 
   void unlinkBot(int typeBot) async {
     try {
-      await _interface.post("/user/bot/unlink", serverType: ComInterface.serverGoAPI, body:{"typeBot" : typeBot}, type: ComInterface.typeJson, debug: true);
+      await _interface.post("/user/bot/unlink", serverType: ComInterface.serverGoAPI, body: {"typeBot": typeBot}, type: ComInterface.typeJson, debug: true);
       getTokenLink();
     } catch (e) {
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
@@ -62,7 +61,12 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
   }
 
   showInSnackBar(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value, textAlign: TextAlign.center,), backgroundColor: Colors.green));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+          value,
+          textAlign: TextAlign.center,
+        ),
+        backgroundColor: Colors.green));
   }
 
   @override
@@ -125,9 +129,12 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
               },
               linkSocials: 'https://t.me/xdntip_bot',
               tokenCommand: "/register ${_tokenLink ?? ""}",
-              showSnackBar: () {showInSnackBar(AppLocalizations.of(context)!.dl_priv_copy);},
+              showSnackBar: () {
+                showInSnackBar(AppLocalizations.of(context)!.dl_priv_copy);
+              },
               unlink: unlinkBot,
-              socials: linkedCheck(_telegram), typeBot: 1,
+              socials: linkedCheck(_telegram),
+              typeBot: 1,
             ),
             const SizedBox(
               height: 30.0,
@@ -136,13 +143,15 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
               name: _discord ?? "XDN TIP Discord Bot",
               cardActiveColor: const Color(0xFF7289DA),
               pictureName: 'images/discord.png',
-              onTap: () {
-              },
+              onTap: () {},
               linkSocials: 'https://discord.gg/S9bZmTTG4a',
               tokenCommand: "\$connect ${_tokenLink ?? ""}",
-              showSnackBar: () {showInSnackBar(AppLocalizations.of(context)!.dl_priv_copy);},
+              showSnackBar: () {
+                showInSnackBar(AppLocalizations.of(context)!.dl_priv_copy);
+              },
               unlink: unlinkBot,
-              socials: linkedCheck(_discord), typeBot: 2,
+              socials: linkedCheck(_discord),
+              typeBot: 2,
             ),
           ]),
         )
@@ -157,7 +166,6 @@ class SocialScreenState extends LifecycleWatcherState<SocialScreen> {
       return true;
     }
   }
-
 
   @override
   void onDetached() {

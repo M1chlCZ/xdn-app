@@ -35,6 +35,14 @@ func (s *Server) StartMasternode(_ context.Context, in *grpcModels.StartMasterno
 	return &grpcModels.StartMasternodeResponse{Code: 200}, nil
 }
 
+func (s *Server) StartNonMasternode(_ context.Context, in *grpcModels.StartNonMasternodeRequest) (*grpcModels.StartNonMasternodeResponse, error) {
+	utils.ReportMessage(fmt.Sprintf("Start MN %d", in.NodeID))
+	nodeID := int(in.NodeID)
+	key := in.WalletKey
+	go fn.StartRemoteMasternode(nodeID, key)
+	return &grpcModels.StartNonMasternodeResponse{Code: 200}, nil
+}
+
 func (s *Server) Withdraw(_ context.Context, wdmn *grpcModels.WithdrawRequest) (*grpcModels.WithdrawResponse, error) {
 	if len(wdmn.Deposit) == 0 || wdmn.Amount == 0 || wdmn.NodeID == 0 {
 		return &grpcModels.WithdrawResponse{Code: 400}, nil

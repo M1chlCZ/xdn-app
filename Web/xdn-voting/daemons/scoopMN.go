@@ -14,7 +14,7 @@ func ScoopMasternode() {
 	type NodeID struct {
 		IdNode int64 `db:"idNode"`
 	}
-	clients, _ := database.ReadArrayStruct[NodeID]("SELECT id as idNode FROM mn_clients WHERE active = 1 GROUP BY idNode")
+	clients, _ := database.ReadArrayStruct[NodeID]("SELECT id as idNode FROM mn_clients WHERE active = 1 AND custodial = 1 GROUP BY idNode")
 	if len(clients) > 0 {
 		utils.ReportMessage("Scooping Masternodes...")
 	}
