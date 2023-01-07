@@ -16,16 +16,16 @@ Future<bool?> showAlertDialog({
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
-        content: content != null ? Text(content) : null,
+        title: Text(title, style: Theme.of(context).textTheme.displaySmall!.copyWith(fontSize: 20),),
+        content: content != null ? Text(content, style: Theme.of(context).textTheme.displayMedium!.copyWith(fontSize: 24)) : null,
         actions: <Widget>[
           if (cancelActionText != null)
             TextButton(
-              child: Text(cancelActionText),
+              child: Text(cancelActionText, style: Theme.of(context).textTheme.displayMedium!.copyWith(fontSize: 18)),
               onPressed: () => Navigator.of(context).pop(false),
             ),
           TextButton(
-            child: Text(defaultActionText),
+            child: Text(defaultActionText, style: Theme.of(context).textTheme.displayMedium!.copyWith(fontSize: 18)),
             onPressed: () => Navigator.of(context).pop(true),
           ),
         ],
@@ -35,7 +35,7 @@ Future<bool?> showAlertDialog({
   return showCupertinoDialog(
     context: context,
     builder: (context) => CupertinoAlertDialog(
-      title: Text(title),
+      title: Text(title, style: Theme.of(context).textTheme.displayLarge,),
       content: content != null ? Text(content) : null,
       actions: <Widget>[
         if (cancelActionText != null)

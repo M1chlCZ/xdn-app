@@ -1,15 +1,12 @@
 import 'dart:convert';
 
 import 'package:digitalnote/generated/phone.pbgrpc.dart';
+import 'package:digitalnote/globals.dart' as globals;
 import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get_it/get_it.dart';
 import 'package:grpc/grpc.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
-import 'package:digitalnote/globals.dart' as globals;
-
 
 class ComInterface {
   static const int serverAPI = 0;
@@ -23,7 +20,6 @@ class ComInterface {
   Future<dynamic> get(String url,
       {Map<String, dynamic>? request, bool wholeURL = false, int serverType = serverAPI, Map<String, dynamic>? query, dynamic body, int type = typeJson, bool debug = false}) async {
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
-    var ioClient = await GetIt.I.getAsync<IOClient>();
     String bearer = "";
     String payload = "";
     dynamic responseJson;
@@ -51,7 +47,7 @@ class ComInterface {
         "payload": payload,
       };
 
-      response = await ioClient.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
+      response = await http.get(Uri.parse(mUrl), headers: mHeaders).timeout(const Duration(seconds: 20));
       if (debug) {
         debugPrint(mUrl);
         if (serverType == serverDAO || serverType == serverGoAPI) {
@@ -79,7 +75,7 @@ class ComInterface {
               "Content-Type": "application/json",
               "payload": payload,
             };
-            var resRefresh = await ioClient.get(Uri.parse(mUrl), headers: rHeaders).timeout(const Duration(seconds: 20));
+            var resRefresh = await http.get(Uri.parse(mUrl), headers: rHeaders).timeout(const Duration(seconds: 20));
             if (type == typePlain) {
               return resRefresh;
             } else {
@@ -108,7 +104,6 @@ class ComInterface {
   Future<dynamic> post(String url, {Map<String, dynamic>? request, int serverType = serverAPI, dynamic body, int type = typeJson, bool debug = false, bool bandwidth = false}) async {
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
     // print(daoJWT);
-    var ioClient = await GetIt.I.getAsync<IOClient>();
     String bearer = "";
     String payload = "";
     dynamic responseJson;
@@ -129,7 +124,7 @@ class ComInterface {
       "payload": payload,
     };
     var b = body != null ? json.encode(body) : null;
-    response = await ioClient.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
+    response = await http.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));
     if (debug) {
       debugPrint(mUrl);
       debugPrint(response.statusCode.toString());
@@ -154,7 +149,7 @@ class ComInterface {
           "Content-Type": "application/json",
           "payload": payload,
         };
-        var resRefresh = await ioClient.post(Uri.parse(mUrl), headers: rHeaders, body: bod).timeout(const Duration(seconds: 20));
+        var resRefresh = await http.post(Uri.parse(mUrl), headers: rHeaders, body: bod).timeout(const Duration(seconds: 20));
         if (type == typePlain) {
           return resRefresh;
         } else {
@@ -196,7 +191,7 @@ class ComInterface {
         if (response.token.isNotEmpty) {
           await SecureStorage.write(key: globals.TOKEN_DAO, value: response.token);
           await SecureStorage.write(key: globals.TOKEN_REFRESH, value: response.refreshToken);
-        }else {
+        } else {
           debugPrint('refreshToken: empty token');
           await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
           await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);

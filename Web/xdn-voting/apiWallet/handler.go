@@ -135,11 +135,10 @@ func submitTransaction(c *fiber.Ctx) error {
 	_, err = database.InsertSQl("INSERT INTO transaction(txid, account, amount, confirmation, address, category) VALUES (?, ?, ?, ?, ?, ?)", txid, account, txinfo.Amount, txinfo.Confirmations, address, "receive")
 	if err != nil {
 		//utils.ReportMessage(err.Error())
-		_, err = database.InsertSQl("UPDATE transaction SET confirmation = ? WHERE txid = ?", txinfo.Confirmations, txinfo.Txid)
-		if err != nil {
-			utils.ReportMessage(err.Error())
-		}
+		_, _ = database.InsertSQl("UPDATE transaction SET confirmation = ? WHERE txid = ?", txinfo.Confirmations, txinfo.Txid)
+		return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
 	}
+
 	go func() {
 		d := map[string]string{
 			"fn": "sendTransaction",

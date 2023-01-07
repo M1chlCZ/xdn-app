@@ -15,11 +15,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
-	"hash/maphash"
 	"io"
 	_ "io/ioutil"
 	"log"
 	"math"
+	"math/big"
 	mathRand "math/rand"
 	"net/http"
 	"os"
@@ -34,11 +34,12 @@ import (
 )
 
 const (
-	VERSION        = "0.0.1.8"
-	STATUS  string = "status"
-	OK      string = "OK"
-	FAIL    string = "FAIL"
-	ERROR   string = "hasError"
+	VERSION              = "0.0.1.8"
+	STATUS        string = "status"
+	OK            string = "OK"
+	FAIL          string = "FAIL"
+	ERROR         string = "hasError"
+	ERROR_MESSAGE        = "errorMessage"
 )
 
 var colorReset = "\033[0m"
@@ -469,8 +470,13 @@ func SendMessage(token string, title string, body string, data map[string]string
 	}
 }
 
-func RandNum(elements int) int {
-	r := mathRand.New(mathRand.NewSource(int64(new(maphash.Hash).Sum64())))
-	r = mathRand.New(mathRand.NewSource(int64(new(maphash.Hash).Sum64())))
-	return r.Intn(elements)
+func RandNum(elements int) int64 {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(int64(elements)))
+	if err != nil {
+		WrapErrorLog(err.Error())
+		return int64(elements - 1)
+	}
+	//r := mathRand.New(mathRand.NewSource(int64(new(maphash.Hash).Sum64())))
+	//r = mathRand.New(mathRand.NewSource(int64(new(maphash.Hash).Sum64())))
+	return nBig.Int64()
 }

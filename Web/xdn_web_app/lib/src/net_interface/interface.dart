@@ -6,12 +6,14 @@ import 'package:grpc/grpc.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:xdn_web_app/generated/phone.pbgrpc.dart';
+import 'package:xdn_web_app/src/models/RefreshToken.dart';
 import 'package:xdn_web_app/src/net_interface/app_exception.dart';
 import 'package:xdn_web_app/src/support/secure_storage.dart';
 
 import '/globals.dart' as globals;
 
 class ComInterface {
+
   static const int serverAPI = 0;
   static const int serverDAO = 1;
   static const int typePlain = 2;
@@ -20,12 +22,10 @@ class ComInterface {
 
   static var _refreshingToken = false;
 
+
   Future<dynamic> get(String url,
       {Map<String, dynamic>? request, bool wholeURL = false, int serverType = serverAPI, Map<String, dynamic>? query, dynamic body, int type = typeJson, bool debug = false}) async {
     String? daoJWT = await SecureStorage.read(key: globals.TOKEN_DAO);
-    SecurityContext context = SecurityContext.defaultContext;
-    final httpClient = HttpClient(context: context);
-    var ioClient = IOClient(httpClient);
     String bearer = "";
     String payload = "";
     dynamic responseJson;
@@ -87,7 +87,7 @@ class ComInterface {
               "Content-Type": "application/json",
               "payload": payload,
             };
-            var resRefresh = await ioClient.get(Uri.parse(mUrl), headers: rHeaders).timeout(const Duration(seconds: 20));
+            var resRefresh = await http.get(Uri.parse(mUrl), headers: rHeaders).timeout(const Duration(seconds: 20));
             if (type == typePlain) {
               return resRefresh;
             } else {
@@ -188,40 +188,40 @@ class ComInterface {
     return responseJson;
   }
 
-  Future<void> refreshToken() async {
-    if (_refreshingToken) {
-      return;
-    }
-    final channel = ClientChannel('194.60.201.213', port: 6805, options: const ChannelOptions(credentials: ChannelCredentials.insecure()));
-    final stub = AppServiceClient(channel);
-    debugPrint('/////Refreshing token/////');
-    _refreshingToken = true;
+  static Future<void> refreshToken() async {
+    debugPrint("/// RefreshToken ///");
     try {
-      String refreshToken = await SecureStorage.read(key: globals.TOKEN_REFRESH) ?? '';
-      var response = await stub.refreshToken(RefreshTokenRequest()..token = refreshToken, options: CallOptions());
-      if (response.token.isNotEmpty) {
-        await SecureStorage.write(key: globals.TOKEN_DAO, value: response.token);
-        await SecureStorage.write(key: globals.TOKEN_REFRESH, value: response.refreshToken);
-      } else {
-        await Future.delayed(const Duration(seconds: 1));
-        debugPrint('Second chance');
-        response = await stub.refreshToken(RefreshTokenRequest()..token = refreshToken, options: CallOptions());
-        if (response.token.isNotEmpty) {
-          await SecureStorage.write(key: globals.TOKEN_DAO, value: response.token);
-          await SecureStorage.write(key: globals.TOKEN_REFRESH, value: response.refreshToken);
-        } else {
-          debugPrint('refreshToken: empty token');
-          await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
-          await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);
-        }
+      if (_refreshingToken) {
+        return;
       }
+      _refreshingToken = true;
+
+      await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
+      String? enc = await SecureStorage.read(key: globals.TOKEN_REFRESH);
+      Map request = {
+        "token": enc,
+      };
+      final resp = await http
+          .post(Uri.parse("${globals.API_URL}/login/refresh"), body: json.encode(request), headers: {"accept": "application/json", "content-type": "application/json", "Auth-Type": "rsa"}).timeout(
+        const Duration(seconds: 20),
+        onTimeout: () {
+          return http.Response('ErrorTimeOut', 500); // Request Timeout response status code
+        },
+      );
+
+      TokenRefresh? res = TokenRefresh.fromJson(json.decode(resp.body));
+      if (res.data!.token != null) {
+        await SecureStorage.write(key: globals.TOKEN_DAO, value: res.data!.token!);
+        await SecureStorage.write(key: globals.TOKEN_REFRESH, value: res.data!.refreshToken!);
+        _refreshingToken = false;
+      }
+      _refreshingToken = false;
     } catch (e) {
-      debugPrint('refreshTokenError: $e');
       await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
       await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);
+      _refreshingToken = false;
+      debugPrint(e.toString());
     }
-    await channel.shutdown();
-    _refreshingToken = false;
   }
 
   dynamic _returnResponse(http.Response response) {

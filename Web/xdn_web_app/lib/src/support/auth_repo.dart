@@ -23,8 +23,6 @@ class FakeAuthRepository {
     if (pin != null) {
       m['twoFactor'] = pin;
     }
-    print(m);
-    // var s = encryptAESCryptoJS(json.encode(m), "rp9ww*jK8KX_!537e%Crmf");
 
     ComInterface ci = ComInterface();
     Response res = await ci.post("/login",
@@ -32,9 +30,7 @@ class FakeAuthRepository {
         serverType: ComInterface.serverGoAPI,
         type: ComInterface.typePlain,
         debug: false);
-    // if (currentUser == null) {
-    //   _createNewUser(email);
-    // }
+
     if (res.statusCode == 200) {
       Map<String, dynamic> r = json.decode(res.body.toString());
       var username = r["username"];
@@ -75,6 +71,33 @@ class FakeAuthRepository {
       _createNewUser(email);
     }
   }
+
+  void checkIfLoggedIn() async{
+    var s = await daoLogin();
+     if (s == true) {
+       print("SHIT");
+      var id = await SecureStorage.read(key: globals.ID);
+      var email = await SecureStorage.read(key: globals.USERNAME);
+       _authState.value = AppUser(
+         uid: id.toString(),
+         email: email,
+       );
+     }else{
+       print("double shit");
+     }
+
+  }
+
+  Future<bool> daoLogin() async {
+      ComInterface ci = ComInterface();
+      Response r =  await ci.get("/ping", debug: true, serverType: ComInterface.serverDAO, type: ComInterface.typePlain, request: {});
+      if (r.statusCode == 200) {
+        return true;
+      }else{
+        return false;
+      }
+    }
+
 
   Future<void> signOut() async {
     // await Future.delayed(const Duration(seconds: 3));

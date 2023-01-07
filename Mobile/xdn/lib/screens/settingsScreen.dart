@@ -20,7 +20,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -650,74 +649,74 @@ class _SettingsState extends State<SettingsScreen> {
                                 height: 5.0,
                                 color: Colors.transparent,
                               ),
-                              SizedBox(
-                                height: 60,
-                                width: MediaQuery.of(context).size.width - 20.0,
-                                child: Card(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-                                  color: Colors.transparent,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(5.0),
-                                    child: Material(
-                                      color: Colors.black12,
-                                      child: InkWell(
-                                        splashColor: Colors.white54,
-                                        // splash color
-                                        onTap: () {
-                                          // Navigator.of(context).pushNamed(BlockInfoScreen.route);
-                                          // Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
-                                        },
-                                        // labelLarge pressed
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            const Padding(
-                                              padding: EdgeInsets.only(left: 15.0),
-                                              child: Icon(
-                                                FontAwesomeIcons.userSecret,
-                                                color: Colors.white70,
-                                              ),
-                                            ),
-                                            const SizedBox(
-                                              width: 15.0,
-                                            ),
-                                            const Expanded(
-                                              child: AutoSizeText(
-                                                "SSL Pinning",
-                                                style: TextStyle(fontSize: 20, color: Colors.white70),
-                                                minFontSize: 8,
-                                                maxLines: 1,
-                                                textAlign: TextAlign.start,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 80,
-                                              child: Switch(
-                                                  value: switchValue,
-                                                  activeColor: const Color(0xFF37467C),
-                                                  inactiveThumbColor: Colors.red.withOpacity(0.8),
-                                                  inactiveTrackColor: Colors.transparent,
-
-                                                  onChanged: (b) {
-                                                    setState(() {
-                                                      switchValue = b;
-                                                      sslPin(b);
-                                                    });
-                                                  }),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const Divider(
-                                height: 5.0,
-                                color: Colors.transparent,
-                              ),
+                              // SizedBox(
+                              //   height: 60,
+                              //   width: MediaQuery.of(context).size.width - 20.0,
+                              //   child: Card(
+                              //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+                              //     color: Colors.transparent,
+                              //     child: ClipRRect(
+                              //       borderRadius: BorderRadius.circular(5.0),
+                              //       child: Material(
+                              //         color: Colors.black12,
+                              //         child: InkWell(
+                              //           splashColor: Colors.white54,
+                              //           // splash color
+                              //           onTap: () {
+                              //             // Navigator.of(context).pushNamed(BlockInfoScreen.route);
+                              //             // Dialogs.openPasswordChangeBox(context, _passCheckPrivKey);
+                              //           },
+                              //           // labelLarge pressed
+                              //           child: Row(
+                              //             mainAxisAlignment: MainAxisAlignment.start,
+                              //             crossAxisAlignment: CrossAxisAlignment.center,
+                              //             children: [
+                              //               const Padding(
+                              //                 padding: EdgeInsets.only(left: 15.0),
+                              //                 child: Icon(
+                              //                   FontAwesomeIcons.userSecret,
+                              //                   color: Colors.white70,
+                              //                 ),
+                              //               ),
+                              //               const SizedBox(
+                              //                 width: 15.0,
+                              //               ),
+                              //               const Expanded(
+                              //                 child: AutoSizeText(
+                              //                   "SSL Pinning",
+                              //                   style: TextStyle(fontSize: 20, color: Colors.white70),
+                              //                   minFontSize: 8,
+                              //                   maxLines: 1,
+                              //                   textAlign: TextAlign.start,
+                              //                   overflow: TextOverflow.ellipsis,
+                              //                 ),
+                              //               ),
+                              //               SizedBox(
+                              //                 width: 80,
+                              //                 child: Switch(
+                              //                     value: switchValue,
+                              //                     activeColor: const Color(0xFF37467C),
+                              //                     inactiveThumbColor: Colors.red.withOpacity(0.8),
+                              //                     inactiveTrackColor: Colors.transparent,
+                              //
+                              //                     onChanged: (b) {
+                              //                       setState(() {
+                              //                         switchValue = b;
+                              //                         sslPin(b);
+                              //                       });
+                              //                     }),
+                              //               ),
+                              //             ],
+                              //           ),
+                              //         ),
+                              //       ),
+                              //     ),
+                              //   ),
+                              // ),
+                              // const Divider(
+                              //   height: 5.0,
+                              //   color: Colors.transparent,
+                              // ),
                               SizedBox(
                                 height: 60,
                                 width: MediaQuery.of(context).size.width - 20.0,

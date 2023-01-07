@@ -118,6 +118,7 @@ func main() {
 	app.Post("api/v1/masternode/reward", utils.Authorized(rewardMN))
 
 	app.Post("api/v1/masternode/non/start", utils.Authorized(startNonMN))
+	app.Get("api/v1/masternode/non/list", utils.Authorized(listNonMN))
 
 	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
@@ -227,6 +228,31 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func listNonMN(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			utils.ERROR:         true,
+			utils.STATUS:        utils.ERROR,
+			utils.ERROR_MESSAGE: "Unauthorized",
+		})
+	}
+
+	data, err := database.ReadArrayStruct[models.NonMNStruct]("SELECT a.id, a.ip, a.last_seen, a.active_time FROM mn_clients as a, users_mn as b WHERE a.custodial = 0 AND a.id = b.idNode AND b.idUser = ?", userID)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			utils.ERROR:         true,
+			utils.STATUS:        utils.ERROR,
+			utils.ERROR_MESSAGE: err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"data":       data,
+	})
 }
 
 func startNonMN(c *fiber.Ctx) error {
@@ -572,11 +598,12 @@ func rewardMN(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusConflict)
 	}
-	user, err := database.ReadStruct[models.MNUsers]("SELECT * FROM users_mn WHERE idUser = ? AND active = ?", userID, 1)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
-	}
-	_, _ = database.InsertSQl("UPDATE payouts_masternode SET credited = ? WHERE idUser = ? AND session = ? AND id <> 0", 1, userID, user.Session)
+	//user, err := database.ReadStruct[models.MNUsers]("SELECT * FROM users_mn WHERE idUser = ? AND active = ?", userID, 1)
+	//if err != nil {
+	//	return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	//}
+	utils.ReportMessage(fmt.Sprintf("! - Reward withdrawal of %f sent to %s - !", amountToSend, userID))
+	_, _ = database.InsertSQl("UPDATE payouts_masternode SET credited = ? WHERE idUser = ?", 1, userID)
 	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode Reward", tx, "receive")
 	time.Sleep(time.Millisecond * 200)
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xdn_web_app/src/screens/home_screen.dart';
 import 'package:xdn_web_app/src/screens/not_found.dart';
 import 'package:xdn_web_app/src/screens/splash.dart';
 import 'package:xdn_web_app/src/support/auth_repo.dart';
@@ -8,6 +9,7 @@ import 'package:xdn_web_app/src/support/go_router_refresh_stream.dart';
 
 enum AppRoute {
   home,
+  splash,
   product,
   leaveReview,
   cart,
@@ -26,10 +28,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authRepository.currentUser != null;
       if (isLoggedIn) {
         if (state.location == '/') {
-          return '/account';
+          return '/home';
         }
       } else {
-        if (state.location == '/account' || state.location == '/orders') {
+        if (state.location == '/home' || state.location == '/orders') {
           return '/';
         }
       }
@@ -39,7 +41,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/',
-        name: AppRoute.home.name,
+        name: AppRoute.splash.name,
         builder: (context, state) => const SplashScreen(),
         routes: [
           // GoRoute(
@@ -94,13 +96,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           //   ),
           // ),
           GoRoute(
-            path: 'account',
-            name: AppRoute.account.name,
-            pageBuilder: (context, state) => MaterialPage(
-              key: state.pageKey,
-              fullscreenDialog: true,
-              child: Container(color: Colors.red,),
-            ),
+            path: 'home',
+            name: AppRoute.home.name,
+            builder: (context, state) => const HomeScreen(),
           ),
           // GoRoute(
           //   path: 'signIn',
