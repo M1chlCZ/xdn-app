@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:grpc/grpc.dart';
-import 'dart:io';
+import 'package:universal_io/io.dart';
 
 import 'package:xdn_web_app/generated/phone.pbgrpc.dart';
 

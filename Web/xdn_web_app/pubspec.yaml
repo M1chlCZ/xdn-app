@@ -25,6 +25,7 @@ dependencies:
   freezed_annotation: ^2.2.0
   google_fonts: ^3.0.1
   shared_preferences: ^2.0.15
+  universal_io: ^2.0.4
 
 
 dev_dependencies:

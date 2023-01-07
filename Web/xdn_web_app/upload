@@ -1,4 +1,4 @@
 #!/bin/bash
-# Uploads a file to a remote server
 flutter build web --release --no-tree-shake-icons --web-renderer html
+ssh -i ~/.ssh/xdn XDNService@194.60.201.213 "/home/XDNService/apiVoting/updateWeb"
 sftp -i ~/.ssh/xdn XDNService@194.60.201.213:/home/XDNService/www/html <<< $'put -r ./build/web/*'

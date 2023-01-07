@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:universal_io/io.dart';
 
 class SecureStorage {
   static Future<String?> read({required String key}) async {
