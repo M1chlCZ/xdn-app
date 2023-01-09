@@ -1,11 +1,7 @@
 import 'dart:convert';
-import 'package:universal_io/io.dart';
 
 import 'package:flutter/foundation.dart';
-import 'package:grpc/grpc.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
-import 'package:xdn_web_app/generated/phone.pbgrpc.dart';
 import 'package:xdn_web_app/src/models/RefreshToken.dart';
 import 'package:xdn_web_app/src/net_interface/app_exception.dart';
 import 'package:xdn_web_app/src/support/secure_storage.dart';
@@ -13,7 +9,6 @@ import 'package:xdn_web_app/src/support/secure_storage.dart';
 import '/globals.dart' as globals;
 
 class ComInterface {
-
   static const int serverAPI = 0;
   static const int serverDAO = 1;
   static const int typePlain = 2;
@@ -21,7 +16,6 @@ class ComInterface {
   static const int serverGoAPI = 4;
 
   static var _refreshingToken = false;
-
 
   Future<dynamic> get(String url,
       {Map<String, dynamic>? request, bool wholeURL = false, int serverType = serverAPI, Map<String, dynamic>? query, dynamic body, int type = typeJson, bool debug = false}) async {
@@ -49,8 +43,8 @@ class ComInterface {
     try {
       Map<String, String> mHeaders = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers" : "*",
-        "Access-Control-Allow-Methods" : "POST,GET,DELETE,PUT,OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,OPTIONS",
         "Authorization": bearer,
         "Content-Type": "application/json",
         "payload": payload,
@@ -81,8 +75,8 @@ class ComInterface {
             var b = "Bearer ${dJWT ?? ""}";
             Map<String, String> rHeaders = {
               "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Headers" : "*",
-              "Access-Control-Allow-Methods" : "POST,GET,DELETE,PUT,OPTIONS",
+              "Access-Control-Allow-Headers": "*",
+              "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,OPTIONS",
               "Authorization": b,
               "Content-Type": "application/json",
               "payload": payload,
@@ -131,8 +125,8 @@ class ComInterface {
     // print("POST: $mUrl");
     Map<String, String> mHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers" : "*",
-      "Access-Control-Allow-Methods" : "POST,GET,DELETE,PUT,OPTIONS",
+      "Access-Control-Allow-Headers": "*",
+      "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,OPTIONS",
       "Authorization": bearer,
       "Content-Type": "application/json",
       "payload": payload,
@@ -161,8 +155,8 @@ class ComInterface {
         var b = "Bearer ${dJWT ?? ""}";
         Map<String, String> rHeaders = {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers" : "*",
-          "Access-Control-Allow-Methods" : "POST,GET,DELETE,PUT,OPTIONS",
+          "Access-Control-Allow-Headers": "*",
+          "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,OPTIONS",
           "Authorization": b,
           "Content-Type": "application/json",
           "payload": payload,

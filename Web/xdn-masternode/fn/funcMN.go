@@ -462,7 +462,34 @@ func ScanMasternodes() {
 				continue
 			}
 		}
-		bytes, err := coind.WrapDaemon(daemon, 1, "masternode", "list", "full")
+		rpcuser := ""
+		rpcpassword := ""
+		rpcport := ""
+		bcMerge, errScript := exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcuser/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+		if errScript != nil {
+			utils.ReportMessage(errScript.Error())
+			continue
+		}
+		rpcuser = strings.TrimSuffix(string(bcMerge), "\n")
+		bcMerge, errScript = exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcpassword/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+		if errScript != nil {
+			utils.ReportMessage(errScript.Error())
+			continue
+		}
+
+		rpcpassword = strings.TrimSuffix(string(bcMerge), "\n")
+		bcMerge, errScript = exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcport/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+		if errScript != nil {
+			utils.ReportMessage(errScript.Error())
+			continue
+		}
+		rpcport = strings.TrimSuffix(string(bcMerge), "\n")
+		rpcPort, err := strconv.Atoi(rpcport)
+		if err != nil {
+			utils.ReportMessage(err.Error())
+			continue
+		}
+		bytes, err := coind.WrapDaemon(models.Daemon{WalletPass: rpcpassword, WalletPort: rpcPort, WalletUser: rpcuser}, 2, "masternode", "list", "full")
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			go Snap(daemon.Folder, daemon.CoinID)
@@ -582,7 +609,35 @@ func ScanMasternodes() {
 			go Snap(daemon.Folder, daemon.CoinID)
 			continue
 		} else {
-			bytes, err := coind.WrapDaemon(daemon, 1, "masternode", "list", "full")
+			rpcuser := ""
+			rpcpassword := ""
+			rpcport := ""
+			bcMerge, errScript := exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcuser/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+			if errScript != nil {
+				utils.ReportMessage(errScript.Error())
+				continue
+			}
+			rpcuser = strings.TrimSuffix(string(bcMerge), "\n")
+			bcMerge, errScript = exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcpassword/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+			if errScript != nil {
+				utils.ReportMessage(errScript.Error())
+				continue
+			}
+
+			rpcpassword = strings.TrimSuffix(string(bcMerge), "\n")
+			bcMerge, errScript = exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcport/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+			if errScript != nil {
+				utils.ReportMessage(errScript.Error())
+				continue
+			}
+			rpcport = strings.TrimSuffix(string(bcMerge), "\n")
+			rpcPort, err := strconv.Atoi(rpcport)
+			if err != nil {
+				utils.ReportMessage(err.Error())
+				continue
+			}
+
+			bytes, err := coind.WrapDaemon(models.Daemon{WalletPass: rpcpassword, WalletPort: rpcPort, WalletUser: rpcuser}, 2, "masternode", "list", "full")
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
 				go Snap(daemon.Folder, daemon.CoinID)

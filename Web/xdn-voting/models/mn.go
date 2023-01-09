@@ -186,6 +186,7 @@ type LastTxs struct {
 type NonMNStruct struct {
 	Id         int           `json:"id" db:"id"`
 	Ip         string        `json:"ip" db:"ip"`
+	Active     int           `json:"active" db:"active"`
 	LastSeen   sql.NullInt64 `json:"last_seen" db:"last_seen"`
 	TimeActive sql.NullInt64 `json:"active_time" db:"active_time"`
 }
@@ -194,11 +195,13 @@ func (u *NonMNStruct) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ID         int       `db:"id" json:"id"`
 		IP         string    `db:"ip" json:"ip"`
+		Active     int       `json:"active" db:"active"`
 		LastSeen   time.Time `json:"lastSeen" db:"last_seen"`
 		TimeActive int64     `json:"timeActive" db:"active_time"`
 	}{
 		LastSeen:   InlineIF[time.Time](u.LastSeen.Valid, time.Unix(u.LastSeen.Int64, 0), time.Time{}),
 		TimeActive: InlineIF[int64](u.TimeActive.Valid, u.TimeActive.Int64, 0),
+		Active:     u.Active,
 		ID:         u.Id,
 		IP:         u.Ip,
 	})

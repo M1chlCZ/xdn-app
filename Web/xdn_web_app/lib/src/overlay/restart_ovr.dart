@@ -140,7 +140,6 @@ class RestartOverlay extends ModalRoute<void> {
 
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
-    // You can add your own animations for the overlay content
     return FadeTransition(
       opacity: animation,
       child: child,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xdn_web_app/src/models/MNList.dart';
 import 'package:xdn_web_app/src/overlay/restart_ovr.dart';
+import 'package:xdn_web_app/src/overlay/start_ovr.dart';
 import 'package:xdn_web_app/src/provider/mn_list_provider.dart';
 import 'package:xdn_web_app/src/support/app_sizes.dart';
 import 'package:xdn_web_app/src/support/utils.dart';
@@ -146,9 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     hoverColor: Colors.lime.withOpacity(0.8),
                                     splashColor: Colors.white24,
                                     onTap: () {
-                                      _showOverlay(context, items.value![index].id ?? 0, () {
-                                        _restartNode(items.value![index].id ?? 0);
-                                      });
+                                      _showTutOverlay(context);
                                     },
                                     child: Container(
                                     decoration: BoxDecoration(
@@ -173,11 +172,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _restartNode(int id) {
+    //TODO: CODE FOR THIS SHIT
     Navigator.of(context).pop();
-    print("restart node $id");
   }
 
   void _showOverlay(BuildContext context, int mnId, VoidCallback onTap) {
     Navigator.of(context).push(RestartOverlay(mnId, onTap));
+  }
+
+  void _showTutOverlay(BuildContext context) {
+    Navigator.of(context).push(StartOverlay()).then((value) => ref.refresh(itemsProvider));
   }
 }

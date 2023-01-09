@@ -6,6 +6,11 @@ import 'package:xdn_web_app/src/support/s_p.dart';
 final itemsProvider = FutureProvider<List<dynamic>>((ref) async {
   try {
     dynamic response = await ref.read(networkProvider).get("/masternode/non/list", serverType: ComInterface.serverGoAPI, debug: true );
+    if (response["data"] == null) {
+      List<dynamic> lret = [];
+      lret.add("end");
+      return lret;
+    }
     var l = response['data'] as List;
     var list = l.map((item) => MNList.fromJson(item)).toList();
     List<dynamic> lret = [];

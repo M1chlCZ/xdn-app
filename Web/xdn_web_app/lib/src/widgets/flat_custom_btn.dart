@@ -41,6 +41,9 @@ class _FlatCustomButtonState extends State<FlatCustomButton> {
           curve: Curves.fastOutSlowIn,
           color: isHover ? widget.splashColor  : widget.color,
           child: InkWell(
+            customBorder: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(widget.radius),
+            ),
             hoverColor: widget.splashColor,
             // highlightColor: splashColor!.withOpacity(0.5),
             splashColor: widget.splashColor ?? Colors.white30,

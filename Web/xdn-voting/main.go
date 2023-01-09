@@ -240,7 +240,7 @@ func listNonMN(c *fiber.Ctx) error {
 		})
 	}
 
-	data, err := database.ReadArrayStruct[models.NonMNStruct]("SELECT a.id, a.ip, a.last_seen, a.active_time FROM mn_clients as a, users_mn as b WHERE a.custodial = 0 AND a.id = b.idNode AND b.idUser = ?", userID)
+	data, err := database.ReadArrayStruct[models.NonMNStruct]("SELECT a.id, a.ip, a.last_seen, a.active_time, a.active FROM mn_clients as a, users_mn as b WHERE a.custodial = 0 AND a.id = b.idNode AND b.idUser = ?", userID)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			utils.ERROR:         true,
@@ -379,7 +379,7 @@ func startNonMN(c *fiber.Ctx) error {
 
 	mnKey := strings.Trim(string(s), "\"")
 
-	str := fmt.Sprintf("MN%s [%s]:%d %s %s %d", "1", nodeIP.String, 18092, mnKey, txid, vout)
+	str := fmt.Sprintf("MN%d [%s]:%d %s %s %d", idNode, nodeIP.String, 18092, mnKey, txid, vout)
 	nIP := database.ReadValueEmpty[sql.NullString]("SELECT node_ip FROM mn_clients WHERE id = ?", idNode)
 	if nodeIP.Valid == false {
 		return utils.ReportError(c, "Node not found", http.StatusNotFound)

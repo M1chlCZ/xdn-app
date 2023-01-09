@@ -417,7 +417,6 @@ func StartTelegramBot() {
 						Running = false
 						continue
 					} else {
-						mID := database.ReadValueEmpty[int64]("SELECT idMessage FROM bot_post_activity WHERE idChannel = ? ORDER BY id DESC LIMIT 1", update.CallbackQuery.Message.Chat.ID)
 						addressTo := database.ReadValueEmpty[string]("SELECT addr FROM users WHERE id = ?", idU)
 						addressFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM servers_stake WHERE 1")
 						if !addressFrom.Valid {
@@ -425,7 +424,8 @@ func StartTelegramBot() {
 							Running = false
 							continue
 						}
-						dl := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, int(mID))
+						utils.ReportMessage(fmt.Sprintf("Posting message channelID: %d messageID: %d", update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID))
+						dl := tgbotapi.NewDeleteMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID)
 						_, err = bot.Send(dl)
 						if err != nil {
 							utils.ReportMessage(err.Error())
@@ -1408,13 +1408,14 @@ func AnnOtherChannelTelegram() {
 		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
-
-			if lastPost.Id != 0 {
-				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
-				_, err := bot.Send(dl)
-				if err != nil {
-					utils.ReportMessage(err.Error())
-				}
+		}
+		if lastPost.Id != 0 {
+			dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+			_, err := bot.Send(dl)
+			if err != nil {
+				utils.ReportMessage(fmt.Sprintf("Error deleting message: channelID: %d messageID: %d", lastPost.IdChannel, int(lastPost.IdMessage)))
+				utils.ReportMessage(fmt.Sprintf("BOT DELETE PROBLEMO %s", err.Error()))
+				utils.ReportMessage(err.Error())
 			}
 		}
 		postID := post.PostID
@@ -1439,11 +1440,11 @@ func AnnOtherChannelTelegram() {
 			utils.WrapErrorLog(err.Error())
 			return
 		}
-
-		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)
+		id, err := database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 		}
+		utils.ReportMessage(fmt.Sprintf("Posting messageID:%d channelID: %d messageID: %d", id, mess.Chat.ID, mess.MessageID))
 	}
 }
 
@@ -1471,13 +1472,13 @@ func GiftOtherChannelsTelegram() {
 		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
-
-			if lastPost.Id != 0 {
-				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
-				_, err := bot.Send(dl)
-				if err != nil {
-					utils.ReportMessage(fmt.Sprintf("BOT DELETE PROBLEMO %s", err.Error()))
-				}
+		}
+		if lastPost.Id != 0 {
+			dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+			_, err := bot.Send(dl)
+			if err != nil {
+				utils.ReportMessage(fmt.Sprintf("Error deleting message: channelID: %d messageID: %d", lastPost.IdChannel, int(lastPost.IdMessage)))
+				utils.ReportMessage(fmt.Sprintf("BOT DELETE PROBLEMO %s", err.Error()))
 			}
 		}
 		msg := tgbotapi.NewPhoto(channel.IdChannel, tgbotapi.FileURL(url))
