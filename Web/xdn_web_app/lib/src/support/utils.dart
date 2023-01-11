@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:intl/intl.dart';
 import 'package:universal_io/io.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class Utils {
@@ -106,6 +107,31 @@ class Utils {
       return '${nf.format(number / 1000000)}m';
     } else {
       return number.toString();
+    }
+  }
+
+  static void openLink(String? s) async {
+    var succ = false;
+    if (s != null) {
+      try {
+        succ = await launchUrl(Uri.parse(s), mode: LaunchMode.externalNonBrowserApplication);
+      } catch (e) {
+        debugPrint(e.toString());
+      }
+      if (!succ) {
+        try {
+          succ = await launchUrl(Uri.parse(s), mode: LaunchMode.externalApplication);
+        } catch (e) {
+          debugPrint(e.toString());
+        }
+      }
+      if (!succ) {
+        try {
+          await launchUrl(Uri.parse(s), mode: LaunchMode.platformDefault);
+        } catch (e) {
+          debugPrint(e.toString());
+        }
+      }
     }
   }
 

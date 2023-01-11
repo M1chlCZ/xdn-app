@@ -111,8 +111,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   height: 120,
                 ),
                 Text(
-                  "Non-custodial MN".hardcoded,
-                  style: const TextStyle(color: Colors.white70, fontSize: 24, fontWeight: FontWeight.w400),
+                  "Non-custodial MN service console".hardcoded,
+                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white.withOpacity(0.85)),
                 ),
                 /**/
                 ResponsiveScrollableCard(
@@ -130,7 +130,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             controller: _emailController,
                             decoration: InputDecoration(
                               labelText: 'Username'.hardcoded,
-                              hintText: 'username'.hardcoded,
+                              hintText: 'Username from XDN app'.hardcoded,
                               enabled: !state.isLoading,
                             ),
                             autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -147,6 +147,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             // key: EmailPasswordSignInScreen.passwordKey,
                             controller: _passwordController,
                             decoration: InputDecoration(
+                              hintText: "Password from XDN app".hardcoded,
                               labelText: state.passwordLabelText,
                               enabled: !state.isLoading,
                             ),

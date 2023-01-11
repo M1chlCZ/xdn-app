@@ -7,7 +7,6 @@ import 'package:xdn_web_app/src/models/TXInfo.dart';
 import 'package:xdn_web_app/src/provider/mn_provider.dart';
 import 'package:xdn_web_app/src/support/app_sizes.dart';
 import 'package:xdn_web_app/src/support/extensions.dart';
-import 'package:xdn_web_app/src/support/s_p.dart';
 import 'package:xdn_web_app/src/widgets/flat_custom_btn.dart';
 import 'package:http/http.dart' as http;
 
@@ -19,7 +18,7 @@ class SixthOvrPage extends ConsumerStatefulWidget {
 }
 
 class _SixthOvrPageState extends ConsumerState<SixthOvrPage> {
-  int confirmations = 5;
+  int confirmations =0;
 
   @override
   void dispose() {
@@ -63,6 +62,18 @@ class _SixthOvrPageState extends ConsumerState<SixthOvrPage> {
                   style: TextStyle(color: Colors.white70, fontSize: 14.0),
                 ),
               ],
+            ),
+            gapH16,
+            Text(
+              'If you are getting error "Cannot allocate vin ${rrr.getMNConf}", please make sure that you have mnconflock=0 in your config file',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70, fontSize: 10.0),
+            ),
+            gapH8,
+            const Text(
+              'Remember to restart QT wallet if you made any changes to the config file',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, fontSize: 10.0),
             ),
             gapH12,
             SizedBox(width: MediaQuery.of(context).size.width * 0.7, child: Image.asset("assets/images/tut_start.png")),

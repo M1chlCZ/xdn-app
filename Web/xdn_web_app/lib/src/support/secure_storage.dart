@@ -22,7 +22,7 @@ class SecureStorage {
     }
   }
 
-  static Future<void> write({required String key, required String value})async {
+  static Future<void> write({required String key, required String value}) async {
     try {
       if (Platform.isMacOS) {
         final prefs = await SharedPreferences.getInstance();
@@ -41,28 +41,38 @@ class SecureStorage {
     }
   }
 
-  static Future<void> deleteStorage({required String key}) {
+  static Future<void> deleteStorage({required String key}) async {
     try {
-      const FlutterSecureStorage mstorage = FlutterSecureStorage();
-      const optionsApple = IOSOptions(accessibility: KeychainAccessibility.first_unlock);
-      const optionsAndroid = AndroidOptions(encryptedSharedPreferences: true);
-      const webOptions = WebOptions(dbName: "CNliCGCAgu", publicKey: "6i81ge6Fc3bqgxbtc1Wl");
-      const macOptions = MacOsOptions(groupId: "D2VD7YVAQ5", accessibility: KeychainAccessibility.first_unlock);
-      return mstorage.delete(key: key, iOptions: optionsApple, aOptions: optionsAndroid, webOptions: webOptions, mOptions: macOptions);
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+      } else {
+        const FlutterSecureStorage mstorage = FlutterSecureStorage();
+        const optionsApple = IOSOptions(accessibility: KeychainAccessibility.first_unlock);
+        const optionsAndroid = AndroidOptions(encryptedSharedPreferences: true);
+        const webOptions = WebOptions(dbName: "CNliCGCAgu", publicKey: "6i81ge6Fc3bqgxbtc1Wl");
+        const macOptions = MacOsOptions(groupId: "D2VD7YVAQ5", accessibility: KeychainAccessibility.first_unlock);
+        return mstorage.delete(key: key, iOptions: optionsApple, aOptions: optionsAndroid, webOptions: webOptions, mOptions: macOptions);
+      }
     } catch (e) {
       print(e);
       return Future.value(null);
     }
   }
 
-  static Future<void> deleteAllStorage() {
+  static Future<void> deleteAllStorage() async {
     try {
-      const FlutterSecureStorage mstorage = FlutterSecureStorage();
-      const optionsApple = IOSOptions(accessibility: KeychainAccessibility.first_unlock);
-      const optionsAndroid = AndroidOptions(encryptedSharedPreferences: true);
-      const webOptions = WebOptions(dbName: "CNliCGCAgu", publicKey: "6i81ge6Fc3bqgxbtc1Wl");
-      const macOptions = MacOsOptions(groupId: "D2VD7YVAQ5", accessibility: KeychainAccessibility.first_unlock);
-      return mstorage.deleteAll(iOptions: optionsApple, aOptions: optionsAndroid, webOptions: webOptions, mOptions: macOptions);
+      if (Platform.isMacOS) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+      } else {
+        const FlutterSecureStorage mstorage = FlutterSecureStorage();
+        const optionsApple = IOSOptions(accessibility: KeychainAccessibility.first_unlock);
+        const optionsAndroid = AndroidOptions(encryptedSharedPreferences: true);
+        const webOptions = WebOptions(dbName: "CNliCGCAgu", publicKey: "6i81ge6Fc3bqgxbtc1Wl");
+        const macOptions = MacOsOptions(groupId: "D2VD7YVAQ5", accessibility: KeychainAccessibility.first_unlock);
+        return mstorage.deleteAll(iOptions: optionsApple, aOptions: optionsAndroid, webOptions: webOptions, mOptions: macOptions);
+      }
     } catch (e) {
       print(e);
       return Future.value(null);

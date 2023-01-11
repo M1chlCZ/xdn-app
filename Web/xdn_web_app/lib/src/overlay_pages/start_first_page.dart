@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:xdn_web_app/src/support/app_sizes.dart';
+import 'package:xdn_web_app/src/support/utils.dart';
+import 'package:xdn_web_app/src/widgets/flat_custom_btn.dart';
 
 class StartOvrPage extends StatelessWidget {
   const StartOvrPage({Key? key}) : super(key: key);
@@ -17,11 +19,59 @@ class StartOvrPage extends StatelessWidget {
           style: TextStyle(color: Colors.white70, fontSize: 24.0),
         ),
         gapH16,
+        const Text(
+          '1) You have to have at least 2 000 000 XDN.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontSize: 14.0),
+        ),
+        gapH16,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              '2) Download the latest wallet, from ',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, fontSize: 14.0),
+            ),
+            GestureDetector(
+              onTap: () {
+
+              },
+              child: FlatCustomButton(
+                radius: 8,
+                color: Colors.black12,
+                onTap: () {
+                  Utils.openLink('https://digitalnote.org/#wallets');
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    children: const [
+
+                      Text('link', textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.bold),),
+                    gapW4,
+                      Icon(Icons.open_in_new, color: Colors.white, size: 12,)
+
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        gapH8,
+        const Text(
+          "It's important to do so, otherwise you won't be able to start the masternode" ,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.red, fontSize: 10.0),
+        ),
+        gapH16,
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
             Text(
-              '1) Add ',
+              '3) Add ',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, fontSize: 14.0),
             ),
@@ -42,7 +92,7 @@ class StartOvrPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
             Text(
-              '2) Restart your QT wallet',
+              '4) Restart your QT wallet',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, fontSize: 14.0),
             ),

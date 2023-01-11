@@ -37,9 +37,18 @@ class MyApp extends ConsumerWidget {
               borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
           ),
-          inputDecorationTheme: const InputDecorationTheme(
-              labelStyle: TextStyle(color: Colors.white54),
-              focusedBorder: UnderlineInputBorder(
+          inputDecorationTheme: InputDecorationTheme(
+              hintStyle: GoogleFonts.montserrat(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Colors.white30,
+              ),
+
+              labelStyle: const TextStyle(color: Colors.white54),
+              enabledBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(style: BorderStyle.solid, color: Colors.white54),
+              ),
+              focusedBorder: const UnderlineInputBorder(
                 borderSide: BorderSide(style: BorderStyle.solid, color: Colors.white70),
               )),
           colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue, accentColor: Colors.black26, backgroundColor: Colors.black),

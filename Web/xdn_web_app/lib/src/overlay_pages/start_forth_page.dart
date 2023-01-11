@@ -23,6 +23,7 @@ class ForthOvrPage extends ConsumerStatefulWidget {
 
 class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
   final TextEditingController _controller = TextEditingController();
+  bool _isLoading = false;
   String? _mnText;
 
   @override
@@ -32,7 +33,7 @@ class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
       final rr = ref.read(blockProvider.notifier);
       rr.setBlock(true);
       _controller.addListener(() {
-        if (_controller.text.length == 34) {
+        if (_controller.text.length >= 34) {
           _startMasternode(_controller.text);
         }
       });
@@ -41,6 +42,12 @@ class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
 
   void _startMasternode(String address) async {
     try {
+      RegExp regex = RegExp(r"^\b(d)[a-zA-Z0-9]{33}$");
+      if (!regex.hasMatch(address)) {
+        debugPrint("Invalid address");
+        throw Exception("Invalid address");
+      }
+      setState(() {_isLoading = true;}) ;
       final net = ref.read(networkProvider);
       final rr = ref.read(blockProvider.notifier);
       final rrr = ref.read(mnProvider.notifier);
@@ -56,11 +63,24 @@ class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
       List<String> l = _mnText!.split(" ");
       rrr.setConfig(l[0]);
       rrr.setTxId(l[3]);
+      await SecureStorage.write(key: "mn", value: _mnText!);
+      setState(() {_isLoading = false;}) ;
     } catch (e) {
-      var err = json.decode(e.toString());
-      showAlertDialog(context: context, title: "Error", content: err['errorMessage']);
+      setState(() {_isLoading = false;}) ;
+      _controller.clear();
+      try {
+        var err = json.decode(e.toString());
+        showAlertDialog(context: context, title: "Error", content: err['errorMessage']);
+      } catch (e) {
+        var  ee = e.toString();
+        try {
+          var err = e.toString().split("Exception:")[2].replaceAll("^", "");
+          showAlertDialog(context: context, title: "Error", content: err);
+        } catch (e) {
+          showAlertDialog(context: context, title: "Error", content: ee.toString());
+        }
+      }
     }
-    await SecureStorage.write(key: "mn", value: _mnText!);
   }
 
   @override
@@ -82,15 +102,19 @@ class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
           style: TextStyle(color: Colors.white70, fontSize: 24.0),
         ),
         gapH12,
-        if (_mnText == null)
+        if (_mnText == null && _isLoading)
+          const Expanded(child: Center(child: CircularProgressIndicator(color: Colors.white70,))),
+        if (_mnText == null && !_isLoading)
           Column(
             children: [
+              gapH24,
               const Text(
                 'Enter XDN address which you generated in previous step',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white70, fontSize: 14.0),
               ),
-              gapH64,
+              gapH32,
+              gapH8,
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.5,
                 child: TextField(
