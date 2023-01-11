@@ -186,6 +186,7 @@ type LastTxs struct {
 type NonMNStruct struct {
 	Id         int           `json:"id" db:"id"`
 	Ip         string        `json:"ip" db:"ip"`
+	Addr       string        `json:"address" db:"address"`
 	Active     int           `json:"active" db:"active"`
 	LastSeen   sql.NullInt64 `json:"last_seen" db:"last_seen"`
 	TimeActive sql.NullInt64 `json:"active_time" db:"active_time"`
@@ -196,13 +197,26 @@ func (u *NonMNStruct) MarshalJSON() ([]byte, error) {
 		ID         int       `db:"id" json:"id"`
 		IP         string    `db:"ip" json:"ip"`
 		Active     int       `json:"active" db:"active"`
+		Addr       string    `json:"address" db:"address"`
 		LastSeen   time.Time `json:"lastSeen" db:"last_seen"`
 		TimeActive int64     `json:"timeActive" db:"active_time"`
 	}{
 		LastSeen:   InlineIF[time.Time](u.LastSeen.Valid, time.Unix(u.LastSeen.Int64, 0), time.Time{}),
 		TimeActive: InlineIF[int64](u.TimeActive.Valid, u.TimeActive.Int64, 0),
+		Addr:       u.Addr,
 		Active:     u.Active,
 		ID:         u.Id,
 		IP:         u.Ip,
 	})
+}
+
+type MNNonCustodial struct {
+	Id     int    `json:"id" db:"id"`
+	IdUser int    `json:"idUser" db:"idUser"`
+	IdNode int    `json:"idNode" db:"idNode"`
+	IdCoin int    `json:"idCoin" db:"idCoin"`
+	Addr   string `json:"addr" db:"addr"`
+	MnKey  string `json:"mnKey" db:"mnKey"`
+	Txid   string `json:"txid" db:"txid"`
+	Vout   int    `json:"vout" db:"vout"`
 }

@@ -38,7 +38,8 @@ func CallSubmitTX(tx *grpcModels.SubmitRequest) (*grpcModels.Response, error) {
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -54,7 +55,8 @@ func CallRegisterRequest(tx *grpcModels.RegisterRequest) (*grpcModels.RegisterRe
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -70,7 +72,8 @@ func CallRegisterMN(tx *grpcModels.RegisterMasternodeRequest) (*grpcModels.Regis
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -86,7 +89,8 @@ func CallGetPrivateKey(tx *grpcModels.GetPrivateKeyRequest) (*grpcModels.GetPriv
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -102,7 +106,8 @@ func WithdrawConfirm(tx *grpcModels.WithdrawConfirmRequest) (*grpcModels.Withdra
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -118,7 +123,8 @@ func MasternodeActive(tx *grpcModels.MasternodeActiveRequest) (*grpcModels.Maste
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -134,7 +140,8 @@ func LastSeen(tx *grpcModels.LastSeenRequest) (*grpcModels.LastSeenResponse, err
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -150,7 +157,8 @@ func Ping(tx *grpcModels.PingRequest) (*grpcModels.PingResponse, error) {
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -166,7 +174,8 @@ func RemoveMasternode(tx *grpcModels.RemoveMasternodeRequest) (*grpcModels.Remov
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -182,7 +191,8 @@ func MasternodeStart(tx *grpcModels.MasternodeStartedRequest) (*grpcModels.Maste
 	if err != nil {
 		log.Fatal("cannot load TLS credentials: ", err)
 	}
-	grpcCon, err := grpc.Dial("194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}

@@ -70,6 +70,10 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 	amountSend := amount - fee
 	txBack := inputsAmount - amountSend
 
+	if amountSend < 0 {
+		return "", errors.New("amountSend is negative")
+	}
+
 	var firstParam []models.RawTxArray
 	for _, input := range inputs {
 		fparam := models.RawTxArray{

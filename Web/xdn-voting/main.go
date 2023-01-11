@@ -240,7 +240,7 @@ func listNonMN(c *fiber.Ctx) error {
 		})
 	}
 
-	data, err := database.ReadArrayStruct[models.NonMNStruct]("SELECT a.id, a.ip, a.last_seen, a.active_time, a.active FROM mn_clients as a, users_mn as b WHERE a.custodial = 0 AND a.id = b.idNode AND b.idUser = ?", userID)
+	data, err := database.ReadArrayStruct[models.NonMNStruct]("SELECT a.id, a.ip, a.last_seen, a.active_time, a.active, a.address FROM mn_clients as a, users_mn as b WHERE a.custodial = 0 AND a.id = b.idNode AND b.idUser = ?", userID)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			utils.ERROR:         true,
@@ -271,6 +271,13 @@ func startNonMN(c *fiber.Ctx) error {
 
 	if admin == 0 && tier <= count {
 		return utils.ReportError(c, "You are not allowed to start more masternodes", http.StatusConflict)
+	}
+
+	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS (SELECT id FROM mn_non_custodial WHERE addr =?)", request.Address)
+	if check.Valid && check.Bool {
+		return utils.ReportError(c, "Address already in use, if needed please restart node with this address from main menu", http.StatusConflict)
+	} else {
+		utils.ReportMessage("not exists")
 	}
 
 	var empty models.MasternodeClient
@@ -324,11 +331,13 @@ func startNonMN(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Node not found", http.StatusNotFound)
 	}
 
+	utils.ReportMessage("Getting data from explorer")
 	addrCheck, errNet := utils.GETAny(fmt.Sprintf("https://xdn-explorer.com/ext/getaddress/%s", request.Address))
 	if errNet != nil {
 		utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
 		return utils.ReportError(c, errNet.ErrorMessage(), errNet.StatusCode())
 	}
+	utils.ReportMessage("Got response from explorer")
 
 	bodyXDN, _ := io.ReadAll(addrCheck.Body)
 	defer func(Body io.ReadCloser) {
@@ -378,7 +387,7 @@ func startNonMN(c *fiber.Ctx) error {
 	}
 
 	mnKey := strings.Trim(string(s), "\"")
-
+	_, _ = database.InsertSQl("INSERT INTO mn_non_custodial (idUser, idCoin, addr, txid, vout, mnKey, idNode) VALUES (?, ?, ?, ?, ?, ?, ?)", userID, request.CoinID, request.Address, txid, vout, mnKey, idNode)
 	str := fmt.Sprintf("MN%d [%s]:%d %s %s %d", idNode, nodeIP.String, 18092, mnKey, txid, vout)
 	nIP := database.ReadValueEmpty[sql.NullString]("SELECT node_ip FROM mn_clients WHERE id = ?", idNode)
 	if nodeIP.Valid == false {
@@ -420,6 +429,7 @@ func startNonMN(c *fiber.Ctx) error {
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
 		"data":       str,
+		"started":    false,
 	})
 
 }
@@ -2413,7 +2423,7 @@ func setStake(c *fiber.Ctx) error {
 		} else {
 			balance = r.Amount
 		}
-		tx, errWallet := coind.SendCoins(server, userAddr, r.Amount, false)
+		tx, errWallet := coind.SendCoins(server, userAddr, r.Amount-0.02, false)
 		if errWallet != nil {
 			return utils.ReportError(c, errWallet.Error(), 400)
 		}
@@ -2430,7 +2440,7 @@ func setStake(c *fiber.Ctx) error {
 		if err != nil {
 			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 		}
-		tx, err := coind.SendCoins(server, userAddr, r.Amount, false)
+		tx, err := coind.SendCoins(server, userAddr, r.Amount-0.02, false)
 		if err != nil {
 			return utils.ReportError(c, err.Error(), http.StatusConflict)
 		}
