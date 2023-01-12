@@ -681,6 +681,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   void sendCoints(Map<String, String?> data) {
     try {
+      Navigator.of(context).pop();
       String method = "/user/send";
       Map<String, dynamic>? m;
       ComInterface interface = ComInterface();
@@ -710,7 +711,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         await interface.post(method, body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
         if (mounted) {
           Navigator.of(context).pop();
-          Dialogs.displayDialog(context, AppLocalizations.of(context)!.notice_warn, AppLocalizations.of(context)!.succ);
+          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.notice_warn, AppLocalizations.of(context)!.succ);
         }
       });
     } catch (e) {

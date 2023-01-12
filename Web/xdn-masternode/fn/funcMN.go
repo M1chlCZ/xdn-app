@@ -268,7 +268,7 @@ func StartRemoteMasternode(nodeID int, mnKey string) {
 	time.Sleep(60 * time.Second)
 
 	//XDN
-	res, errMNstart := coind.WrapDaemon(*daemon, 50, "masternode", "start")
+	res, errMNstart := coind.WrapDaemon(*daemon, 125, "masternode", "start")
 	utils.ReportMessage(fmt.Sprintf("%s", res))
 	if errMNstart != nil {
 		utils.WrapErrorLog(errMNstart.Error())

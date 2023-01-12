@@ -132,7 +132,6 @@ class SendDialogQRState extends State<SendDialogQR> {
                             color: Colors.lightGreen,
                             onTap: () {
                               widget.sendCoins(mapData);
-                              Navigator.of(context).pop();
                             },
                             child: const Text(
                               "Yes",

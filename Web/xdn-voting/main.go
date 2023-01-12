@@ -269,6 +269,11 @@ func startNonMN(c *fiber.Ctx) error {
 	count := database.ReadValueEmpty[int64]("SELECT COUNT(id) FROM users_mn WHERE idUser = ? AND (active = 1 OR dateStart between NOW() - INTERVAL 10 HOUR AND NOW())", userID)
 	utils.ReportMessage(fmt.Sprintf("User %s has %d MNs with tier %d (admin: %d)", userID, count, tier, admin))
 
+	nodesCount := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(id),0) FROM mn_clients WHERE locked = 0 AND active = 0")
+	if nodesCount == 0 {
+		return utils.ReportError(c, "No free nodes", http.StatusBadRequest)
+	}
+
 	if admin == 0 && tier <= count {
 		return utils.ReportError(c, "You are not allowed to start more masternodes", http.StatusConflict)
 	}
@@ -278,6 +283,68 @@ func startNonMN(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Address already in use, if needed please restart node with this address from main menu", http.StatusConflict)
 	} else {
 		utils.ReportMessage("not exists")
+	}
+
+	utils.ReportMessage("Getting data from explorer")
+	addrCheck, errNet := utils.GETAny(fmt.Sprintf("https://xdn-explorer.com/ext/getaddress/%s", request.Address))
+	if errNet != nil {
+		utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
+		return utils.ReportError(c, errNet.ErrorMessage(), errNet.StatusCode())
+	}
+	utils.ReportMessage("Got response from explorer")
+
+	bodyXDN, _ := io.ReadAll(addrCheck.Body)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}(addrCheck.Body)
+
+	var sum models.MNAddressCheck
+	var errAddr models.MNAddrProblem
+	err := json.Unmarshal(bodyXDN, &sum)
+	if err != nil {
+		err := json.Unmarshal(bodyXDN, &errAddr)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		} else {
+			utils.WrapErrorLog(errAddr.Error)
+			return utils.ReportError(c, errAddr.Error, http.StatusInternalServerError)
+		}
+	}
+
+	if sum.Balance != "2000000" {
+		return utils.ReportError(c, "Address balance is not 2 mil XDN", http.StatusConflict)
+	}
+
+	if len(sum.LastTxs) == 0 {
+		return utils.ReportError(c, "Address has no transactions", http.StatusConflict)
+	}
+
+	tx := sum.LastTxs[0].Addresses
+
+	var ing models.MNTX
+	p, _ := coind.WrapDaemon(utils.DaemonWallet, 5, "gettransaction", tx)
+	err = json.Unmarshal(p, &ing)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+	}
+	var vout int
+	txid := ing.Txid
+	for _, v := range ing.Vout {
+		if v.Value == 2000000.0 {
+			vout = v.N
+			break
+		}
+	}
+
+	s, err := coind.WrapDaemon(utils.DaemonWallet, 5, "masternode", "genkey")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 
 	var empty models.MasternodeClient
@@ -327,63 +394,10 @@ func startNonMN(c *fiber.Ctx) error {
 	}
 
 	nodeIP := database.ReadValueEmpty[sql.NullString]("SELECT ip FROM mn_clients WHERE id = ?", idNode)
+
 	if nodeIP.Valid == false {
+		_, _ = database.InsertSQl("UPDATE mn_clients SET locked = 0 WHERE id = ? ", idNode)
 		return utils.ReportError(c, "Node not found", http.StatusNotFound)
-	}
-
-	utils.ReportMessage("Getting data from explorer")
-	addrCheck, errNet := utils.GETAny(fmt.Sprintf("https://xdn-explorer.com/ext/getaddress/%s", request.Address))
-	if errNet != nil {
-		utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
-		return utils.ReportError(c, errNet.ErrorMessage(), errNet.StatusCode())
-	}
-	utils.ReportMessage("Got response from explorer")
-
-	bodyXDN, _ := io.ReadAll(addrCheck.Body)
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			utils.WrapErrorLog(err.Error())
-		}
-	}(addrCheck.Body)
-
-	var sum models.MNAddressCheck
-	err := json.Unmarshal(bodyXDN, &sum)
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-	}
-
-	if sum.Balance != "2000000" {
-		return utils.ReportError(c, "Address balance is not 2 mil XDN", http.StatusConflict)
-	}
-
-	if len(sum.LastTxs) == 0 {
-		return utils.ReportError(c, "Address has no transactions", http.StatusConflict)
-	}
-
-	tx := sum.LastTxs[0].Addresses
-
-	var ing models.MNTX
-	p, _ := coind.WrapDaemon(utils.DaemonWallet, 5, "gettransaction", tx)
-	err = json.Unmarshal(p, &ing)
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-	}
-	var vout int
-	txid := ing.Txid
-	for _, v := range ing.Vout {
-		if v.Value == 2000000.0 {
-			vout = v.N
-			break
-		}
-	}
-
-	s, err := coind.WrapDaemon(utils.DaemonWallet, 5, "masternode", "genkey")
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 
 	mnKey := strings.Trim(string(s), "\"")
@@ -391,15 +405,18 @@ func startNonMN(c *fiber.Ctx) error {
 	str := fmt.Sprintf("MN%d [%s]:%d %s %s %d", idNode, nodeIP.String, 18092, mnKey, txid, vout)
 	nIP := database.ReadValueEmpty[sql.NullString]("SELECT node_ip FROM mn_clients WHERE id = ?", idNode)
 	if nodeIP.Valid == false {
+		_, _ = database.InsertSQl("UPDATE mn_clients SET locked = 0 WHERE id = ? ", idNode)
 		return utils.ReportError(c, "Node not found", http.StatusNotFound)
 	}
 	creds, err := grpcModels.LoadTLSCredentials()
 	if err != nil {
+		_, _ = database.InsertSQl("UPDATE mn_clients SET locked = 0 WHERE id = ? ", idNode)
 		utils.WrapErrorLog("cannot load TLS credentials: " + err.Error())
 		return utils.ReportError(c, "cannot load TLS credentials: "+err.Error(), fiber.StatusInternalServerError)
 	}
 	grpcCon, err := gpc.Dial(fmt.Sprintf("%s:6810", nIP.String), gpc.WithTransportCredentials(creds))
 	if err != nil {
+		_, _ = database.InsertSQl("UPDATE mn_clients SET locked = 0 WHERE id = ? ", idNode)
 		utils.WrapErrorLog(err.Error())
 		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
 	}
@@ -410,6 +427,7 @@ func startNonMN(c *fiber.Ctx) error {
 	}
 	resp, err := cc.StartNonMasternode(context.Background(), txGRPC)
 	if err != nil {
+		_, _ = database.InsertSQl("UPDATE mn_clients SET locked = 0 WHERE id = ? ", idNode)
 		utils.WrapErrorLog(err.Error())
 		return utils.ReportError(c, err.Error(), fiber.StatusInternalServerError)
 	}
@@ -422,6 +440,7 @@ func startNonMN(c *fiber.Ctx) error {
 		_, _ = database.InsertSQl("INSERT INTO users_mn(idUser, idCoin, tier, idNode, session, custodial) VALUES (?, ?, ?, ?, ?,?)", userID, 0, 1, idNode, smax, 0)
 		utils.ReportMessage(fmt.Sprintf("Start non-custodial wallet on node %s", nIP.String))
 	} else {
+		_, _ = database.InsertSQl("UPDATE mn_clients SET locked = 0 WHERE id = ? ", idNode)
 		utils.ReportMessage(fmt.Sprintf("Somethings wrong on node %s", nIP.String))
 	}
 	_ = grpcCon.Close()
