@@ -178,6 +178,12 @@ type MNAddressCheck struct {
 	Balance  string    `json:"balance"`
 	LastTxs  []LastTxs `json:"last_txs"`
 }
+
+type MNAddrProblem struct {
+	Error string `json:"error"`
+	Hash  string `json:"hash"`
+}
+
 type LastTxs struct {
 	Addresses string `json:"addresses"`
 	Type      string `json:"type"`

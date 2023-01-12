@@ -101,6 +101,12 @@ class _SixthOvrPageState extends ConsumerState<SixthOvrPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Text(
+                'Waiting for your transaction to be confirmed',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 14.0),
+              ),
+              gapH8,
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [

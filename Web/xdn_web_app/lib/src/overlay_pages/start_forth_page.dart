@@ -24,6 +24,8 @@ class ForthOvrPage extends ConsumerStatefulWidget {
 class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
+  bool _isFound = true;
+  bool _shouldCancel = false;
   String? _mnText;
 
   @override
@@ -47,7 +49,9 @@ class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
         debugPrint("Invalid address");
         throw Exception("Invalid address");
       }
-      setState(() {_isLoading = true;}) ;
+      setState(() {
+        _isLoading = true;
+      });
       final net = ref.read(networkProvider);
       final rr = ref.read(blockProvider.notifier);
       final rrr = ref.read(mnProvider.notifier);
@@ -64,15 +68,37 @@ class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
       rrr.setConfig(l[0]);
       rrr.setTxId(l[3]);
       await SecureStorage.write(key: "mn", value: _mnText!);
-      setState(() {_isLoading = false;}) ;
+      setState(() {
+        _isLoading = false;
+        _isFound = true;
+        _shouldCancel = false;
+      });
     } catch (e) {
-      setState(() {_isLoading = false;}) ;
+      setState(() {
+        _isLoading = false;
+      });
       _controller.clear();
       try {
         var err = json.decode(e.toString());
+        if (err['errorMessage'] == "address not found." && _shouldCancel == false) {
+          Future.delayed(const Duration(seconds: 5), () {
+            setState(() {
+              _isFound = false;
+            });
+          });
+          _startMasternode(address);
+          return;
+        } else if (err['errorMessage'] == "address not found." && _shouldCancel == true) {
+          setState(() {
+            _isFound = true;
+            _shouldCancel = false;
+          });
+          showAlertDialog(context: context, title: "Error", content: "Address not found, please try again later");
+          return;
+        }
         showAlertDialog(context: context, title: "Error", content: err['errorMessage']);
       } catch (e) {
-        var  ee = e.toString();
+        var ee = e.toString();
         try {
           var err = e.toString().split("Exception:")[2].replaceAll("^", "");
           showAlertDialog(context: context, title: "Error", content: err);
@@ -102,8 +128,54 @@ class _ForthOvrPageState extends ConsumerState<ForthOvrPage> {
           style: TextStyle(color: Colors.white70, fontSize: 24.0),
         ),
         gapH12,
-        if (_mnText == null && _isLoading)
-          const Expanded(child: Center(child: CircularProgressIndicator(color: Colors.white70,))),
+        if (_mnText == null && _isLoading && _isFound)
+          const Expanded(
+              child: Center(
+                  child: CircularProgressIndicator(
+            color: Colors.white70,
+          ))),
+        if (_mnText == null && _isLoading && !_isFound)
+          Expanded(
+              child: Center(
+            child: Column(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
+              const CircularProgressIndicator(
+                color: Colors.white70,
+              ),
+              gapH24,
+              const Text(
+                "Address could not be found",
+                style: TextStyle(color: Colors.white70, fontSize: 20.0),
+              ),
+              gapH8,
+              const Text(
+                "Please wait until address appears on blockchain",
+                style: TextStyle(color: Colors.white70, fontSize: 12.0),
+              ),
+              gapH8,
+              const Text(
+                "This could take up to 10 minutes, after transaction has been sent",
+                style: TextStyle(color: Colors.white70, fontSize: 10.0),
+              ),
+              gapH20,
+              FlatCustomButton(
+                  height: 30,
+                  width: 200,
+                  radius: 8.0,
+                  color: Colors.pinkAccent,
+                  splashColor: Colors.red,
+                  onTap: () {
+                    setState(() {
+                      _shouldCancel = true;
+                    });
+                  },
+                  child: AutoSizeText(
+                    "Cancel address lookup",
+                    maxLines: 1,
+                    minFontSize: 8.0,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white70, fontSize: 14.0),
+                  )),
+            ]),
+          )),
         if (_mnText == null && !_isLoading)
           Column(
             children: [

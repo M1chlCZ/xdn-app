@@ -281,17 +281,13 @@ func startNonMN(c *fiber.Ctx) error {
 	check := database.ReadValueEmpty[sql.NullBool]("SELECT EXISTS (SELECT id FROM mn_non_custodial WHERE addr =?)", request.Address)
 	if check.Valid && check.Bool {
 		return utils.ReportError(c, "Address already in use, if needed please restart node with this address from main menu", http.StatusConflict)
-	} else {
-		utils.ReportMessage("not exists")
 	}
 
-	utils.ReportMessage("Getting data from explorer")
 	addrCheck, errNet := utils.GETAny(fmt.Sprintf("https://xdn-explorer.com/ext/getaddress/%s", request.Address))
 	if errNet != nil {
 		utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
 		return utils.ReportError(c, errNet.ErrorMessage(), errNet.StatusCode())
 	}
-	utils.ReportMessage("Got response from explorer")
 
 	bodyXDN, _ := io.ReadAll(addrCheck.Body)
 	defer func(Body io.ReadCloser) {
@@ -305,14 +301,16 @@ func startNonMN(c *fiber.Ctx) error {
 	var errAddr models.MNAddrProblem
 	err := json.Unmarshal(bodyXDN, &sum)
 	if err != nil {
-		err := json.Unmarshal(bodyXDN, &errAddr)
-		if err != nil {
-			utils.WrapErrorLog(err.Error())
-			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-		} else {
-			utils.WrapErrorLog(errAddr.Error)
-			return utils.ReportError(c, errAddr.Error, http.StatusInternalServerError)
-		}
+		return utils.ReportErrorSilent(c, errAddr.Error, http.StatusInternalServerError)
+	}
+
+	err = json.Unmarshal(bodyXDN, &errAddr)
+	if err != nil {
+		return utils.ReportErrorSilent(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	if errAddr.Error != "" {
+		return utils.ReportErrorSilent(c, errAddr.Error, http.StatusConflict)
 	}
 
 	if sum.Balance != "2000000" {
@@ -935,7 +933,7 @@ func getMNInfo(c *fiber.Ctx) error {
 
 	returnListArr, err := database.ReadArrayStruct[models.ListMN]("SELECT id, ip FROM mn_clients WHERE active = 0 AND coin_id = ? AND locked = 0", 0)
 
-	returnArr, err := database.ReadArrayStruct[models.MNListInfo]("SELECT b.id, b.ip, a.dateStart, b.last_seen, b.active_time FROM users_mn as a, mn_clients as b WHERE a.idUser = ? AND a.idCoin = ? AND a.active = 1 AND a.idNode = b.id", userID, 0)
+	returnArr, err := database.ReadArrayStruct[models.MNListInfo]("SELECT b.id, b.ip, a.dateStart, b.last_seen, b.active_time FROM users_mn as a, mn_clients as b WHERE a.idUser = ? AND a.idCoin = ? AND a.active = 1 AND a.custodial = 1 AND a.idNode = b.id", userID, 0)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
