@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 class PercentSwitchWidget extends StatefulWidget {
   final Function(double percent) changePercent;
-  const PercentSwitchWidget({Key? key, required this.changePercent}) : super(key: key);
+  final double? width;
+  const PercentSwitchWidget({Key? key, required this.changePercent, this.width}) : super(key: key);
 
   @override
   PercentSwitchWidgetState createState() => PercentSwitchWidgetState();
@@ -21,7 +22,7 @@ class PercentSwitchWidgetState extends State<PercentSwitchWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width * 0.23;
+    var width = widget.width ?? MediaQuery.of(context).size.width * 0.23;
     return SizedBox(
         width: width * 4,
         child: Row(

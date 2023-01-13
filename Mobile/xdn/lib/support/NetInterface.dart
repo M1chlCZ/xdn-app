@@ -458,7 +458,7 @@ class NetInterface {
     }
   }
 
-  static Future<int> unstakeCoins(int type) async {
+  static Future<int> unstakeCoins(int type, {double amount = 0.0}) async {
     try {
       // String? id = await SecureStorage.read(key: globals.ID);
 
@@ -469,6 +469,7 @@ class NetInterface {
       // };
       Map<String, dynamic> m = {
         "type": type,
+        "amount" : amount,
       };
       ComInterface ci = ComInterface();
       Response response = await ci.post("/staking/unset", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: false);

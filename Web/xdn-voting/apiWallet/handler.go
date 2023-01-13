@@ -65,7 +65,7 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 			//utils.ReportMessage(err.Error())
 			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
 		}
-		//utils.ReportMessage(fmt.Sprintf("Stake transaction added %s", txID.Txid))
+		utils.ReportMessage(fmt.Sprintf("Stake transaction added %s", txID.Txid))
 		total, err := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM users_stake WHERE active = 1")
 		if err != nil {
 			utils.ReportMessage(err.Error())
@@ -77,10 +77,37 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 			Session int64   `db:"session" json:"session"`
 		}
 		users, err := database.ReadArrayStruct[Stake]("SELECT idUser, amount, session FROM users_stake WHERE active = 1")
+		lastHour, _ := database.ReadArrayStruct[models.PayoutStake]("SELECT * FROM payouts_stake WHERE DATE_FORMAT(datetime, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H') AND credited = 0")
 		for _, user := range users {
+			useric := false
 			percentage := user.Amount / total
 			credit := 100 * percentage
-			_, err = database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
+
+			dt := time.Now().UTC().Format("2006-01-02 15:04:05")
+			if len(lastHour) == 0 {
+				_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
+				if errUpdate != nil {
+					return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+				}
+			} else {
+			loopic:
+				for _, v := range lastHour {
+					if int64(v.IdUser) == user.IDuser {
+						_, errUpdate := database.InsertSQl("UPDATE payouts_stake SET amount = amount + ?, datetime = ? WHERE id = ?", credit, dt, v.Id)
+						if errUpdate != nil {
+							return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+						}
+						useric = true
+						break loopic
+					}
+				}
+				if useric == false {
+					_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
+					if errUpdate != nil {
+						return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+					}
+				}
+			}
 		}
 		_, _ = database.InsertSQl("UPDATE transaction_stake SET credited = 1 WHERE txid = ?", txID.Txid)
 		utils.ReportMessage(fmt.Sprintf("Stake transaction credited %s", txID.Txid))

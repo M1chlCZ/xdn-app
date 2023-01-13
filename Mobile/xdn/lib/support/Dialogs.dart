@@ -2,12 +2,14 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:decimal/decimal.dart';
 import 'package:digitalnote/models/StealthTX.dart';
 import 'package:digitalnote/support/RoundButton.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
+import 'package:digitalnote/widgets/percent_switch_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -2838,6 +2840,106 @@ class Dialogs {
               ),
             );
           });
+        });
+  }
+
+  static Future<void> openStakeAdjustment(
+      context, double totalCoins, Function(double k) func) async {
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          double amount = 0.0;
+          TextEditingController codeControl = TextEditingController();
+          bool tooMuch = false;
+          void changePercentage(double percent) {
+            amount = totalCoins * percent;
+            codeControl.text = amount.toInt().toString();
+          }
+
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter sState) {
+                codeControl.addListener(() {
+                  if (Decimal.parse(codeControl.text.toString()) > Decimal.parse(totalCoins.toString())) {
+                    tooMuch = true;
+                  }else{
+                    tooMuch = false;
+                  }
+                  sState((){});
+                });
+                return DialogBody(
+                  header: AppLocalizations.of(context)!.st_amount,
+                  buttonLabel: 'OK',
+                  onTap: (){
+                    if (tooMuch) {
+                      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "Amount has to be lower than your whole staking balance");
+                    }else {
+                      amount = double.parse(codeControl.text.toString());
+                      func(amount);
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 15, bottom: 15, left: 15.0, right: 15.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+                            child: Container(
+                              color: tooMuch ? Colors.red.withOpacity(0.3) : Colors.black38,
+                              padding: const EdgeInsets.all(15.0),
+                              child: TextField(
+                                autofocus: true,
+                                keyboardType: Platform.isIOS
+                                    ? const TextInputType.numberWithOptions(signed: true)
+                                    : TextInputType.number,
+                                inputFormatters: <TextInputFormatter>[
+                                  FilteringTextInputFormatter.allow(
+                                      RegExp(r'^\d*\.?\d{0,8}')),
+                                ],
+                                controller: codeControl,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                decoration: InputDecoration(
+                                  isDense: false,
+                                  contentPadding: const EdgeInsets.only(bottom: 0.0),
+                                  hintStyle: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium!
+                                      .copyWith(color: Colors.white54, fontSize: 20.0),
+                                  hintText:
+                                  AppLocalizations.of(context)!.amount,
+                                  enabledBorder: const UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.transparent),
+                                  ),
+                                  focusedBorder: const UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.transparent),
+                                  ),
+                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge!
+                                    .copyWith(fontSize: 24.0, color: Colors.white70),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Center(
+                          child: PercentSwitchWidget(
+                            width: 75,
+                            changePercent: changePercentage,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              });
         });
   }
 

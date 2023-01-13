@@ -2440,7 +2440,7 @@ func setStake(c *fiber.Ctx) error {
 		} else {
 			balance = r.Amount
 		}
-		tx, errWallet := coind.SendCoins(server, userAddr, r.Amount-0.02, false)
+		tx, errWallet := coind.SendCoins(server, userAddr, r.Amount-0.01, false)
 		if errWallet != nil {
 			return utils.ReportError(c, errWallet.Error(), 400)
 		}
@@ -2457,7 +2457,7 @@ func setStake(c *fiber.Ctx) error {
 		if err != nil {
 			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 		}
-		tx, err := coind.SendCoins(server, userAddr, r.Amount-0.02, false)
+		tx, err := coind.SendCoins(server, userAddr, r.Amount-0.01, false)
 		if err != nil {
 			return utils.ReportError(c, err.Error(), http.StatusConflict)
 		}
@@ -2481,7 +2481,8 @@ func unstake(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Unknown User", http.StatusBadRequest)
 	}
 	type req struct {
-		Type int `json:"type"`
+		Type   int     `json:"type"`
+		Amount float64 `json:"amount" default:"0"`
 	}
 	var r req
 	err := c.BodyParser(&r)
@@ -2500,6 +2501,20 @@ func unstake(c *fiber.Ctx) error {
 	}
 	if r.Type == 1 {
 		amountToSend += payouts
+	} else if r.Type == 2 {
+		stakingAmount, _ := database.ReadValue[sql.NullFloat64]("SELECT amount FROM users_stake WHERE idUser = ? AND active = 1", userID)
+		if stakingAmount.Valid {
+			st := utils.ToFixed(stakingAmount.Float64, 8)
+			if st > r.Amount {
+				amountToSend = utils.ToFixed(r.Amount, 8)
+			} else {
+				return utils.ReportError(c, "Amount is bigger than user's staking amount", http.StatusConflict)
+
+			}
+		} else {
+			return utils.ReportError(c, "Payout invalid", http.StatusForbidden)
+
+		}
 	} else {
 		dateChanged := user.DateStart.Time.UTC().UnixMilli()
 		dateNow := time.Now().UnixMilli()
@@ -2525,6 +2540,10 @@ func unstake(c *fiber.Ctx) error {
 		}
 		if r.Type == 1 {
 			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND session = ? AND id <> 0", 1, userID, user.Session)
+		} else if r.Type == 2 {
+			newAmount := userStake - r.Amount
+			utils.ReportMessage(fmt.Sprintf("Adjustment to staking by user: %d amount: %f remaining", user.IdUser, newAmount))
+			_, _ = database.InsertSQl("UPDATE users_stake SET amount = ? WHERE id = ? ", newAmount, userID)
 		} else {
 			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND session = ? AND id <> 0", 1, userID, user.Session)
 			_, _ = database.InsertSQl("UPDATE users_stake SET active = ? WHERE idUser = ?", 0, userID)

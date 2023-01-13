@@ -41,3 +41,14 @@ type StakeGetEntry struct {
 	Amount float64 `db:"amount" json:"amount"`
 	Day    string  `db:"day" json:"day"`
 }
+
+type PayoutStake struct {
+	Id       int     `db:"id"`
+	IdUser   int     `db:"idUser"`
+	IdServer int     `db:"idServer"`
+	Txid     string  `db:"txid"`
+	Session  int     `db:"session"`
+	Amount   float64 `db:"amount"`
+	Datetime string  `db:"datetime"`
+	Credited int     `db:"credited"`
+}
