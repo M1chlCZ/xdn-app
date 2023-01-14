@@ -73,6 +73,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _submitQR(EmailPasswordSignInState state) async {
     setState(() => _submitted = true);
     bool? s;
+    _qrcancelled = false;
     final netw = ref.read(networkProvider);
     var res = await netw.get("/login/qr", serverType: ComInterface.serverGoAPI, debug: true);
     _checkLogin(res['token']);
@@ -81,7 +82,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     if (s == null || s == false) {
-      print("QR login cancelled");
       _qrcancelled = true;
     }
   }
@@ -114,6 +114,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
     if (token != null) {
       if (mounted) context.pop();
+
       if (mounted) {
         Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
         return const HomeScreen();
@@ -220,13 +221,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             keyboardAppearance: Brightness.light,
                             onEditingComplete: () => _passwordEditingComplete(state),
                           ),
-                          gapH8,
+                          gapH24,
                           PrimaryButton(
                             text: state.primaryButtonText,
                             isLoading: state.isLoading,
                             onPressed: state.isLoading ? null : () => _submit(state),
                           ),
-                          gapH12,
+                          gapH8,
                           PrimaryButton(
                             text: "Login via QR code".hardcoded,
                             isLoading: state.isLoading,

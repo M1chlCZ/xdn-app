@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:xdn_web_app/src/support/app_sizes.dart';
 
 /// Primary button based on [ElevatedButton].
@@ -7,27 +8,58 @@ import 'package:xdn_web_app/src/support/app_sizes.dart';
 /// @param isLoading - if true, a loading indicator will be displayed instead of
 /// the text.
 /// @param onPressed - callback to be called when the button is pressed.
-class PrimaryButton extends StatelessWidget {
+class PrimaryButton extends StatefulWidget {
   const PrimaryButton(
       {super.key, required this.text, this.isLoading = false, this.onPressed});
   final String text;
   final bool isLoading;
   final VoidCallback? onPressed;
+
+  @override
+  State<PrimaryButton> createState() => _PrimaryButtonState();
+}
+
+class _PrimaryButtonState extends State<PrimaryButton> {
+  var b = false;
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: Sizes.p48,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        child: isLoading
-            ? const CircularProgressIndicator()
-            : Text(
-          text,
-          textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .headline6!
-              .copyWith(color: Colors.white),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        decoration: BoxDecoration(
+          color: b ? Colors.black87 : const Color(0xFF1E2E48),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        duration: const Duration(milliseconds: 200),
+        child: SizedBox(
+          height: Sizes.p48,
+          child: ElevatedButton(
+            onPressed: widget.onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Sizes.p8),
+              ),
+            ),
+            onHover: (isHovering) {
+              if (isHovering) {
+                setState(() {
+                  b = true;
+                });
+              }else{
+                setState(() {
+                  b = false;
+                });
+              }
+            },
+            child: widget.isLoading
+                ? const CircularProgressIndicator()
+                : Text(
+              widget.text,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dosis(color: Colors.white70, letterSpacing: 2, fontWeight: FontWeight.w500, fontSize: Sizes.p20),
+            ),
+          ),
         ),
       ),
     );
