@@ -15,6 +15,7 @@ func InitCron() {
 		err = gocron.Every(1).Day().At("13:00").Do(GiftBot)
 		err = gocron.Every(1).Day().At("17:00").Do(GiftBot)
 		err = gocron.Every(1).Day().At("21:00").Do(GiftBot)
+		err = gocron.Every(1).Day().At("23:00").Do(GiftBot)
 		err = gocron.Every(1).Day().At("01:00").Do(GiftBot)
 		err = gocron.Every(1).Day().At("05:00").Do(GiftBot)
 		err = gocron.Every(1).Day().At("20:00").Do(RunBotAnn)
@@ -22,9 +23,12 @@ func InitCron() {
 		//other channel
 		err = gocron.Every(1).Day().At("22:00").Do(RunBotAnnOtherChannel)
 		err = gocron.Every(1).Day().At("02:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("06:00").Do(GiftBotOtherChannel)
 		err = gocron.Every(1).Day().At("08:00").Do(GiftBotOtherChannel)
 		err = gocron.Every(1).Day().At("14:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("16:00").Do(GiftBotOtherChannel)
 		err = gocron.Every(1).Day().At("20:00").Do(GiftBotOtherChannel)
+		err = gocron.Every(1).Day().At("22:00").Do(GiftBotOtherChannel)
 		err = gocron.Every(1).Day().At("04:00").Do(AnnNFTBotOtherChannel)
 		err = gocron.Every(1).Day().At("08:00").Do(AnnNFTBotOtherChannel)
 		if err != nil {

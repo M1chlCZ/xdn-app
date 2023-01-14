@@ -69,6 +69,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   int _typeGraph = 0;
 
   int _numberNodes = 0;
+  int _numberNonNodes = 0;
   int _freeMN = 0;
   int _pendingMasternodes = 0;
   String _amountReward = "0.0";
@@ -184,7 +185,10 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     var res = await interface.get("/masternode/info", debug: false, serverType: ComInterface.serverGoAPI, request: {});
     _mnInfo = MasternodeInfo.fromJson(res);
     if (_mnInfo == null || _mnInfo!.hasError == true) return;
-    _numberNodes = _mnInfo?.mnList?.length ?? 0;
+    List<MnList>? custodial = _mnInfo?.mnList?.where((element) => element.custodial == true).toList();
+    List<MnList>? nonCustodial = _mnInfo?.mnList?.where((element) => element.custodial == false).toList();
+    _numberNodes = custodial?.length ?? 0;
+    _numberNonNodes = nonCustodial?.length ?? 0;
     _activeNodes = _mnInfo!.activeNodes!;
     double rev = _mnInfo!.nodeRewards!.fold(0, (previousValue, element) => previousValue + element.amount!);
     _amountReward = rev.toString();
@@ -612,6 +616,38 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                             ),
                                           ],
                                         ),
+                                      if (_numberNonNodes != 0)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
+                                        child: Row(
+                                          children: [
+                                            AutoSizeText(
+                                              "Your non-custodial MNs:",
+                                              maxLines: 1,
+                                              minFontSize: 8.0,
+                                              // textAlign: TextAlign.end,
+                                              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 4.0),
+                                                child: AutoSizeText(
+                                                  "$_numberNonNodes",
+                                                  maxLines: 1,
+                                                  minFontSize: 8.0,
+                                                  textAlign: TextAlign.end,
+                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                                ),
+                                              ),
+                                            ),
+                                            const Text(
+                                              "MNs",
+                                              // textAlign: TextAlign.end,
+                                              style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
                                         child: Row(
@@ -669,9 +705,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      const SizedBox(
-                                        height: 10,
                                       ),
                                     ],
                                   ),

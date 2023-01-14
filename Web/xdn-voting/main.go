@@ -997,7 +997,7 @@ func getMNInfo(c *fiber.Ctx) error {
 
 	returnListArr, err := database.ReadArrayStruct[models.ListMN]("SELECT id, ip FROM mn_clients WHERE active = 0 AND coin_id = ? AND locked = 0", 0)
 
-	returnArr, err := database.ReadArrayStruct[models.MNListInfo]("SELECT b.id, b.ip, a.dateStart, b.last_seen, b.active_time, a.custodial FROM users_mn as a, mn_clients as b WHERE a.idUser = ? AND a.idCoin = ? AND a.active = 1 AND a.idNode = b.id", userID, 0)
+	returnArr, err := database.ReadArrayStruct[models.MNListInfo]("SELECT b.id, b.ip, a.dateStart, b.last_seen, b.active_time, a.custodial, b.address FROM users_mn as a, mn_clients as b WHERE a.idUser = ? AND a.idCoin = ? AND a.active = 1 AND a.idNode = b.id", userID, 0)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{

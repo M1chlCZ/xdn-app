@@ -145,6 +145,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     getPriceData();
     String? s = await SecureStorage.read(key: globals.TOKEN_DAO);
     if (s != null) {
+      print(s);
       bool contest = await NetInterface.checkContest();
       if (contest) {
         debugPrint('Contest is active');

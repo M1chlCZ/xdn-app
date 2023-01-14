@@ -45,6 +45,7 @@ type MNList struct {
 type MNListInfo struct {
 	ID         int           `db:"id" json:"id"`
 	IP         string        `db:"ip" json:"ip"`
+	Addr       string        `json:"address" db:"address"`
 	DateStart  string        `db:"dateStart" json:"dateStart"`
 	LastSeen   sql.NullInt64 `json:"lastSeen" db:"last_seen"`
 	TimeActive sql.NullInt64 `json:"timeActive" db:"active_time"`
@@ -56,6 +57,7 @@ func (u *MNListInfo) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ID         int       `db:"id" json:"id"`
 		IP         string    `db:"ip" json:"ip"`
+		Addr       string    `json:"address" db:"address"`
 		DateStart  string    `db:"dateStart" json:"dateStart"`
 		LastSeen   time.Time `json:"lastSeen" db:"last_seen"`
 		TimeActive int64     `json:"timeActive" db:"active_time"`
@@ -66,6 +68,7 @@ func (u *MNListInfo) MarshalJSON() ([]byte, error) {
 		TimeActive: InlineIF[int64](u.TimeActive.Valid, u.TimeActive.Int64, 0),
 		ID:         u.ID,
 		IP:         u.IP,
+		Addr:       u.Addr,
 		DateStart:  u.DateStart,
 		Average:    u.Average,
 		Custodial:  u.Custodial,

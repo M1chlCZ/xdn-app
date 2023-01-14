@@ -23,7 +23,8 @@ class MasternodeInfo {
     List<MnList>? mnList,
     List<NodeRewards>? nodeRewards,
     List<PendingList>? pendingList,
-    String? status,}){
+    String? status,
+  }) {
     _activeNodes = activeNodes;
     _averagePayTime = averagePayTime;
     _averageRewardPerDay = averageRewardPerDay;
@@ -76,6 +77,7 @@ class MasternodeInfo {
     }
     _status = json['status'];
   }
+
   int? _activeNodes;
   String? _averagePayTime;
   double? _averageRewardPerDay;
@@ -90,7 +92,9 @@ class MasternodeInfo {
   String? _status;
   int? _collateral;
   List<int>? _collateralTiers;
-  MasternodeInfo copyWith({  int? activeNodes,
+
+  MasternodeInfo copyWith({
+    int? activeNodes,
     String? averagePayTime,
     double? averageRewardPerDay,
     String? averageTimeToStart,
@@ -103,34 +107,50 @@ class MasternodeInfo {
     List<NodeRewards>? nodeRewards,
     List<PendingList>? pendingList,
     String? status,
-  }) => MasternodeInfo(  activeNodes: activeNodes ?? _activeNodes,
-    averagePayTime: averagePayTime ?? _averagePayTime,
-    averageRewardPerDay: averageRewardPerDay ?? _averageRewardPerDay,
-    averageTimeToStart: averageTimeToStart ?? _averageTimeToStart,
-    averagePayDay: averagePayDay ?? _averagePayDay,
-    roi: roi ?? _roi,
-    freeList: freeList ?? _freeList,
-    hasError: hasError ?? _hasError,
-    mnList: mnList ?? _mnList,
-    nodeRewards: nodeRewards ?? _nodeRewards,
-    pendingList: pendingList ?? _pendingList,
-    status: status ?? _status,
-    collateral: collateral ?? _collateral,
-    collateralTiers: collateralTiers ?? _collateralTiers,
-  );
+  }) =>
+      MasternodeInfo(
+        activeNodes: activeNodes ?? _activeNodes,
+        averagePayTime: averagePayTime ?? _averagePayTime,
+        averageRewardPerDay: averageRewardPerDay ?? _averageRewardPerDay,
+        averageTimeToStart: averageTimeToStart ?? _averageTimeToStart,
+        averagePayDay: averagePayDay ?? _averagePayDay,
+        roi: roi ?? _roi,
+        freeList: freeList ?? _freeList,
+        hasError: hasError ?? _hasError,
+        mnList: mnList ?? _mnList,
+        nodeRewards: nodeRewards ?? _nodeRewards,
+        pendingList: pendingList ?? _pendingList,
+        status: status ?? _status,
+        collateral: collateral ?? _collateral,
+        collateralTiers: collateralTiers ?? _collateralTiers,
+      );
+
   int? get activeNodes => _activeNodes;
+
   String? get averagePayTime => _averagePayTime;
+
   double? get averageRewardPerDay => _averageRewardPerDay;
+
   String? get averageTimeToStart => _averageTimeToStart;
+
   double? get averagePayDay => _averagePayDay;
+
   double? get roi => _roi;
+
   List<FreeList>? get freeList => _freeList;
+
   bool? get hasError => _hasError;
+
   List<MnList>? get mnList => _mnList;
+
   List<NodeRewards>? get nodeRewards => _nodeRewards;
+
   List<PendingList>? get pendingList => _pendingList;
+
   String? get status => _status;
+
   int? get collateral => _collateral;
+
   List<int>? get collateralTiers => _collateralTiers;
 
   Map<String, dynamic> toJson() {
@@ -159,7 +179,6 @@ class MasternodeInfo {
     map['status'] = _status;
     return map;
   }
-
 }
 
 /// ip : "2001:41d0:800:194::4"
@@ -174,7 +193,8 @@ class NodeRewards {
     int? idNode,
     double? amount,
     String? lastRewardDate,
-    String? address,}){
+    String? address,
+  }) {
     _ip = ip;
     _idNode = idNode;
     _amount = amount;
@@ -189,26 +209,36 @@ class NodeRewards {
     _lastRewardDate = json['lastRewardDate'];
     _address = json['address'];
   }
+
   String? _ip;
   int? _idNode;
   double? _amount;
   String? _lastRewardDate;
   String? _address;
-  NodeRewards copyWith({  String? ip,
+
+  NodeRewards copyWith({
+    String? ip,
     int? idNode,
     double? amount,
     String? lastRewardDate,
     String? address,
-  }) => NodeRewards(  ip: ip ?? _ip,
-    idNode: idNode ?? _idNode,
-    amount: amount ?? _amount,
-    lastRewardDate: lastRewardDate ?? _lastRewardDate,
-    address: address ?? _address,
-  );
+  }) =>
+      NodeRewards(
+        ip: ip ?? _ip,
+        idNode: idNode ?? _idNode,
+        amount: amount ?? _amount,
+        lastRewardDate: lastRewardDate ?? _lastRewardDate,
+        address: address ?? _address,
+      );
+
   String? get ip => _ip;
+
   int? get idNode => _idNode;
+
   double? get amount => _amount;
+
   String? get lastRewardDate => _lastRewardDate;
+
   String? get address => _address;
 
   Map<String, dynamic> toJson() {
@@ -220,7 +250,6 @@ class NodeRewards {
     map['address'] = _address;
     return map;
   }
-
 }
 
 /// id : 4
@@ -228,83 +257,73 @@ class NodeRewards {
 /// dateStart : "2022-05-04T22:33:19Z"
 /// lastSeen : "2022-07-15T12:53:45Z"
 /// average_pay_time : "17:53:14.409100"
+/// custodial: false
 
 class MnList {
-  MnList({
-    int? id,
-    String? ip,
-    String? dateStart,
-    String? lastSeen,
-    int? timeActive,
-    String? averagePayTime,}){
-    _id = id;
-    _ip = ip;
-    _dateStart = dateStart;
-    _lastSeen = lastSeen;
-    _timeActive = timeActive;
-    _averagePayTime = averagePayTime;
-  }
+  int? id;
+  String? ip;
+  String? address;
+  String? dateStart;
+  String? lastSeen;
+  int? timeActive;
+  String? averagePayTime;
+  bool? custodial;
 
-  MnList.fromJson(dynamic json) {
-    _id = json['id'];
-    _ip = json['ip'];
-    _dateStart = json['dateStart'];
-    _lastSeen = json['lastSeen'];
-    _timeActive = json['timeActive'];
-    _averagePayTime = json['average_pay_time'];
+  MnList(
+      {this.id,
+        this.ip,
+        this.address,
+        this.dateStart,
+        this.lastSeen,
+        this.timeActive,
+        this.averagePayTime,
+        this.custodial});
+
+  MnList.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    ip = json['ip'];
+    address = json['address'];
+    dateStart = json['dateStart'];
+    lastSeen = json['lastSeen'];
+    timeActive = json['timeActive'];
+    averagePayTime = json['average_pay_time'];
+    custodial = json['custodial'];
   }
-  int? _id;
-  String? _ip;
-  String? _dateStart;
-  String? _lastSeen;
-  String? _averagePayTime;
-  int? _timeActive;
-  MnList copyWith({  int? id,
-    String? ip,
-    String? dateStart,
-    String? lastSeen,
-    String? averagePayTime,
-    int? timeActive,
-  }) => MnList(  id: id ?? _id,
-    ip: ip ?? _ip,
-    dateStart: dateStart ?? _dateStart,
-    lastSeen: lastSeen ?? _lastSeen,
-    averagePayTime: averagePayTime ?? _averagePayTime,
-    timeActive: timeActive ?? _timeActive,
-  );
-  int? get id => _id;
-  String? get ip => _ip;
-  String? get dateStart => _dateStart;
-  String? get lastSeen => _lastSeen;
-  String? get averagePayTime => _averagePayTime;
-  int? get timeActive => _timeActive;
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
-    map['id'] = _id;
-    map['ip'] = _ip;
-    map['dateStart'] = _dateStart;
-    map['lastSeen'] = _lastSeen;
-    map['average_pay_time'] = _averagePayTime;
-    map['timeActive'] = _timeActive;
-    return map;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['ip'] = ip;
+    data['address'] = address;
+    data['dateStart'] = dateStart;
+    data['lastSeen'] = lastSeen;
+    data['timeActive'] = timeActive;
+    data['average_pay_time'] = averagePayTime;
+    data['custodial'] = custodial;
+    return data;
   }
-
 }
 
 class PendingList {
   PendingList({
-    int? idNode,}){
+    int? idNode,
+  }) {
     _idNode = idNode;
   }
 
   PendingList.fromJson(dynamic json) {
     _idNode = json['idNode'];
   }
+
   int? _idNode;
-  PendingList copyWith({  int? idNode,
-  }) => PendingList(  idNode: idNode ?? _idNode,
-  );
+
+  PendingList copyWith({
+    int? idNode,
+  }) =>
+      PendingList(
+        idNode: idNode ?? _idNode,
+      );
+
   int? get idNode => _idNode;
 
   Map<String, dynamic> toJson() {
@@ -312,7 +331,6 @@ class PendingList {
     map['idNode'] = _idNode;
     return map;
   }
-
 }
 
 /// id : 315
@@ -321,7 +339,8 @@ class PendingList {
 class FreeList {
   FreeList({
     int? id,
-    String? ip,}){
+    String? ip,
+  }) {
     _id = id;
     _ip = ip;
   }
@@ -330,14 +349,21 @@ class FreeList {
     _id = json['id'];
     _ip = json['ip'];
   }
+
   int? _id;
   String? _ip;
-  FreeList copyWith({  int? id,
+
+  FreeList copyWith({
+    int? id,
     String? ip,
-  }) => FreeList(  id: id ?? _id,
-    ip: ip ?? _ip,
-  );
+  }) =>
+      FreeList(
+        id: id ?? _id,
+        ip: ip ?? _ip,
+      );
+
   int? get id => _id;
+
   String? get ip => _ip;
 
   Map<String, dynamic> toJson() {
@@ -346,5 +372,4 @@ class FreeList {
     map['ip'] = _ip;
     return map;
   }
-
 }
