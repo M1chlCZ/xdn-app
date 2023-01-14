@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xdn_web_app/globals.dart' as globals;
 import 'package:xdn_web_app/src/controllers/sign_in_controller.dart';
 import 'package:xdn_web_app/src/net_interface/interface.dart';
+import 'package:xdn_web_app/src/screens/home_screen.dart';
 import 'package:xdn_web_app/src/support/app_router.dart';
 import 'package:xdn_web_app/src/support/app_sizes.dart';
 import 'package:xdn_web_app/src/support/auth_repo.dart';
 import 'package:xdn_web_app/src/support/extensions.dart';
 import 'package:xdn_web_app/src/support/s_p.dart';
+import 'package:xdn_web_app/src/support/secure_storage.dart';
+import 'package:xdn_web_app/src/widgets/alert_dialogs.dart';
 import 'package:xdn_web_app/src/widgets/background_widget.dart';
 import 'package:xdn_web_app/src/widgets/primary_button.dart';
 import 'package:xdn_web_app/src/widgets/responsible_center.dart';
@@ -31,6 +35,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   String get password => _passwordController.text;
 
   var _submitted = false;
+  var _qrcancelled = false;
 
   @override
   void initState() {
@@ -62,6 +67,62 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         if (mounted) context.goNamed(AppRoute.home.name);
         // widget.onSignedIn?.call();
       }
+    }
+  }
+
+  Future<void> _submitQR(EmailPasswordSignInState state) async {
+    setState(() => _submitted = true);
+    bool? s;
+    final netw = ref.read(networkProvider);
+    var res = await netw.get("/login/qr", serverType: ComInterface.serverGoAPI, debug: true);
+    _checkLogin(res['token']);
+    if (mounted) {
+      s = await showQRAlertDialog(context: context, title: "QR code login", content: res["token"]);
+    }
+
+    if (s == null || s == false) {
+      print("QR login cancelled");
+      _qrcancelled = true;
+    }
+  }
+
+  void _checkLogin(String qr) async {
+    final netw = ref.read(networkProvider);
+    String? token;
+    await Future.doWhile(() async {
+      try {
+        if (_qrcancelled) {
+          return false;
+        }
+        await Future.delayed(const Duration(seconds: 1));
+        Map<String, dynamic>? res = await netw.post("/login/qr/token", body: {"token": qr}, serverType: ComInterface.serverGoAPI, debug: true);
+        if (res != null && res["token"] != null) {
+          token = res["token"];
+          await SecureStorage.write(key: globals.TOKEN_DAO, value: res["token"]);
+          await SecureStorage.write(key: globals.TOKEN_REFRESH, value: res["refresh_token"]);
+          return false;
+        } else {
+          return true;
+        }
+      } catch (e) {
+        return true;
+      }
+    });
+    if (_qrcancelled) {
+      _qrcancelled = false;
+      return;
+    }
+    if (token != null) {
+      if (mounted) context.pop();
+      if (mounted) {
+        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
+        return const HomeScreen();
+      }, transitionsBuilder: (_, Animation<double> animation, __, Widget child) {
+        return FadeTransition(opacity: animation, child: child);
+      }));
+      }
+    } else {
+      if (mounted) showAlertDialog(context: context, title: "QR code login", content: "QR code login failed");
     }
   }
 
@@ -164,6 +225,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             text: state.primaryButtonText,
                             isLoading: state.isLoading,
                             onPressed: state.isLoading ? null : () => _submit(state),
+                          ),
+                          gapH12,
+                          PrimaryButton(
+                            text: "Login via QR code".hardcoded,
+                            isLoading: state.isLoading,
+                            onPressed: state.isLoading ? null : () => _submitQR(state),
                           ),
                         ],
                       ),

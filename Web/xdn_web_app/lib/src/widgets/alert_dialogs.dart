@@ -1,3 +1,4 @@
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:universal_io/io.dart';
 
 import 'package:flutter/cupertino.dart';
@@ -30,6 +31,64 @@ Future<bool?> showAlertDialog({
           ),
         ],
       ),
+    );
+  }
+  return showCupertinoDialog(
+    context: context,
+    builder: (context) => CupertinoAlertDialog(
+      title: Text(title, style: Theme.of(context).textTheme.displayLarge,),
+      content: content != null ? Text(content) : null,
+      actions: <Widget>[
+        if (cancelActionText != null)
+          CupertinoDialogAction(
+            child: Text(cancelActionText),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+        CupertinoDialogAction(
+          child: Text(defaultActionText),
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<bool?> showQRAlertDialog({
+  required BuildContext context,
+  required String title,
+  String? content,
+  String? cancelActionText,
+  String defaultActionText = 'OK',
+}) async {
+  if (kIsWeb || !Platform.isIOS) {
+    return showDialog(
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: Text(title, style: Theme
+                .of(context)
+                .textTheme
+                .displaySmall!
+                .copyWith(fontSize: 20),),
+            content: SizedBox(
+              width: 200,
+              height: 200,
+              child: Center(
+                child: QrImage(
+                  dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
+                  eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
+                  errorCorrectionLevel: QrErrorCorrectLevel.H,
+                  data: content.toString(),
+                  foregroundColor: Colors.black87,
+                  version: QrVersions.auto,
+                  size: 200,
+                  gapless: false,
+                ),
+              ),
+            ),
+            actions: <Widget>[
+            ],
+          ),
     );
   }
   return showCupertinoDialog(

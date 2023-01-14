@@ -49,6 +49,7 @@ type MNListInfo struct {
 	LastSeen   sql.NullInt64 `json:"lastSeen" db:"last_seen"`
 	TimeActive sql.NullInt64 `json:"timeActive" db:"active_time"`
 	Average    string        `db:"average" json:"average"`
+	Custodial  bool          `db:"custodial" json:"custodial"`
 }
 
 func (u *MNListInfo) MarshalJSON() ([]byte, error) {
@@ -59,6 +60,7 @@ func (u *MNListInfo) MarshalJSON() ([]byte, error) {
 		LastSeen   time.Time `json:"lastSeen" db:"last_seen"`
 		TimeActive int64     `json:"timeActive" db:"active_time"`
 		Average    string    `db:"average" json:"average_pay_time"`
+		Custodial  bool      `db:"custodial" json:"custodial"`
 	}{
 		LastSeen:   InlineIF[time.Time](u.LastSeen.Valid, time.Unix(u.LastSeen.Int64, 0), time.Time{}),
 		TimeActive: InlineIF[int64](u.TimeActive.Valid, u.TimeActive.Int64, 0),
@@ -66,7 +68,12 @@ func (u *MNListInfo) MarshalJSON() ([]byte, error) {
 		IP:         u.IP,
 		DateStart:  u.DateStart,
 		Average:    u.Average,
+		Custodial:  u.Custodial,
 	})
+}
+
+func (u *MNListInfo) AddAverage(value string) {
+	u.Average = value
 }
 
 func InlineIF[T any](condition bool, a T, b T) T {
@@ -74,10 +81,6 @@ func InlineIF[T any](condition bool, a T, b T) T {
 		return a
 	}
 	return b
-}
-
-func (u *MNListInfo) AddAverage(value string) {
-	u.Average = value
 }
 
 type PendingMN struct {
@@ -123,6 +126,7 @@ type MasternodeClient struct {
 	Conf       string         `db:"conf"`
 	Active     int            `db:"active"`
 	Locked     int            `db:"locked"`
+	Error      int            `db:"error"`
 	Custodial  int            `db:"custodial"`
 	LastSeen   sql.NullString `db:"last_seen"`
 	ActiveTime sql.NullInt64  `db:"active_time"`
@@ -194,6 +198,7 @@ type NonMNStruct struct {
 	Ip         string        `json:"ip" db:"ip"`
 	Addr       string        `json:"address" db:"address"`
 	Active     int           `json:"active" db:"active"`
+	Error      int           `json:"error" db:"error"`
 	LastSeen   sql.NullInt64 `json:"last_seen" db:"last_seen"`
 	TimeActive sql.NullInt64 `json:"active_time" db:"active_time"`
 }
@@ -204,6 +209,7 @@ func (u *NonMNStruct) MarshalJSON() ([]byte, error) {
 		IP         string    `db:"ip" json:"ip"`
 		Active     int       `json:"active" db:"active"`
 		Addr       string    `json:"address" db:"address"`
+		Error      int       `json:"error" db:"error"`
 		LastSeen   time.Time `json:"lastSeen" db:"last_seen"`
 		TimeActive int64     `json:"timeActive" db:"active_time"`
 	}{
@@ -211,6 +217,7 @@ func (u *NonMNStruct) MarshalJSON() ([]byte, error) {
 		TimeActive: InlineIF[int64](u.TimeActive.Valid, u.TimeActive.Int64, 0),
 		Addr:       u.Addr,
 		Active:     u.Active,
+		Error:      u.Error,
 		ID:         u.Id,
 		IP:         u.Ip,
 	})

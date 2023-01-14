@@ -534,7 +534,7 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 		return "", errors.New("You can specify only one tier")
 	}
 	tierName := strings.TrimSpace(tier[0])
-	if tierName != "bronze" && tierName != "silver" && tierName != "gold" {
+	if tierName != "bronze" && tierName != "silver" && tierName != "gold" && tierName != "smartnode" {
 		return "", errors.New("Invalid tier name")
 	}
 
@@ -557,21 +557,52 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 	case "gold":
 		tierNum = 25
 		numAddr = 1000
+	case "smartnode":
+		tierNum = 1
+		numAddr = 50
 	default:
 		return "", errors.New("Invalid tier")
 	}
 	check := database.ReadValueEmpty[bool]("SELECT EXISTS( SELECT idUser FROM users_permission WHERE idUser = ?)", usrTo.Int64)
 	if check == false {
 		_, err := database.InsertSQl("INSERT INTO users_permission (idUser, mn, stealth, dateEnd) VALUES (?, ?, ?, ?)", usrTo.Int64, tierNum, numAddr, date)
+		if tierName == "smartnode" {
+			type nodes struct {
+				IDNode int64 `db:"idNode"`
+			}
+			var empty nodes
+			mnZero, err := database.ReadStruct[nodes]("SELECT idNode FROM users_mn WHERE idUser = ? AND active = 1 ORDER BY RAND() LIMIT 1", 0)
+			if err != nil {
+				return "", err
+			}
+			if mnZero == empty {
+				return "", errors.New("No free smartnodes available")
+			}
+			futureTime := time.Now().AddDate(2, 0, 0).Format("2006-01-02 15:04:05")
+			_, err = database.InsertSQl("UPDATE users_mn SET idUser = ? WHERE idNode = ?", usrTo.Int64, mnZero.IDNode)
+			_, err = database.InsertSQl("UPDATE users_mn SET dateStart = ? WHERE idNode = ?", futureTime, mnZero.IDNode)
+			if err != nil {
+				return "", err
+			}
+
+		}
+
 		if err != nil {
 			return "", err
 		}
 		return fmt.Sprintf("User %s has been granted with access to MN service with %s tier for %d days", from.Mentions[0].Username, tierName, regLength), nil
 	} else {
-		_, _ = database.InsertSQl("UPDATE users_permission SET mn = ? WHERE idUser = ?", tierNum, usrTo.Int64)
-		_, _ = database.InsertSQl("UPDATE users_permission SET stealth = ? WHERE idUser = ?", numAddr, usrTo.Int64)
-		_, _ = database.InsertSQl("UPDATE users_permission SET dateEnd = ? WHERE idUser = ?", date, usrTo.Int64)
-		return fmt.Sprintf("User %s got changed MN tier to %s for lenght of %d days", from.Mentions[0].Username, tierName, regLength), nil
+		if tierName == "smartnode" {
+			_, _ = database.InsertSQl("UPDATE users_permission SET mn = mn + 1 WHERE idUser = ?", usrTo.Int64)
+			_, _ = database.InsertSQl("UPDATE users_permission SET dateEnd = ? WHERE idUser = ?", date, usrTo.Int64)
+			return fmt.Sprintf("User %s got added 1 Smartnode to their account for %d days", from.Mentions[0].Username, regLength), nil
+		} else {
+			_, _ = database.InsertSQl("UPDATE users_permission SET mn = ? WHERE idUser = ?", tierNum, usrTo.Int64)
+			_, _ = database.InsertSQl("UPDATE users_permission SET stealth = ? WHERE idUser = ?", numAddr, usrTo.Int64)
+			_, _ = database.InsertSQl("UPDATE users_permission SET dateEnd = ? WHERE idUser = ?", date, usrTo.Int64)
+			return fmt.Sprintf("User %s got changed MN tier to %s for lenght of %d days", from.Mentions[0].Username, tierName, regLength), nil
+		}
+
 	}
 }
 
@@ -1558,7 +1589,20 @@ func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Running = false
 			return
 		}
-		_, err := s.ChannelMessageSendEmbeds(i.ChannelID, []*discordgo.MessageEmbed{WinEmbed(fmt.Sprintf("%s", i.Member.User.ID), "100", i.Member.User.AvatarURL("128"), i.Member.User.Username)})
+		winningAmount := 100
+		luck := false
+		chance := utils.RandNum(100)
+		if chance < 30 {
+			winningAmount = 1000
+			luck = true
+		}
+		wonPic := "win"
+		if luck {
+			wonPic = "bot_luck"
+		}
+		url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", wonPic)
+
+		_, err := s.ChannelMessageSendEmbeds(i.ChannelID, []*discordgo.MessageEmbed{WinEmbed(fmt.Sprintf("%s", i.Member.User.ID), fmt.Sprintf("%d", winningAmount), i.Member.User.AvatarURL("128"), i.Member.User.Username, url)})
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			Running = false
@@ -1652,7 +1696,8 @@ func annBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Running = false
 			return
 		}
-		_, err := s.ChannelMessageSendEmbeds(i.ChannelID, []*discordgo.MessageEmbed{WinEmbed(fmt.Sprintf("%s", i.Member.User.ID), "100", i.Member.User.AvatarURL("128"), i.Member.User.Username)})
+		url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", "win")
+		_, err := s.ChannelMessageSendEmbeds(i.ChannelID, []*discordgo.MessageEmbed{WinEmbed(fmt.Sprintf("%s", i.Member.User.ID), "100", i.Member.User.AvatarURL("128"), i.Member.User.Username, url)})
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			Running = false

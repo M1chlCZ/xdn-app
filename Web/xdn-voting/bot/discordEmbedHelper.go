@@ -258,7 +258,7 @@ func GiftEmbed(message, picture string) *discordgo.MessageEmbed {
 	return &genericEmbed
 }
 
-func WinEmbed(userTo, amount, avatar, username string) *discordgo.MessageEmbed {
+func WinEmbed(userTo, amount, avatar, username, background string) *discordgo.MessageEmbed {
 	timeString := time.Now().Format(time.RFC3339)
 	genericEmbed := discordgo.MessageEmbed{
 		Type:        "",
@@ -267,7 +267,7 @@ func WinEmbed(userTo, amount, avatar, username string) *discordgo.MessageEmbed {
 		Timestamp:   timeString,
 		Color:       0x00ff00,
 		Footer:      nil,
-		Image:       nil,
+		Image:       &discordgo.MessageEmbedImage{URL: background},
 		Thumbnail:   nil,
 		Video:       nil,
 		Provider:    nil,

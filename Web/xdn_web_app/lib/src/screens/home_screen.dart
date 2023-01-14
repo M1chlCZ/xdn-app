@@ -1,13 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xdn_web_app/src/models/MNList.dart';
+import 'package:xdn_web_app/src/net_interface/interface.dart';
 import 'package:xdn_web_app/src/overlay/restart_ovr.dart';
 import 'package:xdn_web_app/src/overlay/start_ovr.dart';
 import 'package:xdn_web_app/src/provider/mn_list_provider.dart';
 import 'package:xdn_web_app/src/support/app_sizes.dart';
+import 'package:xdn_web_app/src/support/s_p.dart';
 import 'package:xdn_web_app/src/support/secure_storage.dart';
 import 'package:xdn_web_app/src/support/utils.dart';
+import 'package:xdn_web_app/src/widgets/alert_dialogs.dart';
 import 'package:xdn_web_app/src/widgets/background_widget.dart';
 import 'package:xdn_web_app/src/widgets/flat_custom_btn.dart';
 import 'package:xdn_web_app/src/widgets/responsible_center.dart';
@@ -142,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                 opacity: data.active == 0 ? 0.5 : 1,
                                                 child: Container(
                                                   decoration: BoxDecoration(
-                                                    color: Colors.black12,
+                                                    color: data.error == 0 ? Colors.black12 : Colors.red.withOpacity(0.5),
                                                     borderRadius: BorderRadius.circular(8),
                                                   ),
                                                   padding: const EdgeInsets.only(top: Sizes.p16, bottom: Sizes.p16, left: Sizes.p8, right: Sizes.p8),
@@ -214,8 +219,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _restartNode(int id) {
-    //TODO: CODE FOR THIS SHIT
+    final network = ref.read(networkProvider);
+    Future.delayed(Duration.zero, () async {
+      try {
+        await network.post("/masternode/non/restart", body: {"idNode": id}, serverType: ComInterface.serverGoAPI);
+        if (mounted) showAlertDialog(context: context, title: "Success", content: "Node $id restarted");
+      } catch (e) {
+        var err = json.decode(e.toString());
+        showAlertDialog(context: context, title: "Fail", content: err['errorMessage']);
+      }
+    });
     Navigator.of(context).pop();
+    Future.delayed(const Duration(seconds: 1), () {
+    }).then((value) => ref.refresh(itemsProvider));
   }
 
   void _showOverlay(BuildContext context, int mnId, VoidCallback onTap) {

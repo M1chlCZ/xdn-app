@@ -19,6 +19,19 @@ enum AppRoute {
   signIn,
 }
 
+CustomTransitionPage buildPageWithDefaultTransition<T>({
+  required BuildContext context,
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeTransition(opacity: animation, child: child),
+  );
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   return GoRouter(
@@ -43,6 +56,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/',
         name: AppRoute.splash.name,
         builder: (context, state) => const SplashScreen(),
+        pageBuilder: (context, state) => buildPageWithDefaultTransition<void>(
+          context: context,
+          state: state,
+          child: const SplashScreen(),
+        ),
         routes: [
           // GoRoute(
           //   path: 'product/:id',
@@ -99,6 +117,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: 'home',
             name: AppRoute.home.name,
             builder: (context, state) => const HomeScreen(),
+            pageBuilder: (context, state) => buildPageWithDefaultTransition<void>(
+              context: context,
+              state: state,
+              child: const HomeScreen(),
+            ),
           ),
           // GoRoute(
           //   path: 'signIn',

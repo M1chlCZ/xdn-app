@@ -46,6 +46,9 @@ service RegisterMasternodeService {
   rpc CheckMasternode (CheckMasternodeRequest) returns (CheckMasternodeResponse) {}
   rpc RemoveMasternode (RemoveMasternodeRequest) returns (RemoveMasternodeResponse) {}
   rpc MasternodeStarted (MasternodeStartedRequest) returns (MasternodeStartedResponse) {}
+  rpc RestartMasternode (RestartMasternodeRequest) returns (RestartMasternodeResponse) {}
+  rpc MasternodeStatus (MasternodeStatusRequest) returns (MasternodeStatusResponse) {}
+  rpc MasternodeError (MasternodeErrorRequest) returns (MasternodeErrorResponse) {}
 }
 
 message RegisterMasternodeRequest {
@@ -172,5 +175,31 @@ message MasternodeStartedRequest {
 }
 
 message MasternodeStartedResponse {
+  uint32 code = 1;
+}
+
+message RestartMasternodeRequest {
+  uint32 nodeID = 1;
+}
+
+message RestartMasternodeResponse {
+  uint32 code = 1;
+}
+
+message MasternodeStatusRequest {
+  uint32 nodeID = 1;
+}
+
+message MasternodeStatusResponse {
+  uint32 code = 1;
+  uint32 status = 2;
+}
+
+message MasternodeErrorRequest {
+  uint32 nodeID = 1;
+  string error = 2;
+}
+
+message MasternodeErrorResponse {
   uint32 code = 1;
 }

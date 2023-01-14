@@ -132,7 +132,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         });
       }
     } catch (e) {
-      print('Caught error: ${e.toString()}');
       Future.delayed(const Duration(seconds: 5), () {
         getMNPermission();
       });
@@ -664,6 +663,17 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
               );
             });
       });
+    } else if (data["loginqr"] != null) {
+      Future.delayed(Duration.zero, () async {
+        try {
+          ComInterface interface = ComInterface();
+          var tok = data["loginqr"];
+          await interface.post("/login/qr/auth", body: {"token": tok}, serverType: ComInterface.serverGoAPI, debug: true);
+          if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "Login successful");
+        } catch (e) {
+          debugPrint(e.toString());
+        }
+      });
     } else if (data["error"] == null) {
       showDialog(
           context: context,
@@ -743,6 +753,11 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         return {"error": "Invalid QR code"};
       }
     } else {
+      var split = string.split(";");
+      if (split[0] == "loginqr") {
+        var m = {"loginqr": split[1]};
+        return m;
+      }
       var match = regex.firstMatch(string);
       if (match != null) {
         data["address"] = match.group(0);

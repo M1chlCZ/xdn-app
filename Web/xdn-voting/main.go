@@ -92,6 +92,9 @@ func main() {
 
 	// ================== API ==================
 	app.Post("api/v1/login", loginAPI)
+	app.Get("api/v1/login/qr", loginQRAPI)
+	app.Post("api/v1/login/qr/auth", utils.Authorized(loginQRAuthAPI))
+	app.Post("api/v1/login/qr/token", loginQRTokenAPI)
 	app.Post("api/v1/register", registerAPI)
 	app.Post("api/v1/login/refresh", refreshToken)
 	app.Post("api/v1/login/forgot", forgotPassword)
@@ -119,6 +122,7 @@ func main() {
 
 	app.Post("api/v1/masternode/non/start", utils.Authorized(startNonMN))
 	app.Get("api/v1/masternode/non/list", utils.Authorized(listNonMN))
+	app.Post("api/v1/masternode/non/restart", utils.Authorized(restartNonMN))
 
 	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
@@ -230,6 +234,73 @@ func main() {
 
 }
 
+func restartNonMN(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			utils.ERROR:         true,
+			utils.STATUS:        utils.ERROR,
+			utils.ERROR_MESSAGE: "Unauthorized",
+		})
+	}
+
+	var request models.MNUnlockStruct
+	errJson := c.BodyParser(&request)
+	if errJson != nil {
+		return utils.ReportError(c, errJson.Error(), http.StatusBadRequest)
+	}
+
+	nodeExists := database.ReadValueEmpty[bool]("SELECT EXISTS (SELECT id FROM mn_clients WHERE id = ?)", request.IdNode)
+	if !nodeExists {
+		return utils.ReportError(c, "Node not found", http.StatusBadRequest)
+	}
+
+	belongToUser := database.ReadValueEmpty[bool]("SELECT EXISTS (SELECT id FROM users_mn WHERE idUser = ? AND idNode = ?)", userID, request.IdNode)
+	if !belongToUser {
+		return utils.ReportError(c, "You don't have access to this masternode", http.StatusBadRequest)
+	}
+
+	nodeIP := database.ReadValueEmpty[sql.NullString]("SELECT node_ip FROM mn_clients WHERE id = ?", request.IdNode)
+	if !nodeIP.Valid {
+		return utils.ReportError(c, "Node IP not found", http.StatusBadRequest)
+	}
+
+	creds, err := grpcModels.LoadTLSCredentials()
+	if err != nil {
+		return utils.ReportError(c, "cannot load TLS credentials: "+err.Error(), http.StatusInternalServerError)
+
+	}
+	grpcCon, err := gpc.Dial(fmt.Sprintf("%s:6810", nodeIP.String), gpc.WithTransportCredentials(creds))
+	if err != nil {
+		return utils.ReportError(c, "cannot connect to gRPC server: "+err.Error(), http.StatusInternalServerError)
+	}
+	tx := &grpcModels.RestartMasternodeRequest{
+		NodeID: uint32(request.IdNode),
+	}
+	cc := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+	resp, err := cc.RestartMasternode(context.Background(), tx)
+	if err != nil {
+		_ = grpcCon.Close()
+		return utils.ReportError(c, "cannot restart masternode: "+err.Error(), http.StatusInternalServerError)
+	}
+	_ = grpcCon.Close()
+	if resp.Code == 200 {
+		utils.ReportMessage(fmt.Sprintf("Masternode %d restarted", request.IdNode))
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			utils.ERROR:         false,
+			utils.STATUS:        utils.OK,
+			utils.ERROR_MESSAGE: "Masternode restarted",
+		})
+	} else {
+		utils.ReportMessage(fmt.Sprintf("Somethings wrong on node %s while restarting node %d", nodeIP.String, request.IdNode))
+		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+			utils.ERROR:         true,
+			utils.STATUS:        utils.FAIL,
+			utils.ERROR_MESSAGE: "Problem with node restart",
+		})
+	}
+}
+
 func listNonMN(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	if userID == "" {
@@ -240,7 +311,7 @@ func listNonMN(c *fiber.Ctx) error {
 		})
 	}
 
-	data, err := database.ReadArrayStruct[models.NonMNStruct]("SELECT a.id, a.ip, a.last_seen, a.active_time, a.active, a.address FROM mn_clients as a, users_mn as b WHERE a.custodial = 0 AND a.id = b.idNode AND b.idUser = ?", userID)
+	data, err := database.ReadArrayStruct[models.NonMNStruct]("SELECT a.id, a.ip, a.last_seen, a.active_time, a.active, a.error, a.address FROM mn_clients as a, users_mn as b WHERE a.custodial = 0 AND a.id = b.idNode AND b.idUser = ?", userID)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			utils.ERROR:         true,
@@ -910,13 +981,6 @@ func getGithubRelease(c *fiber.Ctx) error {
 		if strings.Contains(asset.Name, formValue) {
 			utils.ReportMessage(asset.BrowserDownloadURL)
 			utils.ReportMessage(asset.Name)
-			//download file from the asset.BrowserDownloadURL
-			//c.Response().Header.Set("Content-Disposition", "attachment; filename="+asset.Name)
-			//c.Response().Header.Set("Content-Type", "application/octet-stream")
-			//c.Response().Header.Set("Content-Length", strconv.Itoa(asset.Size))
-			//c.Response().Header.Set("Content-Transfer-Encoding", "binary")
-			//c.Response().Header.Set("Expires", "0")
-			//c.Response().Header.Set("url", asset.BrowserDownloadURL)
 			return c.Redirect(asset.BrowserDownloadURL, fiber.StatusSeeOther)
 		}
 	}
@@ -933,7 +997,7 @@ func getMNInfo(c *fiber.Ctx) error {
 
 	returnListArr, err := database.ReadArrayStruct[models.ListMN]("SELECT id, ip FROM mn_clients WHERE active = 0 AND coin_id = ? AND locked = 0", 0)
 
-	returnArr, err := database.ReadArrayStruct[models.MNListInfo]("SELECT b.id, b.ip, a.dateStart, b.last_seen, b.active_time FROM users_mn as a, mn_clients as b WHERE a.idUser = ? AND a.idCoin = ? AND a.active = 1 AND a.custodial = 1 AND a.idNode = b.id", userID, 0)
+	returnArr, err := database.ReadArrayStruct[models.MNListInfo]("SELECT b.id, b.ip, a.dateStart, b.last_seen, b.active_time, a.custodial FROM users_mn as a, mn_clients as b WHERE a.idUser = ? AND a.idCoin = ? AND a.active = 1 AND a.idNode = b.id", userID, 0)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
@@ -1949,6 +2013,85 @@ func loginAPI(c *fiber.Ctx) error {
 		"jwt":           tokenDepr,
 		"token":         token,
 		"refresh_token": refToken,
+	})
+}
+
+func loginQRTokenAPI(c *fiber.Ctx) error {
+	var QR struct {
+		Token string `json:"token"`
+	}
+	err := c.BodyParser(&QR)
+	if err != nil {
+		return utils.ReportErrorSilent(c, "QR code not found", fiber.StatusBadRequest)
+	}
+	if QR.Token == "" {
+		return utils.ReportErrorSilent(c, "QR code not found", fiber.StatusBadRequest)
+	}
+	tok := strings.Split(QR.Token, ";")
+	idUser := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM qr_login WHERE token = ?", tok[1])
+	if idUser.Valid == false {
+		return utils.ReportErrorSilent(c, "user not found", fiber.StatusConflict)
+	}
+	token, errToken := utils.CreateKeyToken(uint64(idUser.Int64))
+	if errToken != nil {
+		log.Printf("err: %v\n", errToken)
+		return utils.ReportErrorSilent(c, errToken.Error(), http.StatusInternalServerError)
+	}
+
+	refToken := utils.GenerateSecureToken(32)
+	_, errInsertToken := database.InsertSQl("INSERT INTO refresh_token(idUser, refreshToken) VALUES(?, ?)", idUser.Int64, refToken)
+	if errInsertToken != nil {
+		return utils.ReportErrorSilent(c, errInsertToken.Error(), http.StatusInternalServerError)
+	}
+	utils.ReportMessage(fmt.Sprintf("/// QR login user %d -> login OK ///", idUser.Int64))
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"hasError":      false,
+		utils.STATUS:    utils.OK,
+		"token":         token,
+		"refresh_token": refToken,
+	})
+}
+
+func loginQRAuthAPI(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "User not found", fiber.StatusBadRequest)
+	}
+	var QR struct {
+		Token string `json:"token"`
+	}
+	err := c.BodyParser(&QR)
+	if err != nil {
+		return utils.ReportError(c, "QR code not found", fiber.StatusBadRequest)
+	}
+	if QR.Token == "" {
+		return utils.ReportError(c, "QR code not found", fiber.StatusBadRequest)
+	}
+	_, err = database.InsertSQl("UPDATE qr_login SET idUser = ?, auth = 1 WHERE token = ?", userID, QR.Token)
+	if err != nil {
+		return utils.ReportError(c, "QR code not found", fiber.StatusBadRequest)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func loginQRAPI(c *fiber.Ctx) error {
+	tk := utils.GenerateSocialsToken(8)
+	token := fmt.Sprintf("%s-%s", tk, utils.GenerateSecureToken(8))
+
+	_, err := database.InsertSQl("INSERT INTO `qr_login` (`token`,`ip` ) VALUES (?, ?)", token, c.IP())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			utils.ERROR:  true,
+			utils.STATUS: utils.ERROR,
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"token":      fmt.Sprintf("loginqr;%s", token),
 	})
 }
 

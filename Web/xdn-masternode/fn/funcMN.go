@@ -271,6 +271,7 @@ func StartRemoteMasternode(nodeID int, mnKey string) {
 	res, errMNstart := coind.WrapDaemon(*daemon, 125, "masternode", "start")
 	utils.ReportMessage(fmt.Sprintf("%s", res))
 	if errMNstart != nil {
+		_, errMNstart = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(nodeID), Error: errMNstart.Error()})
 		utils.WrapErrorLog(errMNstart.Error())
 		return
 	}
@@ -281,6 +282,27 @@ func StartRemoteMasternode(nodeID int, mnKey string) {
 		return
 	}
 	utils.ReportMessage("-| Finished MN setup |-")
+}
+
+func RestartMasternode(nodeID int) {
+	daemon, err := database.GetDaemon(nodeID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	res, errMNstart := coind.WrapDaemon(*daemon, 5, "masternode", "start")
+	utils.ReportMessage(fmt.Sprintf("%s", res))
+	if errMNstart != nil {
+		_, errMNstart = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(nodeID), Error: errMNstart.Error()})
+		utils.WrapErrorLog(errMNstart.Error())
+		return
+	}
+	_, err = grpcClient.MasternodeStart(&grpcModels.MasternodeStartedRequest{NodeID: uint32(nodeID)})
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	utils.ReportMessage(fmt.Sprintf("Daemon %s restarted", daemon.Folder))
 }
 
 func Snap(folder string, coinID int) {
@@ -430,6 +452,7 @@ func ScanMasternodes() {
 			if errr != nil {
 				utils.WrapErrorLog(errr.Error())
 				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
+				_, _ = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(daemon.NodeID), Error: errr.Error()})
 				go snapInactive(daemon.Folder, daemon.CoinID)
 				continue
 			} else {
@@ -437,7 +460,11 @@ func ScanMasternodes() {
 				go func(dm models.Daemon) {
 					utils.ReportMessage("Starting goroutine restart service")
 					time.Sleep(12 * time.Minute)
-					//
+					_, err = grpcClient.MasternodeStart(&grpcModels.MasternodeStartedRequest{NodeID: uint32(dm.NodeID)})
+					if err != nil {
+						utils.WrapErrorLog(err.Error())
+						return
+					}
 					utils.ReportMessage("Restarting daemon: " + dm.Folder)
 					_, errScript := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart %s.service", dm.Folder)).Output()
 					if errScript != nil {
@@ -453,13 +480,20 @@ func ScanMasternodes() {
 			s, errr := coind.WrapDaemon(daemon, 1, "masternode", "start")
 			if errr != nil {
 				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
-				go snapInactive(daemon.Folder, daemon.CoinID)
+				_, _ = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(daemon.NodeID), Error: errr.Error()})
+				//go snapInactive(daemon.Folder, daemon.CoinID)
 				continue
 			}
 			if string(s) != "Masternode successfully started" {
 				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
-				go snapInactive(daemon.Folder, daemon.CoinID)
+				_, _ = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(daemon.NodeID), Error: errr.Error()})
+				//go snapInactive(daemon.Folder, daemon.CoinID)
 				continue
+			}
+			_, err = grpcClient.MasternodeStart(&grpcModels.MasternodeStartedRequest{NodeID: uint32(daemon.NodeID)})
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+				return
 			}
 		}
 		rpcuser := ""
@@ -513,8 +547,14 @@ func ScanMasternodes() {
 				}
 				lastSeen = append(lastSeen, m)
 				utils.ReportMessage(fmt.Sprintf("NC OK @ %s!", daemon.Folder))
+				_, err = grpcClient.MasternodeStart(&grpcModels.MasternodeStartedRequest{NodeID: uint32(daemon.NodeID)})
+				if err != nil {
+					utils.WrapErrorLog(err.Error())
+					return
+				}
 			}
 		}
+
 	}
 
 	for _, daemon := range daemonFinal {

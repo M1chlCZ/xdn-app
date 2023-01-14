@@ -99,3 +99,20 @@ func (s *Server) CheckMasternode(_ context.Context, request *grpcModels.CheckMas
 		return &grpcModels.CheckMasternodeResponse{Code: 200}, nil
 	}
 }
+
+func (s *Server) RestartMasternode(_ context.Context, wdmn *grpcModels.RestartMasternodeRequest) (*grpcModels.RestartMasternodeResponse, error) {
+	if wdmn.NodeID == 0 {
+		return &grpcModels.RestartMasternodeResponse{Code: 400}, nil
+	}
+	go fn.RestartMasternode(int(wdmn.NodeID))
+	return &grpcModels.RestartMasternodeResponse{Code: 200}, nil
+}
+
+func (s *Server) MasternodeStatus(_ context.Context, wdmn *grpcModels.MasternodeStatusRequest) (*grpcModels.MasternodeStatusResponse, error) {
+	//if wdmn.NodeID == 0 {
+	//	return &grpcModels.MasternodeStatusResponse{Code: 400}, nil
+	//}
+	//go fn.MasternodeStatus(int(wdmn.NodeID))
+	//return &grpcModels.MasternodeStatusResponse{Code: 200}, nil
+	return &grpcModels.MasternodeStatusResponse{Code: 200, Status: 100}, nil
+}

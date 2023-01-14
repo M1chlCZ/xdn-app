@@ -202,3 +202,20 @@ func MasternodeStart(tx *grpcModels.MasternodeStartedRequest) (*grpcModels.Maste
 	defer cancel()
 	return c.MasternodeStarted(ctx, tx)
 }
+
+func MasternodeError(tx *grpcModels.MasternodeErrorRequest) (*grpcModels.MasternodeErrorResponse, error) {
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	grpcCon, err := grpc.DialContext(ctx, "194.60.201.213:6810", grpc.WithTransportCredentials(tlsCredentials))
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer grpcCon.Close()
+	c := grpcModels.NewRegisterMasternodeServiceClient(grpcCon)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return c.MasternodeError(ctx, tx)
+}

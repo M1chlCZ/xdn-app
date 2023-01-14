@@ -173,34 +173,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     }
   }
 
-  // void _unstakeCoins(int type) async {
-  //   Dialogs.openWaitBox(context);
-  //   var i = await NetInterface.unstakeCoins(type);
-  //   _awaitingNot = true;
-  //   Future.delayed(const Duration(milliseconds: 1000), () {
-  //     if (_awaitingNot) {
-  //       setState(() {
-  //         _awaitingNot = false;
-  //         _countNot = 0;
-  //         _getBalance();
-  //
-  //         // Navigator.of(context).pop();
-  //       });
-  //       Navigator.of(context).pop();
-  //       Future.delayed(const Duration(milliseconds: 50), () {
-  //         FocusScope.of(context).unfocus();
-  //       });
-  //     }
-  //   });
-  //   if (i == 2) {
-  //     if (mounted) {
-  //       Navigator.of(context).pop();
-  //       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_24h_timeout);
-  //     }
-  //     return;
-  //   }
-  // }
-
   void _getBalance() async {
     _getBalanceFuture = NetInterface.getBalance(details: true);
     setState(() {});
@@ -216,8 +188,6 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     _activeNodes = _mnInfo!.activeNodes!;
     double rev = _mnInfo!.nodeRewards!.fold(0, (previousValue, element) => previousValue + element.amount!);
     _amountReward = rev.toString();
-    // List<String> partsPayrate = _mnInfo!.averagePayTime!.split(".");
-    // _averagePayrate = partsPayrate[0].isEmpty ? "00:00:00" : partsPayrate[0];
     List<String> partsStart = _mnInfo!.averageTimeToStart!.split(".");
     _averateTimeStart = partsStart[0].isEmpty ? "00:00:00" : partsStart[0];
     _estimated = _mnInfo!.averageRewardPerDay!;

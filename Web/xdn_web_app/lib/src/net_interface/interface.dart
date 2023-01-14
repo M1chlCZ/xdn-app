@@ -229,7 +229,7 @@ class ComInterface {
         var responseJson = json.decode(response.body.toString());
         return responseJson;
       case 400:
-        throw BadRequestException(response.body.toString());
+        throw ConflictDataException(response.body.toString());
       case 401:
         Map<String, dynamic> error = {
           "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
@@ -256,12 +256,7 @@ class ComInterface {
         throw UnauthorisedException(error);
       case 500:
       default:
-        Map<String, dynamic> error = {
-          "info": 'Error occured while Communication with Server with StatusCode:${response.statusCode}',
-          "statusCode": response.statusCode,
-          "messageBody": response.body.toString(),
-        };
-        throw FetchDataException(error);
+      throw ConflictDataException(response.body.toString());
     }
   }
 }

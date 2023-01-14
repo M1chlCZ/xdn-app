@@ -261,10 +261,69 @@ func (s *Server) RemoveMasternode(_ context.Context, request *grpcModels.RemoveM
 }
 
 func (s *Server) MasternodeStarted(_ context.Context, request *grpcModels.MasternodeStartedRequest) (*grpcModels.MasternodeStartedResponse, error) {
-	_, err := database.InsertSQl("UPDATE mn_clients SET active = 1 WHERE id = ?", request.NodeID)
+	isError, err := database.ReadValue[bool]("SELECT error FROM mn_clients WHERE id = ?", request.NodeID)
 	if err != nil {
-		utils.WrapErrorLog(err.Error())
 		return &grpcModels.MasternodeStartedResponse{Code: 400}, err
 	}
+	if isError == true {
+		go func() {
+			utils.ReportMessage(fmt.Sprintf("! Masternode %d restart !", request.NodeID))
+			userID := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_mn WHERE idNode = ? AND active = 1", request.NodeID)
+			if !userID.Valid {
+				utils.WrapErrorLog(fmt.Sprintf("! Masternode %d restart error can'f find user!", request.NodeID))
+				return
+			}
+			type Token struct {
+				Token string `json:"token"`
+			}
+			tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", userID.Int64)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+
+			if len(tk) > 0 {
+				for _, v := range tk {
+					utils.SendMessage(v.Token, fmt.Sprintf("Node %d ", request.NodeID), fmt.Sprintf("MN has been restarted successfully"), map[string]string{})
+				}
+			}
+		}()
+		_, err = database.InsertSQl("UPDATE mn_clients SET active = 1 WHERE id = ?", request.NodeID)
+		_, err = database.InsertSQl("UPDATE mn_clients SET error = 0 WHERE id = ?", request.NodeID)
+	} else {
+		_, err = database.InsertSQl("UPDATE mn_clients SET active = 1 WHERE id = ?", request.NodeID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return &grpcModels.MasternodeStartedResponse{Code: 400}, err
+		}
+	}
 	return &grpcModels.MasternodeStartedResponse{Code: 200}, nil
+}
+
+func (s *Server) MasternodeError(_ context.Context, request *grpcModels.MasternodeErrorRequest) (*grpcModels.MasternodeErrorResponse, error) {
+	_, _ = database.InsertSQl("UPDATE mn_clients SET error = 1 WHERE id = ?", request.NodeID)
+
+	utils.WrapErrorLog(fmt.Sprintf("! Masternode %d error: %s !", request.NodeID, request.Error))
+
+	go func() {
+		utils.ReportMessage(fmt.Sprintf("! Masternode %d error !", request.NodeID))
+		userID := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_mn WHERE idNode = ? AND active = 1", request.NodeID)
+		if !userID.Valid {
+			utils.WrapErrorLog(fmt.Sprintf("! Masternode %d error can'f find user!", request.NodeID))
+			return
+		}
+		type Token struct {
+			Token string `json:"token"`
+		}
+		tk, err := database.ReadArray[Token]("SELECT token FROM devices WHERE idUser = ?", userID.Int64)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+
+		if len(tk) > 0 {
+			for _, v := range tk {
+				utils.SendMessage(v.Token, fmt.Sprintf("Node %d ", request.NodeID), fmt.Sprintf("MN stopped, please restart it in masternode console"), map[string]string{})
+			}
+		}
+	}()
+	return &grpcModels.MasternodeErrorResponse{Code: 200}, nil
 }
