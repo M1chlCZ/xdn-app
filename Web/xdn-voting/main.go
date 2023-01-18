@@ -1006,21 +1006,45 @@ func getMNInfo(c *fiber.Ctx) error {
 		})
 	}
 	//returnFinalArry := make([]listFinalMN, 0)
+	//var wg sync.WaitGroup
+	//wg.Add(len(returnArr))
+	//for i := 0; i < len(returnArr); i++ {
+	//	go func(i int) {
+	//		id := returnArr[i].ID
+	//		maxSession, _ := database.ReadValue[int]("SELECT MAX(session) FROM users_mn WHERE idNode = ?", id)
+	//		sqlAveragePayrate := `SELECT IFNULL(SEC_TO_TIME(AVG(av)), 0) as average FROM (SELECT IFNULL(TIMESTAMPDIFF(second, MIN(datetime), MAX(datetime)) / NULLIF(COUNT(*) - 1, 0), 0) as av	FROM payouts_masternode WHERE idNode=? AND session=? GROUP BY idNode) as b`
+	//		avp, _ := database.ReadValue[string](sqlAveragePayrate, id, maxSession)
+	//		returnArr[i].AddAverage(avp)
+	//		wg.Done()
+	//	}(i)
+	//}
+	//go func() {
+	//	wg.Wait()
+	//}()
+
 	var wg sync.WaitGroup
 	wg.Add(len(returnArr))
+	results := make(chan string, len(returnArr))
 	for i := 0; i < len(returnArr); i++ {
 		go func(i int) {
 			id := returnArr[i].ID
 			maxSession, _ := database.ReadValue[int]("SELECT MAX(session) FROM users_mn WHERE idNode = ?", id)
 			sqlAveragePayrate := `SELECT IFNULL(SEC_TO_TIME(AVG(av)), 0) as average FROM (SELECT IFNULL(TIMESTAMPDIFF(second, MIN(datetime), MAX(datetime)) / NULLIF(COUNT(*) - 1, 0), 0) as av	FROM payouts_masternode WHERE idNode=? AND session=? GROUP BY idNode) as b`
 			avp, _ := database.ReadValue[string](sqlAveragePayrate, id, maxSession)
-			returnArr[i].AddAverage(avp)
+			results <- avp
 			wg.Done()
 		}(i)
 	}
+
 	go func() {
 		wg.Wait()
+		close(results)
 	}()
+	i := 0
+	for avp := range results {
+		returnArr[i].AddAverage(avp)
+		i++
+	}
 
 	returnArrr, err := database.ReadArrayStruct[models.MNList]("SELECT idNode, amount as amount, lastRewardDate, ip, address  FROM (SELECT a.idNode, SUM(a.amount) as amount, max(datetime) as lastRewardDate,  b.ip, b.address FROM payouts_masternode as a, mn_clients as b WHERE a.idCoin = ? AND a.idUser = ? AND a.idNode = b.id AND a.credited = 0  AND a.datetime < (NOW() - INTERVAL 5 MINUTE) GROUP BY a.idNode) as t1", 0, userID)
 	if err != nil {
@@ -1056,6 +1080,7 @@ func getMNInfo(c *fiber.Ctx) error {
 	for _, element := range collateralAmount {
 		colArr = append(colArr, element.Amount)
 	}
+	wg.Wait()
 
 	resp := models.MNInfoResponse{
 		Status:              utils.OK,

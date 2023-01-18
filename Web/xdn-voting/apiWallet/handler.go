@@ -176,6 +176,9 @@ func submitTransaction(c *fiber.Ctx) error {
 			return
 		}
 		for _, data := range trans {
+			if data.Amount < 0 {
+				continue
+			}
 			userTo := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users WHERE addr = ?", data.Address)
 			if userTo.Valid {
 				type Token struct {

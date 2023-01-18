@@ -48,6 +48,9 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 				//utils.ReportMessage(fmt.Sprintf("Found unspent input: %f", unspent.Amount))
 				totalCoins += unspent.Amount
 				myUnspent = append(myUnspent, unspent)
+				if totalCoins >= amount {
+					break
+				}
 			}
 		}
 	}
