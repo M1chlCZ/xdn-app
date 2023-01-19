@@ -27,6 +27,13 @@ func StartMasternode(nodeID int) {
 	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
 	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.bak", daemon.Folder)).Output()
 
+	active, errScript := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user is-active %s", daemon.Folder)).Output()
+	if strings.TrimSpace(string(active)) != "active" {
+		_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart %s", daemon.Folder)).Output()
+	} else {
+		utils.ReportMessage(fmt.Sprintf("Daemon %s is already running", daemon.Folder))
+	}
+
 	utils.ReportMessage(fmt.Sprintf(" -| Setting up node id: %d |-", daemon.NodeID))
 
 	if err != nil {
@@ -48,7 +55,7 @@ func StartMasternode(nodeID int) {
 		Outputidx string `json:"outputidx"`
 	}
 	var ing MasternodeOutputsXDN
-	mOut, err := coind.WrapDaemon(*daemon, 15, "masternode", "outputs")
+	mOut, err := coind.WrapDaemon(*daemon, 5, "masternode", "outputs")
 	if err != nil {
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s", daemon.Folder)).Output()
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/wallet.dat", daemon.Folder)).Output()
@@ -69,55 +76,28 @@ func StartMasternode(nodeID int) {
 	err = json.Unmarshal(mOut, &ing)
 	if err != nil {
 		utils.ReportMessage("Error getting outputs")
-		go Snap(daemon.Folder, daemon.CoinID)
+		c := Snap(daemon.Folder, daemon.CoinID)
+		<-c
 		return
 	}
 	if len(ing) != 0 {
 		txid = ing[0].Txhash
 		v, _ := strconv.Atoi(ing[0].Outputidx)
 		vout = v
-		//} else {
-		//var ing models_json.MasternodeOutputs
-		//mOut, err := coind.WrapDaemon(*daemon, 15, "getmasternodeoutputs")
-		//if err != nil {
-		//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s", daemon.Folder)).Output()
-		//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/wallet.dat", daemon.Folder)).Output()
-		//	_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user start %s", daemon.Folder)).Output()
-		//	time.Sleep(60 * time.Second)
-		//	priv, err := privateKey(daemon.NodeID)
-		//	if err != nil {
-		//		utils.WrapErrorLog(err.Error())
-		//	}
-		//	utils.ReportMessage("Importing key...")
-		//	utils.ReportMessage(priv.Key)
-		//	_, err = coind.WrapDaemon(*daemon, 5, "importprivkey", priv.Key)
-		//	if err != nil {
-		//		utils.WrapErrorLog(err.Error())
-		//	}
-		//	mOut, err = coind.WrapDaemon(*daemon, 15, "getmasternodeoutputs")
-		//}
-		//err = json.Unmarshal(mOut, &ing)
-		//if err != nil {
-		//	utils.ReportMessage("Error getting outputs")
-		//	go Snap(daemon.Folder, daemon.CoinID)
-		//	return
-		//}
-		//txid = ing[0].Txhash
-		//vout = ing[0].Outputidx
-		//}
-
 		//REEdundancy
 		if len(txid) == 0 {
 			utils.ReportMessage("No masternode output")
 			mOut, err := coind.WrapDaemon(*daemon, 15, "masternode", "outputs")
 			if err != nil {
-				go Snap(daemon.Folder, daemon.CoinID)
+				c := Snap(daemon.Folder, daemon.CoinID)
+				<-c
 				return
 			}
 			err = json.Unmarshal(mOut, &ing)
 			if err != nil {
 				utils.ReportMessage("Error getting outputs")
-				go Snap(daemon.Folder, daemon.CoinID)
+				c := Snap(daemon.Folder, daemon.CoinID)
+				<-c
 				return
 			}
 			txid = ing[0].Txhash
@@ -128,13 +108,15 @@ func StartMasternode(nodeID int) {
 		utils.ReportMessage("! No masternode output !")
 		mOut, err := coind.WrapDaemon(*daemon, 15, "masternode", "outputs")
 		if err != nil {
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			return
 		}
 		err = json.Unmarshal(mOut, &ing)
 		if err != nil {
 			utils.ReportMessage("Error getting outputs")
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			return
 		}
 		txid = ing[0].Txhash
@@ -305,12 +287,14 @@ func RestartMasternode(nodeID int) {
 	utils.ReportMessage(fmt.Sprintf("Daemon %s restarted", daemon.Folder))
 }
 
-func Snap(folder string, coinID int) {
+func Snap(folder string, coinID int) chan struct{} {
+	done := make(chan struct{}, 1)
 	utils.ReportMessage(fmt.Sprintf("Snapping active %s", folder))
 	go func(folder string) {
 		_, errScript := exec.Command("bash", "-c", fmt.Sprintf("$HOME/snap %s", folder)).Output()
 		if errScript != nil {
 			utils.ReportMessage(errScript.Error())
+			close(done)
 			return
 		}
 		time.Sleep(time.Second * 60)
@@ -324,13 +308,20 @@ func Snap(folder string, coinID int) {
 			_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternode=", pathConf)).Output()
 			_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternodeprivkey=", pathConf)).Output()
 			_, _ = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
-			StartMasternode(dm.NodeID)
+			time.Sleep(time.Second * 10)
+			_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s", dm.Folder)).Output()
+			time.Sleep(time.Second * 10)
+			_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user start %s", dm.Folder)).Output()
+			go StartMasternode(dm.NodeID)
+			close(done)
 			return
 		} else {
 			utils.ReportMessage(string(pp))
+			close(done)
 			return
 		}
 	}(folder)
+	return done
 }
 
 func corruptCheck(daemon *models.Daemon) {
@@ -526,7 +517,8 @@ func ScanMasternodes() {
 		bytes, err := coind.WrapDaemon(models.Daemon{WalletPass: rpcpassword, WalletPort: rpcPort, WalletUser: rpcuser}, 2, "masternode", "list", "full")
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			continue
 		}
 
@@ -534,7 +526,8 @@ func ScanMasternodes() {
 		errJson = json.Unmarshal(bytes, &mnList40)
 		if errJson != nil {
 			utils.WrapErrorLog(errJson.Error())
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			continue
 		}
 
@@ -565,20 +558,23 @@ func ScanMasternodes() {
 		bnm, errBlock := strconv.Atoi(strings.Trim(string(blk), "\""))
 		if errBlock != nil {
 			utils.WrapErrorLog(errBlock.Error())
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			continue
 		}
 
 		if !(blockhashXDN < (bnm + 10)) || !(blockhashXDN > (bnm - 10)) {
 			utils.ReportMessage(fmt.Sprintf("SHIT BLOCK COUNT: Have %d, should have %d", bnm, blockhashXDN))
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			continue
 		}
 		bl, err := coind.WrapDaemon(daemon, 1, "getbalance")
 		balance, err := strconv.ParseFloat(strings.Trim(string(bl), "\""), 64)
 		if errBlock != nil {
 			utils.WrapErrorLog(errBlock.Error())
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			continue
 		}
 		if balance < 2000000.0 {
@@ -600,7 +596,8 @@ func ScanMasternodes() {
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			utils.ReportMessage(fmt.Sprintf("error status masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			continue
 		}
 		errJson := json.Unmarshal(p, &ing)
@@ -611,7 +608,8 @@ func ScanMasternodes() {
 			if errr != nil {
 				utils.WrapErrorLog(errr.Error())
 				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
-				go Snap(daemon.Folder, daemon.CoinID)
+				c := Snap(daemon.Folder, daemon.CoinID)
+				<-c
 				continue
 			} else {
 				utils.ReportMessage(string(pp))
@@ -634,19 +632,22 @@ func ScanMasternodes() {
 			s, errr := coind.WrapDaemon(daemon, 1, "masternode", "start")
 			if errr != nil {
 				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
-				go Snap(daemon.Folder, daemon.CoinID)
+				c := Snap(daemon.Folder, daemon.CoinID)
+				<-c
 				continue
 			}
 			if string(s) != "Masternode successfully started" {
 				utils.ReportMessage(fmt.Sprintf("error starting masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
-				go Snap(daemon.Folder, daemon.CoinID)
+				c := Snap(daemon.Folder, daemon.CoinID)
+				<-c
 				continue
 			}
 		}
 
 		if ing == check {
 			utils.ReportMessage("Rescuing masternode")
-			go Snap(daemon.Folder, daemon.CoinID)
+			c := Snap(daemon.Folder, daemon.CoinID)
+			<-c
 			continue
 		} else {
 			rpcuser := ""
@@ -680,7 +681,8 @@ func ScanMasternodes() {
 			bytes, err := coind.WrapDaemon(models.Daemon{WalletPass: rpcpassword, WalletPort: rpcPort, WalletUser: rpcuser}, 2, "masternode", "list", "full")
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
-				go Snap(daemon.Folder, daemon.CoinID)
+				c := Snap(daemon.Folder, daemon.CoinID)
+				<-c
 				continue
 			}
 
@@ -688,7 +690,8 @@ func ScanMasternodes() {
 			errJson = json.Unmarshal(bytes, &mnList40)
 			if errJson != nil {
 				utils.WrapErrorLog(errJson.Error())
-				go Snap(daemon.Folder, daemon.CoinID)
+				c := Snap(daemon.Folder, daemon.CoinID)
+				<-c
 				continue
 			}
 

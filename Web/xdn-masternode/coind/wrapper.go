@@ -56,7 +56,6 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 		if client == nil {
 			client, errClient = New("127.0.0.1", daemon.WalletPort, daemon.WalletUser, daemon.WalletPass, false, 90)
 			if errClient != nil {
-				utils.ReportMessage(errClient.Error())
 				time.Sleep(30 * time.Second)
 				continue
 			}
@@ -66,7 +65,6 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 
 		if er != nil {
 			_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart %s.service", daemon.Folder)).Output()
-			utils.ReportMessage("Daemon unreachable " + er.Error())
 			time.Sleep(30 * time.Second)
 			continue
 		}

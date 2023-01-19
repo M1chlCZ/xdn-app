@@ -182,14 +182,14 @@ class ComInterface {
     return responseJson;
   }
 
-  static Future<void> refreshToken() async {
+  Future<void> refreshToken() async {
     debugPrint("/// RefreshToken ///");
-    if (_refreshingToken) {
-      return;
-    }
     try {
+      if (_refreshingToken) {
+        return;
+      }
       _refreshingToken = true;
-      await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
+
       String? enc = await SecureStorage.read(key: globals.TOKEN_REFRESH);
       Map request = {
         "token": enc,
@@ -207,29 +207,6 @@ class ComInterface {
         await SecureStorage.write(key: globals.TOKEN_DAO, value: res.data!.token!);
         await SecureStorage.write(key: globals.TOKEN_REFRESH, value: res.data!.refreshToken!);
         _refreshingToken = false;
-      }else{
-        await Future.delayed(const Duration(seconds: 1));
-        Map request = {
-          "token": enc,
-        };
-        final resp = await http
-            .post(Uri.parse("${globals.API_URL}/login/refresh"), body: json.encode(request), headers: {"accept": "application/json", "content-type": "application/json", "Auth-Type": "rsa"}).timeout(
-          const Duration(seconds: 20),
-          onTimeout: () {
-            return http.Response('ErrorTimeOut', 500); // Request Timeout response status code
-          },
-        );
-        if (resp.statusCode == 200) {
-          TokenRefresh? res = TokenRefresh.fromJson(json.decode(resp.body));
-          if (res.data!.token != null) {
-            await SecureStorage.write(key: globals.TOKEN_DAO, value: res.data!.token!);
-            await SecureStorage.write(key: globals.TOKEN_REFRESH, value: res.data!.refreshToken!);
-            _refreshingToken = false;
-          }
-        }else{
-          await SecureStorage.deleteStorage(key: globals.TOKEN_DAO);
-          await SecureStorage.deleteStorage(key: globals.TOKEN_REFRESH);
-        }
       }
       _refreshingToken = false;
     } catch (e) {

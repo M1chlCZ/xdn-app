@@ -123,6 +123,7 @@ func main() {
 	app.Post("api/v1/masternode/non/start", utils.Authorized(startNonMN))
 	app.Get("api/v1/masternode/non/list", utils.Authorized(listNonMN))
 	app.Post("api/v1/masternode/non/restart", utils.Authorized(restartNonMN))
+	app.Post("api/v1/masternode/non/tx", utils.Authorized(txNonMn))
 
 	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
 
@@ -231,6 +232,43 @@ func main() {
 	_ = ln.Close()
 	_ = app.Shutdown()
 	os.Exit(0)
+
+}
+
+func txNonMn(c *fiber.Ctx) error {
+	var Req struct {
+		Tx string `json:"tx"`
+	}
+
+	err := c.BodyParser(&Req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	addrCheck, errNet := utils.GETAny(fmt.Sprintf("https://xdn-explorer.com/ext/gettx/%s", Req.Tx))
+	if errNet != nil {
+		utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
+		return utils.ReportError(c, errNet.ErrorMessage(), errNet.StatusCode())
+	}
+
+	bodyXDN, _ := io.ReadAll(addrCheck.Body)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}(addrCheck.Body)
+
+	var sum models.BlockTX
+	err = json.Unmarshal(bodyXDN, &sum)
+	if err != nil {
+		return utils.ReportErrorSilent(c, err.Error(), http.StatusInternalServerError)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:     false,
+		utils.STATUS:    utils.OK,
+		"confirmations": sum.Confirmations,
+	})
 
 }
 
