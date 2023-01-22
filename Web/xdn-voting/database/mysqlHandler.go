@@ -323,6 +323,7 @@ func InsertSQl(SQL string, params ...interface{}) (int64, error) {
 	query, errStmt := Database.Exec(SQL, params...)
 	//res, errStmt := query.Exec(params...)
 	if errStmt != nil {
+		utils.WrapErrorLog(errStmt.Error())
 		//fmt.Printf("Can't Insert shit")
 		return 0, errStmt
 	}

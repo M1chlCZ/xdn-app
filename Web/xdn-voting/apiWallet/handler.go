@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"net/http"
+	"os/exec"
 	"time"
 	"xdn-voting/coind"
 	"xdn-voting/daemons"
@@ -36,6 +37,15 @@ func unlockStakeWallet() {
 		utils.ReportMessage(err.Error())
 	}
 	utils.ReportMessage("Stake wallet unlocked")
+}
+
+func RepairWallet() {
+	_, err := coind.WrapDaemon(utils.DaemonStakeWallet, 1, "repairwallet")
+	if err != nil {
+		utils.ReportMessage(err.Error())
+	}
+	_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop staking.service")).Output()
+	utils.ReportMessage("Wallet Repaired unlocked")
 }
 
 func submitStakeTransaction(c *fiber.Ctx) error {
@@ -112,6 +122,8 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 		_, _ = database.InsertSQl("UPDATE transaction_stake SET credited = 1 WHERE txid = ?", txID.Txid)
 		utils.ReportMessage(fmt.Sprintf("Stake transaction credited %s", txID.Txid))
 
+	} else {
+		utils.ReportMessage(fmt.Sprintf("Transaction is not stake %s %f", txID.Txid, txID.Amount))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{

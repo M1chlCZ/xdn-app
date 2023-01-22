@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xdn_web_app/globals.dart' as globals;
 import 'package:xdn_web_app/src/controllers/sign_in_controller.dart';
+import 'package:xdn_web_app/src/models/AppUser.dart';
 import 'package:xdn_web_app/src/net_interface/interface.dart';
 import 'package:xdn_web_app/src/screens/home_screen.dart';
 import 'package:xdn_web_app/src/support/app_router.dart';
@@ -88,6 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   void _checkLogin(String qr) async {
     final netw = ref.read(networkProvider);
+    final rauth = ref.read(authRepositoryProvider);
     String? token;
     await Future.doWhile(() async {
       try {
@@ -100,6 +102,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           token = res["token"];
           await SecureStorage.write(key: globals.TOKEN_DAO, value: res["token"]);
           await SecureStorage.write(key: globals.TOKEN_REFRESH, value: res["refresh_token"]);
+          await SecureStorage.write(key: globals.ADMINPRIV, value: res["admin"].toString());
+          rauth.currentUser = AppUser (uid: "asdf", email: "adf@dsf.com", admin: res["admin"] == 1 ? true : false);
           return false;
         } else {
           return true;

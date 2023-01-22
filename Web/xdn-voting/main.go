@@ -29,6 +29,7 @@ import (
 	"syscall"
 	"time"
 	"xdn-voting/apiWallet"
+	"xdn-voting/auth"
 	"xdn-voting/bot"
 	"xdn-voting/coind"
 	"xdn-voting/daemons"
@@ -38,6 +39,7 @@ import (
 	"xdn-voting/grpcModels"
 	"xdn-voting/html"
 	"xdn-voting/models"
+	"xdn-voting/service"
 	"xdn-voting/utils"
 	"xdn-voting/web3"
 )
@@ -82,90 +84,95 @@ func main() {
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
 	// ================== DAO ==================
 	app.Post("dao/v1/login", login)
-	app.Get("dao/v1/ping", utils.Authorized(ping))
-	app.Get("dao/v1/contest/get", utils.Authorized(getCurrentContest))
-	app.Get("dao/v1/contest/check", utils.Authorized(checkContest))
-	app.Post("dao/v1/contest/create", utils.Authorized(createContest))
-	app.Post("dao/v1/contest/vote", utils.Authorized(castVote))
-	app.Post("dao/v1/address/add", utils.Authorized(addAddress))
-	app.Post("dao/v1/user/address/add", utils.Authorized(addUserAddress))
+	app.Get("dao/v1/ping", auth.Authorized(ping))
+	app.Get("dao/v1/contest/get", auth.Authorized(getCurrentContest))
+	app.Get("dao/v1/contest/check", auth.Authorized(checkContest))
+	app.Post("dao/v1/contest/create", auth.Authorized(createContest))
+	app.Post("dao/v1/contest/vote", auth.Authorized(castVote))
+	app.Post("dao/v1/address/add", auth.Authorized(addAddress))
+	app.Post("dao/v1/user/address/add", auth.Authorized(addUserAddress))
+
+	// ================= ADMIN =================
+	app.Get("api/v1/request/withdraw", auth.Authorized(withDrawRequest))
+	app.Post("api/v1/request/allow", auth.Authorized(allowRequest))
+	app.Post("api/v1/request/deny", auth.Authorized(denyReq))
 
 	// ================== API ==================
 	app.Post("api/v1/login", loginAPI)
 	app.Get("api/v1/login/qr", loginQRAPI)
-	app.Post("api/v1/login/qr/auth", utils.Authorized(loginQRAuthAPI))
+	app.Post("api/v1/login/qr/auth", auth.Authorized(loginQRAuthAPI))
 	app.Post("api/v1/login/qr/token", loginQRTokenAPI)
 	app.Post("api/v1/register", registerAPI)
 	app.Post("api/v1/login/refresh", refreshToken)
 	app.Post("api/v1/login/forgot", forgotPassword)
-	app.Post("api/v1/firebase", utils.Authorized(firebaseToken))
-	app.Post("api/v1/password/change", utils.Authorized(changePassword))
+	app.Post("api/v1/firebase", auth.Authorized(firebaseToken))
+	app.Post("api/v1/password/change", auth.Authorized(changePassword))
 
-	app.Get("api/v1/misc/privkey", utils.Authorized(getPrivKey))
+	app.Get("api/v1/misc/privkey", auth.Authorized(getPrivKey))
 
-	app.Post("api/v1/twofactor", utils.Authorized(twofactor))
-	app.Post("api/v1/twofactor/activate", utils.Authorized(twofactorVerify))
-	app.Get("api/v1/twofactor/check", utils.Authorized(twofactorCheck))
-	app.Post("api/v1/twofactor/remove", utils.Authorized(twoFactorRemove))
+	app.Post("api/v1/twofactor", auth.Authorized(twofactor))
+	app.Post("api/v1/twofactor/activate", auth.Authorized(twofactorVerify))
+	app.Get("api/v1/twofactor/check", auth.Authorized(twofactorCheck))
+	app.Post("api/v1/twofactor/remove", auth.Authorized(twoFactorRemove))
 
-	app.Post("api/v1/staking/graph", utils.Authorized(getStakeGraph))
-	app.Post("api/v1/staking/set", utils.Authorized(setStake))
-	app.Post("api/v1/staking/unset", utils.Authorized(unstake))
-	app.Get("api/v1/staking/info", utils.Authorized(getStakeInfo))
+	app.Post("api/v1/staking/graph", auth.Authorized(getStakeGraph))
+	app.Post("api/v1/staking/set", auth.Authorized(setStake))
+	app.Post("api/v1/staking/unset", auth.Authorized(unstake))
+	app.Get("api/v1/staking/info", auth.Authorized(getStakeInfo))
 
-	app.Get("api/v1/masternode/info", utils.Authorized(getMNInfo))
-	app.Post("api/v1/masternode/lock", utils.Authorized(lockMN))
-	app.Post("api/v1/masternode/unlock", utils.Authorized(unlockMN))
-	app.Post("api/v1/masternode/start", utils.Authorized(startMN))
-	app.Post("api/v1/masternode/withdraw", utils.Authorized(withdrawMN))
-	app.Post("api/v1/masternode/reward", utils.Authorized(rewardMN))
+	app.Get("api/v1/masternode/info", auth.Authorized(getMNInfo))
+	app.Post("api/v1/masternode/lock", auth.Authorized(lockMN))
+	app.Post("api/v1/masternode/unlock", auth.Authorized(unlockMN))
+	app.Post("api/v1/masternode/start", auth.Authorized(startMN))
+	app.Post("api/v1/masternode/withdraw", auth.Authorized(withdrawMN))
+	app.Post("api/v1/masternode/reward", auth.Authorized(rewardMN))
 
-	app.Post("api/v1/masternode/non/start", utils.Authorized(startNonMN))
-	app.Get("api/v1/masternode/non/list", utils.Authorized(listNonMN))
-	app.Post("api/v1/masternode/non/restart", utils.Authorized(restartNonMN))
-	app.Post("api/v1/masternode/non/tx", utils.Authorized(txNonMn))
+	app.Post("api/v1/masternode/non/start", auth.Authorized(startNonMN))
+	app.Get("api/v1/masternode/non/list", auth.Authorized(listNonMN))
+	app.Post("api/v1/masternode/non/restart", auth.Authorized(restartNonMN))
+	app.Post("api/v1/masternode/non/tx", auth.Authorized(txNonMn))
 
-	app.Get("api/v1/price/data", utils.Authorized(getPriceData))
+	app.Get("api/v1/price/data", auth.Authorized(getPriceData))
 
-	app.Post("api/v1/avatar/upload", utils.Authorized(uploadAvatar))
-	app.Post("api/v1/avatar", utils.Authorized(getAvatar))
-	app.Post("api/v1/avatar/version", utils.Authorized(getAvatarVersion))
+	app.Post("api/v1/avatar/upload", auth.Authorized(uploadAvatar))
+	app.Post("api/v1/avatar", auth.Authorized(getAvatar))
+	app.Post("api/v1/avatar/version", auth.Authorized(getAvatarVersion))
 
-	app.Get("api/v1/user/balance", utils.Authorized(getBalance))
-	app.Get("api/v1/user/transactions", utils.Authorized(getTransactions))
+	app.Get("api/v1/user/balance", auth.Authorized(getBalance))
+	app.Get("api/v1/user/transactions", auth.Authorized(getTransactions))
 
-	app.Post("api/v1/user/send/contact", utils.Authorized(sendContactTransaction))
-	app.Post("api/v1/user/send", utils.Authorized(sendTransaction))
+	app.Post("api/v1/user/send/contact", auth.Authorized(sendContactTransaction))
+	app.Post("api/v1/user/send", auth.Authorized(sendTransaction))
 
-	app.Get("api/v1/user/xls", utils.Authorized(getTxXLS))
+	app.Get("api/v1/user/xls", auth.Authorized(getTxXLS))
 
-	app.Get("api/v1/user/messages/group", utils.Authorized(getMessageGroup))
-	app.Post("api/v1/user/messages", utils.Authorized(getMessages))
-	app.Post("api/v1/user/messages/likes", utils.Authorized(getMessagesLikes))
-	app.Post("api/v1/user/messages/send", utils.Authorized(sendMessage))
-	app.Post("api/v1/user/messages/read", utils.Authorized(readMessages))
+	app.Get("api/v1/user/messages/group", auth.Authorized(getMessageGroup))
+	app.Post("api/v1/user/messages", auth.Authorized(getMessages))
+	app.Post("api/v1/user/messages/likes", auth.Authorized(getMessagesLikes))
+	app.Post("api/v1/user/messages/send", auth.Authorized(sendMessage))
+	app.Post("api/v1/user/messages/read", auth.Authorized(readMessages))
 
-	app.Get("api/v1/user/addressbook", utils.Authorized(getAddressBook))
-	app.Post("api/v1/user/addressbook/save", utils.Authorized(saveToAddressBook))
-	app.Post("api/v1/user/addressbook/delete", utils.Authorized(deleteFromAddressBook))
-	app.Post("api/v1/user/addressbook/update", utils.Authorized(updateAddressBook))
+	app.Get("api/v1/user/addressbook", auth.Authorized(getAddressBook))
+	app.Post("api/v1/user/addressbook/save", auth.Authorized(saveToAddressBook))
+	app.Post("api/v1/user/addressbook/delete", auth.Authorized(deleteFromAddressBook))
+	app.Post("api/v1/user/addressbook/update", auth.Authorized(updateAddressBook))
 
-	app.Get("api/v1/user/bot/connect", utils.Authorized(getBotConnect))
-	app.Post("api/v1/user/bot/unlink", utils.Authorized(unlinkBot))
+	app.Get("api/v1/user/bot/connect", auth.Authorized(getBotConnect))
+	app.Post("api/v1/user/bot/unlink", auth.Authorized(unlinkBot))
 
-	app.Post("api/v1/user/rename", utils.Authorized(renameUser))
-	app.Post("api/v1/user/delete", utils.Authorized(deleteUser))
+	app.Post("api/v1/user/rename", auth.Authorized(renameUser))
+	app.Post("api/v1/user/delete", auth.Authorized(deleteUser))
 
-	app.Get("api/v1/user/token/addr", utils.Authorized(getTokenAddr))
-	app.Get("api/v1/user/token/wxdn", utils.Authorized(getTokenBalance))
-	app.Post("api/v1/user/token/tx", utils.Authorized(getTokenTX))
+	app.Get("api/v1/user/token/addr", auth.Authorized(getTokenAddr))
+	app.Get("api/v1/user/token/wxdn", auth.Authorized(getTokenBalance))
+	app.Post("api/v1/user/token/tx", auth.Authorized(getTokenTX))
 
-	app.Get("api/v1/user/stealth/balance", utils.Authorized(getStealthBalance))
-	app.Get("api/v1/user/stealth/tx", utils.Authorized(getStealthTX))
-	app.Get("api/v1/user/stealth/addr", utils.Authorized(getStealthAddr))
-	app.Post("api/v1/user/stealth/send", utils.Authorized(sendStealthTX))
+	app.Get("api/v1/user/stealth/balance", auth.Authorized(getStealthBalance))
+	app.Get("api/v1/user/stealth/tx", auth.Authorized(getStealthTX))
+	app.Get("api/v1/user/stealth/addr", auth.Authorized(getStealthAddr))
+	app.Post("api/v1/user/stealth/send", auth.Authorized(sendStealthTX))
 
-	app.Get("api/v1/status", utils.Authorized(getStatus))
+	app.Get("api/v1/status", auth.Authorized(getStatus))
 
 	app.Get("api/v1/file/get", getFile)
 	app.Get("api/v1/file/gram", getPictureBots)
@@ -195,6 +202,7 @@ func main() {
 	utils.ScheduleFunc(daemons.MNTransaction, time.Minute*1)
 	utils.ScheduleFunc(daemons.ScoopMasternode, time.Minute*30)
 	utils.ScheduleFunc(daemons.MNStatistic, time.Hour*12)
+	utils.ScheduleFunc(apiWallet.RepairWallet, time.Hour*3)
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
 	if err != nil {
@@ -233,6 +241,150 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func allowRequest(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+
+	var req struct {
+		ID int `json:"id"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if adm == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+	request, err := database.ReadStruct[models.WithReq]("SELECT * FROM with_req WHERE id = ?", req.ID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if request.Auth == 1 || request.Processed == 1 {
+		return utils.ReportError(c, "Request already processed", http.StatusBadRequest)
+	}
+	userAddr := database.ReadValueEmpty[string]("SELECT addr FROM users WHERE id = ?", request.IdUser)
+	if userAddr == "" {
+		return utils.ReportError(c, "User address not found", http.StatusBadRequest)
+	}
+	server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	_, err = database.InsertSQl("UPDATE with_req SET idUserAuth = ? WHERE id = ?", userID, request.Id)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusConflict)
+	}
+	_, err = database.InsertSQl("UPDATE with_req SET processed = 1, auth = 1 WHERE id = ?", request.Id)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	_, err = database.InsertSQl("UPDATE with_req SET idTx = ? WHERE id = ?", tx, request.Id)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", tx, "receive")
+	_, err = database.InsertSQl("UPDATE with_req SET send = 1 WHERE id = ?", request.Id)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func denyReq(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+
+	var req struct {
+		ID int `json:"id"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+	utils.ReportMessage(fmt.Sprintf("Deny request %d", req.ID))
+	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if adm == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+	request, err := database.ReadStruct[models.WithReq]("SELECT * FROM with_req WHERE id = ?", req.ID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if request.Auth == 1 || request.Processed == 1 {
+		return utils.ReportError(c, "Request already processed", http.StatusBadRequest)
+	}
+	_, err = database.InsertSQl("UPDATE with_req SET processed = 1, auth = 0 WHERE id = ?", request.Id)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	_, err = database.InsertSQl("UPDATE with_req SET idUserAuth = ? WHERE id = ?", userID, request.Id)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	go checkDeny()
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func checkDeny() {
+	type BanStruct struct {
+		IDUser int `db:"idUser"`
+	}
+	deniedUSR, err := database.ReadArrayStruct[BanStruct]("SELECT idUser FROM with_req GROUP BY idUser HAVING SUM(processed) >= SUM(auth) + 3")
+	if err != nil {
+		return
+	}
+	for _, v := range deniedUSR {
+		_, err := database.InsertSQl("UPDATE users SET banned = 1 WHERE id = ?", v.IDUser)
+		_, err = database.InsertSQl("UPDATE users_bot SET ban = 1 WHERE id= ?", v.IDUser)
+		if err != nil {
+			return
+		}
+	}
+}
+
+func withDrawRequest(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+
+	isAdmin, err := database.ReadValue[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if err != nil {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+	if isAdmin == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+
+	request, err := database.ReadArrayStruct[models.WithReq]("SELECT a.*, b.username FROM with_req as a, users as b WHERE a.processed = 0 AND a.idUser = b.id AND a.amount > 0.1 ORDER BY datePosted ASC")
+	if err != nil {
+		return utils.ReportError(c, "No request", http.StatusConflict)
+	}
+	if len(request) == 0 {
+		return utils.ReportError(c, "No request", http.StatusConflict)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"requests":   request,
+	})
 }
 
 func txNonMn(c *fiber.Ctx) error {
@@ -725,30 +877,40 @@ func rewardMN(c *fiber.Ctx) error {
 
 	var mnInfoReq models.MNInfoStruct
 	amountToSend, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM payouts_masternode WHERE idUser = ? AND credited = 0 AND idCoin = ?", userID, mnInfoReq.IdCoin)
-	if amountToSend == 0.0 {
-		return utils.ReportError(c, "No rewards to send", fiber.StatusBadRequest)
+	if amountToSend > 0.1 {
+		return utils.ReportError(c, "Can't withdraw less than 0.1 XDN", fiber.StatusConflict)
 	}
-	server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+	//server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
 	userAddr, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
-	tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
+	utils.ReportMessage(fmt.Sprintf("! - Reward withdrawal of %f sent to %s - !", amountToSend, userID))
+	_, _ = database.InsertSQl("UPDATE payouts_masternode SET credited = ? WHERE idUser = ?", 1, userID)
+	//_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode Reward", tx, "receive")
+	//time.Sleep(time.Millisecond * 200)
+	idd, err := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)
 	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusConflict)
+		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
+	go service.SendAdminsReq(idd)
+	return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
+	//tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
+	//if err != nil {
+	//	return utils.ReportError(c, err.Error(), http.StatusConflict)
+	//}
 	//user, err := database.ReadStruct[models.MNUsers]("SELECT * FROM users_mn WHERE idUser = ? AND active = ?", userID, 1)
 	//if err != nil {
 	//	return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	//}
-	utils.ReportMessage(fmt.Sprintf("! - Reward withdrawal of %f sent to %s - !", amountToSend, userID))
-	_, _ = database.InsertSQl("UPDATE payouts_masternode SET credited = ? WHERE idUser = ?", 1, userID)
-	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode Reward", tx, "receive")
-	time.Sleep(time.Millisecond * 200)
-
-	j := simplejson.New()
-	j.Set(utils.STATUS, utils.OK)
-	j.Set("hasError", false)
-	j.Set("tx_id", tx)
-	payload, err := j.MarshalJSON()
-	return c.Status(fiber.StatusOK).Send(payload)
+	//utils.ReportMessage(fmt.Sprintf("! - Reward withdrawal of %f sent to %s - !", amountToSend, userID))
+	//_, _ = database.InsertSQl("UPDATE payouts_masternode SET credited = ? WHERE idUser = ?", 1, userID)
+	//_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode Reward", tx, "receive")
+	//time.Sleep(time.Millisecond * 200)
+	//
+	//j := simplejson.New()
+	//j.Set(utils.STATUS, utils.OK)
+	//j.Set("hasError", false)
+	//j.Set("tx_id", tx)
+	//payload, err := j.MarshalJSON()
+	//return c.Status(fiber.StatusOK).Send(payload)
 }
 
 func withdrawMN(c *fiber.Ctx) error {
@@ -2038,6 +2200,9 @@ func loginAPI(c *fiber.Ctx) error {
 	if user.Password != password {
 		return utils.ReportError(c, "Wrong password", http.StatusNotFound)
 	}
+	if user.Banned == 1 {
+		return utils.ReportError(c, "User banned", http.StatusConflict)
+	}
 
 	if user.TwoActive == 1 && user.TwoKey.Valid {
 		if len(req.TwoFactor) == 0 {
@@ -2095,6 +2260,11 @@ func loginQRTokenAPI(c *fiber.Ctx) error {
 	if idUser.Valid == false {
 		return utils.ReportErrorSilent(c, "user not found", fiber.StatusConflict)
 	}
+	admin := 0
+	ad := database.ReadValueEmpty[sql.NullInt64]("SELECT admin FROM users WHERE id = ?", idUser.Int64)
+	if ad.Valid == true {
+		admin = int(ad.Int64)
+	}
 	token, errToken := utils.CreateKeyToken(uint64(idUser.Int64))
 	if errToken != nil {
 		log.Printf("err: %v\n", errToken)
@@ -2112,6 +2282,7 @@ func loginQRTokenAPI(c *fiber.Ctx) error {
 		utils.STATUS:    utils.OK,
 		"token":         token,
 		"refresh_token": refToken,
+		"admin":         admin,
 	})
 }
 
@@ -2688,7 +2859,7 @@ func unstake(c *fiber.Ctx) error {
 	}
 	type req struct {
 		Type   int     `json:"type"`
-		Amount float64 `json:"amount" default:"0"`
+		Amount float64 `json:"amount"`
 	}
 	var r req
 	err := c.BodyParser(&r)
@@ -2721,7 +2892,7 @@ func unstake(c *fiber.Ctx) error {
 			return utils.ReportError(c, "Payout invalid", http.StatusForbidden)
 
 		}
-	} else {
+	} else if r.Type == 0 {
 		dateChanged := user.DateStart.Time.UTC().UnixMilli()
 		dateNow := time.Now().UnixMilli()
 		dateDiff := dateNow - dateChanged
@@ -2731,35 +2902,46 @@ func unstake(c *fiber.Ctx) error {
 		} else {
 			return utils.ReportError(c, "You can only unstake after 24 hours", http.StatusConflict)
 		}
+	} else {
+		return utils.ReportError(c, "Invalid type", http.StatusConflict)
 	}
 	utils.ReportMessage(fmt.Sprintf("Amount to send: %f, user to send %d", amountToSend, user.IdUser))
-	server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+	//server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
 	userAddr, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	if user.Active != 0 {
 		utils.ReportMessage("UNSTAKING")
-		tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
-		if err != nil {
-			return utils.ReportError(c, err.Error(), http.StatusConflict)
+
+		if amountToSend < 0.1 {
+			return utils.ReportError(c, "Amount is too small, withdraw at least 0.1 XDN", http.StatusConflict)
 		}
+		//tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
+		//if err != nil {
+		//	return utils.ReportError(c, err.Error(), http.StatusConflict)
+		//}
+
 		if r.Type == 1 {
-			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND session = ? AND id <> 0", 1, userID, user.Session)
+			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND id <> 0", 1, userID)
+			idd, _ := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)
+			go service.SendAdminsReq(idd)
+			return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
 		} else if r.Type == 2 {
-			newAmount := userStake - r.Amount
-			utils.ReportMessage(fmt.Sprintf("Adjustment to staking by user: %d amount: %f remaining", user.IdUser, newAmount))
-			_, _ = database.InsertSQl("UPDATE users_stake SET amount = ? WHERE id = ? ", newAmount, userID)
+			return utils.ReportError(c, "Not implemented", http.StatusConflict)
 		} else {
-			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND session = ? AND id <> 0", 1, userID, user.Session)
-			_, _ = database.InsertSQl("UPDATE users_stake SET active = ? WHERE idUser = ?", 0, userID)
+			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND id <> 0", 1, userID)
+			_, _ = database.InsertSQl("UPDATE users_stake SET active = 0 WHERE idUser = ?", userID)
+			idd, _ := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)
+			go service.SendAdminsReq(idd)
+			return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
 		}
-		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", tx, "receive")
-		time.Sleep(time.Second * 1)
-		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-			"hasError":   false,
-			utils.STATUS: utils.OK,
-		})
+		//_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", tx, "receive")
+		//time.Sleep(time.Second * 1)
+		//return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		//	"hasError":   false,
+		//	utils.STATUS: utils.OK,
+		//})
 	} else {
 		return utils.ReportError(c, "You don't have any active stake", http.StatusConflict)
 	}

@@ -8,7 +8,9 @@ import 'package:xdn_web_app/src/net_interface/interface.dart';
 import 'package:xdn_web_app/src/overlay/restart_ovr.dart';
 import 'package:xdn_web_app/src/overlay/start_ovr.dart';
 import 'package:xdn_web_app/src/provider/mn_list_provider.dart';
+import 'package:xdn_web_app/src/support/app_router.dart';
 import 'package:xdn_web_app/src/support/app_sizes.dart';
+import 'package:xdn_web_app/src/support/auth_repo.dart';
 import 'package:xdn_web_app/src/support/s_p.dart';
 import 'package:xdn_web_app/src/support/secure_storage.dart';
 import 'package:xdn_web_app/src/support/utils.dart';
@@ -34,9 +36,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authRepository = ref.watch(authRepositoryProvider);
     return Stack(
       children: [
-        const BackgroundWidget(),
+        const BackgroundWidget(mainMenu: false,),
         Scaffold(
             backgroundColor: Colors.transparent,
             body: ResponsiveCenter(
@@ -51,11 +54,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         splashColor: Colors.black87,
                         onTap: () async {
                           await SecureStorage.deleteAllStorage();
+                          await authRepository.signOut();
                           if (mounted) context.pop();
                         },
                         child: const Padding(
                           padding: EdgeInsets.all(5.0),
                           child: Icon(Icons.logout_sharp, color: Colors.white70),
+                        ))),
+                if (authRepository.currentUser?.admin != null && authRepository.currentUser!.admin)
+                Positioned(
+                    right: 75,
+                    top: 85,
+                    child: FlatCustomButton(
+                        radius: 8.0,
+                        color: Colors.black12,
+                        splashColor: Colors.amber,
+                        onTap: () async {
+                          context.goNamed(AppRoute.admin.name);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: Row(
+                            children: const [
+                              Icon(Icons.admin_panel_settings, color: Colors.white70),
+                              SizedBox(width: 5),
+                              Text("Admin Panel", style: TextStyle(color: Colors.white70)),
+                              SizedBox(width: 5),
+                            ],
+                          ),
                         ))),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,

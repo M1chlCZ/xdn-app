@@ -45,7 +45,7 @@ class SecureStorage {
     try {
       if (Platform.isMacOS) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
+        await prefs.remove(key);
       } else {
         const FlutterSecureStorage mstorage = FlutterSecureStorage();
         const optionsApple = IOSOptions(accessibility: KeychainAccessibility.first_unlock);

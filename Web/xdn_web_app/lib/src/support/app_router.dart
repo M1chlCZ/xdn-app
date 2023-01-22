@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xdn_web_app/src/screens/admin_panel.dart';
 import 'package:xdn_web_app/src/screens/home_screen.dart';
 import 'package:xdn_web_app/src/screens/not_found.dart';
 import 'package:xdn_web_app/src/screens/splash.dart';
@@ -10,11 +11,7 @@ import 'package:xdn_web_app/src/support/go_router_refresh_stream.dart';
 enum AppRoute {
   home,
   splash,
-  product,
-  leaveReview,
-  cart,
-  checkout,
-  orders,
+  admin,
   account,
   signIn,
 }
@@ -27,8 +24,7 @@ CustomTransitionPage buildPageWithDefaultTransition<T>({
   return CustomTransitionPage<T>(
     key: state.pageKey,
     child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-        FadeTransition(opacity: animation, child: child),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
   );
 }
 
@@ -39,11 +35,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final isLoggedIn = authRepository.currentUser != null;
+      final isAdmin = authRepository.currentUser?.admin ?? false;
       if (isLoggedIn) {
         if (state.location == '/') {
           return '/home';
         }
       } else {
+        if (state.location == '/admin' && !isAdmin) {
+          return '/home';
+        }
         if (state.location == '/home' || state.location == '/orders') {
           return '/';
         }
@@ -122,18 +122,28 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               state: state,
               child: const HomeScreen(),
             ),
+            routes: [
+              GoRoute(
+                path: 'admin',
+                name: AppRoute.admin.name,
+                pageBuilder: (context, state) => buildPageWithDefaultTransition<void>(
+                  context: context,
+                  state: state,
+                  child: const AdminScreen(),
+                ),
+              ),
+            ],
           ),
-          // GoRoute(
-          //   path: 'signIn',
-          //   name: AppRoute.signIn.name,
-          //   pageBuilder: (context, state) => MaterialPage(
-          //     key: state.pageKey,
-          //     fullscreenDialog: true,
-          //     child: const EmailPasswordSignInScreen(
-          //       formType: EmailPasswordSignInFormType.signIn,
-          //     ),
-          //   ),
-          // ),
+          GoRoute(
+            path: 'account',
+            name: AppRoute.account.name,
+            builder: (context, state) => const AdminScreen(),
+            pageBuilder: (context, state) => buildPageWithDefaultTransition<void>(
+              context: context,
+              state: state,
+              child: const AdminScreen(),
+            ),
+          ),
         ],
       ),
     ],

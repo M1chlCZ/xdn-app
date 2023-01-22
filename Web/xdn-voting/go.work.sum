@@ -59,6 +59,7 @@ cloud.google.com/go/language v1.8.0 h1:3Wa+IUMamL4JH3Zd3cDZUHpwyqplTACt6UZKRD2eC
 cloud.google.com/go/lifesciences v0.6.0 h1:tIqhivE2LMVYkX0BLgG7xL64oNpDaFFI7teunglt1tI=
 cloud.google.com/go/logging v1.6.1 h1:ZBsZK+JG+oCDT+vaxwqF2egKNRjz8soXiS6Xv79benI=
 cloud.google.com/go/managedidentities v1.4.0 h1:3Kdajn6X25yWQFhFCErmKSYTSvkEd3chJROny//F1A0=
+cloud.google.com/go/maps v0.1.0 h1:kLReRbclTgJefw2fcCbdLPLhPj0U6UUWN10ldG8sdOU=
 cloud.google.com/go/mediatranslation v0.6.0 h1:qAJzpxmEX+SeND10Y/4868L5wfZpo4Y3BIEnIieP4dk=
 cloud.google.com/go/memcache v1.7.0 h1:yLxUzJkZVSH2kPaHut7k+7sbIBFpvSh1LW9qjM2JDjA=
 cloud.google.com/go/metastore v1.8.0 h1:3KcShzqWdqxrDEXIBWpYJpOOrgpDj+HlBi07Grot49Y=
@@ -106,6 +107,7 @@ cloud.google.com/go/video v1.9.0 h1:ttlvO4J5c1VGq6FkHqWPD/aH6PfdxujHt+muTJlW1Zk=
 cloud.google.com/go/videointelligence v1.9.0 h1:RPFgVVXbI2b5vnrciZjtsUgpNKVtHO/WIyXUhEfuMhA=
 cloud.google.com/go/vision/v2 v2.5.0 h1:TQHxRqvLMi19azwm3qYuDbEzZWmiKJNTpGbkNsfRCik=
 cloud.google.com/go/vmmigration v1.3.0 h1:A2Tl2ZmwMRpvEmhV2ibISY85fmQR+Y5w9a0PlRz5P3s=
+cloud.google.com/go/vmwareengine v0.1.0 h1:JMPZaOT/gIUxVlTqSl/QQ32Y2k+r0stNeM1NSqhVP9o=
 cloud.google.com/go/vpcaccess v1.5.0 h1:woHXXtnW8b9gLFdWO9HLPalAddBQ9V4LT+1vjKwR3W8=
 cloud.google.com/go/webrisk v1.7.0 h1:ypSnpGlJnZSXbN9a13PDmAYvVekBLnGKxQ3Q9SMwnYY=
 cloud.google.com/go/websecurityscanner v1.4.0 h1:y7yIFg/h/mO+5Y5aCOtVAnpGUOgqCH5rXQ2Oc8Oq2+g=
@@ -194,6 +196,7 @@ golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 h1:XQyxROzUlZH+WIQwySDgnISg
 golang.org/x/mobile v0.0.0-20190719004257-d2bd2a29d028 h1:4+4C/Iv2U4fMZBiMCc98MG1In4gJY5YRhtpDNeDeHWs=
 golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 h1:6zppjxzCulZykYSLyVDYbneBfbaBIQPYMevg0bEwv2s=
 golang.org/x/term v0.2.0 h1:z85xZCsEl7bi/KwbNADeBYoOP0++7W1ipu+aGnpwzRM=
+golang.org/x/term v0.4.0 h1:O7UWfv5+A2qiuulQk30kVinPoMtoIPeVaKLEgLpVkvg=
 golang.org/x/tools v0.1.12 h1:VveCTK38A2rkS8ZqFY25HIDFscX5X9OoEhJd3quQmXU=
 gopkg.in/fsnotify.v1 v1.4.7 h1:xOHLXZwVvI9hhs+cLKq5+I5onOuwQLhQwiu63xxlHs4=
 gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce h1:+JknDZhAj8YMt7GC73Ei8pv4MzjDUNPHgQWJdtMAaDU=

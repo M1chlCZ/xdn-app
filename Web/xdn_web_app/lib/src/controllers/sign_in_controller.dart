@@ -9,7 +9,7 @@ class EmailPasswordSignInController
     required EmailPasswordSignInFormType formType,
     required this.authRepository,
   }) : super(EmailPasswordSignInState(formType: formType));
-  final FakeAuthRepository authRepository;
+  final AuthRepository authRepository;
 
   Future<bool> submit(String email, String password) async {
     state = state.copyWith(value: const AsyncValue.loading());
