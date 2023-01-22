@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:digitalnote/models/MasternodeInfo.dart';
 import 'package:digitalnote/models/MessageGroup.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
+import 'package:digitalnote/screens/auth_req_screen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
 import 'package:digitalnote/screens/main_menu.dart';
@@ -405,6 +406,17 @@ class MyAppState extends State<MyApp> {
                   ));
         } else {
           return MaterialPageRoute(builder: (_) => const MessageScreen());
+        }
+      case AuthReqScreen.route:
+        Object? args = settings.arguments;
+        if (args != null) {
+          String? m = args as String?;
+          return MaterialPageRoute(
+              builder: (_) => AuthReqScreen(
+                idRequest: m,
+              ));
+        } else {
+          return MaterialPageRoute(builder: (_) => const AuthReqScreen());
         }
       case BlockInfoScreen.route:
         return MaterialPageRoute(builder: (_) => const BlockInfoScreen());

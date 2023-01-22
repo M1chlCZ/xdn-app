@@ -97,6 +97,8 @@ func main() {
 	app.Post("api/v1/request/allow", auth.Authorized(allowRequest))
 	app.Post("api/v1/request/deny", auth.Authorized(denyReq))
 
+	app.Post("api/v1/request/withdraw", auth.Authorized(getReqWithApp))
+
 	// ================== API ==================
 	app.Post("api/v1/login", loginAPI)
 	app.Get("api/v1/login/qr", loginQRAPI)
@@ -243,6 +245,37 @@ func main() {
 
 }
 
+func getReqWithApp(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+
+	var req struct {
+		ID string `json:"id"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if adm == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+	request, err := database.ReadStruct[models.WithReq]("SELECT a.*, b.username FROM with_req as a, users as b WHERE a.id = ? AND a.idUser = b.id", req.ID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if request.Processed == 1 {
+		return utils.ReportError(c, "Request already processed", http.StatusConflict)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"request":    request,
+	})
+}
+
 func allowRequest(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	if userID == "" {
@@ -264,7 +297,7 @@ func allowRequest(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	if request.Auth == 1 || request.Processed == 1 {
+	if request.Processed == 1 {
 		return utils.ReportError(c, "Request already processed", http.StatusBadRequest)
 	}
 	userAddr := database.ReadValueEmpty[string]("SELECT addr FROM users WHERE id = ?", request.IdUser)
@@ -324,7 +357,7 @@ func denyReq(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	if request.Auth == 1 || request.Processed == 1 {
+	if request.Processed == 1 {
 		return utils.ReportError(c, "Request already processed", http.StatusBadRequest)
 	}
 	_, err = database.InsertSQl("UPDATE with_req SET processed = 1, auth = 0 WHERE id = ?", request.Id)

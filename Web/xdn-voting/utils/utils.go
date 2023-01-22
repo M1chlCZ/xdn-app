@@ -386,7 +386,7 @@ func SendMessage(token string, title string, body string, data map[string]string
 		WrapErrorLog(err.Error())
 		return
 	}
-	_, err = mess.Send(context.Background(), &messaging.Message{
+	m, err := mess.Send(context.Background(), &messaging.Message{
 		Notification: &messaging.Notification{
 			Title: title,
 			Body:  body,
@@ -406,9 +406,10 @@ func SendMessage(token string, title string, body string, data map[string]string
 	})
 
 	if err != nil {
-		//WrapErrorLog(err.Error())
+		WrapErrorLog(err.Error())
 		return
 	}
+	ReportMessage(m)
 }
 
 func RandNum(elements int) int64 {

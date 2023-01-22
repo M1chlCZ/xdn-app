@@ -5,6 +5,7 @@ import 'package:digitalnote/generated/phone.pbgrpc.dart';
 import 'package:digitalnote/models/StealhBalance.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
+import 'package:digitalnote/screens/auth_req_screen.dart';
 import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
@@ -102,9 +103,11 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     _getLocale();
     super.initState();
     loginDao();
-    getNotification();
     FlutterAppBadger.removeBadge();
     getMNPermission();
+    Future.delayed(Duration.zero, () {
+      getNotification();
+    });
   }
 
   getMNPermission() async {
@@ -181,6 +184,20 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         String? contact = await db.getContactNameByAddr(sentAddr);
         MessageGroup m = MessageGroup(sentAddr: contact ?? sentAddr, sentAddressOrignal: sentAddr);
         if (mounted) Navigator.pushNamed(context, MessageDetailScreen.route, arguments: m);
+      }
+    });
+    if (initialMessage != null) {
+      if (initialMessage.data['func'] == "req") {
+        String idReq = initialMessage.data['fr'];
+        if (mounted) Navigator.pushNamed(context, AuthReqScreen.route, arguments: idReq);
+        return;
+      }
+    }
+
+    FirebaseMessaging.onMessageOpenedApp.listen((message) async {
+      if (message.data['func'] == "req") {
+        String idReq = message.data['fr'];
+        if (mounted) Navigator.pushNamed(context, AuthReqScreen.route, arguments: idReq);
       }
     });
   }

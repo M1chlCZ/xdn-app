@@ -13,7 +13,6 @@ import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/secure_storage.dart';
-import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/coin_stake_graph.dart';
 import 'package:digitalnote/widgets/percent_switch_widget.dart';
@@ -1005,45 +1004,6 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 15.0,
-                    ),
-                    Visibility(
-                      visible: endTime == 0 ? true : false,
-                      child: Padding(
-                          padding: const EdgeInsets.only(left: 10.0, right: 10.0),
-                          child: FlatCustomButton(
-                            onTap: () {
-                              if (!_adjustReward) {
-                                // _unStake(2);
-                                Dialogs.openStakeAdjustment(context, _stakeAmount, (k) {
-                                  Navigator.of(context).pop();
-                                  _unstakeCoins(2, amount: k);
-                                });
-                              }
-                            },
-                            radius: 10.0,
-                            color: Colors.amber.withOpacity(0.6),
-                            child:
-                            SizedBox(
-                                height: 40.0,
-                                child: Center(
-                                    child: _adjustReward
-                                        ? const Padding(
-                                      padding: EdgeInsets.all(3.0),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.0,
-                                        color: Colors.white70,
-                                      ),
-                                    )
-                                        : AutoSizeText(
-                                      AppLocalizations.of(context)!.st_adjust,
-                                      maxLines: 1,
-                                      minFontSize: 8.0,
-                                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 18.0),
-                                    ))),
-                          )),
                     ),
                     const SizedBox(
                       height: 15.0,
