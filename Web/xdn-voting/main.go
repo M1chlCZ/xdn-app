@@ -948,12 +948,27 @@ func rewardMN(c *fiber.Ctx) error {
 
 func withdrawMN(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
+	uid, err := strconv.Atoi(userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
 	var stakeReq models.MNWithStruct
 	errJson := c.BodyParser(&stakeReq)
 	if errJson != nil {
 		return utils.ReportError(c, "JSON Request Body empty", http.StatusBadRequest)
-
 	}
+
+	exist, err := database.ReadValue[int]("SELECT COUNT(id) FROM requests WHERE idUser = ? AND masternode = 1 AND processed = 0", uid)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if exist > 0 {
+		return utils.ReportError(c, "You have an active request", http.StatusBadRequest)
+	}
+
+	_, _ = database.InsertSQl("INSERT INTO requests (idUser, staking, masternode) VALUES (?, ?, ?)", userID, 0, 1)
+
+	defer unrequestMasternode(uid)
 
 	userNode, _ := database.ReadValue[int64]("SELECT COUNT(*) FROM users_mn WHERE idUser = ? AND idNode = ? AND active = 1", userID, stakeReq.IdNode)
 	if userNode == 0 {
@@ -1021,6 +1036,10 @@ func withdrawMN(c *fiber.Ctx) error {
 	j.Set(utils.STATUS, utils.OK)
 	j.Set(utils.ERROR, false)
 	return c.Status(fiber.StatusOK).JSON(j)
+}
+
+func unrequestMasternode(idUser int) {
+	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND masternode = 1 AND id <> 0", idUser)
 }
 
 func startMN(c *fiber.Ctx) error {
@@ -2373,6 +2392,10 @@ func refreshToken(c *fiber.Ctx) error {
 	if errSelect != nil {
 		return utils.ReportErrorSilent(c, "Invalid refresh token", http.StatusUnauthorized)
 	}
+	ban := database.ReadValueEmpty[bool]("SELECT banned FROM users WHERE id= ?", readSql.IdUser)
+	if ban {
+		return utils.ReportErrorSilent(c, "Banned user", http.StatusUnauthorized)
+	}
 
 	if len(readSql.RefToken) != 0 && readSql.Used == 0 {
 		_, errUpdate := database.InsertSQl("UPDATE refresh_token SET used = 1 WHERE refreshToken = ?", userAuth.Token)
@@ -2894,8 +2917,20 @@ func unstake(c *fiber.Ctx) error {
 		Type   int     `json:"type"`
 		Amount float64 `json:"amount"`
 	}
+	exist, err := database.ReadValue[int]("SELECT COUNT(id) FROM requests WHERE idUser = ? AND staking = ? AND processed = 0", userID, 1)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if exist > 0 {
+		return utils.ReportError(c, "You have an active request", http.StatusBadRequest)
+	}
+
+	_, _ = database.InsertSQl("INSERT INTO requests (idUser, staking, masternode) VALUES (?, ?, ?)", userID, 1, 0)
+
+	defer unrequestStaking(userID)
+
 	var r req
-	err := c.BodyParser(&r)
+	err = c.BodyParser(&r)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
@@ -2979,6 +3014,11 @@ func unstake(c *fiber.Ctx) error {
 		return utils.ReportError(c, "You don't have any active stake", http.StatusConflict)
 	}
 }
+
+func unrequestStaking(idUser int) {
+	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND staking = 1 AND id <> 0", idUser)
+}
+
 func getStakeInfo(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	var emptyStruct models.CheckStakeDBStruct

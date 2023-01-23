@@ -312,7 +312,7 @@ func Snap(folder string, coinID int) chan struct{} {
 			_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s", dm.Folder)).Output()
 			time.Sleep(time.Second * 10)
 			_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user start %s", dm.Folder)).Output()
-			go StartMasternode(dm.NodeID)
+			StartMasternode(dm.NodeID)
 			close(done)
 			return
 		} else {

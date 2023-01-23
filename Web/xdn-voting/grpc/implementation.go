@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 	"xdn-voting/coind"
 	"xdn-voting/database"
@@ -146,8 +145,7 @@ func (s *Server) RegisterMasternode(_ context.Context, request *grpcModels.Regis
 func (s *Server) GetPrivateKey(_ context.Context, request *grpcModels.GetPrivateKeyRequest) (*grpcModels.GetPrivateKeyResponse, error) {
 	keyDB, err := database.ReadValue[string]("SELECT priv_key FROM mn_clients WHERE id = ?", request.NodeID)
 	if err != nil {
-		log.Printf("err: %v\n", err)
-		log.Println(err)
+		utils.WrapErrorLog(err.Error())
 		return &grpcModels.GetPrivateKeyResponse{Code: 400, PrivKey: ""}, err
 	}
 	return &grpcModels.GetPrivateKeyResponse{Code: 200, PrivKey: keyDB}, nil
