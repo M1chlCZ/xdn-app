@@ -882,7 +882,7 @@ class Dialogs {
 
   static void openWaitBox(context) async {
     return showDialog(
-        barrierDismissible: true,
+        barrierDismissible: false,
         context: context,
         builder: (BuildContext context) {
           return DialogBody(

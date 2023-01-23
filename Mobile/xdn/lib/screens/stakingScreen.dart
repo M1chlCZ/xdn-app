@@ -54,6 +54,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   StreamSubscription? _fcmSubscription;
   StakeGraphBloc? _stakeBloc;
   List<FlSpot>? values = [];
+  var unstaking = false;
 
   int endTime = 0;
   String _lockedText = '';
@@ -245,6 +246,10 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   }
 
   void _unstakeCoins(int type, {double amount = 0.0}) async {
+    if (unstaking) {
+      return;
+    }
+    unstaking = true;
     Dialogs.openWaitBox(context);
     var i = await NetInterface.unstakeCoins(type, amount: amount);
     _awaitingNot = true;
@@ -268,7 +273,10 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
         Navigator.of(context).pop();
         Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_24h_timeout);
       }
+      unstaking = false;
       return;
+    }else{
+      unstaking = false;
     }
   }
 

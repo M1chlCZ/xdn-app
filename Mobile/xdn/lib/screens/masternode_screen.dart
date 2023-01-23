@@ -88,6 +88,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   double? _min;
   bool amountEmpty = true;
   int _collateral = 0;
+  bool unstaking = true;
 
   @override
   void initState() {
@@ -1059,8 +1060,13 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   }
 
   _unStake(int rewardParam) async {
+    if(unstaking) {
+      return;
+    }
+    unstaking = true;
     final interface = ComInterface();
     if (_loadingReward || _loadingCoins) {
+      unstaking = false;
       return;
     }
     Dialogs.openWaitBox(context);
@@ -1084,14 +1090,17 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
       }
       await _getMasternodeDetails();
       setState(() {});
+      unstaking = false;
       if (mounted) {
         Navigator.of(context).pop();
         await _getMasternodeDetails();
       }
     } on ConflictDataException catch (e) {
+      unstaking = false;
       var err = json.decode(e.toString());
       if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, err['errorMessage'].toString());
     } catch (e) {
+      unstaking = false;
       Navigator.of(context).pop();
       Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
     }

@@ -53,6 +53,37 @@ Future<bool?> showAlertDialog({
   );
 }
 
+Future<void> showWaitDialog({
+  required BuildContext context,
+  required String title,
+  String? content,
+  String? cancelActionText,
+  String defaultActionText = 'OK',
+}) async {
+  if (kIsWeb || !Platform.isIOS) {
+    return showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: Text(title, style: Theme
+                .of(context)
+                .textTheme
+                .displaySmall!
+                .copyWith(fontSize: 20),),
+            content: const SizedBox(
+              width: 100,
+              height: 100,
+              child: Center(
+                child: CircularProgressIndicator(color: Colors.black87,strokeWidth: 2.0,),
+              ),
+            ),
+            actions: <Widget>[
+            ],
+          ),
+    );
+}}
+
 Future<bool?> showQRAlertDialog({
   required BuildContext context,
   required String title,

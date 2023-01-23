@@ -24,7 +24,7 @@ class Utils {
     var newDate = DateTime(date.year, date.month, date.day,
         date.hour + offset, date.minute, date.second);
     var format = DateFormat.yMMMMd(Platform.localeName).add_jm();
-    return format.format(newDate);
+    return format.format(date);
   }
 
   static DateTime convertDateTime(String? d) {

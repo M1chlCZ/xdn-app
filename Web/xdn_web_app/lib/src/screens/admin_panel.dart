@@ -25,7 +25,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     super.initState();
     Future.delayed(Duration.zero, () {
       final authRepository = ref.watch(authRepositoryProvider);
-      // ref.refresh(requestProvider);
       final p = ref.read(requestProvider.notifier);
       p.getRequest();
       if (authRepository.currentUser?.admin == null) {
@@ -38,10 +37,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final net = ref.read(networkProvider);
     final p = ref.read(requestProvider.notifier);
     try {
+      showWaitDialog(context: context, title: "Please wait", content: "Allow request");
       await net.post("/request/allow", body: {"id": id}, serverType: ComInterface.serverGoAPI);
       p.getRequest();
+      if (mounted) context.pop();
       if (mounted) showExceptionAlertDialog(context: context, title: "Success", exception: "Allow: successful");
     } catch (e) {
+      if (mounted) context.pop();
       showExceptionAlertDialog(context: context, title: "Error", exception: e.toString());
       print(e);
     }
@@ -51,10 +53,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final net = ref.read(networkProvider);
     final p = ref.read(requestProvider.notifier);
     try {
+      showWaitDialog(context: context, title: "Please wait", content: "Allow request");
       await net.post("/request/deny", body: {"id": id}, serverType: ComInterface.serverGoAPI);
       p.getRequest();
+      if (mounted) context.pop();
       if (mounted) showExceptionAlertDialog(context: context, title: "Success", exception: "Deny: successful");
     } catch (e) {
+      if (mounted) context.pop();
       showExceptionAlertDialog(context: context, title: "Error", exception: e.toString());
       print(e);
     }

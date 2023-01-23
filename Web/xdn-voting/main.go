@@ -907,12 +907,23 @@ func getTokenAddr(c *fiber.Ctx) error {
 
 func rewardMN(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
-
+	uid, _ := strconv.Atoi(userID)
 	var mnInfoReq models.MNInfoStruct
 	amountToSend, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM payouts_masternode WHERE idUser = ? AND credited = 0 AND idCoin = ?", userID, mnInfoReq.IdCoin)
-	if amountToSend > 0.1 {
+	if amountToSend < 0.1 {
 		return utils.ReportError(c, "Can't withdraw less than 0.1 XDN", fiber.StatusConflict)
 	}
+	exist, err := database.ReadValue[int]("SELECT COUNT(id) FROM requests WHERE idUser = ? AND masternode = 1 AND processed = 0", uid)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if exist > 0 {
+		return utils.ReportError(c, "You have an active request", http.StatusBadRequest)
+	}
+
+	_, _ = database.InsertSQl("INSERT INTO requests (idUser, staking, masternode) VALUES (?, ?, ?)", userID, 0, 1)
+
+	defer unrequestMasternode(uid)
 	//server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
 	userAddr, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
 	utils.ReportMessage(fmt.Sprintf("! - Reward withdrawal of %f sent to %s - !", amountToSend, userID))
