@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -160,7 +161,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   _changePercentage(double d) {
     if (d == 1.0) {
       _controller.text = _formatPriceString(((double.parse(_balance)) * d - 0.01).toString());
-    }else{
+    } else {
       _controller.text = _formatPriceString(((double.parse(_balance)) * d).toString());
     }
 
@@ -197,22 +198,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       } else {
         Dialogs.openWaitBox(context);
 
-        _serverStatus = await NetInterface.sendStakeCoins(amnt.toString());
-        if (_serverStatus == 2) {
-          if (mounted) {
-            _keyStake.currentState!.reset();
-            Navigator.of(context).pop();
-            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_cannot_stake);
-          }
-          return;
-        } else if (_serverStatus == 4) {
-          if (mounted) {
-            _keyStake.currentState!.reset();
-            Navigator.of(context).pop();
-            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.st_not_balance);
-          }
-          return;
-        }
+        Map<String, dynamic> m = {
+          "amount": double.parse(amount),
+        };
+
+        ComInterface ci = ComInterface();
+        await ci.post("/staking/set", body: m, type: ComInterface.typePlain, serverType: ComInterface.serverGoAPI, debug: false);
+
         var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
         SecureStorage.write(key: globals.COUNTDOWN, value: endTime.toString());
         setState(() {
@@ -221,27 +213,16 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
         });
         _awaitingNot = true;
         _controller.clear();
-
-        Future.delayed(const Duration(milliseconds: 1000), () {
-          if (_awaitingNot) {
-            setState(() {
-              _awaitingNot = false;
-              _countNot = 0;
-              _getBalance();
-              // Navigator.of(context).pop();
-            });
-            Navigator.of(context).pop();
-            _keyStake.currentState!.reset();
-            Future.delayed(const Duration(milliseconds: 50), () {
-              FocusScope.of(context).unfocus();
-            });
-          }
-        });
+        _keyStake.currentState!.reset();
+        await Future.delayed(const Duration(seconds: 2));
+        _getBalance();
+        if (mounted) Navigator.of(context).pop();
       }
     } catch (e) {
       Navigator.of(context).pop();
       _keyStake.currentState!.reset();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.amount_empty);
+      var err = json.decode(e.toString());
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, err['errorMessage'] ?? "Error");
     }
   }
 
@@ -251,32 +232,22 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
     }
     unstaking = true;
     Dialogs.openWaitBox(context);
-    var i = await NetInterface.unstakeCoins(type, amount: amount);
-    _awaitingNot = true;
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (_awaitingNot) {
-        setState(() {
-          _awaitingNot = false;
-          _countNot = 0;
-          _getBalance();
-
-          // Navigator.of(context).pop();
-        });
-        Navigator.of(context).pop();
-        Future.delayed(const Duration(milliseconds: 50), () {
-          FocusScope.of(context).unfocus();
-        });
-      }
-    });
-    if (i == 2) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, AppLocalizations.of(context)!.st_24h_timeout);
-      }
+    try {
+      ComInterface ci = ComInterface();
+      Map<String, dynamic> m = {
+        "type": type,
+        "amount": amount,
+      };
+      await ci.post("/staking/unset", body: m, serverType: ComInterface.serverGoAPI, debug: true);
       unstaking = false;
-      return;
-    }else{
+      await Future.delayed(const Duration(seconds: 2));
+      _getBalance();
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
       unstaking = false;
+      Navigator.of(context).pop();
+      var err = json.decode(e.toString());
+      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, err['errorMessage'] ?? "Error");
     }
   }
 
@@ -329,7 +300,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
           _lockedText = AppLocalizations.of(context)!.st_coins_staked;
         });
       }
-    }else{
+    } else {
       setState(() {
         _lockedText = AppLocalizations.of(context)!.st_coins_staked;
       });
@@ -943,7 +914,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     return SizedBox(
                                       width: MediaQuery.of(context).size.width,
                                       child: Center(
-                                        child: Text('${_formatCountdownTime(time.hours ?? 0)}:${_formatCountdownTime(time.min?? 0)}:${_formatCountdownTime(time.sec ?? 0)}',
+                                        child: Text('${_formatCountdownTime(time.hours ?? 0)}:${_formatCountdownTime(time.min ?? 0)}:${_formatCountdownTime(time.sec ?? 0)}',
                                             style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 13.0, color: Colors.white70)),
                                       ),
                                     );
@@ -961,16 +932,16 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                   )),
                   Positioned.fill(
                       child: Visibility(
-                        visible: _hideLoad ? false : true,
-                        child: ClipRect(
-                            child: Container(
-                    margin: const EdgeInsets.only(left: 2.0, right: 2.0),
-                    decoration: BoxDecoration(
+                    visible: _hideLoad ? false : true,
+                    child: ClipRect(
+                        child: Container(
+                      margin: const EdgeInsets.only(left: 2.0, right: 2.0),
+                      decoration: BoxDecoration(
                         borderRadius: const BorderRadius.all(Radius.circular(10.0)),
                         border: Border.all(color: Theme.of(context).konjHeaderColor),
                         color: const Color(0xFF262C43),
-                    ),
-                    child: SizedBox(
+                      ),
+                      child: SizedBox(
                         width: double.infinity,
                         height: MediaQuery.of(context).size.height * 0.5,
                         child: const Center(
@@ -981,9 +952,9 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   color: Colors.white54,
                                   strokeWidth: 1.0,
                                 ))),
-                    ),
+                      ),
+                    )),
                   )),
-                      )),
                 ],
               ),
               const SizedBox(

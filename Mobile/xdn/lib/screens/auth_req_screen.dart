@@ -33,10 +33,13 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
     ComInterface net = ComInterface();
     try {
       await net.post("/request/allow", body: {"id": id}, serverType: ComInterface.serverGoAPI);
+      if(mounted) await Dialogs.openWaitBox(context);
+      if(mounted) Navigator.of(context).pop();
       done = true;
       setState(() {});
       Future.delayed(const Duration(seconds: 2), () => Navigator.of(context).pop());
     } catch (e) {
+      if(mounted) Navigator.of(context).pop();
       Dialogs.openAlertBox(context, "Error", e.toString());
       print(e);
     }
@@ -46,10 +49,13 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
     ComInterface net = ComInterface();
     try {
       await net.post("/request/deny", body: {"id": id}, serverType: ComInterface.serverGoAPI);
+      if(mounted) await Dialogs.openWaitBox(context);
+      if(mounted) Navigator.of(context).pop();
       done = true;
       setState(() {});
       Future.delayed(const Duration(seconds: 2), () => Navigator.of(context).pop());
     } catch (e) {
+      if(mounted) Navigator.of(context).pop();
       Dialogs.openAlertBox(context, "Error", e.toString());
       print(e);
     }
@@ -157,7 +163,7 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
                       size: 35,
                     ),
                     onTap: () {
-                      ScaffoldMessenger.of(context)!.showSnackBar(const SnackBar(
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text("Long press to allow"),
                         duration: Duration(seconds: 2),
                       ));
@@ -201,13 +207,18 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
         Visibility(visible: done,child: Material(
           child: Container(
               color: Colors.black.withOpacity(0.2),
-              child:  Center(child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: const [
-                  Icon(Icons.check, color: Colors.lime, size: 150,),
-                  Text("Success", style: TextStyle(fontSize: 30, color: Colors.white),),
-                ],
+              child:  Center(child: AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                width: !done ? 0 : 400,
+                height: !done ? 0 : 400,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.check, color: Colors.lime, size: 150,),
+                    Text("Success", style: TextStyle(fontSize: 30, color: Colors.white),),
+                  ],
+                ),
               ),)),
         ),
         ),

@@ -1095,14 +1095,11 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
         Navigator.of(context).pop();
         await _getMasternodeDetails();
       }
-    } on ConflictDataException catch (e) {
+    } catch (e) {
+      Navigator.of(context).pop();
       unstaking = false;
       var err = json.decode(e.toString());
       if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, err['errorMessage'].toString());
-    } catch (e) {
-      unstaking = false;
-      Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, e.toString());
     }
   }
 

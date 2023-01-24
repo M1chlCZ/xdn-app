@@ -324,7 +324,13 @@ func allowRequest(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", tx, "receive")
+	if request.WithdrawType == 0 {
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", tx, "receive")
+	} else if request.WithdrawType == 1 {
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode withdrawal", tx, "receive")
+	} else {
+		//_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode withdrawal", tx, "receive")
+	}
 	_, err = database.InsertSQl("UPDATE with_req SET send = 1 WHERE id = ?", request.Id)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
@@ -909,6 +915,10 @@ func rewardMN(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	uid, _ := strconv.Atoi(userID)
 	var mnInfoReq models.MNInfoStruct
+	errDB := apiWallet.CheckStakeBalance()
+	if errDB != nil {
+		return utils.ReportError(c, "Withdrawing rewards on maintenance, stand by", http.StatusConflict)
+	}
 	amountToSend, _ := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM payouts_masternode WHERE idUser = ? AND credited = 0 AND idCoin = ?", userID, mnInfoReq.IdCoin)
 	if amountToSend < 0.1 {
 		return utils.ReportError(c, "Can't withdraw less than 0.1 XDN", fiber.StatusConflict)
@@ -930,7 +940,7 @@ func rewardMN(c *fiber.Ctx) error {
 	_, _ = database.InsertSQl("UPDATE payouts_masternode SET credited = ? WHERE idUser = ?", 1, userID)
 	//_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode Reward", tx, "receive")
 	//time.Sleep(time.Millisecond * 200)
-	idd, err := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)
+	idd, err := database.InsertSQl("INSERT with_req (idUser, amount, address, withdrawType) VALUES (?, ?, ?, ?)", userID, amountToSend, userAddr, 1)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
@@ -2258,13 +2268,13 @@ func loginAPI(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	if user.Username == "" {
-		return utils.ReportError(c, "User not found", http.StatusNotFound)
+		return utils.ReportErrorSilent(c, "User not found", http.StatusNotFound)
 	}
 	if user.Password != password {
-		return utils.ReportError(c, "Wrong password", http.StatusNotFound)
+		return utils.ReportErrorSilent(c, "Wrong password", http.StatusNotFound)
 	}
 	if user.Banned == 1 {
-		return utils.ReportError(c, "User banned", http.StatusConflict)
+		return utils.ReportErrorSilent(c, "User banned", http.StatusConflict)
 	}
 
 	if user.TwoActive == 1 && user.TwoKey.Valid {
@@ -2867,6 +2877,10 @@ func setStake(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
+	errDB := apiWallet.CheckStakeBalance()
+	if errDB != nil {
+		return utils.ReportError(c, "Staking turned off temporarily", http.StatusConflict)
+	}
 	user, err := database.ReadStruct[models.StakeUsers]("SELECT * FROM users_stake WHERE idUser = ? AND active = ?", userID, 1)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
@@ -2935,7 +2949,10 @@ func unstake(c *fiber.Ctx) error {
 	if exist > 0 {
 		return utils.ReportError(c, "You have an active request", http.StatusBadRequest)
 	}
-
+	errDB := apiWallet.CheckStakeBalance()
+	if errDB != nil {
+		return utils.ReportError(c, "Staking turned off temporarily", http.StatusConflict)
+	}
 	_, _ = database.InsertSQl("INSERT INTO requests (idUser, staking, masternode) VALUES (?, ?, ?)", userID, 1, 0)
 
 	defer unrequestStaking(userID)
@@ -2991,7 +3008,6 @@ func unstake(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	if user.Active != 0 {
-		utils.ReportMessage("UNSTAKING")
 
 		if amountToSend < 0.1 {
 			return utils.ReportError(c, "Amount is too small, withdraw at least 0.1 XDN", http.StatusConflict)
@@ -3002,6 +3018,7 @@ func unstake(c *fiber.Ctx) error {
 		//}
 
 		if r.Type == 1 {
+			utils.ReportMessage("UNSTAKING")
 			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND id <> 0", 1, userID)
 			idd, _ := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)
 			go service.SendAdminsReq(idd)
@@ -3009,6 +3026,7 @@ func unstake(c *fiber.Ctx) error {
 		} else if r.Type == 2 {
 			return utils.ReportError(c, "Not implemented", http.StatusConflict)
 		} else {
+			utils.ReportMessage("UNSTAKING")
 			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND id <> 0", 1, userID)
 			_, _ = database.InsertSQl("UPDATE users_stake SET active = 0 WHERE idUser = ?", userID)
 			idd, _ := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)

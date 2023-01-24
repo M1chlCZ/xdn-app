@@ -3,7 +3,7 @@ description: DigitalNote App Wallet
 
 publish_to: 'none'
 
-version: 1.1.21+104
+version: 1.1.22+105
 
 environment:
   sdk: ">=2.15.0 <3.3.9"

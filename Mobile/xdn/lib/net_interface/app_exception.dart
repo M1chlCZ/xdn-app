@@ -19,7 +19,8 @@ class FetchDataException extends AppException {
 }
 
 class BadRequestException extends AppException {
-  BadRequestException([message]) : super(message, "Invalid Request: ");
+  BadRequestException(String message)
+      : super(message, "");
 }
 
 class ConflictDataException extends AppException {

@@ -3,10 +3,13 @@ package apiWallet
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"io"
 	"net/http"
 	"os/exec"
+	"strconv"
 	"time"
 	"xdn-voting/coind"
 	"xdn-voting/daemons"
@@ -65,6 +68,7 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 
 	if txID.Generated == true {
 		//utils.ReportMessage("Transaction is stake")
+		_, err = database.InsertSQl("INSERT INTO transaction_stake_wallet(txid, amount) VALUES (?, ?)", txID.Txid, 100)
 		_, err = database.InsertSQl("INSERT INTO transaction_stake(txid, amount) VALUES (?, ?)", txID.Txid, 90)
 		if err != nil {
 			//utils.ReportMessage(err.Error())
@@ -78,7 +82,6 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 		utils.ReportMessage(fmt.Sprintf("Stake transaction added %s", txID.Txid))
 		total, err := database.ReadValue[float64]("SELECT IFNULL(SUM(amount), 0) as amount FROM users_stake WHERE active = 1")
 		if err != nil {
-			utils.ReportMessage(err.Error())
 			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
 		}
 		type Stake struct {
@@ -123,7 +126,11 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 		utils.ReportMessage(fmt.Sprintf("Stake transaction credited %s", txID.Txid))
 
 	} else {
-		utils.ReportMessage(fmt.Sprintf("Transaction is not stake %s %f", txID.Txid, txID.Amount))
+		_, _ = database.InsertSQl("INSERT INTO transaction_stake_wallet(txid, amount) VALUES (?, ?)", txID.Txid, txID.Amount)
+		//if err != nil {
+		//	//utils.ReportMessage(err.Error())
+		//return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
+		//}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -215,4 +222,44 @@ func submitTransaction(c *fiber.Ctx) error {
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
 	})
+}
+
+func CheckStakeBalance() error {
+	dbBalance := database.ReadValueEmpty[float64]("SELECT SUM(AMOUNT) FROM transaction_stake_wallet WHERE 1")
+	checkBalanceDaemon, err := coind.WrapDaemon(utils.DaemonStakeWallet, 1, "getinfo")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return err
+	}
+	var inf models.GetInfo
+	err = json.Unmarshal(checkBalanceDaemon, &inf)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return err
+	}
+	blkReqXDN, errNet := utils.GETAny("https://xdn-explorer.com/ext/getbalance/daZCF2oVwvfVg3WWqqCFq8k9WLuKbmUc5N")
+	if errNet != nil {
+		utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
+		return errors.New(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
+	}
+
+	bodyXDN, _ := io.ReadAll(blkReqXDN.Body)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}(blkReqXDN.Body)
+	balanceDaemon, err := strconv.ParseFloat(string(bodyXDN), 64)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return err
+	}
+
+	if !(balanceDaemon < (dbBalance + 1)) || !(balanceDaemon > (dbBalance - 1)) {
+		utils.ReportMessage(fmt.Sprintf("Stake balance is not equal %f %f", balanceDaemon, dbBalance))
+		return errors.New("stake balance is not equal")
+	}
+	utils.ReportMessage(fmt.Sprintf("Stake balance is equal %f %f", balanceDaemon, dbBalance))
+	return nil
 }

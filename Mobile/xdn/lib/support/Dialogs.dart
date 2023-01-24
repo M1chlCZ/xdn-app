@@ -880,7 +880,7 @@ class Dialogs {
         });
   }
 
-  static void openWaitBox(context) async {
+  static Future<void> openWaitBox(context) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
