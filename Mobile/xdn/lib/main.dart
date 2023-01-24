@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:digitalnote/models/MasternodeInfo.dart';
 import 'package:digitalnote/models/MessageGroup.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
@@ -21,6 +22,7 @@ import 'package:digitalnote/screens/stealth_screen.dart';
 import 'package:digitalnote/screens/token_screen.dart';
 import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/screens/withdrawals_screen.dart';
 import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/locator.dart';
@@ -58,8 +60,19 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  ByteData data = await PlatformAssetBundle().load('assets/lets-encrypt-r3.pem');
-  SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
+
+  if (Platform.isAndroid) {
+    await FlutterDisplayMode.setHighRefreshRate();
+    var androidInfo = await DeviceInfoPlugin().androidInfo;
+    var sdkInt = androidInfo.version.sdkInt;
+    if (sdkInt < 26) {
+      ByteData data = await PlatformAssetBundle().load('assets/lets-encrypt-r3.pem');
+      SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
+    } else {
+      await FlutterDisplayMode.setHighRefreshRate();
+    }
+  }
+
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -416,11 +429,13 @@ class MyAppState extends State<MyApp> {
           String? m = args as String?;
           return MaterialPageRoute(
               builder: (_) => AuthReqScreen(
-                idRequest: m,
-              ));
+                    idRequest: m,
+                  ));
         } else {
           return MaterialPageRoute(builder: (_) => const AuthReqScreen());
         }
+      case WithdrawalsScreen.route:
+        return MaterialPageRoute(builder: (_) => const WithdrawalsScreen());
       case BlockInfoScreen.route:
         return MaterialPageRoute(builder: (_) => const BlockInfoScreen());
       default:

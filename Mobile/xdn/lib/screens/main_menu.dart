@@ -15,6 +15,7 @@ import 'package:digitalnote/screens/stealth_screen.dart';
 import 'package:digitalnote/screens/token_screen.dart';
 import 'package:digitalnote/screens/voting_screen.dart';
 import 'package:digitalnote/screens/walletscreen.dart';
+import 'package:digitalnote/screens/withdrawals_screen.dart';
 import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/LifecycleWatcherState.dart';
@@ -33,6 +34,7 @@ import 'package:digitalnote/widgets/send_qr_dialog.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
 import 'package:digitalnote/widgets/staking_menu_widget.dart';
 import 'package:digitalnote/widgets/voting_menu_widget.dart';
+import 'package:digitalnote/widgets/withdrawal_card.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
@@ -254,6 +256,10 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     Navigator.of(context).pushNamed(StealthScreen.route, arguments: "nothing");
   }
 
+  void gotoWithdrawalScreen() {
+    Navigator.of(context).pushNamed(WithdrawalsScreen.route, arguments: "nothing");
+  }
+
   void gotoSettingsScreen() {
     Navigator.of(context).pushNamed(SettingsScreen.route, arguments: "shit");
     // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
@@ -387,6 +393,12 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                           getBalanceFuture: _getBalance,
                           goto: gotoBalanceScreen,
                           scan: scanQR,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        WithdrawalCardMainMenu(
+                          goto: gotoWithdrawalScreen,
                         ),
                         SizeTransition(
                           sizeFactor: _animation2,

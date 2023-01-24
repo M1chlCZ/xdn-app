@@ -25,6 +25,7 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="DigitalNote"
         android:requestLegacyExternalStorage="true">
         <!-- Specifies an Android theme to apply to this Activity as soon as

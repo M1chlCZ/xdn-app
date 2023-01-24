@@ -96,6 +96,7 @@ func main() {
 	app.Get("api/v1/request/withdraw", auth.Authorized(withDrawRequest))
 	app.Post("api/v1/request/allow", auth.Authorized(allowRequest))
 	app.Post("api/v1/request/deny", auth.Authorized(denyReq))
+	app.Get("api/v1/request/list", auth.Authorized(getReqList))
 
 	app.Post("api/v1/request/withdraw", auth.Authorized(getReqWithApp))
 
@@ -243,6 +244,25 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func getReqList(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+
+	requests, err := database.ReadArrayStruct[models.Withdrawals](`SELECT amount, datePosted, dateChanged, idUserAuth, username, send, auth, processed, idTx FROM with_req
+																	LEFT JOIN users ON with_req.idUserAuth = users.id
+																	WHERE idUser = ? ORDER BY datePosted`, userID)
+	if err != nil {
+		return utils.ReportError(c, "Internal error", http.StatusInternalServerError)
+	}
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"requests":   requests,
+	})
 }
 
 func getReqWithApp(c *fiber.Ctx) error {
