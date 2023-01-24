@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/models/WithReq.dart';
 import 'package:digitalnote/net_interface/interface.dart';
@@ -20,6 +22,7 @@ class AuthReqScreen extends StatefulWidget {
 class _AuthReqScreenState extends State<AuthReqScreen> {
   WithReq? request;
   bool done = false;
+  bool anim = false;
 
   @override
   void initState() {
@@ -32,32 +35,36 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
   void allow(int id) async {
     ComInterface net = ComInterface();
     try {
+      Dialogs.openWaitBox(context);
       await net.post("/request/allow", body: {"id": id}, serverType: ComInterface.serverGoAPI);
-      if(mounted) await Dialogs.openWaitBox(context);
       if(mounted) Navigator.of(context).pop();
-      done = true;
-      setState(() {});
+      setState(() {done = true;});
+      Future.delayed(const Duration(milliseconds: 300), () => setState(() {anim = true;}));
       Future.delayed(const Duration(seconds: 2), () => Navigator.of(context).pop());
     } catch (e) {
+      debugPrint(e.toString());
       if(mounted) Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, "Error", e.toString());
-      print(e);
+      var err = json.decode(e.toString());
+      await Dialogs.openAlertBox(context, "Error", err['errorMessage']);
+      if(mounted) Navigator.of(context).pop();
     }
   }
 
   void deny(int id) async {
     ComInterface net = ComInterface();
     try {
+      Dialogs.openWaitBox(context);
       await net.post("/request/deny", body: {"id": id}, serverType: ComInterface.serverGoAPI);
-      if(mounted) await Dialogs.openWaitBox(context);
       if(mounted) Navigator.of(context).pop();
-      done = true;
-      setState(() {});
+      setState(() {done = true;});
+      Future.delayed(const Duration(milliseconds: 300), () => setState(() {anim = true;}));
       Future.delayed(const Duration(seconds: 2), () => Navigator.of(context).pop());
     } catch (e) {
+      debugPrint(e.toString());
       if(mounted) Navigator.of(context).pop();
-      Dialogs.openAlertBox(context, "Error", e.toString());
-      print(e);
+      var err = json.decode(e.toString());
+      await Dialogs.openAlertBox(context, "Error", err['errorMessage']);
+      if(mounted) Navigator.of(context).pop();
     }
   }
 
@@ -73,8 +80,10 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
       request = WithReq.fromJson(req);
       setState(() {});
     } catch (e) {
-      Dialogs.openAlertBox(context, "Error", e.toString());
-      print(e);
+      debugPrint(e.toString());
+      var err = json.decode(e.toString());
+      await Dialogs.openAlertBox(context, "Error", err['errorMessage']);
+      if(mounted) Navigator.of(context).pop();
     }
   }
 
@@ -133,7 +142,7 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                Utils.convertDate(request?.request?.datePosted.toString()) ?? "No date",
+                Utils.convertDate(request?.request?.datePosted.toString()),
                 style: const TextStyle(fontSize: 14.0),
               ),
               const SizedBox(height: 50),
@@ -150,7 +159,7 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
                       deny(request?.request?.id ?? 0);
                     },
                     onTap: () {
-                      ScaffoldMessenger.of(context)!.showSnackBar(const SnackBar(
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text("Long press to deny"),
                         duration: Duration(seconds: 2),
                       ));
@@ -207,17 +216,21 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
         Visibility(visible: done,child: Material(
           child: Container(
               color: Colors.black.withOpacity(0.2),
-              child:  Center(child: AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                width: !done ? 0 : 400,
-                height: !done ? 0 : 400,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.check, color: Colors.lime, size: 150,),
-                    Text("Success", style: TextStyle(fontSize: 30, color: Colors.white),),
-                  ],
+              child:  Center(
+                child: AnimatedScale(
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.bounceOut,
+                scale: anim ? 1 : 0,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.check, color: Colors.lime, size: 150,),
+                      Text("Success", style: TextStyle(fontSize: 30, color: Colors.white),),
+                    ],
+                  ),
                 ),
               ),)),
         ),

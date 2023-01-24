@@ -88,7 +88,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   double? _min;
   bool amountEmpty = true;
   int _collateral = 0;
-  bool unstaking = true;
+  bool unstaking = false;
 
   @override
   void initState() {

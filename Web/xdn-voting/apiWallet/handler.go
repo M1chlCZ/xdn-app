@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 	"xdn-voting/coind"
 	"xdn-voting/daemons"
@@ -229,7 +230,10 @@ func CheckStakeBalance() error {
 	checkBalanceDaemon, err := coind.WrapDaemon(utils.DaemonStakeWallet, 1, "getinfo")
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
-		return err
+		active, _ := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user is-active %s", utils.DaemonStakeWallet.Folder)).Output()
+		if strings.TrimSpace(string(active)) != "active" {
+			_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart %s", utils.DaemonStakeWallet.Folder)).Output()
+		}
 	}
 	var inf models.GetInfo
 	err = json.Unmarshal(checkBalanceDaemon, &inf)
@@ -257,8 +261,16 @@ func CheckStakeBalance() error {
 	}
 
 	if !(balanceDaemon < (dbBalance + 1)) || !(balanceDaemon > (dbBalance - 1)) {
-		utils.ReportMessage(fmt.Sprintf("Stake balance is not equal %f %f", balanceDaemon, dbBalance))
-		return errors.New("stake balance is not equal")
+		lastTX := database.ReadValueEmpty[float64]("SELECT amount FROM transaction_stake_wallet ORDER BY id DESC LIMIT 1")
+		utils.ReportMessage(fmt.Sprintf("Stake balance is not equal | Daemon:%f Database: %f lastTX: %f second try", balanceDaemon, dbBalance, lastTX))
+		s := balanceDaemon + lastTX
+		if !(s < (dbBalance + (lastTX * 0.1))) || !(s > (dbBalance - (lastTX * 0.1))) {
+			utils.ReportMessage(fmt.Sprintf("Stake balance is not equal | Daemon:%f Database: %f lastTX: %f", balanceDaemon, dbBalance, lastTX))
+			return errors.New("stake balance is not equal")
+		} else {
+			utils.ReportMessage(fmt.Sprintf("Stake balance is equal %f %f", balanceDaemon, dbBalance))
+			return nil
+		}
 	}
 	utils.ReportMessage(fmt.Sprintf("Stake balance is equal %f %f", balanceDaemon, dbBalance))
 	return nil

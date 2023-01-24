@@ -55,7 +55,7 @@ class Request {
     id = json['id'];
     idUser = json['idUser'];
     username = json['username'];
-    amount = json['amount'];
+    amount = double.parse(json['amount'].toString());
     address = json['address'];
     auth = json['auth'];
     send = json['send'];
