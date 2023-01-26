@@ -3,13 +3,10 @@ package apiWallet
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"io"
 	"net/http"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 	"xdn-voting/coind"
@@ -48,7 +45,10 @@ func RepairWallet() {
 	if err != nil {
 		utils.ReportMessage(err.Error())
 	}
-	_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop staking.service")).Output()
+	active, _ := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user is-active %s", utils.DaemonStakeWallet.Folder)).Output()
+	if strings.TrimSpace(string(active)) != "active" {
+		_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart staking.service")).Output()
+	}
 	utils.ReportMessage("Wallet Repaired unlocked")
 }
 
@@ -226,52 +226,52 @@ func submitTransaction(c *fiber.Ctx) error {
 }
 
 func CheckStakeBalance() error {
-	dbBalance := database.ReadValueEmpty[float64]("SELECT SUM(AMOUNT) FROM transaction_stake_wallet WHERE 1")
-	checkBalanceDaemon, err := coind.WrapDaemon(utils.DaemonStakeWallet, 1, "getinfo")
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		active, _ := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user is-active %s", utils.DaemonStakeWallet.Folder)).Output()
-		if strings.TrimSpace(string(active)) != "active" {
-			_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart %s", utils.DaemonStakeWallet.Folder)).Output()
-		}
-	}
-	var inf models.GetInfo
-	err = json.Unmarshal(checkBalanceDaemon, &inf)
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		return err
-	}
-	blkReqXDN, errNet := utils.GETAny("https://xdn-explorer.com/ext/getbalance/daZCF2oVwvfVg3WWqqCFq8k9WLuKbmUc5N")
-	if errNet != nil {
-		utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
-		return errors.New(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
-	}
-
-	bodyXDN, _ := io.ReadAll(blkReqXDN.Body)
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			utils.WrapErrorLog(err.Error())
-		}
-	}(blkReqXDN.Body)
-	balanceDaemon, err := strconv.ParseFloat(string(bodyXDN), 64)
-	if err != nil {
-		utils.WrapErrorLog(err.Error())
-		return err
-	}
-
-	if !(balanceDaemon < (dbBalance + 1)) || !(balanceDaemon > (dbBalance - 1)) {
-		lastTX := database.ReadValueEmpty[float64]("SELECT amount FROM transaction_stake_wallet ORDER BY id DESC LIMIT 1")
-		utils.ReportMessage(fmt.Sprintf("Stake balance is not equal | Daemon:%f Database: %f lastTX: %f second try", balanceDaemon, dbBalance, lastTX))
-		s := balanceDaemon + lastTX
-		if !(s < (dbBalance + (lastTX * 0.1))) || !(s > (dbBalance - (lastTX * 0.1))) {
-			utils.ReportMessage(fmt.Sprintf("Stake balance is not equal | Daemon:%f Database: %f lastTX: %f", balanceDaemon, dbBalance, lastTX))
-			return errors.New("stake balance is not equal")
-		} else {
-			utils.ReportMessage(fmt.Sprintf("Stake balance is equal %f %f", balanceDaemon, dbBalance))
-			return nil
-		}
-	}
-	utils.ReportMessage(fmt.Sprintf("Stake balance is equal %f %f", balanceDaemon, dbBalance))
+	//dbBalance := database.ReadValueEmpty[float64]("SELECT SUM(AMOUNT) FROM transaction_stake_wallet WHERE 1")
+	//checkBalanceDaemon, err := coind.WrapDaemon(utils.DaemonStakeWallet, 1, "getinfo")
+	//if err != nil {
+	//	utils.WrapErrorLog(err.Error())
+	//	active, _ := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user is-active %s", utils.DaemonStakeWallet.Folder)).Output()
+	//	if strings.TrimSpace(string(active)) != "active" {
+	//		_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user restart %s", utils.DaemonStakeWallet.Folder)).Output()
+	//	}
+	//}
+	//var inf models.GetInfo
+	//err = json.Unmarshal(checkBalanceDaemon, &inf)
+	//if err != nil {
+	//	utils.WrapErrorLog(err.Error())
+	//	return err
+	//}
+	//blkReqXDN, errNet := utils.GETAny("https://xdn-explorer.com/ext/getbalance/daZCF2oVwvfVg3WWqqCFq8k9WLuKbmUc5N")
+	//if errNet != nil {
+	//	utils.WrapErrorLog(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
+	//	return errors.New(errNet.ErrorMessage() + " " + strconv.Itoa(errNet.StatusCode()))
+	//}
+	//
+	//bodyXDN, _ := io.ReadAll(blkReqXDN.Body)
+	//defer func(Body io.ReadCloser) {
+	//	err := Body.Close()
+	//	if err != nil {
+	//		utils.WrapErrorLog(err.Error())
+	//	}
+	//}(blkReqXDN.Body)
+	//balanceDaemon, err := strconv.ParseFloat(string(bodyXDN), 64)
+	//if err != nil {
+	//	utils.WrapErrorLog(err.Error())
+	//	return err
+	//}
+	//
+	//if !(balanceDaemon < (dbBalance + 1)) || !(balanceDaemon > (dbBalance - 1)) {
+	//	lastTX := database.ReadValueEmpty[float64]("SELECT amount FROM transaction_stake_wallet ORDER BY id DESC LIMIT 1")
+	//	utils.ReportMessage(fmt.Sprintf("Stake balance is not equal | Daemon:%f Database: %f lastTX: %f second try", balanceDaemon, dbBalance, lastTX))
+	//	s := balanceDaemon + lastTX
+	//	if !(s < (dbBalance + (lastTX * 0.1))) || !(s > (dbBalance - (lastTX * 0.1))) {
+	//		utils.ReportMessage(fmt.Sprintf("Stake balance is not equal | Daemon:%f Database: %f lastTX: %f", balanceDaemon, dbBalance, lastTX))
+	//		return errors.New("stake balance is not equal")
+	//	} else {
+	//		utils.ReportMessage(fmt.Sprintf("Stake balance is equal %f %f", balanceDaemon, dbBalance))
+	//		return nil
+	//	}
+	//}
+	//utils.ReportMessage(fmt.Sprintf("Stake balance is equal %f %f", balanceDaemon, dbBalance))
 	return nil
 }

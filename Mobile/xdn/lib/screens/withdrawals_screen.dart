@@ -78,103 +78,112 @@ class _WithdrawalsScreenState extends State<WithdrawalsScreen> {
               child: Column(children: [
             const Header(header: "Withdrawals"),
             const SizedBox(
-              height: 10.0,
+              height: 5.0,
             ),
-            Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                child: FutureBuilder<List<Requests>?>(
-                    future: getRequests(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                            child: CircularProgressIndicator(
-                          color: Colors.white70,
-                          strokeWidth: 2.0,
-                        ));
-                      }
-                      if (snapshot.hasData) {
-                        return ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              return Card(
-                                color: Colors.black12,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Column(
-                                    children: [
-                                      if (snapshot.data![index].processed != 0)
-                                        Column(
-                                          children: [
-                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-
-                                                AutoSizeText(
-                                                  snapshot.data![index].auth == 1 ? "SENT" : "Deny",
-                                                  maxLines: 1,
-                                                  minFontSize: 10,
-                                                  style: TextStyle(color:snapshot.data![index].auth == 1 ? Colors.lime : Colors.white, fontWeight: FontWeight.bold),
-                                                ),
-                                              ],
-                                            ),
-                                            const Divider(
-                                              color: Colors.white54,
-                                            ),
-                                          ],
-                                        ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Expanded(
+              child: Padding(
+                  padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                  child: FutureBuilder<List<Requests>?>(
+                      future: getRequests(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator(
+                            color: Colors.white70,
+                            strokeWidth: 2.0,
+                          ));
+                        }
+                        if (snapshot.hasData) {
+                          return ClipRRect(
+                            borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+                            child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: snapshot.data!.length,
+                                itemBuilder: (context, index) {
+                                  return Card(
+                                    color: snapshot.data![index].processed == 0 ? Colors.yellow : snapshot.data![index].send == 1 ? Colors.lime : Colors.redAccent,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14.0),
+                                      child: Column(
                                         children: [
-                                          Text(
-                                            snapshot.data![index].processed != null
-                                                ? snapshot.data![index].processed == 1
-                                                    ? "Processed"
-                                                    : "Pending"
-                                                : "Pending",
-                                            style: const TextStyle(color: Colors.white),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                snapshot.data![index].processed != null
+                                                    ? snapshot.data![index].processed == 1
+                                                        ? "Processed"
+                                                        : "Pending"
+                                                    : "Pending",
+                                                style: const TextStyle(color: Colors.black87, fontSize: 12.0),
+                                              ),
+                                              const SizedBox(
+                                                width: 10.0,
+                                              ),
+                                              Expanded(
+                                                child: Align(
+                                                  alignment: Alignment.centerRight,
+                                                  child: AutoSizeText(
+                                                    "${Utils.formatBalance(snapshot.data![index].amount!).toString()} XDN",
+                                                    maxLines: 1,
+                                                    minFontSize: 10,
+                                                    style: const TextStyle(color: Colors.black87, fontSize: 12.0),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                           const SizedBox(
-                                            width: 10.0,
+                                            height: 10.0,
                                           ),
-                                          Expanded(
-                                            child: Align(
-                                              alignment: Alignment.centerRight,
-                                              child: AutoSizeText(
-                                                "${Utils.formatBalance(snapshot.data![index].amount!).toString()} XDN",
-                                                maxLines: 1,
-                                                minFontSize: 10,
-                                                style: const TextStyle(color: Colors.white),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Text(
+                                                "Submitted:",
+                                                style: TextStyle(color: Colors.black87, fontSize: 12.0),
                                               ),
+                                              Text(
+                                                _getMeDate(snapshot.data![index].datePosted.toString()),
+                                                style: const TextStyle(color: Colors.black87, fontSize: 12.0),
+                                              ),
+                                            ],
+                                          ),
+                                          if (snapshot.data![index].processed != 0)
+                                            Column(
+                                              children: [
+                                                const Divider(
+                                                  color: Colors.white12,
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      snapshot.data![index].auth == 1 ? "SENT" : "Deny",
+                                                      maxLines: 1,
+                                                      textAlign: TextAlign.end,
+                                                      style: const TextStyle(color:Colors.black54, fontWeight: FontWeight.bold),
+                                                    ),
+                                                    const SizedBox(
+                                                      width: 5.0,
+                                                    ),
+                                                    Icon(snapshot.data![index].send == 1 ? Icons.check_circle_outline : Icons.watch_later_outlined, color: Colors.black54)
+                                                  ],
+                                                ),
+
+                                              ],
                                             ),
-                                          ),
                                         ],
                                       ),
-                                      const SizedBox(
-                                        height: 10.0,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text(
-                                            "Submitted:",
-                                            style: TextStyle(color: Colors.white),
-                                          ),
-                                          Text(
-                                            _getMeDate(snapshot.data![index].datePosted.toString()),
-                                            style: const TextStyle(color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            });
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    })),
+                                    ),
+                                  );
+                                }),
+                          );
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      })),
+            ),
           ])),
         ],
       ),

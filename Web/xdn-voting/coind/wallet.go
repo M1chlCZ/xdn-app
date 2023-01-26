@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 	"xdn-voting/database"
 	"xdn-voting/models"
@@ -16,7 +17,11 @@ func init() {
 
 }
 
+var mu sync.Mutex
+
 func SendCoins(addressReceive string, addressSend string, amount float64, stakeWallet bool) (string, error) {
+	mu.Lock()
+	defer mu.Unlock()
 	var wallet models.Daemon
 	if stakeWallet {
 		wallet = utils.DaemonStakeWallet

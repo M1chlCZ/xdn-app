@@ -74,11 +74,12 @@ func main() {
 	go grpc.NewAppServer()
 
 	app := fiber.New(fiber.Config{
-		AppName:       "XDN DAO API",
-		StrictRouting: true,
-		WriteTimeout:  time.Second * 35,
-		ReadTimeout:   time.Second * 35,
-		IdleTimeout:   time.Second * 65,
+		AppName:           "XDN DAO API",
+		StrictRouting:     true,
+		WriteTimeout:      time.Second * 35,
+		ReadTimeout:       time.Second * 35,
+		IdleTimeout:       time.Second * 65,
+		EnablePrintRoutes: true,
 	})
 	app.Use(cors.New())
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
@@ -95,6 +96,8 @@ func main() {
 	// ================= ADMIN =================
 	app.Get("api/v1/request/withdraw", auth.Authorized(withDrawRequest))
 	app.Post("api/v1/request/allow", auth.Authorized(allowRequest))
+	app.Post("api/v1/request/unsure", auth.Authorized(unsureRequest))
+	app.Post("api/v1/request/vote", auth.Authorized(voteRequest))
 	app.Post("api/v1/request/deny", auth.Authorized(denyReq))
 	app.Get("api/v1/request/list", auth.Authorized(getReqList))
 
@@ -246,6 +249,66 @@ func main() {
 
 }
 
+func voteRequest(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	var req struct {
+		ID int  `json:"id"`
+		UP bool `json:"up"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if adm == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+	upvote := 0
+	downvote := 0
+	if req.UP == true {
+		upvote = 1
+	} else {
+		downvote = 1
+	}
+	_, err = database.InsertSQl("INSERT INTO with_req_votes(idReq, idUser, upvote, downvote) VALUES (?,?,?,?)", req.ID, userID, upvote, downvote)
+	if err != nil {
+		return utils.ReportError(c, "Already voted", http.StatusConflict)
+	}
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func unsureRequest(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	var req struct {
+		ID int `json:"id"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if adm == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+	_, err = database.InsertSQl("INSERT INTO with_req_voting(idReq, idUser) VALUES (?,?)", req.ID, userID)
+	if err != nil {
+		return utils.ReportError(c, "Can't start voting", http.StatusConflict)
+	}
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
 func getReqList(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	if userID == "" {
@@ -282,17 +345,24 @@ func getReqWithApp(c *fiber.Ctx) error {
 	if adm == false {
 		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
 	}
-	request, err := database.ReadStruct[models.WithReq]("SELECT a.*, b.username FROM with_req as a, users as b WHERE a.id = ? AND a.idUser = b.id", req.ID)
+	request, err := database.ReadStruct[models.WithReqVote](`SELECT a.*, b.username, c.idUser as idUserVoting, IFNULL(d.upvote, 0) as upvote, IFNULL(d.downvote, 0) as downvote, IF(c.idUser = ?, true, false) as currentUser
+FROM with_req as a
+LEFT JOIN users as b ON a.idUser = b.id
+LEFT JOIN with_req_voting as c ON a.id = c.idReq
+LEFT JOIN (SELECT idReq, SUM(upvote) as upvote, SUM(downvote) as downvote FROM with_req_votes GROUP BY upvote, downvote, idReq) AS d on d.idReq = a.id
+WHERE a.idUserAuth IS NULL AND a.id = ?
+ORDER BY a.datePosted`, userID, req.ID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	if request.Processed == 1 {
 		return utils.ReportError(c, "Request already processed", http.StatusConflict)
 	}
+	js, err := request.MarshalJSON()
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,
 		utils.STATUS: utils.OK,
-		"request":    request,
+		"request":    js,
 	})
 }
 
@@ -432,9 +502,14 @@ func withDrawRequest(c *fiber.Ctx) error {
 		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
 	}
 
-	request, err := database.ReadArrayStruct[models.WithReq]("SELECT a.*, b.username FROM with_req as a, users as b WHERE a.processed = 0 AND a.idUser = b.id AND a.amount > 0.1 ORDER BY datePosted ASC")
+	request, err := database.ReadArrayStruct[models.WithReqVote](`SELECT a.*, b.username, c.idUser as idUserVoting, IFNULL(d.upvote, 0) as upvote, IFNULL(d.downvote, 0) as downvote, IF(c.idUser = ?, true, false) as currentUser FROM with_req as a
+LEFT JOIN users as b ON a.idUser = b.id
+LEFT JOIN with_req_voting as c ON a.id = c.idReq
+LEFT JOIN (SELECT idReq, SUM(upvote) as upvote, SUM(downvote) as downvote FROM with_req_votes GROUP BY upvote, downvote, idReq) AS d on d.idReq = a.id
+WHERE a.idUserAuth IS NULL
+ORDER BY a.datePosted`, userID)
 	if err != nil {
-		return utils.ReportError(c, "No request", http.StatusConflict)
+		return utils.ReportError(c, err.Error(), http.StatusConflict)
 	}
 	if len(request) == 0 {
 		return utils.ReportError(c, "No request", http.StatusConflict)
@@ -2275,6 +2350,7 @@ func registerAPI(c *fiber.Ctx) error {
 
 func loginAPI(c *fiber.Ctx) error {
 	var req models.UserLogin
+	remoteIP := c.Get("CF-Connecting-IP")
 	err := c.BodyParser(&req)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
@@ -2296,7 +2372,11 @@ func loginAPI(c *fiber.Ctx) error {
 	if user.Banned == 1 {
 		return utils.ReportErrorSilent(c, "User banned", http.StatusConflict)
 	}
-
+	if remoteIP == "" {
+		remoteIP = c.IP()
+	}
+	utils.ReportMessage(fmt.Sprintf("/// Refresh token user %s -> login OK ///", remoteIP))
+	service.GetLocationData(remoteIP, int64(user.Id))
 	if user.TwoActive == 1 && user.TwoKey.Valid {
 		if len(req.TwoFactor) == 0 {
 			return utils.ReportError(c, "Two factor is required", http.StatusConflict)
@@ -2424,6 +2504,7 @@ func loginQRAPI(c *fiber.Ctx) error {
 
 func refreshToken(c *fiber.Ctx) error {
 	var userAuth models.RefreshToken
+	remoteIP := c.Get("CF-Connecting-IP")
 	errJson := c.BodyParser(&userAuth)
 	if errJson != nil {
 		return utils.ReportError(c, errJson.Error(), http.StatusBadRequest)
@@ -2439,6 +2520,11 @@ func refreshToken(c *fiber.Ctx) error {
 	}
 
 	if len(readSql.RefToken) != 0 && readSql.Used == 0 {
+		if remoteIP == "" {
+			remoteIP = c.IP()
+		}
+		utils.ReportMessage(fmt.Sprintf("/// Refresh token user %s -> login OK ///", remoteIP))
+		service.GetLocationData(remoteIP, readSql.IdUser)
 		_, errUpdate := database.InsertSQl("UPDATE refresh_token SET used = 1 WHERE refreshToken = ?", userAuth.Token)
 		if errUpdate != nil {
 			return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)

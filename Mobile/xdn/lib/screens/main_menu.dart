@@ -641,6 +641,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   void onResumed() {
     refreshBalance();
     getInfo();
+    getNotification();
   }
 
   String _getDatetimeHeadline() {

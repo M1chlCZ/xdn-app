@@ -25,6 +25,7 @@ class ComInterface {
     dynamic responseJson;
     http.Response response;
 
+    print(daoJWT);
     var mUrl = "";
     if (!wholeURL) {
       mUrl = globals.API_URL + url;
@@ -131,6 +132,9 @@ class ComInterface {
       "Content-Type": "application/json",
       "payload": payload,
     };
+    if (debug) {
+      print(body);
+    }
 
     var b = body != null ? json.encode(body) : null;
     response = await http.post(Uri.parse(mUrl), headers: mHeaders, body: b).timeout(const Duration(seconds: 20));

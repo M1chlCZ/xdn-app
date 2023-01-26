@@ -16,8 +16,10 @@ class MyApp extends ConsumerWidget {
 
     return MaterialApp.router(
       restorationScopeId: 'app',
-      routerConfig: goRouter,
-
+      // routerConfig: goRouter,
+      routeInformationParser: goRouter.routeInformationParser,
+      routerDelegate: goRouter.routerDelegate,
+      routeInformationProvider: goRouter.routeInformationProvider,
       onGenerateTitle: (BuildContext context) => AppLocalizations.of(context)!.appTitle,
       localizationsDelegates: const [
         AppLocalizations.delegate,

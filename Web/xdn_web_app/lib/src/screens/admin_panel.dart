@@ -33,6 +33,39 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     });
   }
 
+  void unsure(int id) async {
+    final net = ref.read(networkProvider);
+    final p = ref.read(requestProvider.notifier);
+    try {
+      showWaitDialog(context: context, title: "Please wait", content: "Unsure request");
+      await net.post("/request/unsure", body: {"id": id}, serverType: ComInterface.serverGoAPI);
+      p.getRequest();
+      if (mounted) context.pop();
+      if (mounted) showExceptionAlertDialog(context: context, title: "Success", exception: "Allow: successful");
+    } catch (e) {
+      if (mounted) context.pop();
+      showExceptionAlertDialog(context: context, title: "Error", exception: e.toString());
+      print(e);
+    }
+  }
+
+  void vote(int id, bool upvote) async {
+    print("vote: $id, $upvote");
+    final net = ref.read(networkProvider);
+    final p = ref.read(requestProvider.notifier);
+    try {
+      showWaitDialog(context: context, title: "Please wait", content: "Vote request");
+      await net.post("/request/vote", body: {"id": id, "up": upvote}, serverType: ComInterface.serverGoAPI, debug: true);
+      p.getRequest();
+      if (mounted) context.pop();
+      if (mounted) showExceptionAlertDialog(context: context, title: "Success", exception: "Allow: successful");
+    } catch (e) {
+      if (mounted) context.pop();
+      showExceptionAlertDialog(context: context, title: "Error", exception: e.toString());
+      print(e);
+    }
+  }
+
   void allow(int id) async {
     final net = ref.read(networkProvider);
     final p = ref.read(requestProvider.notifier);
@@ -112,7 +145,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           SizedBox(
-                                              width: MediaQuery.of(context).size.width * 0.35,
+                                              width: 450,
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.start,
                                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,11 +180,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                                   ),
                                                 ],
                                               )),
-                                          SizedBox(width: MediaQuery.of(context).size.width * 0.1),
-                                          Text(
-                                            "${data[index].amount} XDN",
-                                            textAlign: TextAlign.start,
-                                            style: Theme.of(context).textTheme.bodySmall!.copyWith(color: Colors.white70, fontWeight: FontWeight.w100, fontSize: 16),
+                                          Expanded(
+                                            child: Text(
+                                              "${data[index].amount} XDN",
+                                              textAlign: TextAlign.start,
+                                              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: Colors.white70, fontWeight: FontWeight.w100, fontSize: 16),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -163,30 +197,128 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   ),
                                   leading: const Icon(Icons.person, color: Colors.white70),
                                   textColor: Colors.white70,
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                  trailing: Stack(
                                     children: [
-                                      IconButton(
-                                        hoverColor: Colors.redAccent.withOpacity(0.5),
-                                        icon: const Icon(
-                                          Icons.block,
-                                          color: Colors.red,
-                                        ),
-                                        onPressed: () {
-                                          deny(data[index].id!);
-                                        },
+                                      if (data[index].currentUser == false && data[index].idUserVoting != 0)
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            hoverColor: Colors.limeAccent.withOpacity(0.5),
+                                            icon: const Icon(
+                                              Icons.thumb_up_alt_sharp,
+                                              color: Colors.lime,
+                                            ),
+                                            onPressed: () {
+                                              vote(data[index].id!, true);
+                                            },
+                                          ),
+                                          const SizedBox(width: 10),
+                                          IconButton(
+                                            hoverColor: Colors.redAccent.withOpacity(0.5),
+                                            icon: const Icon(
+                                              Icons.thumb_down_alt_sharp,
+                                              color: Colors.red,
+                                            ),
+                                            onPressed: () {
+                                              vote(data[index].id!, false);
+                                            },
+                                          )
+                                        ],
                                       ),
-                                      const SizedBox(width: 10),
-                                      IconButton(
-                                        hoverColor: Colors.lime.withOpacity(0.5),
-                                        icon: const Icon(
-                                          Icons.check,
-                                          color: Colors.lime,
+                                      if (data[index].currentUser == true && data[index].idUserVoting != 0)
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            hoverColor: Colors.redAccent.withOpacity(0.5),
+                                            icon: const Icon(
+                                              Icons.block,
+                                              color: Colors.red,
+                                            ),
+                                            onPressed: () {
+                                              deny(data[index].id!);
+                                            },
+                                          ),
+                                          const SizedBox(width: 10),
+                                          IconButton(
+                                            hoverColor: Colors.lime.withOpacity(0.5),
+                                            icon: const Icon(
+                                              Icons.check,
+                                              color: Colors.lime,
+                                            ),
+                                            onPressed: () {
+                                              allow(data[index].id!);
+                                            },
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Column(
+                                            children: [
+                                              Text(
+                                                data[index].downvotes.toString(),
+                                                style: Theme.of(context).textTheme.bodySmall!.copyWith(color: Colors.red, fontWeight: FontWeight.w900, fontSize: 12),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              const Icon(
+                                                Icons.thumb_down_alt_sharp,
+                                                color: Colors.red,
+                                              )
+                                            ],
+                                          ),
+                                          const SizedBox(width: 15),
+                                          Column(
+                                            children: [
+                                              Text(
+                                                data[index].upvotes.toString(),
+                                                style: Theme.of(context).textTheme.bodySmall!.copyWith(color: Colors.lime, fontWeight: FontWeight.w900, fontSize: 12),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              const Icon(
+                                                Icons.thumb_up_alt_sharp,
+                                                color: Colors.lime,
+                                              )
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      if (data[index].currentUser == false && data[index].idUserVoting == 0)
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              hoverColor: Colors.redAccent.withOpacity(0.5),
+                                              icon: const Icon(
+                                                Icons.block,
+                                                color: Colors.red,
+                                              ),
+                                              onPressed: () {
+                                                deny(data[index].id!);
+                                              },
+                                            ),
+                                            const SizedBox(width: 10),
+                                            IconButton(
+                                              hoverColor: Colors.lime.withOpacity(0.5),
+                                              icon: const Icon(
+                                                Icons.check,
+                                                color: Colors.lime,
+                                              ),
+                                              onPressed: () {
+                                                allow(data[index].id!);
+                                              },
+                                            ),
+                                            const SizedBox(width: 10),
+                                            IconButton(
+                                              hoverColor: Colors.amber.withOpacity(0.5),
+                                              icon: const Icon(
+                                                Icons.thumbs_up_down,
+                                                color: Colors.amber,
+                                              ),
+                                              onPressed: () {
+                                                unsure(data[index].id!);
+                                              },
+                                            )
+                                          ],
                                         ),
-                                        onPressed: () {
-                                          allow(data[index].id!);
-                                        },
-                                      )
                                     ],
                                   ),
                                 ),

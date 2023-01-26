@@ -15,12 +15,12 @@ import 'package:xdn_web_app/src/support/s_p.dart';
 //   }
 // });
 
-final requestProvider = StateNotifierProvider<RequestProvider, AsyncValue<List<WithReq>>>((ref) {
+final requestProvider = StateNotifierProvider<RequestProvider, AsyncValue<List<Requests>>>((ref) {
   var n = ref.read(networkProvider);
   return RequestProvider(n);
 });
 
-class RequestProvider extends StateNotifier<AsyncValue<List<WithReq>>> {
+class RequestProvider extends StateNotifier<AsyncValue<List<Requests>>> {
 final ComInterface com;
   RequestProvider(this.com) : super(const AsyncLoading());
 
@@ -28,7 +28,7 @@ void getRequest() async {
   try {
     dynamic response = await com.get("/request/withdraw", serverType: ComInterface.serverGoAPI, debug: true);
     var l = response['requests'] as List;
-    var list = l.map((item) => WithReq.fromJson(item)).toList();
+    var list = l.map((item) => Requests.fromJson(item)).toList();
     state = AsyncValue.data(list);
   } catch (e) {
     print(e);
