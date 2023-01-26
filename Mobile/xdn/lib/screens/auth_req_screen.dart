@@ -50,6 +50,42 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
     }
   }
 
+  void unsure(int id) async {
+    ComInterface net = ComInterface();
+    try {
+      Dialogs.openWaitBox(context);
+      await net.post("/request/unsure", body: {"id": id}, serverType: ComInterface.serverGoAPI);
+      if(mounted) Navigator.of(context).pop();
+      setState(() {done = true;});
+      Future.delayed(const Duration(milliseconds: 300), () => setState(() {anim = true;}));
+      Future.delayed(const Duration(seconds: 2), () => Navigator.of(context).pop());
+    } catch (e) {
+      debugPrint(e.toString());
+      if(mounted) Navigator.of(context).pop();
+      var err = json.decode(e.toString());
+      await Dialogs.openAlertBox(context, "Error", err['errorMessage']);
+      if(mounted) Navigator.of(context).pop();
+    }
+  }
+
+  void vote(int id, bool upvote) async {
+    ComInterface net = ComInterface();
+    try {
+      Dialogs.openWaitBox(context);
+      await net.post("/request/vote", body: {"id": id, "up": upvote}, serverType: ComInterface.serverGoAPI);
+      if(mounted) Navigator.of(context).pop();
+      setState(() {done = true;});
+      Future.delayed(const Duration(milliseconds: 300), () => setState(() {anim = true;}));
+      Future.delayed(const Duration(seconds: 2), () => Navigator.of(context).pop());
+    } catch (e) {
+      debugPrint(e.toString());
+      if(mounted) Navigator.of(context).pop();
+      var err = json.decode(e.toString());
+      await Dialogs.openAlertBox(context, "Error", err['errorMessage']);
+      if(mounted) Navigator.of(context).pop();
+    }
+  }
+
   void deny(int id) async {
     ComInterface net = ComInterface();
     try {
@@ -77,6 +113,7 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
     try {
       Map<String, dynamic> m = {"id": widget.idRequest};
       var req = await com.post("/request/withdraw", body: m, serverType: ComInterface.serverGoAPI, debug: true);
+      print(req.toString());
       request = WithReq.fromJson(req);
       setState(() {});
     } catch (e) {
@@ -103,8 +140,8 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(request?.request?.username.toString() ?? "No username"),
-                    Text("${request?.request?.amount.toString() ?? "No amount"} XDN"),
+                    Text(request?.username.toString() ?? "No username"),
+                    Text("${request?.amount.toString() ?? "No amount"} XDN"),
                   ],
                 ),
               ),
@@ -113,7 +150,7 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: FlatCustomButton(
                   onTap: () {
-                    Utils.openLink("https://xdn-explorer.com/address/${request?.request?.address}");
+                    Utils.openLink("https://xdn-explorer.com/address/${request?.address}");
                   },
                   color: Colors.black12,
                   child: Padding(
@@ -123,7 +160,7 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
                       children: [
                         Expanded(
                           child: AutoSizeText(
-                            request?.request?.address ?? "No address",
+                            request?.address ?? "No address",
                             maxLines: 1,
                             minFontSize: 10,
                             maxFontSize: 14,
@@ -142,11 +179,48 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                Utils.convertDate(request?.request?.datePosted.toString()),
+                Utils.convertDate(request?.datePosted.toString()),
                 style: const TextStyle(fontSize: 14.0),
               ),
               const SizedBox(height: 50),
+              if (request?.currentUser == false && request?.idUserVoting != 0)
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  FlatCustomButton(
+                    icon: const Icon(
+                      Icons.thumb_up_alt_sharp,
+                      color: Colors.lime,
+                    ),
+                    onLongPress: () {
+                      vote(request!.id!, true);
+                    },
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Long press to deny"),
+                        duration: Duration(seconds: 2),
+                      ));
+                    },
+                  ),
+                  FlatCustomButton(
+                    icon: const Icon(
+                      Icons.thumb_down_alt_sharp,
+                      color: Colors.red,
+                    ),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Long press to allow"),
+                        duration: Duration(seconds: 2),
+                      ));
+                    },
+                    onLongPress: () {
+                      vote(request!.id!, false);
+                    },
+                  ),
+                ],
+              ),
+              if (request?.currentUser == true && request?.idUserVoting != 0)
+                Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   FlatCustomButton(
@@ -156,7 +230,7 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
                       size: 35,
                     ),
                     onLongPress: () {
-                      deny(request?.request?.id ?? 0);
+                      deny(request?.id ?? 0);
                     },
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -178,17 +252,108 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
                       ));
                     },
                     onLongPress: () {
-                      allow(request?.request?.id ?? 0);
+                      allow(request?.id ?? 0);
                     },
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    children: [
+                      Text(
+                        request!.downvotes.toString(),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: Colors.red, fontWeight: FontWeight.w900, fontSize: 12),
+                      ),
+                      const SizedBox(height: 2),
+                      const Icon(
+                        Icons.thumb_down_alt_sharp,
+                        color: Colors.red,
+                      )
+                    ],
+                  ),
+                  const SizedBox(width: 15),
+                  Column(
+                    children: [
+                      Text(
+                        request!.upvotes.toString(),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: Colors.lime, fontWeight: FontWeight.w900, fontSize: 12),
+                      ),
+                      const SizedBox(height: 2),
+                      const Icon(
+                        Icons.thumb_up_alt_sharp,
+                        color: Colors.lime,
+                      )
+                    ],
                   ),
                 ],
               ),
+                if (request?.currentUser == false && request?.idUserVoting == 0)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      FlatCustomButton(
+                        child: const Padding(
+                          padding: EdgeInsets.all(3.0),
+                          child: Icon(
+                            Icons.block,
+                            color: Colors.red,
+                            size: 35,
+                          ),
+                        ),
+                        onLongPress: () {
+                          deny(request?.id ?? 0);
+                        },
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text("Long press to deny"),
+                            duration: Duration(seconds: 2),
+                          ));
+                        },
+                      ),
+                      FlatCustomButton(
+                        child: const Padding(
+                          padding: EdgeInsets.all(3.0),
+                          child: Icon(
+                            Icons.check,
+                            color: Colors.lime,
+                            size: 35,
+                          ),
+                        ),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text("Long press to allow"),
+                            duration: Duration(seconds: 2),
+                          ));
+                        },
+                        onLongPress: () {
+                          allow(request?.id ?? 0);
+                        },
+                      ),
+                      FlatCustomButton(
+                        child: const Padding(
+                          padding: EdgeInsets.all(3.0),
+                          child: Icon(
+                            Icons.thumbs_up_down,
+                            color: Colors.amber,
+                            size: 35,
+                          ),
+                        ),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text("Long press to allow"),
+                            duration: Duration(seconds: 2),
+                          ));
+                        },
+                        onLongPress: () {
+                          unsure(request?.id ?? 0);
+                        },
+                      ),
+                    ],
+                  ),
             ]),
           ),
         ),
         Positioned(
-          top: 85,
-          left: 5,
+          top: 50,
+          left: 8,
           child: FlatCustomButton(
             radius: 8.0,
             color: Colors.black12,
@@ -219,7 +384,7 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
               child:  Center(
                 child: AnimatedScale(
                 duration: const Duration(milliseconds: 600),
-                curve: Curves.bounceOut,
+                curve: Curves.easeInOutBack,
                 scale: anim ? 1 : 0,
                 child: Center(
                   child: Column(

@@ -359,11 +359,7 @@ ORDER BY a.datePosted`, userID, req.ID)
 		return utils.ReportError(c, "Request already processed", http.StatusConflict)
 	}
 	js, err := request.MarshalJSON()
-	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-		utils.ERROR:  false,
-		utils.STATUS: utils.OK,
-		"request":    js,
-	})
+	return c.Status(fiber.StatusOK).Send(js)
 }
 
 func allowRequest(c *fiber.Ctx) error {
