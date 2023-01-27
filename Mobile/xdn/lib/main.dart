@@ -8,12 +8,14 @@ import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_req_screen.dart';
 import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
+import 'package:digitalnote/screens/bug_report_screen.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
 import 'package:digitalnote/screens/mn_manage_screen.dart';
 import 'package:digitalnote/screens/registerscreen.dart';
+import 'package:digitalnote/screens/req_screen.dart';
 import 'package:digitalnote/screens/security_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/socials_screen.dart';
@@ -38,6 +40,7 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -90,7 +93,7 @@ void main() async {
   FCM().setNotifications();
   runApp(
     Phoenix(
-      child: const MyApp(),
+      child: const ProviderScope(child: MyApp()),
     ),
   );
 }
@@ -438,6 +441,10 @@ class MyAppState extends State<MyApp> {
         return MaterialPageRoute(builder: (_) => const WithdrawalsScreen());
       case BlockInfoScreen.route:
         return MaterialPageRoute(builder: (_) => const BlockInfoScreen());
+      case BugReportScreen.route:
+        return MaterialPageRoute(builder: (_) => const BugReportScreen());
+      case AdminScreen.route:
+        return MaterialPageRoute(builder: (_) => const AdminScreen());
       default:
         return MaterialPageRoute(builder: (_) => const LoginPage());
     }

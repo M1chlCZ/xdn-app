@@ -36,7 +36,7 @@ func (s *ServerApp) UserPermission(ctx context.Context, _ *grpcModels.UserPermis
 	}
 	uID := md.Get("user_id")
 	userID := uID[0]
-
+	admin := false
 	mnPermission := false
 	stealthPermission := false
 	value := database.ReadValueEmpty[sql.NullInt64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
@@ -47,7 +47,13 @@ func (s *ServerApp) UserPermission(ctx context.Context, _ *grpcModels.UserPermis
 	if value2.Valid {
 		stealthPermission = true
 	}
-	return &grpcModels.UserPermissionResponse{MnPermission: mnPermission, StealthPermission: stealthPermission}, nil
+	value3 := database.ReadValueEmpty[sql.NullBool]("SELECT admin FROM users WHERE id = ?", userID)
+	if value3.Valid {
+		if value3.Bool {
+			admin = true
+		}
+	}
+	return &grpcModels.UserPermissionResponse{MnPermission: mnPermission, StealthPermission: stealthPermission, Admin: admin}, nil
 }
 
 func (s *ServerApp) MasternodeGraph(ctx context.Context, request *grpcModels.MasternodeGraphRequest) (*grpcModels.MasternodeGraphResponse, error) {

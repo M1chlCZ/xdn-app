@@ -25,6 +25,7 @@ message UserPermissionRequest {
 message UserPermissionResponse {
   bool mn_permission = 1;
   bool stealth_permission = 2;
+  bool admin = 3;
 }
 
 message MasternodeGraphRequest {

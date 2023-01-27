@@ -6,9 +6,11 @@ import 'package:digitalnote/models/StealhBalance.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_req_screen.dart';
+import 'package:digitalnote/screens/bug_report_screen.dart';
 import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
+import 'package:digitalnote/screens/req_screen.dart';
 import 'package:digitalnote/screens/settingsScreen.dart';
 import 'package:digitalnote/screens/stakingScreen.dart';
 import 'package:digitalnote/screens/stealth_screen.dart';
@@ -25,6 +27,7 @@ import 'package:digitalnote/support/daemon_status.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
+import 'package:digitalnote/widgets/admin_main_menu.dart';
 import 'package:digitalnote/widgets/balanceCard.dart';
 import 'package:digitalnote/widgets/balance_card.dart';
 import 'package:digitalnote/widgets/balance_stealth_card.dart';
@@ -77,6 +80,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   bool contestActive = false;
   bool mnActive = false;
   bool stealthActive = false;
+  bool admin = false;
 
   Future<DaemonStatus>? daemonStatus;
 
@@ -98,6 +102,15 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   late final Animation<double> _animation2 = CurvedAnimation(
     parent: _controller2,
     curve: Curves.fastOutSlowIn,
+  );
+
+  late final AnimationController _controller3 = AnimationController(
+    duration: const Duration(seconds: 1),
+    vsync: this,
+  );
+  late final Animation<double> _animation3 = CurvedAnimation(
+    parent: _controller2,
+    curve: Curves.bounceOut,
   );
 
   @override
@@ -134,6 +147,14 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
             stealthActive = true;
           });
           _controller2.forward();
+        });
+      }
+      if (response.admin) {
+        Future.delayed(const Duration(milliseconds: 400), () {
+          setState(() {
+            admin = true;
+          });
+          _controller3.forward();
         });
       }
     } catch (e) {
@@ -265,6 +286,16 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
   }
 
+  void gotoBugReportScreen() {
+    Navigator.of(context).pushNamed(BugReportScreen.route, arguments: "shit");
+    // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
+  }
+
+  void gotoRequestScreen() {
+    Navigator.of(context).pushNamed(AdminScreen.route, arguments: "shit");
+    // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
+  }
+
   void gotoMasternodeScreen() {
     Navigator.of(context).pushNamed(MasternodeScreen.route, arguments: "shit").then((value) => refreshBalance());
   }
@@ -350,25 +381,34 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                     const SizedBox(
                                       height: 2.0,
                                     ),
-                                    InkWell(
-                                      splashColor: Colors.white24,
-                                      onTap: () {
-                                        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "Tips, Rains, Thunder directly from the app. Coming soon!");
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(7.0),
-                                        decoration: BoxDecoration(
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Material(
                                           color: Colors.transparent,
-                                          borderRadius: BorderRadius.circular(10.0),
-                                          border: Border.all(color: Colors.white24, width: 1.0),
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(10.0),
+                                            splashColor: Colors.white24,
+                                            onTap: () {
+                                              gotoBugReportScreen();
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(7.0),
+                                              decoration: BoxDecoration(
+                                                color: Colors.transparent,
+                                                borderRadius: BorderRadius.circular(10.0),
+                                                border: Border.all(color: Colors.pinkAccent, width: 0.5),
+                                              ),
+                                              child: Image.asset(
+                                                "images/bug_report.png",
+                                                height: 28.0,
+                                                width: 28.0,
+                                                color: Colors.white.withOpacity(0.6),
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                        child: Image.asset(
-                                          "images/socials_general.png",
-                                          height: 28.0,
-                                          width: 28.0,
-                                          color: Colors.white.withOpacity(0.9),
-                                        ),
-                                      ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -399,6 +439,15 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                         ),
                         WithdrawalCardMainMenu(
                           goto: gotoWithdrawalScreen,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        SizeTransition(
+                          sizeFactor: _animation3,
+                          child: AdminMainMenu(
+                            goto: gotoRequestScreen,
+                          ),
                         ),
                         SizeTransition(
                           sizeFactor: _animation2,

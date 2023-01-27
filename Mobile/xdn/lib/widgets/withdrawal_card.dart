@@ -1,21 +1,15 @@
-
-import 'package:auto_size_text/auto_size_text.dart';
-import 'package:digitalnote/support/Dialogs.dart';
-import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WithdrawalCardMainMenu extends StatefulWidget {
   final VoidCallback goto;
 
-  const WithdrawalCardMainMenu({Key? key,  required this.goto}) : super(key: key);
+  const WithdrawalCardMainMenu({Key? key, required this.goto}) : super(key: key);
 
   @override
   State<WithdrawalCardMainMenu> createState() => _WithdrawalCardMainMenuState();
 }
 
 class _WithdrawalCardMainMenuState extends State<WithdrawalCardMainMenu> {
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -25,7 +19,7 @@ class _WithdrawalCardMainMenuState extends State<WithdrawalCardMainMenu> {
           widget.goto();
         },
         child: Container(
-          decoration:  BoxDecoration(
+          decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(15.0)),
             boxShadow: [
               BoxShadow(
@@ -41,15 +35,16 @@ class _WithdrawalCardMainMenuState extends State<WithdrawalCardMainMenu> {
           child: Stack(
             children: [
               Center(
-                child: Text("Withdrawals", style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white54, fontWeight: FontWeight.w600),),
+                child: Text(
+                  "Withdrawals",
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white54, fontWeight: FontWeight.w600),
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.only(left:2.0, top: 5.0, bottom: 5.0),
+                padding: const EdgeInsets.only(left: 2.0, top: 5.0, bottom: 5.0),
                 child: Opacity(
                   opacity: 0.8,
-                  child: SizedBox(
-                      width: 64,
-                      child: Image.asset("images/withdrawal_big.png")),
+                  child: SizedBox(width: 64, child: Image.asset("images/withdrawal_big.png")),
                 ),
               )
             ],

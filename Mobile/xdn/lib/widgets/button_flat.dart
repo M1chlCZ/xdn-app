@@ -15,8 +15,9 @@ class FlatCustomButton extends StatelessWidget {
   final double? width;
   final EdgeInsets? padding;
   final double? borderWidth;
+  final CrossAxisAlignment alignment;
 
-  const FlatCustomButton({Key? key, this.color, this.onTap, this.icon, this.imageIcon, this.splashColor, this.animIcon, this.radius = 4.0, this.child, this.borderColor, this.height, this.width, this.padding, this.borderWidth, this.onLongPress}) : super(key: key);
+  const FlatCustomButton({Key? key, this.color, this.onTap, this.icon, this.imageIcon, this.splashColor, this.animIcon, this.radius = 4.0, this.child, this.borderColor, this.height, this.width, this.padding, this.borderWidth, this.onLongPress, this.alignment = CrossAxisAlignment.center}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +43,8 @@ class FlatCustomButton extends StatelessWidget {
               padding: padding,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: alignment,
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   animIcon ?? Container(),
                   icon ?? Container(),

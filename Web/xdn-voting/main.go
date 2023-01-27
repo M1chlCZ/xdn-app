@@ -115,6 +115,7 @@ func main() {
 	app.Post("api/v1/password/change", auth.Authorized(changePassword))
 
 	app.Get("api/v1/misc/privkey", auth.Authorized(getPrivKey))
+	app.Post("api/v1/misc/bug/report", auth.Authorized(reportBug))
 
 	app.Post("api/v1/twofactor", auth.Authorized(twofactor))
 	app.Post("api/v1/twofactor/activate", auth.Authorized(twofactorVerify))
@@ -247,6 +248,31 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func reportBug(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	var req struct {
+		BugDesc     string `json:"bugDesc"`
+		BugLocation string `json:"bugLocation"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+
+	_, err = database.InsertSQl("INSERT INTO bugs (idUser, bugDesc, bugLocation) VALUES (?, ?, ?)", userID, req.BugDesc, req.BugLocation)
+	if err != nil {
+		return utils.ReportError(c, "Error", http.StatusBadRequest)
+	}
+	utils.ReportMessage(fmt.Sprintf("= { New bug report from %s Desc: %s Location: %s } =", userID, req.BugDesc, req.BugLocation))
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
 }
 
 func voteRequest(c *fiber.Ctx) error {
@@ -502,7 +528,7 @@ func withDrawRequest(c *fiber.Ctx) error {
 LEFT JOIN users as b ON a.idUser = b.id
 LEFT JOIN with_req_voting as c ON a.id = c.idReq
 LEFT JOIN (SELECT idReq, SUM(upvote) as upvote, SUM(downvote) as downvote FROM with_req_votes GROUP BY upvote, downvote, idReq) AS d on d.idReq = a.id
-WHERE a.idUserAuth IS NULL
+WHERE a.idUserAuth IS NULL AND a.amount > 0.01
 ORDER BY a.datePosted`, userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusConflict)
@@ -1151,7 +1177,7 @@ func withdrawMN(c *fiber.Ctx) error {
 }
 
 func unrequestMasternode(idUser int) {
-	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND masternode = 1 AND id <> 0", idUser)
+	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND masternode = 1 AND id <> 0 LIMIT 1", idUser)
 }
 
 func startMN(c *fiber.Ctx) error {
@@ -2022,6 +2048,15 @@ func sendContactTransaction(c *fiber.Ctx) error {
 		return utils.ReportError(c, "All fields has to be populated", fiber.StatusBadRequest)
 	}
 
+	exist, err := database.ReadValue[int]("SELECT COUNT(id) FROM requests WHERE idUser = ? AND main = ? AND processed = 0", userID, 1)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if exist > 0 {
+		return utils.ReportError(c, "You have an active request", http.StatusBadRequest)
+	}
+	defer unrequestMain(userID)
+
 	addrSend, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
 
 	tx, err := coind.SendCoins(data.Address, addrSend, data.Amount, false)
@@ -2069,6 +2104,10 @@ func sendContactTransaction(c *fiber.Ctx) error {
 	})
 }
 
+func unrequestMain(id string) {
+	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND main = 1 AND processed = 0 AND id<> 0 LIMIT 1", id)
+}
+
 func sendTransaction(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	if len(userID) == 0 {
@@ -2086,6 +2125,15 @@ func sendTransaction(c *fiber.Ctx) error {
 	if data.Address == "" || data.Amount == 0 {
 		return utils.ReportError(c, "All fields has to be populated", fiber.StatusBadRequest)
 	}
+
+	exist, err := database.ReadValue[int]("SELECT COUNT(id) FROM requests WHERE idUser = ? AND main = ? AND processed = 0", userID, 1)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	if exist > 0 {
+		return utils.ReportError(c, "You have an active request", http.StatusBadRequest)
+	}
+	defer unrequestMain(userID)
 
 	addrSend, err := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
 
@@ -3147,7 +3195,7 @@ func unstake(c *fiber.Ctx) error {
 }
 
 func unrequestStaking(idUser int) {
-	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND staking = 1 AND id <> 0", idUser)
+	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND staking = 1 AND id <> 0 LIMIT 1", idUser)
 }
 
 func getStakeInfo(c *fiber.Ctx) error {

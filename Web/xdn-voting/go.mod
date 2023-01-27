@@ -36,7 +36,7 @@ require (
 
 require (
 	cloud.google.com/go v0.109.0 // indirect
-	cloud.google.com/go/compute v1.15.1 // indirect
+	cloud.google.com/go/compute v1.18.0 // indirect
 	cloud.google.com/go/firestore v1.9.0 // indirect
 	cloud.google.com/go/iam v0.10.0 // indirect
 	cloud.google.com/go/storage v1.29.0 // indirect
