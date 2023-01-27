@@ -109,7 +109,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     vsync: this,
   );
   late final Animation<double> _animation3 = CurvedAnimation(
-    parent: _controller2,
+    parent: _controller3,
     curve: Curves.bounceOut,
   );
 

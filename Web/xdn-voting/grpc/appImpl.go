@@ -47,12 +47,12 @@ func (s *ServerApp) UserPermission(ctx context.Context, _ *grpcModels.UserPermis
 	if value2.Valid {
 		stealthPermission = true
 	}
-	value3 := database.ReadValueEmpty[sql.NullBool]("SELECT admin FROM users WHERE id = ?", userID)
-	if value3.Valid {
-		if value3.Bool {
-			admin = true
-		}
+
+	value3 := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if value3 {
+		admin = true
 	}
+
 	return &grpcModels.UserPermissionResponse{MnPermission: mnPermission, StealthPermission: stealthPermission, Admin: admin}, nil
 }
 

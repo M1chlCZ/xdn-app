@@ -574,6 +574,10 @@ func tip(username string, from *tgbotapi.Message) (string, error) {
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db")
 	}
+	banned := database.ReadValueEmpty[int64]("SELECT banned FROM users WHERE id = ?", usrFrom.Int64)
+	if banned == 1 {
+		return "", errors.New("You are banned")
+	}
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial = ? AND typeBot = ?", strings.TrimSpace(ut), 1)
 	if !usrTo.Valid {
 		return "", errors.New("Mentioned user not registered in the bot db")
@@ -903,6 +907,11 @@ func rain(username string, from *tgbotapi.Message) (string, error, RainReturnStr
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db"), RainReturnStruct{}
 	}
+
+	banned := database.ReadValueEmpty[int64]("SELECT banned FROM users WHERE id = ?", usrFrom.Int64)
+	if banned == 1 {
+		return "", errors.New("You are banned"), RainReturnStruct{}
+	}
 	utils.ReportMessage(fmt.Sprintf("--- Rain from %s ---", username))
 	ban := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ? AND ban = ?", username, 1, 1)
 	if ban.Valid {
@@ -1072,6 +1081,10 @@ func thunderTelegram(username string, from *tgbotapi.Message) (string, error, Th
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE binary idSocial= ? AND typeBot = ?", username, 1)
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db"), ThunderReturnStruct{}
+	}
+	banned := database.ReadValueEmpty[int64]("SELECT banned FROM users WHERE id = ?", usrFrom.Int64)
+	if banned == 1 {
+		return "", errors.New("You are banned"), ThunderReturnStruct{}
 	}
 	utils.ReportMessage(fmt.Sprintf("--- Thunder from %s ---", username))
 

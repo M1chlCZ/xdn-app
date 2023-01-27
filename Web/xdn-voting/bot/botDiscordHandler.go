@@ -314,7 +314,10 @@ func registerDiscord(token string, from *discordgo.MessageCreate) error {
 		RegenerateTokenSocial(idUser.Int64)
 		return errors.New("Invalid token")
 	}
-
+	banned := database.ReadValueEmpty[int64]("SELECT banned FROM users WHERE id = ?", idUser)
+	if banned == 1 {
+		return errors.New("You are banned")
+	}
 	_, err := database.InsertSQl("INSERT INTO users_bot (idUser, idSocial, token, typeBot, dName) VALUES (?, ?, ?, ?, ?)", idUser.Int64, from.Author.ID, token, 2, from.Author.Username)
 	//_, err = database.InsertSQl("UPDATE users_bot SET dName = CONVERT(BINARY(CONVERT(? USING latin1)) USING utf8mb4) WHERE idSocial = ? ", from.Author.UserID, from.Author.ID)
 	if err != nil {
@@ -384,6 +387,10 @@ func tipDiscord(from *discordgo.MessageCreate) (map[string]string, error) {
 	usrTo := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ? AND typeBot = ?", strings.TrimSpace(tippedUser), 2)
 	if !usrTo.Valid {
 		return nil, errors.New("Mentioned user is not registered in the Discord bot db")
+	}
+	banned := database.ReadValueEmpty[int64]("SELECT banned FROM users WHERE id = ?", usrFrom.Int64)
+	if banned == 1 {
+		return nil, errors.New("You are banned")
 	}
 	contactTO := database.ReadValueEmpty[sql.NullString]("SELECT name FROM addressbook WHERE idUser = ? AND addr = (SELECT addr FROM users WHERE id = (SELECT idUser FROM users_bot WHERE idSocial = ? ))", usrFrom, tippedUser)
 	addrFrom := database.ReadValueEmpty[sql.NullString]("SELECT addr FROM users WHERE id = ?", usrFrom.Int64)
@@ -478,6 +485,10 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", author, 2)
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db")
+	}
+	banned := database.ReadValueEmpty[int64]("SELECT banned FROM users WHERE id = ?", usrFrom.Int64)
+	if banned == 1 {
+		return "", errors.New("You are banned")
 	}
 	ustPermission := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", usrFrom.Int64)
 	if ustPermission == 0 {
@@ -686,6 +697,10 @@ func rainDiscord(from *discordgo.MessageCreate) (string, error, RainReturnStruct
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db"), RainReturnStruct{}
 	}
+	banned := database.ReadValueEmpty[int64]("SELECT banned FROM users WHERE id = ?", usrFrom.Int64)
+	if banned == 1 {
+		return "", errors.New("You are banned"), RainReturnStruct{}
+	}
 	utils.ReportMessage(fmt.Sprintf("--- Rain from %s ---", from.Author.Username))
 	ban := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ? AND ban = ?", from.Author.ID, 1, 1)
 	if ban.Valid {
@@ -873,6 +888,10 @@ func thunderDiscord(from *discordgo.MessageCreate) (string, error, ThunderReturn
 	usrFrom := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial= ? AND typeBot = ?", from.Author.ID, 2)
 	if !usrFrom.Valid {
 		return "", errors.New("You are not registered in the bot db"), ThunderReturnStruct{}
+	}
+	banned := database.ReadValueEmpty[int64]("SELECT banned FROM users WHERE id = ?", usrFrom.Int64)
+	if banned == 1 {
+		return "", errors.New("You are banned"), ThunderReturnStruct{}
 	}
 	utils.ReportMessage(fmt.Sprintf("--- Rain from %s ---", from.Author.Username))
 	ban := database.ReadValueEmpty[sql.NullInt64]("SELECT id FROM users_bot WHERE idSocial = ? AND typeBot = ? AND ban = ?", from.Author.ID, 1, 1)
