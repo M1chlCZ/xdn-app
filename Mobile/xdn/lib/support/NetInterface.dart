@@ -132,7 +132,7 @@ class NetInterface {
   static Future<int> getTranData() async {
     try {
       ComInterface ci = ComInterface();
-      Map<String, dynamic>? res = await ci.get("/user/transactions", serverType: ComInterface.serverGoAPI);
+      Map<String, dynamic>? res = await ci.get("/user/transactions", serverType: ComInterface.serverGoAPI, debug: false);
       List<dynamic> rt = res!['data'];
       var l = await compute(getTransactionCompute, rt);
       var i = await AppDatabase().addTransactions(l);
@@ -169,7 +169,7 @@ class NetInterface {
   static Future<StealthBalance?> getStealthBalance() async {
     try {
       ComInterface ci = ComInterface();
-      Map<String, dynamic> rt = await ci.get("/user/stealth/balance", serverType: ComInterface.serverGoAPI, debug: true);
+      Map<String, dynamic> rt = await ci.get("/user/stealth/balance", serverType: ComInterface.serverGoAPI, debug: false);
       return StealthBalance.fromJson(rt);
     } catch (e) {
       print(e);
@@ -179,7 +179,7 @@ class NetInterface {
 
   static Future<Map<String, dynamic>>? getPriceData({bool details = false}) async {
     ComInterface ci = ComInterface();
-    Map<String, dynamic> res = await ci.get("/price/data", request: {}, serverType: ComInterface.serverGoAPI, debug: false);
+    Map<String, dynamic> res = await ci.get("/price/data", request: {}, serverType: ComInterface.serverGoAPI, debug: true);
     return res['data'];
   }
 

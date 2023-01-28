@@ -25,6 +25,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/current_remaining_time.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:slide_to_act/slide_to_act.dart';
 
@@ -36,7 +37,7 @@ import '../support/NetInterface.dart';
 import '../widgets/DropdownMenu.dart';
 import '../widgets/backgroundWidget.dart';
 
-class StakingScreen extends StatefulWidget {
+class StakingScreen extends ConsumerStatefulWidget {
   static const String route = "menu/staking";
 
   const StakingScreen({Key? key}) : super(key: key);

@@ -19,12 +19,17 @@ class _AdminMainMenuState extends State<AdminMainMenu> {
           widget.goto();
         },
         child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.all(Radius.circular(15.0)),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(15.0)),
             boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                spreadRadius: 2,
+                blurRadius: 3,
+                offset: const Offset(0, 5), // changes position of shadow
+              ),
             ],
-            image: DecorationImage(image: AssetImage("images/test_pattern.png"),fit: BoxFit.cover, opacity: 1.0),
+            image: const DecorationImage(image: AssetImage("images/test_pattern.png"),fit: BoxFit.cover, opacity: 1.0),
           ),
           height: 45,
           child: Stack(

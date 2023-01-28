@@ -1177,7 +1177,8 @@ func withdrawMN(c *fiber.Ctx) error {
 }
 
 func unrequestMasternode(idUser int) {
-	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND masternode = 1 AND id <> 0 LIMIT 1", idUser)
+	utils.ReportMessage(fmt.Sprintf("UNREQUEST MN %d", idUser))
+	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND masternode = 1 AND processed = 0 AND id <> 0 LIMIT 1", idUser)
 }
 
 func startMN(c *fiber.Ctx) error {
@@ -2105,7 +2106,11 @@ func sendContactTransaction(c *fiber.Ctx) error {
 }
 
 func unrequestMain(id string) {
-	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND main = 1 AND processed = 0 AND id<> 0 LIMIT 1", id)
+	utils.ReportMessage(fmt.Sprintf("UNREQUEST MAIN %s", id))
+	_, err := database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND main = 1 AND processed = 0 AND id<> 0 LIMIT 1", id)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
 }
 
 func sendTransaction(c *fiber.Ctx) error {
@@ -3099,13 +3104,12 @@ func unstake(c *fiber.Ctx) error {
 	if exist > 0 {
 		return utils.ReportError(c, "You have an active request", http.StatusBadRequest)
 	}
+	_, _ = database.InsertSQl("INSERT INTO requests (idUser, staking, masternode) VALUES (?, ?, ?)", userID, 1, 0)
+	defer unrequestStaking(userID)
 	errDB := apiWallet.CheckStakeBalance()
 	if errDB != nil {
 		return utils.ReportError(c, "Staking turned off temporarily", http.StatusConflict)
 	}
-	_, _ = database.InsertSQl("INSERT INTO requests (idUser, staking, masternode) VALUES (?, ?, ?)", userID, 1, 0)
-
-	defer unrequestStaking(userID)
 
 	var r req
 	err = c.BodyParser(&r)
@@ -3195,7 +3199,8 @@ func unstake(c *fiber.Ctx) error {
 }
 
 func unrequestStaking(idUser int) {
-	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND staking = 1 AND id <> 0 LIMIT 1", idUser)
+	utils.ReportMessage(fmt.Sprintf("UNREQUEST STAKING %d", idUser))
+	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND staking = 1 AND processed = 0 AND id <> 0 LIMIT 1", idUser)
 }
 
 func getStakeInfo(c *fiber.Ctx) error {

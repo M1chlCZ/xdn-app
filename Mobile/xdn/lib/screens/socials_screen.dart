@@ -6,8 +6,9 @@ import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/social_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SocialScreen extends StatefulWidget {
+class SocialScreen extends ConsumerStatefulWidget {
   static const String route = "menu/settings/socials";
 
   const SocialScreen({Key? key}) : super(key: key);

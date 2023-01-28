@@ -1,25 +1,26 @@
 import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../support/Dialogs.dart';
 
-class BalanceCard extends StatefulWidget {
-  final Future<Map<String, dynamic>>? getBalanceFuture;
+class BalanceCard extends ConsumerStatefulWidget {
   final VoidCallback? onPressSend;
 
-  const BalanceCard({Key? key, this.getBalanceFuture, this.onPressSend}) : super(key: key);
+  const BalanceCard({Key? key, this.onPressSend}) : super(key: key);
 
   @override
   BalanceCardState createState() => BalanceCardState();
 }
 
-class BalanceCardState extends State<BalanceCard> {
+class BalanceCardState extends ConsumerState<BalanceCard> {
   final key = GlobalKey<ScaffoldState>();
   Map<String, dynamic>? _priceData;
 
@@ -29,14 +30,21 @@ class BalanceCardState extends State<BalanceCard> {
     getPriceData();
   }
 
-  void getPriceData() async {
-    _priceData = await NetInterface.getPriceData();
-    setState(() {});
-  }
+  void getPriceData() {
+    Future.delayed(Duration.zero, () async {
+      ref.invalidate(balanceProvider);
 
+      await NetInterface.getPriceData()?.then((value) {
+        setState(() {
+          _priceData = value;
+        });
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final balance = ref.read(balanceProvider);
     return Stack(
       children: [
         Container(
@@ -44,8 +52,7 @@ class BalanceCardState extends State<BalanceCard> {
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(15.0)),
             gradient: LinearGradient(
-              colors: [Color(0xFF313C5D),
-                Color(0xFF5469BE)],
+              colors: [Color(0xFF313C5D), Color(0xFF5469BE)],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
@@ -65,115 +72,114 @@ class BalanceCardState extends State<BalanceCard> {
                 const SizedBox(height: 10),
                 SizedBox(
                   height: 80,
-                  child: FutureBuilder<Map<String, dynamic>>(
-                      future: widget.getBalanceFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          Map<String, dynamic> m = snapshot.data!;
-                          var balance = Utils.formatBalance(double.parse(m['spendable'].toString()));
-                          var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
-                          var pending = double.parse(m['balance'].toString()).toStringAsFixed(3);
-                          var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: ${Utils.formatBalance(double.parse(immature))} XDN";
-                          var textPending = double.parse(pending).toInt() == 0 ? '' : "Pending ${Utils.formatBalance(double.parse(pending))} XDN";
-                          if (textImature != '' && textPending != '') {
-                            textPending ='';
-                          }
-                          var priceData = _priceData?['usd'] ?? 0.0;
-                          double price = priceData * double.parse(m['spendable'].toString());
-                          return Column(
+                  child: balance.when(data: (data) {
+                    Map<String, dynamic> m = data!;
+                    var balance = Utils.formatBalance(double.parse(m['spendable'].toString()));
+                    var immature = double.parse(m['immature'].toString()).toStringAsFixed(3);
+                    var pending = double.parse(m['balance'].toString()).toStringAsFixed(3);
+                    var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: ${Utils.formatBalance(double.parse(immature))} XDN";
+                    var textPending = double.parse(pending).toInt() == 0 ? '' : "Pending ${Utils.formatBalance(double.parse(pending))} XDN";
+                    if (textImature != '' && textPending != '') {
+                      textPending = '';
+                    }
+                    var priceData = _priceData?['usd'] ?? 0.0;
+                    double price = priceData * double.parse(m['spendable'].toString());
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(top: 5.0),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 2.0),
-                                      child: SizedBox(
-                                        width: MediaQuery.of(context).size.width * 0.5,
-                                        height: 40,
-                                        child: Center(
-                                          child: AutoSizeText(balance,
-                                              minFontSize: 18.0,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.montserrat(fontWeight: FontWeight.w200, fontSize: 28.0)),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      width: 10.0,
-                                    ),
-                                    Container(
-                                        height: 45,
-                                        margin: const EdgeInsets.only(right: 10.0),
-                                        padding: const EdgeInsets.all(10.0),
-                                        child: const Center(
-                                            child: Text(
-                                              "XDN",
-                                              style: TextStyle(color: Colors.white54, fontSize: 18.0),
-                                            ))),
-                                  ],
+                                padding: const EdgeInsets.only(bottom: 2.0),
+                                child: SizedBox(
+                                  width: MediaQuery.of(context).size.width * 0.5,
+                                  height: 40,
+                                  child: Center(
+                                    child: AutoSizeText(balance,
+                                        minFontSize: 18.0,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.montserrat(fontWeight: FontWeight.w200, fontSize: 28.0)),
+                                  ),
                                 ),
                               ),
                               const SizedBox(
-                                height: 2,
+                                width: 10.0,
                               ),
-                              _priceData != null &&  _priceData!.isNotEmpty && textImature == '' && textPending == ''
-                                  ? SizedBox(
+                              Container(
+                                  height: 45,
+                                  margin: const EdgeInsets.only(right: 10.0),
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: const Center(
+                                      child: Text(
+                                    "XDN",
+                                    style: TextStyle(color: Colors.white54, fontSize: 18.0),
+                                  ))),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 2,
+                        ),
+                        _priceData != null && _priceData!.isNotEmpty && textImature == '' && textPending == ''
+                            ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
                                 child: AutoSizeText("\$ ${price.toStringAsFixed(2)}",
-                                    minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
+                                    minFontSize: 12.0,
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: Colors.white54)),
                               )
-                                  : Container(),
-                              const SizedBox(
-                                height: 2,
-                              ),
-                              textImature != ''
-                                  ? SizedBox(
+                            : Container(),
+                        const SizedBox(
+                          height: 2,
+                        ),
+                        textImature != ''
+                            ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
                                 child: AutoSizeText(textImature,
                                     minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white54)),
                               )
-                                  : Container(),
-                              textPending != ''
-                                  ? SizedBox(
+                            : Container(),
+                        textPending != ''
+                            ? SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
                                 child: AutoSizeText(textPending,
                                     minFontSize: 12.0, maxLines: 1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white54)),
                               )
-                                  : Container(),
-                              const SizedBox(
-                                height: 2,
+                            : Container(),
+                        const SizedBox(
+                          height: 2,
+                        ),
+                      ],
+                    );
+                  }, error: (Object error, StackTrace stackTrace) {
+                    return Center(child: Text(error.toString(), style: Theme.of(context).textTheme.displayLarge!.copyWith(fontSize: 12.0, color: Colors.redAccent)));
+                  }, loading: () {
+                    return Center(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
+                        SizedBox(
+                            height: 75.0,
+                            width: 75.0,
+                            child: Center(
+                              child: SizedBox(
+                                height: 25.0,
+                                width: 25.0,
+                                child: CircularProgressIndicator(
+                                  backgroundColor: Colors.transparent,
+                                  color: Colors.white54,
+                                  strokeWidth: 1.0,
+                                ),
                               ),
-                            ],
-                          );
-                        } else if (snapshot.hasError) {
-                          return Center(child: Text(snapshot.error.toString(), style: Theme.of(context).textTheme.displayLarge!.copyWith(fontSize: 12.0, color: Colors.redAccent)));
-                        } else {
-                          return Center(
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
-                              SizedBox(
-                                  height: 75.0,
-                                  width: 75.0,
-                                  child: Center(
-                                    child: SizedBox(
-                                      height: 25.0,
-                                      width: 25.0,
-                                      child: CircularProgressIndicator(
-                                        backgroundColor: Colors.transparent,
-                                        color: Colors.white54,
-                                        strokeWidth: 1.0,
-                                      ),
-                                    ),
-                                  )),
-                            ]),
-                          );
-                        }
-                      }),
+                            )),
+                      ]),
+                    );
+                  }),
                 ),
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.005,

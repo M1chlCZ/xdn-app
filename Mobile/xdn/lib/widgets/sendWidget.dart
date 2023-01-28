@@ -19,10 +19,9 @@ import '../support/Utils.dart';
 
 class SendWidget extends StatefulWidget {
   final Function? func;
-  final Future? balance;
   final VoidCallback cancel;
 
-  const SendWidget({Key? key, this.func, this.balance, required this.cancel}) : super(key: key);
+  const SendWidget({Key? key, this.func, required this.cancel}) : super(key: key);
 
   @override
   SendWidgetState createState() => SendWidgetState();
@@ -172,9 +171,11 @@ class SendWidgetState extends State<SendWidget> {
   }
 
   void _getCurrentBalance() async {
-    var result = await widget.balance;
-    setState(() {
-      _balance = double.parse(result['spendable'].toString());
+    await Future.delayed(const Duration(seconds: 2), () async {
+      var result = await NetInterface.getBalance(details: true);
+      setState(() {
+        _balance = double.parse(result!['spendable'].toString());
+      });
     });
   }
 

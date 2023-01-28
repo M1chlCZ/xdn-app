@@ -371,11 +371,8 @@ class MyAppState extends State<MyApp> {
     var uri = Uri.parse(settings.name!);
     switch (uri.path) {
       case WalletScreen.route:
-        Object? shit = settings.arguments;
         return MaterialPageRoute(
-            builder: (_) => WalletScreen(
-                  arguments: shit!,
-                ));
+            builder: (_) => WalletScreen());
       case AddressScreen.route:
         return MaterialPageRoute(builder: (_) => const AddressScreen());
       case StakingScreen.route:

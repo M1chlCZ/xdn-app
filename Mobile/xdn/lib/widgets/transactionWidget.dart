@@ -1,16 +1,14 @@
 import 'dart:async';
 
 import 'package:digitalnote/bloc/transaction_bloc.dart';
-import 'package:digitalnote/net_interface/api_response.dart';
+import 'package:digitalnote/providers/transaction_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../support/NetInterface.dart';
-import '../models/TranSaction.dart';
 import 'TransactionView.dart';
 
-class TransactionWidget extends StatefulWidget {
+class TransactionWidget extends ConsumerStatefulWidget {
   final VoidCallback? func;
 
   @override
@@ -19,10 +17,11 @@ class TransactionWidget extends StatefulWidget {
   const TransactionWidget({Key? key, this.func}) : super(key: key);
 }
 
-class TransactionWidgetState extends State<TransactionWidget> {
+class TransactionWidgetState extends ConsumerState<TransactionWidget> {
   bool shouldRefresh = true;
   bool _circleVisible = true;
   TransactionBloc tb = TransactionBloc();
+  RequestProvider? tx;
 
   @override
   void initState() {
@@ -31,7 +30,13 @@ class TransactionWidgetState extends State<TransactionWidget> {
   }
 
   Future<void> _getShit() async {
-    tb.fetchTransactions();
+    // tb.fetchTransactions();
+
+    Future.delayed(Duration.zero, () {
+      tx = ref.watch(transactionProvider.notifier);
+      tx?.getRequest();
+    });
+    //
   }
 
   // Future<void> refreshTransaction() async {
@@ -41,6 +46,7 @@ class TransactionWidgetState extends State<TransactionWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final transactions = ref.read(transactionProvider);
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -92,51 +98,32 @@ class TransactionWidgetState extends State<TransactionWidget> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15.0),
               child: RefreshIndicator(
-                onRefresh: _getShit,
-                child: StreamBuilder<ApiResponse<List<TranSaction>>>(
-                    stream: tb.coinsListStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        switch (snapshot.data!.status) {
-                          case Status.completed:
-                            Future.delayed(Duration.zero, () {
-                              setState(() {
-                                _circleVisible = false;
-                              });
-                            });
-                            var data = snapshot.data!.data;
-                            return ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: data!.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                return TransactionView(
-                                  key: ValueKey<String>(data[index].txid!),
-                                    customLocale: Localizations.localeOf(context).languageCode, transaction: data[index]);
-                              },
-                            );
-                          case Status.error:
-                            Future.delayed(Duration.zero, () {
-                              setState(() {
-                                _circleVisible = false;
-                              });
-                            });
-                            return Center(
-                                child: Text(
-                              snapshot.error.toString(),
-                              style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 32, color: Colors.red),
-                            ));
-                          case Status.loading:
-                            Future.delayed(Duration.zero, () {
-                              setState(() {
-                                _circleVisible = true;
-                              });
-                            });
-                            return Container();
-                        }
-                      } else {
-                        return Container();
-                      }
-                    }),
+                onRefresh: () async {
+                  await tx?.getRequest();
+                },
+                child: transactions.when(data: (data) {
+                  Future.delayed(Duration.zero, () {
+                    setState(() {
+                      _circleVisible = false;
+                    });
+                  });
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: data.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return TransactionView(key: ValueKey<String>(data[index]!.txid!), customLocale: Localizations.localeOf(context).languageCode, transaction: data[index]);
+                    },
+                  );
+                }, error: (Object error, StackTrace stackTrace) {
+                  return Text(error.toString());
+                }, loading: () {
+                  Future.delayed(Duration.zero, () {
+                    setState(() {
+                      _circleVisible = true;
+                    });
+                  });
+                  return const Center(child: CircularProgressIndicator());
+                }),
               ),
             ),
           ),

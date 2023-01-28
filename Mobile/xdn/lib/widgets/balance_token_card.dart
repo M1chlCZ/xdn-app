@@ -1,24 +1,26 @@
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BalanceTokenCardMenu extends StatefulWidget {
-  final Future<Map<String, dynamic>>? getBalanceFuture;
+class BalanceTokenCardMenu extends ConsumerStatefulWidget {
   final VoidCallback goto;
 
-  const BalanceTokenCardMenu({Key? key, required this.getBalanceFuture, required this.goto}) : super(key: key);
+  const BalanceTokenCardMenu({Key? key, required this.goto}) : super(key: key);
 
   @override
-  State<BalanceTokenCardMenu> createState() => _BalanceTokenCardMenuState();
+  ConsumerState<BalanceTokenCardMenu> createState() => _BalanceTokenCardMenuState();
 }
 
-class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
+class _BalanceTokenCardMenuState extends ConsumerState<BalanceTokenCardMenu> {
   bool _tokenConnected = false;
   @override
   Widget build(BuildContext context) {
+    final balance = ref.watch(balanceTokenProvider);
     return Padding(
       padding: const EdgeInsets.only(left: 10.0, right: 10.0),
       child: GestureDetector(
@@ -44,11 +46,8 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
           child: Stack(
             children: [
               Center(
-                child: FutureBuilder<Map<String, dynamic>>(
-                    future: widget.getBalanceFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        Map<String, dynamic> m = snapshot.data!;
+                child: balance.when(data: (data) {
+                         Map<String, dynamic> m = data!;
                         var balance = double.parse(m['balance'].toString());
                         var immature = '0.000';
                         var textImature = immature == '0.000' ? '' : "${AppLocalizations.of(context)!.immature}: $immature XDN";
@@ -100,7 +99,7 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
                             ],
                           ),
                         );
-                      } else if (snapshot.hasError) {
+                      }, error: (Object error, StackTrace stackTrace) {
                         _tokenConnected = false;
                         return Center(child: Container(
                           padding: const EdgeInsets.all(5.0),
@@ -124,7 +123,7 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
                           image: const DecorationImage(image: AssetImage("images/test_pattern.png"), fit: BoxFit.cover, opacity: 1.0),
                         ), child: Text('Connect your BSC wallet in Voting section'.capitalize(), style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0,
                             color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.w800),)));
-                      } else {
+                      }, loading: () {
                         return Center(
                           child: Column(crossAxisAlignment: CrossAxisAlignment.center,mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
                             SizedBox(
@@ -138,7 +137,7 @@ class _BalanceTokenCardMenuState extends State<BalanceTokenCardMenu> {
                           ]),
                         );
                       }
-                    }),
+                    ),
               ),
               Padding(
                 padding: const EdgeInsets.only(left:2.0, top: 2.0, bottom: 2.0),

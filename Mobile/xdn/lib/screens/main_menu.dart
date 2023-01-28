@@ -4,6 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/generated/phone.pbgrpc.dart';
 import 'package:digitalnote/models/StealhBalance.dart';
 import 'package:digitalnote/net_interface/interface.dart';
+import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_req_screen.dart';
 import 'package:digitalnote/screens/bug_report_screen.dart';
@@ -42,6 +43,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:grpc/grpc.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
@@ -49,14 +51,14 @@ import 'package:walletconnect_dart/walletconnect_dart.dart';
 import '../globals.dart' as globals;
 import '../models/MessageGroup.dart';
 
-class MainMenuNew extends StatefulWidget {
+class MainMenuNew extends ConsumerStatefulWidget {
   static const String route = "menu";
   final String? locale;
 
   const MainMenuNew({Key? key, this.locale}) : super(key: key);
 
   @override
-  State<MainMenuNew> createState() => _MainMenuNewState();
+  ConsumerState<MainMenuNew> createState() => _MainMenuNewState();
 }
 
 class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
@@ -105,7 +107,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   );
 
   late final AnimationController _controller3 = AnimationController(
-    duration: const Duration(seconds: 1),
+    duration: const Duration(milliseconds: 800),
     vsync: this,
   );
   late final Animation<double> _animation3 = CurvedAnimation(
@@ -150,7 +152,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         });
       }
       if (response.admin) {
-        Future.delayed(const Duration(milliseconds: 400), () {
+        Future.delayed(const Duration(milliseconds: 800), () {
           setState(() {
             admin = true;
           });
@@ -243,14 +245,19 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   refreshBalance() {
-    _getBalance = NetInterface.getBalance(details: true);
-    _getTokenBalance = NetInterface.getTokenBalance();
-    _getStealthBalance = NetInterface.getStealthBalance();
-    setState(() {});
+    Future.delayed(Duration.zero, () {
+      ref.invalidate(balanceProvider);
+      ref.invalidate(balanceTokenProvider);
+      ref.invalidate(balanceStealthProvider);
+    });
+    // _getBalance = NetInterface.getBalance(details: true);
+    // _getTokenBalance = NetInterface.getTokenBalance();
+    // _getStealthBalance = NetInterface.getStealthBalance();
+    // setState(() {});
   }
 
   void gotoBalanceScreen() {
-    Navigator.of(context).pushNamed(WalletScreen.route, arguments: _getBalance).then((value) => refreshBalance());
+    Navigator.of(context).pushNamed(WalletScreen.route).then((value) => refreshBalance());
   }
 
   void gotoContactScreen() {
@@ -430,24 +437,27 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                         ),
                         BalanceCardMainMenu(
                           key: _keyBal,
-                          getBalanceFuture: _getBalance,
                           goto: gotoBalanceScreen,
                           scan: scanQR,
+                        ),
+                        SizeTransition(
+                          sizeFactor: _animation3,
+                          child: Column(
+                            children: [
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              AdminMainMenu(
+                                goto: gotoRequestScreen,
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(
                           height: 10,
                         ),
                         WithdrawalCardMainMenu(
                           goto: gotoWithdrawalScreen,
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        SizeTransition(
-                          sizeFactor: _animation3,
-                          child: AdminMainMenu(
-                            goto: gotoRequestScreen,
-                          ),
                         ),
                         SizeTransition(
                           sizeFactor: _animation2,
@@ -460,7 +470,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                                 height: mnActive ? 90.0 : 0.0,
                                 child: BalanceStealthCardMenu(
                                   key: _keyStealthBal,
-                                  getBalanceFuture: _getStealthBalance,
                                   goto: gotoStealthScreen,
                                 ),
                               ),
@@ -472,7 +481,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                         ),
                         BalanceTokenCardMenu(
                           key: _keyTokenBal,
-                          getBalanceFuture: _getTokenBalance,
                           goto: gotoTokenScreen,
                         ),
                         const SizedBox(

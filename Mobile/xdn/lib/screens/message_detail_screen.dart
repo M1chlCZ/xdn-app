@@ -10,6 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 
 import '../globals.dart' as globals;
@@ -23,7 +24,7 @@ import '../widgets/AvatarPicker.dart';
 import '../widgets/MessageBubble.dart';
 import '../widgets/backgroundWidget.dart';
 
-class MessageDetailScreen extends StatefulWidget {
+class MessageDetailScreen extends ConsumerStatefulWidget {
   static const String route = "menu/messages/detail";
   final MessageGroup mgroup;
   final Function(String addr)? func;

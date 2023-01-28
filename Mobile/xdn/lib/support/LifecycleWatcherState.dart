@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-abstract class LifecycleWatcherState<T extends StatefulWidget> extends State<T>
+abstract class LifecycleWatcherState<T extends ConsumerStatefulWidget> extends ConsumerState<T>
     with WidgetsBindingObserver, TickerProviderStateMixin  {
   @override
   Widget build(BuildContext context) {

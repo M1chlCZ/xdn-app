@@ -4,6 +4,7 @@ import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../support/NetInterface.dart';
 import '../widgets/backgroundWidget.dart';
@@ -11,25 +12,23 @@ import '../widgets/balanceCard.dart';
 import '../widgets/sendWidget.dart';
 import '../widgets/transactionWidget.dart';
 
-class WalletScreen extends StatefulWidget {
+class WalletScreen extends ConsumerStatefulWidget {
   static const String route = "menu/wallet";
 
   @override
   DetailScreenState createState() => DetailScreenState();
   final VoidCallback? refreshData;
-  final Object arguments;
 
-  const WalletScreen({Key? key, this.refreshData, required this.arguments}) : super(key: key);
+  const WalletScreen({Key? key, this.refreshData}) : super(key: key);
 }
 
 final Map<String, dynamic> payload = {};
 
-class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixin {
+class DetailScreenState extends ConsumerState<WalletScreen> with TickerProviderStateMixin {
   final GlobalKey<SendWidgetState> _key = GlobalKey();
   final GlobalKey<TransactionWidgetState> _keyTran = GlobalKey();
   final GlobalKey<BalanceCardState> _keyBal = GlobalKey();
 
-  Future<Map<String, dynamic>>? _getBalance;
   Map<String, dynamic>? _priceData;
 
   bool _forward = false;
@@ -38,7 +37,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
   bool? useTablet;
 
   void refreshBalance() {
-    _getBalance = NetInterface.getBalance(details: true);
   }
 
   getPriceData() async {
@@ -58,7 +56,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
   @override
   void initState() {
     super.initState();
-    _getBalance = widget.arguments as Future<Map<String, dynamic>>?;
     refreshBalance();
     _switchWidget = balanceCard();
   }
@@ -156,7 +153,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
       padding: const EdgeInsets.only(top: 0.0),
       child: BalanceCard(
         key: _keyBal,
-        getBalanceFuture: _getBalance,
         onPressSend: showTransactions,
       ),
     );
@@ -169,7 +165,6 @@ class DetailScreenState extends State<WalletScreen> with TickerProviderStateMixi
       child: SendWidget(
         key: _key,
         func: shrinkSendView,
-        balance: _getBalance,
         cancel: showTransactions,
       ),
     );
