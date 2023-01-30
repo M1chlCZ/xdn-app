@@ -81,6 +81,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   double _stakeAmount = 0.0;
   Timer? t;
   int _typeGraph = 0;
+  bool _autoReinvest = false;
 
   @override
   void initState() {
@@ -114,6 +115,33 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
         // print('Message also contained a notification: ${message.notification}');
       }
     });
+  }
+
+  void setReinvest(bool reinvest) async {
+    var time = await _checkCountdownReinvest();
+    if (time == false) {
+     if(mounted) Dialogs.openAlertBox(context, "Error", "You can't change auto reinvest in the next 24 hours");
+      return;
+    }
+    try {
+      ComInterface cm = ComInterface();
+      await cm.post("/staking/auto", body :{"autoStake": reinvest}, serverType: ComInterface.serverGoAPI);
+      setState(() {
+            _autoReinvest = reinvest;
+          });
+     await _getStakingDetails();
+     if (reinvest) {
+       var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
+       SecureStorage.write(key: "cnt", value: endTime.toString());
+       if(mounted) Dialogs.openAlertBox(context, "Success", "Auto reinvest enabled");
+     } else {
+       if(mounted) Dialogs.openAlertBox(context, "Success", "Auto reinvest disabled");
+     }
+    } catch (e) {
+      var err = json.decode(e.toString());
+      if(mounted) Dialogs.openAlertBox(context, "Error", err['errorMessage']);
+      print(e);
+    }
   }
 
   @override
@@ -260,13 +288,14 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
 
   Future<void> _getStakingDetails() async {
     ComInterface interface = ComInterface();
-    var res = await interface.get("/staking/info", debug: false, serverType: ComInterface.serverGoAPI, request: {});
+    var res = await interface.get("/staking/info", debug: true, serverType: ComInterface.serverGoAPI, request: {});
     StakeCheck? sc = StakeCheck.fromJson(res);
     if (sc.hasError == true) return;
     if (sc.active == 0) {
       _staking = false;
       _totalCoins = sc.inPoolTotal ?? 0.0;
       _hideLoad = true;
+      _autoReinvest = false;
       setState(() {});
     } else {
       _estimated = sc.estimated ?? 0.0;
@@ -277,6 +306,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       _reward = Decimal.parse(sc.stakesAmount!.toString()).toDouble();
       _staking = true;
       _hideLoad = true;
+      _autoReinvest = sc.autostake ?? false;
       setState(() {});
     }
   }
@@ -305,6 +335,21 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
       setState(() {
         _lockedText = AppLocalizations.of(context)!.st_coins_staked;
       });
+    }
+  }
+
+  Future<bool> _checkCountdownReinvest() async {
+    var countDown = await SecureStorage.read(key: "cnt");
+    if (countDown != null) {
+      int nowDate = DateTime.now().millisecondsSinceEpoch;
+      int countTime = int.parse(countDown);
+      if (nowDate < countTime) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      return true;
     }
   }
 
@@ -630,17 +675,17 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   height: 10,
                                 ),
                                 const Padding(
-                                  padding: EdgeInsets.only(left: 8.0, right: 8.0),
+                                  padding: EdgeInsets.only(left: 12.0, right: 12.0),
                                   child: Divider(
-                                    height: 1,
-                                    color: Colors.white60,
+                                    height: 0.2,
+                                    color: Colors.white10,
                                   ),
                                 ),
                                 const SizedBox(
                                   height: 10,
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
+                                   padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 0.0),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
@@ -656,31 +701,68 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                     ],
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(AppLocalizations.of(context)!.st_reward, style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 14.0)),
-                                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                        Text(
-                                          "${Utils.formatBalance(_reward)} XDN",
-                                          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                                                fontSize: 12.0,
-                                              ),
-                                        ),
-                                      ]),
-                                    ],
+                                if (_autoReinvest == true)
+                                  const SizedBox(
+                                    height: 5,
                                   ),
+                                if(_autoReinvest == false)
+                                Column(
+                                  children: [
+                                    const SizedBox(
+                                      height: 5,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0),
+                                      child: SizedBox(
+                                        height: 32,
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(AppLocalizations.of(context)!.st_reward, style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 14.0)),
+                                            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                              Text(
+                                                "${Utils.formatBalance(_reward)} XDN",
+                                                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                                      fontSize: 12.0,
+                                                    ),
+                                              ),
+                                            ]),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(
-                                  height: 10,
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 0, left: 17.0, right: 15.0, bottom: 10.0),
+                                  child: SizedBox(
+                                    height: 32,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text("Auto re-invest", style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 14.0)),
+                                        Transform.scale(
+                                          scaleY: 0.65,
+                                          scaleX: 0.7,
+                                          child: Switch(
+                                            inactiveTrackColor: Colors.black38,
+                                            inactiveThumbColor: Colors.black54,
+                                            value: _autoReinvest,
+                                            onChanged: (value) {
+                                              setReinvest(value);
+                                            },
+                                            activeTrackColor: Colors.black54,
+                                            activeColor: Colors.lightBlue,
+                                          ),
+                                        ),
+                                        ]),
+                                  ),
                                 ),
                                 const Padding(
                                   padding: EdgeInsets.only(left: 15.0, right: 15.0),
                                   child: Divider(
-                                    height: 1,
-                                    color: Colors.white54,
+                                    height: 0.2,
+                                    color: Colors.white12,
                                   ),
                                 ),
                                 const SizedBox(
@@ -1012,7 +1094,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                       ),
                     ),
                     const SizedBox(
-                      height: 30.0,
+                      height: 40.0,
                     ),
                   ],
                 ),

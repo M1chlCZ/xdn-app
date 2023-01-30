@@ -7,7 +7,7 @@ class StakeCheck {
     double? contribution,
     double? inPoolTotal,
     double? estimated,
-    String? status,}){
+    String? status, bool? autostake}){
     _active = active;
     _amount = amount;
     _hasError = hasError;
@@ -16,6 +16,7 @@ class StakeCheck {
     _contribution = contribution;
     _estimated = estimated;
     _inPoolTotal = inPoolTotal;
+    _autostake = autostake;
   }
 
   StakeCheck.fromJson(dynamic json) {
@@ -27,6 +28,7 @@ class StakeCheck {
     _contribution = double.parse(json['contribution'].toString());
     _inPoolTotal = double.parse(json['poolAmount'].toString());
     _estimated = double.parse(json['estimated'].toString());
+    _autostake = json['autoStake'];
   }
   int? _active;
   double? _amount;
@@ -36,6 +38,7 @@ class StakeCheck {
   double? _contribution;
   double? _inPoolTotal;
   double? _estimated;
+  bool? _autostake;
 
   int? get active => _active;
   double? get amount => _amount;
@@ -45,6 +48,7 @@ class StakeCheck {
   double? get contribution => _contribution;
   double? get inPoolTotal => _inPoolTotal;
   double? get estimated => _estimated;
+  bool? get autostake => _autostake;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -56,6 +60,7 @@ class StakeCheck {
     map['contribution'] = contribution;
     map['poolAmount'] = inPoolTotal;
     map['estimated'] = estimated;
+    map['autoStake'] = autostake;
     return map;
   }
 
