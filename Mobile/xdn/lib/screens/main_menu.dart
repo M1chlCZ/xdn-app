@@ -83,6 +83,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   bool mnActive = false;
   bool stealthActive = false;
   bool admin = false;
+  bool paused = false;
 
   Future<DaemonStatus>? daemonStatus;
 
@@ -692,13 +693,18 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   void onInactive() {}
 
   @override
-  void onPaused() {}
+  void onPaused() {
+    paused = true;
+  }
 
   @override
   void onResumed() {
-    refreshBalance();
-    getInfo();
-    getNotification();
+    if (paused) {
+      paused = false;
+      refreshBalance();
+      getInfo();
+      getNotification();
+    }
   }
 
   String _getDatetimeHeadline() {

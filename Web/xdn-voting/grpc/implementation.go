@@ -58,7 +58,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				return &grpcModels.Response{Code: 400}, errUpdate
 			}
 
-			readUsers, errDB := database.ReadSql("SELECT idUser, session, custodial FROM users_mn WHERE active = 1 AND idCoin = ? AND idNode = ?", idCoin, txRes.IdNode)
+			readUsers, errDB := database.ReadSql("SELECT idUser, session, custodial, autostake FROM users_mn WHERE active = 1 AND idCoin = ? AND idNode = ?", idCoin, txRes.IdNode)
 			if errDB != nil {
 				utils.WrapErrorLog(errDB.Error())
 				return &grpcModels.Response{Code: 400}, errUpdate
@@ -67,6 +67,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				IdUser    sql.NullInt64 `db:"idUser"`
 				Session   sql.NullInt64 `db:"session"`
 				Custodial int64         `db:"custodial"`
+				AutoStake bool          `db:"autostake"`
 			}
 			for readUsers.Next() {
 				var ru ReadUsers
@@ -85,6 +86,18 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 
 				if idUser != 0 {
 					dt := time.Now().UTC().Format("2006-01-02 15:04:05")
+					if ru.AutoStake == true {
+						_, errUpdate = database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime, credited) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt, 1)
+						if errUpdate != nil {
+							utils.WrapErrorLog(errUpdate.Error())
+							return &grpcModels.Response{Code: 400}, errUpdate
+						}
+
+						_, _ = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", txRes.Amount, idUser)
+						utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d }-", idUser))
+						_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
+						continue
+					}
 					_, errUpdate := database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime) VALUES (?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt)
 					if errUpdate != nil {
 						utils.WrapErrorLog(errUpdate.Error())
@@ -208,19 +221,20 @@ func (s *Server) WithdrawConfirm(_ context.Context, txDaemon *grpcModels.Withdra
 
 func (s *Server) MasternodeActive(_ context.Context, request *grpcModels.MasternodeActiveRequest) (*grpcModels.MasternodeActiveResponse, error) {
 	type ActiveMN struct {
-		ID        int64 `json:"id"`
-		Active    int   `json:"active"`
-		Custodial int   `json:"custodial"`
+		ID        int64  `json:"id" db:"id"`
+		Active    int    `json:"active" db:"active"`
+		Custodial int    `json:"custodial" db:"custodial"`
+		Address   string `json:"address" db:"address"`
 	}
 
-	returnListArr, err := database.ReadArrayStruct[ActiveMN]("SELECT id, active, custodial FROM mn_clients WHERE node_ip = ?", request.Url)
+	returnListArr, err := database.ReadArrayStruct[ActiveMN]("SELECT id, active, custodial, address FROM mn_clients WHERE node_ip = ?", request.Url)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return &grpcModels.MasternodeActiveResponse{Mn: nil}, err
 	}
 	active := make([]*grpcModels.MasternodeActiveResponse_Mn, 0)
 	for _, mn := range returnListArr {
-		active = append(active, &grpcModels.MasternodeActiveResponse_Mn{Id: uint32(mn.ID), Active: uint32(mn.Active), Custodial: uint32(mn.Custodial)})
+		active = append(active, &grpcModels.MasternodeActiveResponse_Mn{Id: uint32(mn.ID), Active: uint32(mn.Active), Custodial: uint32(mn.Custodial), Address: mn.Address})
 	}
 	return &grpcModels.MasternodeActiveResponse{Mn: active}, nil
 }

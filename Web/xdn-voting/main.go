@@ -116,6 +116,7 @@ func main() {
 
 	app.Get("api/v1/misc/privkey", auth.Authorized(getPrivKey))
 	app.Post("api/v1/misc/bug/report", auth.Authorized(reportBug))
+	app.Get("api/v1/misc/bug/user", auth.Authorized(getBugList))
 
 	app.Post("api/v1/twofactor", auth.Authorized(twofactor))
 	app.Post("api/v1/twofactor/activate", auth.Authorized(twofactorVerify))
@@ -126,6 +127,7 @@ func main() {
 	app.Post("api/v1/staking/set", auth.Authorized(setStake))
 	app.Post("api/v1/staking/unset", auth.Authorized(unstake))
 	app.Get("api/v1/staking/info", auth.Authorized(getStakeInfo))
+	app.Post("api/v1/staking/auto", auth.Authorized(setAutoStake))
 
 	app.Get("api/v1/masternode/info", auth.Authorized(getMNInfo))
 	app.Post("api/v1/masternode/lock", auth.Authorized(lockMN))
@@ -133,6 +135,7 @@ func main() {
 	app.Post("api/v1/masternode/start", auth.Authorized(startMN))
 	app.Post("api/v1/masternode/withdraw", auth.Authorized(withdrawMN))
 	app.Post("api/v1/masternode/reward", auth.Authorized(rewardMN))
+	app.Post("api/v1/masternode/auto", auth.Authorized(setAutoStakeMN))
 
 	app.Post("api/v1/masternode/non/start", auth.Authorized(startNonMN))
 	app.Get("api/v1/masternode/non/list", auth.Authorized(listNonMN))
@@ -250,6 +253,83 @@ func main() {
 
 }
 
+func getBugList(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	data, err := database.ReadArrayStruct[models.Bugs]("SELECT * FROM bugs WHERE idUser = ? ORDER BY id DESC", userID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"data":       data,
+	})
+}
+
+func setAutoStakeMN(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	var req struct {
+		AutoStake bool `json:"autoStake"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+
+	check := database.ReadValueEmpty[int]("SELECT COUNT(id) FROM users_stake WHERE idUser = ? AND active = 1", userID)
+	if check != 0 {
+		_, err = database.InsertSQl("UPDATE users_stake SET autostake = ? WHERE idUser = ? AND active = 1", req.AutoStake, userID)
+		if err != nil {
+			return utils.ReportError(c, "Error", http.StatusBadRequest)
+		}
+	} else {
+		smax, err := database.ReadValue[float64]("SELECT IFNULL(MAX(session), 0) as smax FROM users_stake WHERE idUser = ?", userID)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		if smax == 0 {
+			_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", userID, 0.0, 1, 1)
+		} else {
+			_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", userID, 0.0, 1, smax+1)
+		}
+	}
+	utils.ReportMessage(fmt.Sprintf("= { User %s set auto stake to %t } =", userID, req.AutoStake))
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func setAutoStake(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	var req struct {
+		AutoStake bool `json:"autoStake"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+
+	_, err = database.InsertSQl("UPDATE users_stake SET autostake = ? WHERE idUser = ? AND active = 1", req.AutoStake, userID)
+	if err != nil {
+		return utils.ReportError(c, "Error", http.StatusBadRequest)
+	}
+	utils.ReportMessage(fmt.Sprintf("= { User %s set auto stake to %t } =", userID, req.AutoStake))
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
 func reportBug(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	if userID == "" {
@@ -264,9 +344,14 @@ func reportBug(c *fiber.Ctx) error {
 		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
 	}
 
-	_, err = database.InsertSQl("INSERT INTO bugs (idUser, bugDesc, bugLocation) VALUES (?, ?, ?)", userID, req.BugDesc, req.BugLocation)
-	if err != nil {
-		return utils.ReportError(c, "Error", http.StatusBadRequest)
+	check := database.ReadValueEmpty[int64]("SELECT count(id) FROM bugs WHERE idUser = ? AND processed = 0", userID)
+	if check <= 3 {
+		_, err = database.InsertSQl("INSERT INTO bugs (idUser, bugDesc, bugLocation) VALUES (?, ?, ?)", userID, req.BugDesc, req.BugLocation)
+		if err != nil {
+			return utils.ReportError(c, "Error", http.StatusBadRequest)
+		}
+	} else {
+		return utils.ReportError(c, "You can have up to 3 open bugs", http.StatusBadRequest)
 	}
 	utils.ReportMessage(fmt.Sprintf("= { New bug report from %s Desc: %s Location: %s } =", userID, req.BugDesc, req.BugLocation))
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
@@ -534,7 +619,7 @@ ORDER BY a.datePosted`, userID)
 		return utils.ReportError(c, err.Error(), http.StatusConflict)
 	}
 	if len(request) == 0 {
-		return utils.ReportError(c, "No request", http.StatusConflict)
+		return utils.ReportErrorSilent(c, "No request", http.StatusConflict)
 	}
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,

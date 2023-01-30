@@ -30,7 +30,7 @@ func NewServer() {
 	grpcModels.RegisterRegisterMasternodeServiceServer(grpcServer, &s)
 	if err := grpcServer.Serve(lis); err != nil {
 		utils.WrapErrorLog(err.Error())
-		//log.Fatalf("failed to serve: %s", err)
+		log.Fatalf("failed to serve: %s", err)
 	}
 }
 

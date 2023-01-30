@@ -86,11 +86,12 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
 		}
 		type Stake struct {
-			IDuser  int64   `db:"idUser" json:"idUser"`
-			Amount  float64 `db:"amount" json:"amount"`
-			Session int64   `db:"session" json:"session"`
+			IDuser    int64   `db:"idUser" json:"idUser"`
+			Amount    float64 `db:"amount" json:"amount"`
+			Session   int64   `db:"session" json:"session"`
+			Autostake bool    `db:"autostake" json:"autostake"`
 		}
-		users, err := database.ReadArrayStruct[Stake]("SELECT idUser, amount, session FROM users_stake WHERE active = 1")
+		users, err := database.ReadArrayStruct[Stake]("SELECT idUser, amount, session, autostake FROM users_stake WHERE active = 1")
 		lastHour, _ := database.ReadArrayStruct[models.PayoutStake]("SELECT * FROM payouts_stake WHERE DATE_FORMAT(datetime, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H') AND credited = 0")
 		for _, user := range users {
 			useric := false
@@ -99,26 +100,52 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 
 			dt := time.Now().UTC().Format("2006-01-02 15:04:05")
 			if len(lastHour) == 0 {
-				_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
-				if errUpdate != nil {
-					return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+				if user.Autostake == true {
+					_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount, credited) VALUES (?, ?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit, 1)
+					_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", credit, user.IDuser)
+					if errUpdate != nil {
+						return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+					}
+				} else {
+					_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
+					if errUpdate != nil {
+						return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+					}
 				}
 			} else {
 			loopic:
 				for _, v := range lastHour {
 					if int64(v.IdUser) == user.IDuser {
-						_, errUpdate := database.InsertSQl("UPDATE payouts_stake SET amount = amount + ?, datetime = ? WHERE id = ?", credit, dt, v.Id)
-						if errUpdate != nil {
-							return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+						if user.Autostake == true {
+							_, errUpdate := database.InsertSQl("UPDATE payouts_stake SET amount = amount + ? AND credited = 1, datetime = ? WHERE id = ?", credit, dt, v.Id)
+							_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", credit, user.IDuser)
+							if errUpdate != nil {
+								return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+							}
+							useric = true
+							break loopic
+						} else {
+							_, errUpdate := database.InsertSQl("UPDATE payouts_stake SET amount = amount + ?, datetime = ? WHERE id = ?", credit, dt, v.Id)
+							if errUpdate != nil {
+								return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+							}
+							useric = true
+							break loopic
 						}
-						useric = true
-						break loopic
 					}
 				}
 				if useric == false {
-					_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
-					if errUpdate != nil {
-						return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+					if user.Autostake == true {
+						_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount, credited) VALUES (?, ?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit, 1)
+						_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", credit, user.IDuser)
+						if errUpdate != nil {
+							return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+						}
+					} else {
+						_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
+						if errUpdate != nil {
+							return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
+						}
 					}
 				}
 			}

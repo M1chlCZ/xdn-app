@@ -124,6 +124,7 @@ message MasternodeActiveResponse {
     uint32 id = 1;
     uint32 active = 2;
     uint32 custodial = 3;
+    string address = 4;
   }
   repeated Mn mn = 1;
 }

@@ -28,6 +28,7 @@ type StakeUsers struct {
 	Amount    sql.NullFloat64 `json:"amount" db:"amount"`
 	Session   int             `json:"session" db:"session"`
 	Active    int             `json:"active" db:"active"`
+	Autostake bool            `json:"autostake" db:"autostake"`
 	DateStart sql.NullTime    `json:"dateStart" db:"dateStart"`
 }
 

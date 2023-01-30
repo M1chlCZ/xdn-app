@@ -25,7 +25,7 @@ func StartMasternode(nodeID int) {
 	_, errScript := exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternode=", pathConf)).Output()
 	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternodeprivkey=", pathConf)).Output()
 	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
-	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.bak", daemon.Folder)).Output()
+	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm -rf $HOME/.%s/*.bak", daemon.Folder)).Output()
 
 	active, errScript := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user is-active %s", daemon.Folder)).Output()
 	if strings.TrimSpace(string(active)) != "active" {
@@ -210,7 +210,7 @@ func StartRemoteMasternode(nodeID int, mnKey string) {
 	_, errScript := exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternode=", pathConf)).Output()
 	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternodeprivkey=", pathConf)).Output()
 	_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
-	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.bak", daemon.Folder)).Output()
+	_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm -rf $HOME/.%s/*.bak", daemon.Folder)).Output()
 
 	utils.ReportMessage(fmt.Sprintf(" -| Setting up node id: %d |-", daemon.NodeID))
 
@@ -335,7 +335,7 @@ func corruptCheck(daemon *models.Daemon) {
 		_, errScript := exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternode=", pathConf)).Output()
 		_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "masternodeprivkey=", pathConf)).Output()
 		_, errScript = exec.Command("bash", "-c", fmt.Sprintf("sed --in-place \"/%s/d\" \"%s\"", "MN", pathMn)).Output()
-		_, err := exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.bak", daemon.Folder)).Output()
+		_, err := exec.Command("bash", "-c", fmt.Sprintf("rm -rf $HOME/.%s/*.bak", daemon.Folder)).Output()
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user start %s", daemon.Folder)).Output()
 		time.Sleep(60 * time.Second)
 		if errScript != nil {
@@ -409,6 +409,47 @@ func ScanMasternodes() {
 		}
 	}(blkReqXDN.Body)
 
+	rpcuser := ""
+	rpcpassword := ""
+	rpcport := ""
+	bcMerge, errScript := exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcuser/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+	if errScript != nil {
+		utils.ReportMessage(errScript.Error())
+		return
+	}
+	rpcuser = strings.TrimSuffix(string(bcMerge), "\n")
+	bcMerge, errScript = exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcpassword/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+	if errScript != nil {
+		utils.ReportMessage(errScript.Error())
+		return
+	}
+
+	rpcpassword = strings.TrimSuffix(string(bcMerge), "\n")
+	bcMerge, errScript = exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcport/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
+	if errScript != nil {
+		utils.ReportMessage(errScript.Error())
+		return
+	}
+	rpcport = strings.TrimSuffix(string(bcMerge), "\n")
+	rpcPort, err := strconv.Atoi(rpcport)
+	if err != nil {
+		utils.ReportMessage(err.Error())
+		return
+	}
+
+	bytes, err := coind.WrapDaemon(models.Daemon{WalletPass: rpcpassword, WalletPort: rpcPort, WalletUser: rpcuser}, 2, "masternode", "list", "full")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	var mnList models.MasternodeList
+	errJson := json.Unmarshal(bytes, &mnList)
+	if errJson != nil {
+		utils.WrapErrorLog(errJson.Error())
+		return
+	}
+mainNon:
 	for _, daemon := range daemonNonCustodial {
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip", daemon.Folder)).Output()
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip.1", daemon.Folder)).Output()
@@ -425,6 +466,21 @@ func ScanMasternodes() {
 			utils.ReportMessage(fmt.Sprintf("SHIT BLOCK COUNT: Have %d, should have %d", bnm, blockhashXDN))
 			go snapInactive(daemon.Folder, daemon.CoinID)
 			continue
+		}
+
+		for _, mn := range mnList {
+			for _, ing := range mnListServer.Mn {
+				if ing.Address == mn.Addr && mn.Status == "ENABLED" {
+					m := &grpcModels.LastSeenRequest_LastSeen{
+						Id:         uint32(daemon.NodeID),
+						LastSeen:   uint32(mn.Lastseen),
+						ActiveTime: uint32(mn.Activetime),
+					}
+					lastSeen = append(lastSeen, m)
+					utils.ReportMessage(fmt.Sprintf("[OK @ %s!]", daemon.Folder))
+					break mainNon
+				}
+			}
 		}
 
 		var ing models.MasternodeStatusXDN
@@ -550,6 +606,7 @@ func ScanMasternodes() {
 
 	}
 
+main:
 	for _, daemon := range daemonFinal {
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip", daemon.Folder)).Output()
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip.1", daemon.Folder)).Output()
@@ -588,6 +645,21 @@ func ScanMasternodes() {
 			_, err = coind.WrapDaemon(daemon, 5, "importprivkey", priv)
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
+			}
+		}
+
+		for _, mn := range mnList {
+			for _, ing := range mnListServer.Mn {
+				if ing.Address == mn.Addr && mn.Status == "ENABLED" {
+					m := &grpcModels.LastSeenRequest_LastSeen{
+						Id:         uint32(daemon.NodeID),
+						LastSeen:   uint32(mn.Lastseen),
+						ActiveTime: uint32(mn.Activetime),
+					}
+					lastSeen = append(lastSeen, m)
+					utils.ReportMessage(fmt.Sprintf("[OK @ %s!]", daemon.Folder))
+					continue main
+				}
 			}
 		}
 
@@ -650,52 +722,8 @@ func ScanMasternodes() {
 			<-c
 			continue
 		} else {
-			rpcuser := ""
-			rpcpassword := ""
-			rpcport := ""
-			bcMerge, errScript := exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcuser/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
-			if errScript != nil {
-				utils.ReportMessage(errScript.Error())
-				continue
-			}
-			rpcuser = strings.TrimSuffix(string(bcMerge), "\n")
-			bcMerge, errScript = exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcpassword/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
-			if errScript != nil {
-				utils.ReportMessage(errScript.Error())
-				continue
-			}
 
-			rpcpassword = strings.TrimSuffix(string(bcMerge), "\n")
-			bcMerge, errScript = exec.Command("bash", "-c", `echo $(awk -F= '/^.*rpcport/{gsub(/ /,"",$2);print $2}' $HOME/.XDN/DigitalNote.conf)`).Output()
-			if errScript != nil {
-				utils.ReportMessage(errScript.Error())
-				continue
-			}
-			rpcport = strings.TrimSuffix(string(bcMerge), "\n")
-			rpcPort, err := strconv.Atoi(rpcport)
-			if err != nil {
-				utils.ReportMessage(err.Error())
-				continue
-			}
-
-			bytes, err := coind.WrapDaemon(models.Daemon{WalletPass: rpcpassword, WalletPort: rpcPort, WalletUser: rpcuser}, 2, "masternode", "list", "full")
-			if err != nil {
-				utils.WrapErrorLog(err.Error())
-				c := Snap(daemon.Folder, daemon.CoinID)
-				<-c
-				continue
-			}
-
-			var mnList40 models.MasternodeList
-			errJson = json.Unmarshal(bytes, &mnList40)
-			if errJson != nil {
-				utils.WrapErrorLog(errJson.Error())
-				c := Snap(daemon.Folder, daemon.CoinID)
-				<-c
-				continue
-			}
-
-			for _, mnListNode := range mnList40 {
+			for _, mnListNode := range mnList {
 				if mnListNode.Addr == ing.Pubkey {
 					m := &grpcModels.LastSeenRequest_LastSeen{
 						Id:         uint32(daemon.NodeID),
@@ -721,8 +749,8 @@ func ScanMasternodes() {
 		if strings.TrimSpace(string(fileExist)) == "yes" {
 			utils.ReportMessage("Restoring... bak file detected")
 			_, errScript := exec.Command("bash", "-c", fmt.Sprintf("systemctl --user stop %s.service", daemon.Folder)).Output()
-			_, errScript = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.bak", daemon.Folder)).Output()
-			_, errScript = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/wallet.dat", daemon.Folder)).Output()
+			_, errScript = exec.Command("bash", "-c", fmt.Sprintf("rm -rf $HOME/.%s/*.bak", daemon.Folder)).Output()
+			_, errScript = exec.Command("bash", "-c", fmt.Sprintf("rm -rf $HOME/.%s/wallet.dat", daemon.Folder)).Output()
 			_, errScript = exec.Command("bash", "-c", fmt.Sprintf("systemctl --user start %s.service", daemon.Folder)).Output()
 			if errScript != nil {
 				utils.WrapErrorLog(errScript.Error())
