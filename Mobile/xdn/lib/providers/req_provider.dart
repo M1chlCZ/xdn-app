@@ -15,11 +15,15 @@ class RequestProvider extends StateNotifier<AsyncValue<List<Requests>>> {
     try {
       dynamic response = await com.get("/request/withdraw", serverType: ComInterface.serverGoAPI, debug: false);
       var l = response['requests'] as List;
+      if (l.isEmpty) {
+        state = const AsyncValue.data([]);
+        return;
+      }
       var list = l.map((item) => Requests.fromJson(item)).toList();
       state = AsyncValue.data(list);
-    } catch (e) {
+    } catch (e, st) {
       print(e);
-      state = const AsyncValue.data([]);
+      state = AsyncValue.error(e, st);
     }
   }
 }

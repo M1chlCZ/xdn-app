@@ -81,7 +81,7 @@ func (s *ServerApp) MasternodeGraph(ctx context.Context, request *grpcModels.Mas
 	year, month, _ := golangDateTime.Date()
 
 	if request.Type == 0 {
-		sqlQuery = "SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_masternode WHERE datetime BETWEEN ? AND date_sub(NOW(), INTERVAL 5 MINUTE) AND idCoin = ? AND idUser = ? AND credited = 0 GROUP BY hour, day " +
+		sqlQuery = "SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_masternode WHERE datetime BETWEEN ? AND date_sub(NOW(), INTERVAL 5 MINUTE) AND idCoin = ? AND idUser = ? GROUP BY hour, day " +
 			"ORDER BY hour"
 		//utils.ReportMessage(fmt.Sprintf("SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_masternode WHERE datetime BETWEEN %s AND date_add(%s, INTERVAL 24 HOUR) AND idCoin = %d AND idUser = %s GROUP BY hour, day ORDER BY hour", timez, timez, stakeReq.IdCoin, userID))
 		rows, errDB = database.ReadSql(sqlQuery, timez, request.IdCoin, userID)
@@ -136,7 +136,7 @@ func (s *ServerApp) StakeGraph(ctx context.Context, request *grpcModels.StakeGra
 	year, month, _ := golangDateTime.Date()
 
 	if request.Type == 0 {
-		sqlQuery = `SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN ? AND date_add(?, INTERVAL 24 HOUR) AND idUser = ? AND credited = 0 GROUP BY hour, day ORDER BY hour`
+		sqlQuery = `SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN ? AND date_add(?, INTERVAL 24 HOUR) AND idUser = ? GROUP BY hour, day ORDER BY hour`
 		rows, errDB = database.ReadSql(sqlQuery, timez, timez, userID)
 	} else if request.Type == 1 {
 		sqlQuery = "SELECT date(datetime) as day, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN  date_sub(?, INTERVAL 1 WEEK) AND ? AND idUser = ? GROUP BY day"

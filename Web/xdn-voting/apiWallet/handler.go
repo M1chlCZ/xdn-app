@@ -106,6 +106,7 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 					if errUpdate != nil {
 						return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
 					}
+					utils.ReportMessage(fmt.Sprintf("AutoStake: User %d credited with %f", user.IDuser, credit))
 				} else {
 					_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
 					if errUpdate != nil {
@@ -122,6 +123,7 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 							if errUpdate != nil {
 								return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
 							}
+							utils.ReportMessage(fmt.Sprintf("AutoStake: User %d credited with %f", user.IDuser, credit))
 							useric = true
 							break loopic
 						} else {
@@ -141,6 +143,7 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 						if errUpdate != nil {
 							return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
 						}
+						utils.ReportMessage(fmt.Sprintf("AutoStake: User %d credited with %f", user.IDuser, credit))
 					} else {
 						_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount) VALUES (?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit)
 						if errUpdate != nil {

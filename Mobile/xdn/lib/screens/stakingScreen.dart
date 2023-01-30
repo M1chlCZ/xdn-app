@@ -734,7 +734,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   ],
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 0, left: 17.0, right: 15.0, bottom: 10.0),
+                                  padding: const EdgeInsets.only(top: 0, left: 17.0, right: 12.0, bottom: 10.0),
                                   child: SizedBox(
                                     height: 32,
                                     child: Row(
@@ -745,13 +745,13 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                           scaleY: 0.65,
                                           scaleX: 0.7,
                                           child: Switch(
-                                            inactiveTrackColor: Colors.black38,
+                                            inactiveTrackColor: Colors.black26,
                                             inactiveThumbColor: Colors.black54,
                                             value: _autoReinvest,
                                             onChanged: (value) {
                                               setReinvest(value);
                                             },
-                                            activeTrackColor: Colors.black54,
+                                            activeTrackColor: Colors.black38,
                                             activeColor: Colors.lightBlue,
                                           ),
                                         ),

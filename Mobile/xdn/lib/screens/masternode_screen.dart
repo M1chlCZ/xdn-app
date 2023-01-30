@@ -12,6 +12,7 @@ import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/mn_manage_screen.dart';
 import 'package:digitalnote/support/Utils.dart';
+import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/coin_mn_graph.dart';
 import 'package:digitalnote/widgets/coin_stake_graph.dart';
@@ -65,6 +66,7 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   bool _loadingCoins = false;
   int _countNot = 0;
   bool _awaitingNot = false;
+  bool _autoReinvest = false;
   double _estimated = 0.0;
   Timer? t;
   int _typeGraph = 0;
@@ -205,7 +207,50 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
     // _collateralTiers = _mnInfo?.collateralTiers ?? [_collateral];
     _roi = _mnInfo?.roi ?? 0.0;
     _hideLoad = true;
+    _autoReinvest = _mnInfo?.autostake ?? false;
     setState(() {});
+  }
+
+  void setReinvest(bool reinvest) async {
+    var time = await _checkCountdownReinvest();
+    if (time == false) {
+      if(mounted) Dialogs.openAlertBox(context, "Error", "You can't change auto reinvest in the next 24 hours");
+      return;
+    }
+    try {
+      ComInterface cm = ComInterface();
+      await cm.post("/masternode/auto", body :{"autoStake": reinvest}, serverType: ComInterface.serverGoAPI);
+      setState(() {
+        _autoReinvest = reinvest;
+      });
+      await _getMasternodeDetails();
+      if (reinvest) {
+        var endTime = DateTime.now().millisecondsSinceEpoch + 1000 * 86400;
+        SecureStorage.write(key: "cnt_mn", value: endTime.toString());
+        if(mounted) Dialogs.openAlertBox(context, "Success", "Auto stake enabled");
+      } else {
+        if(mounted) Dialogs.openAlertBox(context, "Success", "Auto stake disabled");
+      }
+    } catch (e) {
+      var err = json.decode(e.toString());
+      if(mounted) Dialogs.openAlertBox(context, "Error", err['errorMessage']);
+      print(e);
+    }
+  }
+
+  Future<bool> _checkCountdownReinvest() async {
+    var countDown = await SecureStorage.read(key: "cnt_mn");
+    if (countDown != null) {
+      int nowDate = DateTime.now().millisecondsSinceEpoch;
+      int countTime = int.parse(countDown);
+      if (nowDate < countTime) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      return true;
+    }
   }
 
   @override
@@ -536,10 +581,10 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                   height: 10,
                                 ),
                                 const Padding(
-                                  padding: EdgeInsets.only(left: 8.0, right: 8.0),
+                                  padding: EdgeInsets.only(left: 18.0, right: 18.0),
                                   child: Divider(
-                                    height: 1,
-                                    color: Colors.white60,
+                                    height: 0.2,
+                                    color: Colors.white30,
                                   ),
                                 ),
                                 const SizedBox(
@@ -650,33 +695,62 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                           ],
                                         ),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
-                                        child: Row(
-                                          children: [
-                                            Text(
-                                              "${AppLocalizations.of(context)!.mn_reward}:",
-                                              // textAlign: TextAlign.end,
-                                              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
-                                            ),
-                                            Expanded(
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(right: 4.0),
-                                                child: AutoSizeText(
-                                                  _formatPriceString(_amountReward),
-                                                  maxLines: 1,
-                                                  minFontSize: 8.0,
-                                                  textAlign: TextAlign.end,
-                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                      Visibility(
+                                        visible: _autoReinvest ? false : true,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(top: 0, left: 17.0, right: 25.0, bottom: 10.0),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                "${AppLocalizations.of(context)!.mn_reward}:",
+                                                // textAlign: TextAlign.end,
+                                                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),
+                                              ),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.only(right: 4.0),
+                                                  child: AutoSizeText(
+                                                    _formatPriceString(_amountReward),
+                                                    maxLines: 1,
+                                                    minFontSize: 8.0,
+                                                    textAlign: TextAlign.end,
+                                                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white70),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const Text(
-                                              "XDN",
-                                              // textAlign: TextAlign.end,
-                                              style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
-                                            ),
-                                          ],
+                                              const Text(
+                                                "XDN",
+                                                // textAlign: TextAlign.end,
+                                                style: TextStyle(fontFamily: 'JosefinSans', fontWeight: FontWeight.w600, fontSize: 14.0, color: Colors.white70),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 0, left: 17.0, right: 15.0, bottom: 10.0),
+                                        child: SizedBox(
+                                          height: 28,
+                                          child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text("Auto stake rewards", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.0, color: Colors.white.withOpacity(0.4)),),
+                                                Transform.scale(
+                                                  scaleY: 0.65,
+                                                  scaleX: 0.7,
+                                                  child: Switch(
+                                                    inactiveTrackColor: Colors.black26,
+                                                    inactiveThumbColor: Colors.black54,
+                                                    value: _autoReinvest,
+                                                    onChanged: (value) {
+                                                      // setState(() {_autoReinvest = value;});
+                                                      setReinvest(value);
+                                                    },
+                                                    activeTrackColor: Colors.black38,
+                                                    activeColor: Colors.lightBlue,
+                                                  ),
+                                                ),
+                                              ]),
                                         ),
                                       ),
                                       Padding(
@@ -711,10 +785,10 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                     ],
                                   ),
                                 const Padding(
-                                  padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                                  padding: EdgeInsets.only(left: 18.0, right: 18.0),
                                   child: Divider(
-                                    height: 1,
-                                    color: Colors.white54,
+                                    height: 0.2,
+                                    color: Colors.white12,
                                   ),
                                 ),
                                 const SizedBox(
@@ -816,9 +890,9 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                               height: 10,
                             ),
                             const Padding(
-                              padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                              padding: EdgeInsets.only(left: 18.0, right: 18.0),
                               child: Divider(
-                                height: 1,
+                                height: 0.2,
                                 color: Colors.white12,
                               ),
                             ),
@@ -995,6 +1069,9 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                     ),
                   ),
                 ),
+              ),
+              const SizedBox(
+                height: 40.0,
               ),
             ]),
           ),

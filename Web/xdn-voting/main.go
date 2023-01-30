@@ -281,22 +281,42 @@ func setAutoStakeMN(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
 	}
-
-	check := database.ReadValueEmpty[int]("SELECT COUNT(id) FROM users_stake WHERE idUser = ? AND active = 1", userID)
-	if check != 0 {
-		_, err = database.InsertSQl("UPDATE users_stake SET autostake = ? WHERE idUser = ? AND active = 1", req.AutoStake, userID)
-		if err != nil {
-			return utils.ReportError(c, "Error", http.StatusBadRequest)
-		}
-	} else {
-		smax, err := database.ReadValue[float64]("SELECT IFNULL(MAX(session), 0) as smax FROM users_stake WHERE idUser = ?", userID)
-		if err != nil {
-			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-		}
-		if smax == 0 {
-			_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", userID, 0.0, 1, 1)
+	_, err = database.InsertSQl("UPDATE users_mn SET autostake = ? WHERE idUser = ? AND active = 1", req.AutoStake, userID)
+	if err != nil {
+		return utils.ReportError(c, "Error setting up auto-stake", http.StatusBadRequest)
+	}
+	if req.AutoStake == true {
+		check := database.ReadValueEmpty[int]("SELECT COUNT(id) FROM users_stake WHERE idUser = ? AND active = 1", userID)
+		if check != 0 {
+			reward := database.ReadValueEmpty[float64]("SELECT IFNULL(SUM(amount), 0) FROM payouts_masternode WHERE idUser = ? AND credited = 0", userID)
+			if reward > 0 {
+				_, err = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ? AND active = 1", reward, userID)
+				if err != nil {
+					return utils.ReportError(c, "Error #342", http.StatusBadRequest)
+				}
+				_, err = database.InsertSQl("UPDATE payouts_masternode SET credited = 1 WHERE idUser = ? ", userID)
+				if err != nil {
+					return utils.ReportError(c, "Error #984", http.StatusBadRequest)
+				}
+			}
 		} else {
-			_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", userID, 0.0, 1, smax+1)
+			smax, err := database.ReadValue[float64]("SELECT IFNULL(MAX(session), 0) as smax FROM users_stake WHERE idUser = ?", userID)
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+			}
+			if smax == 0 {
+				_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", userID, 0.0, 1, 1)
+			} else {
+				_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", userID, 0.0, 1, smax+1)
+			}
+			reward := database.ReadValueEmpty[float64]("SELECT IFNULL(SUM(amount), 0) FROM payouts_masternode WHERE idUser = ? AND credited = 0", userID)
+			if reward > 0 {
+				_, err = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ? AND active = 1", reward, userID)
+				if err != nil {
+					return utils.ReportError(c, "Error", http.StatusBadRequest)
+				}
+				_, err = database.InsertSQl("UPDATE payouts_masternode SET credited = 1 WHERE idUser = ? ", userID)
+			}
 		}
 	}
 	utils.ReportMessage(fmt.Sprintf("= { User %s set auto stake to %t } =", userID, req.AutoStake))
@@ -322,6 +342,14 @@ func setAutoStake(c *fiber.Ctx) error {
 	_, err = database.InsertSQl("UPDATE users_stake SET autostake = ? WHERE idUser = ? AND active = 1", req.AutoStake, userID)
 	if err != nil {
 		return utils.ReportError(c, "Error", http.StatusBadRequest)
+	}
+	reward := database.ReadValueEmpty[float64]("SELECT IFNULL(SUM(amount), 0) FROM payouts_stake WHERE idUser = ? AND credited = 0 AND session = (SELECT MAX(session) FROM users_stake WHERE idUser = 1 AND active = 1)", userID)
+	if reward > 0 {
+		_, err = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ? AND active = 1", reward, userID)
+		if err != nil {
+			return utils.ReportError(c, "Error", http.StatusBadRequest)
+		}
+		_, err = database.InsertSQl("UPDATE payouts_stake SET credited = 1 WHERE idUser = ? ", userID)
 	}
 	utils.ReportMessage(fmt.Sprintf("= { User %s set auto stake to %t } =", userID, req.AutoStake))
 	return c.Status(http.StatusOK).JSON(&fiber.Map{
@@ -1556,6 +1584,7 @@ func getMNInfo(c *fiber.Ctx) error {
 	for _, element := range collateralAmount {
 		colArr = append(colArr, element.Amount)
 	}
+	autoStake := database.ReadValueEmpty[bool]("SELECT autoStake FROM users_mn WHERE idUser = ? AND active = 1 LIMIT 1", userID)
 	wg.Wait()
 
 	resp := models.MNInfoResponse{
@@ -1573,6 +1602,7 @@ func getMNInfo(c *fiber.Ctx) error {
 		Collateral:          int64(mnInfo),
 		CollateralTiers:     colArr,
 		NodeRewards:         returnArrr,
+		AutoStake:           autoStake,
 	}
 	return c.Status(fiber.StatusOK).JSON(&resp)
 }
@@ -3311,6 +3341,8 @@ func getStakeInfo(c *fiber.Ctx) error {
 	percentage := refDB.Amount.Float64 / inPoolTotal
 	estimated := totalCoins * percentage
 
+	autoStake := database.ReadValueEmpty[bool]("SELECT autostake FROM users_stake WHERE idUser = ? AND active = 1", userID)
+
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.STATUS:   utils.OK,
 		"hasError":     false,
@@ -3320,6 +3352,7 @@ func getStakeInfo(c *fiber.Ctx) error {
 		"contribution": percentage * 100,
 		"estimated":    estimated,
 		"poolAmount":   inPoolTotal,
+		"autoStake":    autoStake,
 	})
 }
 
@@ -3340,7 +3373,7 @@ func getStakeGraph(c *fiber.Ctx) error {
 	year, month, _ := stakeReq.Datetime.Date()
 
 	if stakeReq.Type == 0 {
-		sqlQuery = `SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN ? AND date_add(?, INTERVAL 24 HOUR) AND idUser = ? AND credited = 0 GROUP BY hour, day ORDER BY hour`
+		sqlQuery = `SELECT date(datetime) as day, Hour(datetime) AS hour, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN ? AND date_add(?, INTERVAL 24 HOUR) AND idUser = ? GROUP BY hour, day ORDER BY hour`
 		s, errDB = database.ReadSql(sqlQuery, timez, timez, userID)
 	} else if stakeReq.Type == 1 {
 		sqlQuery = "SELECT date(datetime) as day, sum(amount) AS amount FROM  payouts_stake WHERE datetime BETWEEN  date_sub(?, INTERVAL 1 WEEK) AND ? AND idUser = ? GROUP BY day"

@@ -24,6 +24,7 @@ class MasternodeInfo {
     List<NodeRewards>? nodeRewards,
     List<PendingList>? pendingList,
     String? status,
+    bool? autostake,
   }) {
     _activeNodes = activeNodes;
     _averagePayTime = averagePayTime;
@@ -39,6 +40,7 @@ class MasternodeInfo {
     _pendingList = pendingList;
     _collateral = collateral;
     _collateralTiers = _collateralTiers;
+    _autostake = autostake;
   }
 
   MasternodeInfo.fromJson(dynamic json) {
@@ -75,6 +77,7 @@ class MasternodeInfo {
         _pendingList?.add(PendingList.fromJson(v));
       });
     }
+    _autostake = json['auto_stake'];
     _status = json['status'];
   }
 
@@ -92,6 +95,7 @@ class MasternodeInfo {
   String? _status;
   int? _collateral;
   List<int>? _collateralTiers;
+  bool? _autostake;
 
   MasternodeInfo copyWith({
     int? activeNodes,
@@ -107,6 +111,7 @@ class MasternodeInfo {
     List<NodeRewards>? nodeRewards,
     List<PendingList>? pendingList,
     String? status,
+    bool? autostake,
   }) =>
       MasternodeInfo(
         activeNodes: activeNodes ?? _activeNodes,
@@ -123,6 +128,7 @@ class MasternodeInfo {
         status: status ?? _status,
         collateral: collateral ?? _collateral,
         collateralTiers: collateralTiers ?? _collateralTiers,
+        autostake: autostake ?? _autostake,
       );
 
   int? get activeNodes => _activeNodes;
@@ -153,6 +159,8 @@ class MasternodeInfo {
 
   List<int>? get collateralTiers => _collateralTiers;
 
+  bool? get autostake => _autostake;
+
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
     map['active_nodes'] = _activeNodes;
@@ -177,6 +185,7 @@ class MasternodeInfo {
       map['pending_list'] = _pendingList?.map((v) => v.toJson()).toList();
     }
     map['status'] = _status;
+    map['auto_stake'] = _autostake;
     return map;
   }
 }
