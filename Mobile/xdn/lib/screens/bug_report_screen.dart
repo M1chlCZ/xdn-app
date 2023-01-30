@@ -130,9 +130,9 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const SizedBox(height: 10),
+                                        const SizedBox(height: 5),
                                         const Text("Please report any bugs you find to the developers", textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Colors.white38)),
-                                        const SizedBox(height: 10.0),
+                                        const SizedBox(height: 5.0),
                                         const SizedBox(height: 10),
                                         Theme(
                                           data: ThemeData(
@@ -276,128 +276,131 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
                               }
                               return Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  children: [
-                                    for (var bug in data)
-                                      Container(
-                                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black12,
-                                          borderRadius: BorderRadius.circular(10),
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (var bug in data)
+                                        Container(
+                                          padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black12,
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(10.0),
+                                                  color: bug.processed == 0 ? Colors.black38 : Colors.lightGreen,
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text("Bug #", style: TextStyle(color: bug.processed == 1 ? Colors.black54 : Colors.white70, fontWeight: FontWeight.w600)),
+                                                    Text("${bug.id}", style: TextStyle(color: bug.processed == 1 ? Colors.black54 : Colors.white70, fontWeight: FontWeight.w900)),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Column(
+                                                children: [
+                                                  const Align(alignment: Alignment.centerLeft, child: Text(" Description:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
+                                                  const SizedBox(height: 8),
+                                                  Container(
+                                                      width: double.infinity,
+                                                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                                      decoration: BoxDecoration(
+                                                        borderRadius: BorderRadius.circular(10.0),
+                                                        color: Colors.black12,
+                                                      ),
+                                                      child: Text(bug.bugDesc ?? "", maxLines: 6, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Column(
+                                                children: [
+                                                  const Align(alignment: Alignment.centerLeft, child: Text(" Location:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
+                                                  const SizedBox(height: 8),
+                                                  Container(
+                                                      width: double.infinity,
+                                                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                                      decoration: BoxDecoration(
+                                                        borderRadius: BorderRadius.circular(10.0),
+                                                        color: Colors.black12,
+                                                      ),
+                                                      child: Text(bug.bugLocation ?? "", maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Column(
+                                                children: [
+                                                  const Align(alignment: Alignment.centerLeft, child: Text(" Date Posted:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
+                                                  const SizedBox(height: 8),
+                                                  Container(
+                                                      width: double.infinity,
+                                                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                                      decoration: BoxDecoration(
+                                                        borderRadius: BorderRadius.circular(10.0),
+                                                        color: Colors.black12,
+                                                      ),
+                                                      child: Text(Utils.convertDate(bug.dateSubmit ?? ""), textAlign: TextAlign.center, maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
+                                                ],
+                                              ),
+                                              if (bug.processed == 1)
+                                                Column(
+                                                  children: [
+                                                    const SizedBox(height: 10),
+                                                    const Align(alignment: Alignment.centerLeft, child: Text(" Date Processed:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
+                                                    const SizedBox(height: 8),
+                                                    Container(
+                                                        width: double.infinity,
+                                                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: BorderRadius.circular(10.0),
+                                                          color: Colors.black12,
+                                                        ),
+                                                        child: Text(Utils.convertDate(bug.dateProcess ?? ""), textAlign: TextAlign.center, maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
+                                                  ],
+                                                ),
+                                              if (bug.comment != null)
+                                                Column(
+                                                  children: [
+                                                    const SizedBox(height: 10),
+                                                    const Align(alignment: Alignment.centerLeft, child: Text(" Comment:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
+                                                    const SizedBox(height: 8),
+                                                    Container(
+                                                        width: double.infinity,
+                                                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: BorderRadius.circular(10.0),
+                                                          color: Colors.black12,
+                                                        ),
+                                                        child: Text(bug.comment ?? "", textAlign: TextAlign.start, maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
+                                                  ],
+                                                ),
+                                              if (bug.processed == 1 && bug.reward != null)
+                                                Column(
+                                                  children: [
+                                                    const SizedBox(height: 10),
+                                                    const Align(alignment: Alignment.centerLeft, child: Text(" Reward:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
+                                                    const SizedBox(height: 8),
+                                                    Container(
+                                                        width: double.infinity,
+                                                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: BorderRadius.circular(10.0),
+                                                          color: Colors.black12,
+                                                        ),
+                                                        child: Text("${bug.reward ?? 0.0} XDN" , textAlign: TextAlign.center, maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
                                         ),
-                                        child: Column(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(10.0),
-                                                color: bug.processed == 0 ? Colors.black38 : Colors.lightGreen,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Text("Bug #", style: TextStyle(color: bug.processed == 1 ? Colors.black54 : Colors.white70, fontWeight: FontWeight.w600)),
-                                                  Text("${bug.id}", style: TextStyle(color: bug.processed == 1 ? Colors.black54 : Colors.white70, fontWeight: FontWeight.w900)),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Column(
-                                              children: [
-                                                const Align(alignment: Alignment.centerLeft, child: Text(" Description:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
-                                                const SizedBox(height: 8),
-                                                Container(
-                                                    width: double.infinity,
-                                                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                                    decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(10.0),
-                                                      color: Colors.black12,
-                                                    ),
-                                                    child: Text(bug.bugDesc ?? "", maxLines: 6, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Column(
-                                              children: [
-                                                const Align(alignment: Alignment.centerLeft, child: Text(" Location:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
-                                                const SizedBox(height: 8),
-                                                Container(
-                                                    width: double.infinity,
-                                                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                                    decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(10.0),
-                                                      color: Colors.black12,
-                                                    ),
-                                                    child: Text(bug.bugLocation ?? "", maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Column(
-                                              children: [
-                                                const Align(alignment: Alignment.centerLeft, child: Text(" Date Posted:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
-                                                const SizedBox(height: 8),
-                                                Container(
-                                                    width: double.infinity,
-                                                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                                    decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(10.0),
-                                                      color: Colors.black12,
-                                                    ),
-                                                    child: Text(Utils.convertDate(bug.dateSubmit ?? ""), textAlign: TextAlign.center, maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
-                                              ],
-                                            ),
-                                            if (bug.processed == 1)
-                                              Column(
-                                                children: [
-                                                  const SizedBox(height: 10),
-                                                  const Align(alignment: Alignment.centerLeft, child: Text(" Date Processed:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
-                                                  const SizedBox(height: 8),
-                                                  Container(
-                                                      width: double.infinity,
-                                                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: BorderRadius.circular(10.0),
-                                                        color: Colors.black12,
-                                                      ),
-                                                      child: Text(Utils.convertDate(bug.dateProcess ?? ""), textAlign: TextAlign.center, maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
-                                                ],
-                                              ),
-                                            if (bug.comment != null)
-                                              Column(
-                                                children: [
-                                                  const SizedBox(height: 10),
-                                                  const Align(alignment: Alignment.centerLeft, child: Text(" Comment:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
-                                                  const SizedBox(height: 8),
-                                                  Container(
-                                                      width: double.infinity,
-                                                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: BorderRadius.circular(10.0),
-                                                        color: Colors.black12,
-                                                      ),
-                                                      child: Text(bug.comment ?? "", textAlign: TextAlign.start, maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
-                                                ],
-                                              ),
-                                            if (bug.processed == 1 && bug.reward != null)
-                                              Column(
-                                                children: [
-                                                  const SizedBox(height: 10),
-                                                  const Align(alignment: Alignment.centerLeft, child: Text(" Reward:", style: TextStyle(color: Colors.white70, fontSize: 12.0, fontWeight: FontWeight.w600))),
-                                                  const SizedBox(height: 8),
-                                                  Container(
-                                                      width: double.infinity,
-                                                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: BorderRadius.circular(10.0),
-                                                        color: Colors.black12,
-                                                      ),
-                                                      child: Text("${bug.reward ?? 0.0} XDN" , textAlign: TextAlign.center, maxLines: 4, style: const TextStyle(color: Colors.white70, fontSize: 12.0))),
-                                                ],
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               );
                             },

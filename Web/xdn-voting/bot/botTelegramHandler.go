@@ -45,6 +45,11 @@ func StartTelegramBot() {
 		if update.Message != nil {
 			go func(update *tgbotapi.Message) {
 				msg := tgbotapi.NewMessage(update.Chat.ID, "")
+				if update.Chat.ID != MainChannel && update.Chat.ID != TestChannel {
+					if len(msg.Text) != 0 {
+						utils.ReportMessage(fmt.Sprintf("Message from %d text %s", update.Chat.ID, update.Text))
+					}
+				}
 				switch update.Command() {
 				case "status":
 					Running = true

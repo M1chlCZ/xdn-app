@@ -46,7 +46,7 @@ class BugSwitcherState extends State<BugSwitcher> {
                       width: 120,
                       height: 40,
                       child: Center(
-                          child: AutoSizeText("Bug Report",
+                          child: AutoSizeText("Report bug",
                               maxLines: 1,
                               minFontSize: 8.0,
                               textAlign: TextAlign.center,

@@ -109,6 +109,7 @@ type MNInfoResponse struct {
 	Collateral          int64        `json:"collateral"`
 	CollateralTiers     []int64      `json:"collateral_tiers"`
 	NodeRewards         []MNList     `json:"node_rewards"`
+	AutoStake           bool         `json:"auto_stake"`
 }
 
 type MNInfoStruct struct {
