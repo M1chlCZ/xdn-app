@@ -1368,10 +1368,10 @@ packages:
     dependency: "direct main"
     description:
       name: walletconnect_qrcode_modal_dart
-      sha256: e2ad368ee17caebf813ba714395b8a29d47bcb2209fe35e85ced35512fd6c27e
+      sha256: "68a9147d50244b5a0d7214e74864227cbc0eaf54e85b5c25b2f713fe24c2a9d3"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.1"
+    version: "0.1.2"
   web3dart:
     dependency: "direct main"
     description:

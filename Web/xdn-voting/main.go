@@ -117,6 +117,8 @@ func main() {
 	app.Get("api/v1/misc/privkey", auth.Authorized(getPrivKey))
 	app.Post("api/v1/misc/bug/report", auth.Authorized(reportBug))
 	app.Get("api/v1/misc/bug/user", auth.Authorized(getBugList))
+	app.Get("api/v1/misc/bug/admin", auth.Authorized(getBugListAdmin))
+	app.Post("api/v1/misc/bug/process", auth.Authorized(processBug))
 
 	app.Post("api/v1/twofactor", auth.Authorized(twofactor))
 	app.Post("api/v1/twofactor/activate", auth.Authorized(twofactorVerify))
@@ -251,6 +253,57 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func processBug(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	type Req struct {
+		ID      int     `json:"id"`
+		Comment *string `json:"comment"`
+		Reward  float32 `json:"reward"`
+	}
+	var res Req
+	err := c.BodyParser(&res)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	utils.ReportMessage(fmt.Sprintf("%+v", res))
+	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if adm == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+	_, err = database.InsertSQl("UPDATE bugs SET processed = 1, comment = ?, reward = ? WHERE id = ?", res.Comment, res.Reward, res.ID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
+}
+
+func getBugListAdmin(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if adm == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+
+	data, err := database.ReadArrayStruct[models.BugsAdmin]("SELECT a.*, b.addr, b.username FROM bugs as a, users as b WHERE a.idUser = b.id ORDER BY a.processed, a.id")
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"data":       data,
+	})
 }
 
 func getBugList(c *fiber.Ctx) error {
@@ -456,7 +509,7 @@ func getReqList(c *fiber.Ctx) error {
 
 	requests, err := database.ReadArrayStruct[models.Withdrawals](`SELECT amount, datePosted, dateChanged, idUserAuth, username, send, auth, processed, idTx FROM with_req
 																	LEFT JOIN users ON with_req.idUserAuth = users.id
-																	WHERE idUser = ? ORDER BY datePosted`, userID)
+																	WHERE idUser = ? ORDER BY datePosted DESC`, userID)
 	if err != nil {
 		return utils.ReportError(c, "Internal error", http.StatusInternalServerError)
 	}
@@ -647,7 +700,7 @@ ORDER BY a.datePosted`, userID)
 		return utils.ReportError(c, err.Error(), http.StatusConflict)
 	}
 	if len(request) == 0 {
-		return utils.ReportErrorSilent(c, "No request", http.StatusConflict)
+		return utils.ReportErrorSilent(c, "No requests available", http.StatusConflict)
 	}
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		utils.ERROR:  false,

@@ -44,7 +44,7 @@ class BalanceCardState extends ConsumerState<BalanceCard> {
 
   @override
   Widget build(BuildContext context) {
-    final balance = ref.read(balanceProvider);
+    final balance = ref.watch(balanceProvider);
     return Stack(
       children: [
         Container(

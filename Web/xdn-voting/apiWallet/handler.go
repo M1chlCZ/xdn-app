@@ -102,7 +102,7 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 			if len(lastHour) == 0 {
 				if user.Autostake == true {
 					_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount, credited) VALUES (?, ?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit, 1)
-					_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", credit, user.IDuser)
+					_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ? AND active = 1", credit, user.IDuser)
 					if errUpdate != nil {
 						return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
 					}
@@ -118,8 +118,8 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 				for _, v := range lastHour {
 					if int64(v.IdUser) == user.IDuser {
 						if user.Autostake == true {
-							_, errUpdate := database.InsertSQl("UPDATE payouts_stake SET amount = amount + ? AND credited = 1, datetime = ? WHERE id = ?", credit, dt, v.Id)
-							_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", credit, user.IDuser)
+							_, errUpdate := database.InsertSQl("UPDATE payouts_stake SET amount = amount + ?, datetime = ? WHERE id = ?", credit, dt, v.Id)
+							_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ? AND active = 1", credit, user.IDuser)
 							if errUpdate != nil {
 								return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
 							}
@@ -139,7 +139,7 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 				if useric == false {
 					if user.Autostake == true {
 						_, errUpdate := database.InsertSQl("INSERT INTO payouts_stake(idUser, txid, session, amount, credited) VALUES (?, ?, ?, ?, ?)", user.IDuser, txID.Txid, user.Session, credit, 1)
-						_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", credit, user.IDuser)
+						_, errUpdate = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ? AND active = 1", credit, user.IDuser)
 						if errUpdate != nil {
 							return utils.ReportError(c, errUpdate.Error(), http.StatusInternalServerError)
 						}

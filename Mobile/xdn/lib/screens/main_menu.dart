@@ -7,6 +7,7 @@ import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_req_screen.dart';
+import 'package:digitalnote/screens/bug_admin_screen.dart';
 import 'package:digitalnote/screens/bug_report_screen.dart';
 import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
@@ -33,6 +34,7 @@ import 'package:digitalnote/widgets/balanceCard.dart';
 import 'package:digitalnote/widgets/balance_card.dart';
 import 'package:digitalnote/widgets/balance_stealth_card.dart';
 import 'package:digitalnote/widgets/balance_token_card.dart';
+import 'package:digitalnote/widgets/bug_admin_main_menu.dart';
 import 'package:digitalnote/widgets/masternode_menu_widget.dart';
 import 'package:digitalnote/widgets/send_qr_dialog.dart';
 import 'package:digitalnote/widgets/small_menu_tile.dart';
@@ -199,7 +201,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
         String sentAddr = initialMessage.data['fr'];
         String? contact = await db.getContactNameByAddr(sentAddr);
         MessageGroup m = MessageGroup(sentAddr: contact ?? sentAddr, sentAddressOrignal: sentAddr);
-        if (mounted) Navigator.pushNamed(context, MessageDetailScreen.route, arguments: m);
+        if (mounted) Navigator.popAndPushNamed(context, MessageDetailScreen.route, arguments: m);
         return;
       }
     }
@@ -282,7 +284,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   }
 
   void gotoStealthScreen() {
-    Navigator.of(context).pushNamed(StealthScreen.route, arguments: "nothing");
+    Navigator.of(context).pushNamed(StealthScreen.route, arguments: "nothing").then((value) => refreshBalance());
   }
 
   void gotoWithdrawalScreen() {
@@ -302,6 +304,11 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   void gotoRequestScreen() {
     Navigator.of(context).pushNamed(AdminScreen.route, arguments: "shit");
     // Dialogs.openAlertBox(context, "header", "\nNot yet implemented\n");
+  }
+
+  void gotoBugScreen() {
+    Navigator.of(context).pushNamed(BugAdminScreen.route, arguments: "shit").then((value) => refreshBalance());
+
   }
 
   void gotoMasternodeScreen() {
@@ -450,6 +457,19 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
                               ),
                               AdminMainMenu(
                                 goto: gotoRequestScreen,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizeTransition(
+                          sizeFactor: _animation3,
+                          child: Column(
+                            children: [
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              BugAdminMainMenu(
+                                goto: gotoBugScreen,
                               ),
                             ],
                           ),

@@ -157,10 +157,11 @@ class _SettingsState extends State<SettingsScreen> {
       if (mounted) await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.storage_perm);
       openAppSettings();
     } else if (status.isDenied) {
-      var r = await Permission.storage.request();
-      if (r.isGranted) {
-        _downloadFile();
-      }
+      _downloadFile();
+      // var r = await Permission.storage.request();
+      // if (r.isGranted) {
+      //
+      // }
     } else {
       _downloadFile();
     }
@@ -198,6 +199,7 @@ class _SettingsState extends State<SettingsScreen> {
       var f = await File(filePath).writeAsBytes(buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
       if (mounted) Navigator.of(context).pop();
       var result = await OpenFilex.open(f.path);
+      print(result.type);
       if (result.type == ResultType.noAppToOpen) {
         if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_csv_no_app);
       }

@@ -25,6 +25,7 @@ class BugSwitcherState extends State<BugSwitcher> {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 350,
+      height: 45,
       child: Container(
           padding: const EdgeInsets.all(5.0),
           decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(10.0)),
@@ -44,7 +45,7 @@ class BugSwitcherState extends State<BugSwitcher> {
                     },
                     child: SizedBox(
                       width: 120,
-                      height: 40,
+                      height: 35,
                       child: Center(
                           child: AutoSizeText("Report bug",
                               maxLines: 1,
@@ -80,7 +81,7 @@ class BugSwitcherState extends State<BugSwitcher> {
                     },
                     child: SizedBox(
                       width: 120,
-                      height: 40,
+                      height: 35,
                       child: Center(
                         child: AutoSizeText("Your reports",
                             maxLines: 1,

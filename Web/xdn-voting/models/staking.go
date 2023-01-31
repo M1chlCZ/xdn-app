@@ -22,14 +22,15 @@ type StakeWeeklyGraph struct {
 }
 
 type StakeUsers struct {
-	Id        int             `json:"id" db:"id"`
-	IdUser    int             `json:"idUser" db:"idUser"`
-	IdServer  int             `json:"idServer" db:"idServer"`
-	Amount    sql.NullFloat64 `json:"amount" db:"amount"`
-	Session   int             `json:"session" db:"session"`
-	Active    int             `json:"active" db:"active"`
-	Autostake bool            `json:"autostake" db:"autostake"`
-	DateStart sql.NullTime    `json:"dateStart" db:"dateStart"`
+	Id          int             `json:"id" db:"id"`
+	IdUser      int             `json:"idUser" db:"idUser"`
+	IdServer    int             `json:"idServer" db:"idServer"`
+	Amount      sql.NullFloat64 `json:"amount" db:"amount"`
+	Session     int             `json:"session" db:"session"`
+	Active      int             `json:"active" db:"active"`
+	Autostake   bool            `json:"autostake" db:"autostake"`
+	DateStart   sql.NullTime    `json:"dateStart" db:"dateStart"`
+	DateChanged sql.NullTime    `json:"dateChanged" db:"dateChanged"`
 }
 
 type CheckStakeDBStruct struct {

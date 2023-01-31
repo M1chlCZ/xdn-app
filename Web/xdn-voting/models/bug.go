@@ -11,3 +11,17 @@ type Bugs struct {
 	Comment     *string `json:"comment" db:"comment"`
 	Reward      float64 `json:"reward" db:"reward"`
 }
+
+type BugsAdmin struct {
+	ID          int     `db:"id" json:"id"`
+	IDUser      int     `db:"idUser" json:"idUser"`
+	BugDesc     string  `db:"bugDesc" json:"bugDesc"`
+	BugLocation string  `db:"bugLocation" json:"bugLocation"`
+	DateSubmit  string  `db:"dateSubmit" json:"dateSubmit"`
+	DateProcess string  `db:"dateProcess" json:"dateProcess"`
+	Processed   int     `db:"processed" json:"processed"`
+	Comment     *string `db:"comment" json:"comment"`
+	Reward      int     `db:"reward" json:"reward"`
+	Addr        string  `db:"addr" json:"addr"`
+	Username    string  `db:"username" json:"username"`
+}

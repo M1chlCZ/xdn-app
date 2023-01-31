@@ -9,6 +9,7 @@ import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
+import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:digitalnote/widgets/percent_switch_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1676,8 +1677,7 @@ class Dialogs {
               Navigator.of(context).pop(true);
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 25, bottom: 25, left: 15.0, right: 15.0),
+              padding: const EdgeInsets.only(top: 25, bottom: 25, left: 15.0, right: 15.0),
               child: SizedBox(
                 width: double.infinity,
                 child: ClipRRect(
@@ -1691,10 +1691,7 @@ class Dialogs {
                       overflow: TextOverflow.ellipsis,
                       maxLines: 8,
                       minFontSize: 8.0,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge!
-                          .copyWith(fontSize: 16.0, color: Colors.white70),
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 16.0, color: Colors.white70),
                     ),
                   ),
                 ),
@@ -1804,11 +1801,11 @@ class Dialogs {
                                   final directory = await getTemporaryDirectory();
                                   final imagePath = await File('${directory.path}/qr_code.png').create();
                                   await imagePath.writeAsBytes(image!);
-                                  await Share.shareFiles(['${directory.path}/qr_code.png'], mimeTypes:['image/png'], subject: "Request XDN payment");
+                                  await Share.shareFiles(['${directory.path}/qr_code.png'], mimeTypes: ['image/png'], subject: "Request XDN payment");
                                 }).catchError((onError) {
                                   print(onError);
                                 });
-                             Navigator.pop(context);
+                                Navigator.pop(context);
                               },
                               child: Screenshot(
                                 controller: screenshotController,
@@ -1868,19 +1865,27 @@ class Dialogs {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 5.0,),
+                            const SizedBox(
+                              width: 5.0,
+                            ),
                             DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 dropdownColor: Colors.white,
                                 value: currency,
-                                items: priceData!.map((curr, value) {
-                                  return MapEntry(
-                                      curr,
-                                      DropdownMenuItem<String>(
-                                        value: curr.toString(),
-                                        child: Text(curr.toUpperCase(), style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.black87, fontSize: 22),),
-                                      ));
-                                }).values.toList(),
+                                items: priceData!
+                                    .map((curr, value) {
+                                      return MapEntry(
+                                          curr,
+                                          DropdownMenuItem<String>(
+                                            value: curr.toString(),
+                                            child: Text(
+                                              curr.toUpperCase(),
+                                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Colors.black87, fontSize: 22),
+                                            ),
+                                          ));
+                                    })
+                                    .values
+                                    .toList(),
                                 onChanged: onChangeDrop,
                               ),
                             ),
@@ -2019,10 +2024,10 @@ class Dialogs {
                       ),
                       Center(
                           child: Text(
-                            '(${AppLocalizations.of(context)!.dl_share})',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.black54),
-                          )),
+                        '(${AppLocalizations.of(context)!.dl_share})',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.black54),
+                      )),
                       const SizedBox(
                         height: 5.0,
                       ),
@@ -2843,8 +2848,7 @@ class Dialogs {
         });
   }
 
-  static Future<void> openStakeAdjustment(
-      context, double totalCoins, Function(double k) func) async {
+  static Future<void> openStakeAdjustment(context, double totalCoins, Function(double k) func) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -2857,89 +2861,212 @@ class Dialogs {
             codeControl.text = amount.toInt().toString();
           }
 
-          return StatefulBuilder(
-              builder: (BuildContext context, StateSetter sState) {
-                codeControl.addListener(() {
-                  if (Decimal.parse(codeControl.text.toString()) > Decimal.parse(totalCoins.toString())) {
-                    tooMuch = true;
-                  }else{
-                    tooMuch = false;
-                  }
-                  sState((){});
-                });
-                return DialogBody(
-                  header: AppLocalizations.of(context)!.st_amount,
-                  buttonLabel: 'OK',
-                  onTap: (){
-                    if (tooMuch) {
-                      Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "Amount has to be lower than your whole staking balance");
-                    }else {
-                      amount = double.parse(codeControl.text.toString());
-                      func(amount);
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            top: 15, bottom: 15, left: 15.0, right: 15.0),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.all(Radius.circular(5.0)),
-                            child: Container(
-                              color: tooMuch ? Colors.red.withOpacity(0.3) : Colors.black38,
-                              padding: const EdgeInsets.all(15.0),
-                              child: TextField(
-                                autofocus: true,
-                                keyboardType: Platform.isIOS
-                                    ? const TextInputType.numberWithOptions(signed: true)
-                                    : TextInputType.number,
-                                inputFormatters: <TextInputFormatter>[
-                                  FilteringTextInputFormatter.allow(
-                                      RegExp(r'^\d*\.?\d{0,8}')),
-                                ],
-                                controller: codeControl,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                decoration: InputDecoration(
-                                  isDense: false,
-                                  contentPadding: const EdgeInsets.only(bottom: 0.0),
-                                  hintStyle: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium!
-                                      .copyWith(color: Colors.white54, fontSize: 20.0),
-                                  hintText:
-                                  AppLocalizations.of(context)!.amount,
-                                  enabledBorder: const UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.transparent),
-                                  ),
-                                  focusedBorder: const UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.transparent),
-                                  ),
-                                ),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge!
-                                    .copyWith(fontSize: 24.0, color: Colors.white70),
+          return StatefulBuilder(builder: (BuildContext context, StateSetter sState) {
+            codeControl.addListener(() {
+              if (Decimal.parse(codeControl.text.toString()) > Decimal.parse(totalCoins.toString())) {
+                tooMuch = true;
+              } else {
+                tooMuch = false;
+              }
+              sState(() {});
+            });
+            return DialogBody(
+              header: AppLocalizations.of(context)!.st_amount,
+              buttonLabel: 'OK',
+              onTap: () {
+                if (tooMuch) {
+                  Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "Amount has to be lower than your whole staking balance");
+                } else {
+                  amount = double.parse(codeControl.text.toString());
+                  func(amount);
+                }
+              },
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15, bottom: 15, left: 15.0, right: 15.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+                        child: Container(
+                          color: tooMuch ? Colors.red.withOpacity(0.3) : Colors.black38,
+                          padding: const EdgeInsets.all(15.0),
+                          child: TextField(
+                            autofocus: true,
+                            keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,8}')),
+                            ],
+                            controller: codeControl,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            decoration: InputDecoration(
+                              isDense: false,
+                              contentPadding: const EdgeInsets.only(bottom: 0.0),
+                              hintStyle: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.white54, fontSize: 20.0),
+                              hintText: AppLocalizations.of(context)!.amount,
+                              enabledBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.transparent),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.transparent),
                               ),
                             ),
+                            style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 24.0, color: Colors.white70),
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Center(
+                      child: PercentSwitchWidget(
+                        width: 75,
+                        changePercent: changePercentage,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          });
+        });
+  }
+
+  static Future<void> openRewardBugDialog(BuildContext context, int idBug, String addr, Function(String addr, double amount, String comment, int idBug) send) async {
+    return showDialog(
+        barrierDismissible: true,
+        context: context,
+        builder: (BuildContext context) {
+          TextEditingController commentControl = TextEditingController();
+          TextEditingController controllerAmnt = TextEditingController();
+          return StatefulBuilder(builder: (context, setState) {
+            return DialogBody(
+              dialogWidth: MediaQuery.of(context).size.width * 0.95,
+              noButtons: true,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(
+                  padding: const EdgeInsets.only(top: 10.0, left: 15.0, right: 15.0, bottom: 10.0),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                    color: Color(0xFF22283A),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 10.0,
+                      ),
+                      TextField(
+                        controller: commentControl,
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70, fontSize: 12.0),
+                        minLines: 4,
+                        maxLines: 6,
+                        decoration: InputDecoration(
+                          floatingLabelBehavior: FloatingLabelBehavior.always,
+                          contentPadding: const EdgeInsets.all(8.0),
+                          filled: true,
+                          hoverColor: Colors.black12,
+                          focusColor: Colors.black12,
+                          fillColor: const Color(0xFF303850),
+                          labelText: "",
+                          labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white54, fontSize: 12.0),
+                          hintText: "Comment",
+                          hintStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white54, fontSize: 12.0),
+                          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                          enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20.0,
+                      ),
                       SizedBox(
-                        width: double.infinity,
-                        child: Center(
-                          child: PercentSwitchWidget(
-                            width: 75,
-                            changePercent: changePercentage,
+                        height: 45,
+                        child: TextField(
+                          controller: controllerAmnt,
+                          keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                          ],
+                          style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70, fontSize: 12.0),
+                          decoration: InputDecoration(
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                            contentPadding: const EdgeInsets.only(left: 8.0),
+                            filled: true,
+                            hoverColor: Colors.white24,
+                            focusColor: Colors.white24,
+                            fillColor: const Color(0xFF303850),
+                            labelText: "",
+                            labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white54, fontSize: 10.0),
+                            hintText: "Amount",
+                            hintStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white54, fontSize: 14.0),
+                            focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white10, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                            enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.black12, width: 2.0), borderRadius: BorderRadius.all(Radius.circular(10.0))),
                           ),
                         ),
+                      ),
+                      const SizedBox(
+                        height: 10.0,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15.0),
+                        child: IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              Expanded(
+                                child: Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: FlatCustomButton(
+                                    radius: 10.0,
+                                    color: Colors.green.withOpacity(0.8),
+                                    splashColor: Colors.white54,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.max,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Send",
+                                            style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70),
+                                          ),
+                                          const SizedBox(
+                                            width: 10.0,
+                                          ),
+                                          const Icon(
+                                            Icons.send,
+                                            color: Colors.white70,
+                                            size: 28.0,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      try {
+                                        double amnt = double.parse(controllerAmnt.text);
+                                        send(addr, amnt, commentControl.text, idBug);
+                                      } catch (e) {
+                                        Dialogs.openAlertBox(context, "Error", e.toString());
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10.0,
                       ),
                     ],
                   ),
-                );
-              });
+                ),
+              ]),
+            );
+          });
         });
   }
 

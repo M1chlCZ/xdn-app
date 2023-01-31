@@ -33,7 +33,7 @@ class TransactionWidgetState extends ConsumerState<TransactionWidget> {
     // tb.fetchTransactions();
 
     Future.delayed(Duration.zero, () {
-      tx = ref.watch(transactionProvider.notifier);
+      tx = ref.read(transactionProvider.notifier);
       tx?.getRequest();
     });
     //
@@ -46,7 +46,7 @@ class TransactionWidgetState extends ConsumerState<TransactionWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final transactions = ref.read(transactionProvider);
+    final transactions = ref.watch(transactionProvider);
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
