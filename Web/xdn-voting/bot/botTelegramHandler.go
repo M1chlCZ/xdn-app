@@ -1255,12 +1255,14 @@ func AnnouncementTelegram() {
 	LoadPictures()
 	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannel)
 	if err != nil {
+		utils.WrapErrorLog("xxx Error deleting message: xxx" + err.Error())
 		utils.WrapErrorLog(err.Error())
 	}
 	if lastPost.Id != 0 {
 		dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
 		_, err := bot.Send(dl)
 		if err != nil {
+			utils.WrapErrorLog("xxx Error deleting message: xxx" + err.Error() + fmt.Sprintf("id: %d", lastPost.IdMessage) + fmt.Sprintf("channel: %d", lastPost.IdChannel))
 			utils.ReportMessage(err.Error())
 		}
 	}
@@ -1354,11 +1356,15 @@ func GiftTelegramBot() {
 	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannel)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
+		utils.WrapErrorLog("xxx Error db xxx" + err.Error())
+		return
 	}
 	if lastPost.Id != 0 {
 		dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
 		_, err := bot.Send(dl)
 		if err != nil {
+
+			utils.WrapErrorLog(fmt.Sprintf("xxx Error deleting message: %d %d %d xxx", lastPost.IdMessage, lastPost.IdChannel, lastPost.Id))
 			utils.ReportMessage(err.Error())
 		}
 	}

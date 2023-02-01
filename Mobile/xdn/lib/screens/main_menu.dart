@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/generated/phone.pbgrpc.dart';
-import 'package:digitalnote/models/StealhBalance.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
@@ -48,6 +47,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:grpc/grpc.dart';
+
+// ignore: depend_on_referenced_packages
 import 'package:walletconnect_dart/walletconnect_dart.dart';
 
 import '../globals.dart' as globals;
@@ -68,12 +69,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
   final GlobalKey<BalanceCardState> _keyTokenBal = GlobalKey();
   final GlobalKey<BalanceStealthCardMenuState> _keyStealthBal = GlobalKey();
   ComInterface cm = ComInterface();
-
-  FutureOr<Map<String, dynamic>>? _getBalance;
-
-  Future<Map<String, dynamic>>? _getTokenBalance;
-
-  Future<StealthBalance?>? _getStealthBalance;
 
   String? name;
 
@@ -308,7 +303,6 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   void gotoBugScreen() {
     Navigator.of(context).pushNamed(BugAdminScreen.route, arguments: "shit").then((value) => refreshBalance());
-
   }
 
   void gotoMasternodeScreen() {

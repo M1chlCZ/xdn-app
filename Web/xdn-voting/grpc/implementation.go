@@ -94,7 +94,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 						}
 
 						_, _ = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", txRes.Amount, idUser)
-						utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d }-", idUser))
+						utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d %f}-", idUser, txRes.Amount))
 						_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
 						continue
 					}

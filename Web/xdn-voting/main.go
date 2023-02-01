@@ -270,7 +270,6 @@ func processBug(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	utils.ReportMessage(fmt.Sprintf("%+v", res))
 	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
 	if adm == false {
 		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
@@ -423,6 +422,14 @@ func reportBug(c *fiber.Ctx) error {
 	err := c.BodyParser(&req)
 	if err != nil {
 		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
+	}
+
+	if req.BugDesc == "" || req.BugLocation == "" {
+		return utils.ReportError(c, "Empty data", http.StatusBadRequest)
+	}
+
+	if len(req.BugDesc) < 10 || len(req.BugLocation) <= 5 {
+		return utils.ReportError(c, "Submitted data is too short, write more", http.StatusBadRequest)
 	}
 
 	check := database.ReadValueEmpty[int64]("SELECT count(id) FROM bugs WHERE idUser = ? AND processed = 0", userID)
@@ -1343,7 +1350,6 @@ func withdrawMN(c *fiber.Ctx) error {
 }
 
 func unrequestMasternode(idUser int) {
-	utils.ReportMessage(fmt.Sprintf("UNREQUEST MN %d", idUser))
 	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND masternode = 1 AND processed = 0 AND id <> 0 LIMIT 1", idUser)
 }
 
@@ -2274,7 +2280,6 @@ func sendContactTransaction(c *fiber.Ctx) error {
 }
 
 func unrequestMain(id string) {
-	utils.ReportMessage(fmt.Sprintf("UNREQUEST MAIN %s", id))
 	_, err := database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND main = 1 AND processed = 0 AND id<> 0 LIMIT 1", id)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
@@ -3367,7 +3372,6 @@ func unstake(c *fiber.Ctx) error {
 }
 
 func unrequestStaking(idUser int) {
-	utils.ReportMessage(fmt.Sprintf("UNREQUEST STAKING %d", idUser))
 	_, _ = database.InsertSQl("UPDATE requests SET processed = 1 WHERE idUser = ? AND staking = 1 AND processed = 0 AND id <> 0 LIMIT 1", idUser)
 }
 
