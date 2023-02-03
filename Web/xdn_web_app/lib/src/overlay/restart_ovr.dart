@@ -1,4 +1,8 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:xdn_web_app/src/provider/config_provider.dart';
 import 'package:xdn_web_app/src/support/app_sizes.dart';
 import 'package:xdn_web_app/src/support/extensions.dart';
 import 'package:xdn_web_app/src/widgets/flat_custom_btn.dart';
@@ -29,6 +33,9 @@ class RestartOverlay extends ModalRoute<void> {
     onTap = onTapped;
     mnIndex = mnI;
   }
+
+  var show = false;
+  String? config;
 
   @override
   Widget buildPage(
@@ -87,8 +94,100 @@ class RestartOverlay extends ModalRoute<void> {
                     ),
                   ],
                 ),
-                gapH20,
-                SizedBox(width: MediaQuery.of(context).size.width * 0.7, child: Image.asset("assets/images/tut_start.png")),
+                gapH16,
+                Center(
+                  child: StatefulBuilder(
+                    builder: (context, sState) {
+                      return Stack(
+                        children: [
+                          Visibility(
+                            visible: show,
+                            child: Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.black38,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Consumer(builder: (context, ref, _) {
+                                  var conf = ref.watch(configProvider(mnIndex));
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: AutoSizeText.selectable(
+                                            conf.when(data: (data) {
+                                              config = data;
+                                              return data.toString();
+                                            }, error: (error, st) {
+                                              return error.toString();
+                                            }, loading: () {
+                                              return "Loading...";
+                                            }),
+                                            textAlign: TextAlign.left,
+                                            maxLines: 1,
+                                            minFontSize: 8,
+                                            style: const TextStyle(color: Colors.white70, fontSize: 12.0),
+                                          ),
+                                        ),
+                                      ),
+                                      FlatCustomButton(
+                                        color: Colors.black12,
+                                        width: 40,
+                                        height: 35,
+                                        radius: 8,
+                                        splashColor: Colors.lightGreen,
+                                        onTap: () {
+                                          Clipboard.setData(ClipboardData(text: config));
+                                          sState(() {});
+                                        },
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(2.0),
+                                          child: Icon(
+                                            Icons.copy,
+                                            color: Colors.white70,
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                              ),
+                            ),
+                          ),
+                          Visibility(
+                            visible: !show,
+                            child: FlatCustomButton(
+                              color: Colors.black12,
+                              width: 140,
+                              height: 35,
+                              radius: 8,
+                              splashColor: Colors.amber,
+                              onTap: () => sState(() {
+                                show ? show = false : show = true;
+                              }),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Text(
+                                  'Show Config',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                gapH16,
+                SizedBox(width: MediaQuery.of(context).size.width * 0.7, height: MediaQuery.of(context).size.height * 0.5, child: Image.asset("assets/images/tut_start.png")),
                 Expanded(
                   child: Align(
                     alignment: Alignment.bottomCenter,
