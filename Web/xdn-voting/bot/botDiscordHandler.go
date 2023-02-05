@@ -1151,6 +1151,78 @@ func AnnouncementDiscord() {
 	}
 }
 
+func AnnouncementMNDiscord() {
+	LoadPictures()
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 3) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+	if lastPost.Id != 0 {
+		err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+
+	}
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 3 ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	messageBold := strings.ReplaceAll(post.Message, "*", "**")
+
+	url := ""
+	if post.Picture.Valid {
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+	} else {
+		randNum := utils.RandNum(len(PictureANN))
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", randNum)
+	}
+	buttons := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Emoji: discordgo.ComponentEmoji{
+						Name: "👍🏻",
+					},
+					Label:    "Like",
+					Style:    discordgo.SuccessButton,
+					CustomID: "annBot",
+				},
+			},
+		},
+	}
+	//
+	messageSend := discordgo.MessageSend{
+		Content:         "",
+		Embeds:          []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)},
+		TTS:             false,
+		Components:      buttons,
+		Files:           nil,
+		AllowedMentions: nil,
+		Reference:       nil,
+		File:            nil,
+		Embed:           nil,
+	}
+
+	msg, err := goBot.ChannelMessageSendComplex(MainChannelID, &messageSend)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	channelID, ko := strconv.Atoi(msg.ChannelID)
+	messageID, ko := strconv.Atoi(msg.ID)
+	if ko != nil {
+		utils.WrapErrorLog("Error converting string to int")
+	} else {
+		_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+	}
+}
+
 func AnnouncementOtherDiscord() {
 	LoadPictures()
 	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID, VIPChannelID)
@@ -1172,6 +1244,86 @@ func AnnouncementOtherDiscord() {
 			}
 		}
 		post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 0 ORDER BY RAND() LIMIT 1")
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		messageBold := strings.ReplaceAll(post.Message, "*", "**")
+
+		url := ""
+		if post.Picture.Valid {
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+		} else {
+			randNum := utils.RandNum(len(PictureANN))
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", randNum)
+		}
+		buttons := []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Emoji: discordgo.ComponentEmoji{
+							Name: "👍🏻",
+						},
+						Label:    "Like",
+						Style:    discordgo.SuccessButton,
+						CustomID: "annBot",
+					},
+				},
+			},
+		}
+		//
+		messageSend := discordgo.MessageSend{
+			Content:         "",
+			Embeds:          []*discordgo.MessageEmbed{AnnEmbed("", messageBold, "XDN Announce Bot", url)},
+			TTS:             false,
+			Components:      buttons,
+			Files:           nil,
+			AllowedMentions: nil,
+			Reference:       nil,
+			File:            nil,
+			Embed:           nil,
+		}
+
+		msg, err := goBot.ChannelMessageSendComplex(fmt.Sprintf("%d", channel.IdChannel), &messageSend)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+
+		channelID, ko := strconv.Atoi(msg.ChannelID)
+		messageID, ko := strconv.Atoi(msg.ID)
+		if ko != nil {
+			utils.WrapErrorLog("Error converting string to int")
+		} else {
+			_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, messageID, channelID)
+			if err != nil {
+				utils.WrapErrorLog(err.Error())
+			}
+		}
+	}
+}
+
+func AnnouncementMNOtherDiscord() {
+	LoadPictures()
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel > 0 AND idChannel !=? AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannelID, MainChannelID, VIPChannelID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	for _, channel := range channels {
+		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 3) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+
+			if lastPost.Id != 0 {
+				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+				_, err := bot.Send(dl)
+				if err != nil {
+					utils.ReportMessage(err.Error())
+				}
+			}
+		}
+		post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 3 ORDER BY RAND() LIMIT 1")
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			return

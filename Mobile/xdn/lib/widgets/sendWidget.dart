@@ -538,7 +538,7 @@ class SendWidgetState extends State<SendWidget> {
                                         RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                 onPressed: () async {
                                   Map<String, dynamic>? ss = await NetInterface.getBalance(details: true);
-                                  _balance = double.parse(ss?["spendable"]);
+                                  _balance = double.parse(ss!["spendable"].toString());
                                   double max = _balance! - 0.001;
                                   _controllerAmount.text = max.toString();
                                   _controllerAmount.selection = TextSelection.fromPosition(TextPosition(offset: _controllerAmount.text.length));

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/providers/bug_admin_provider.dart';
+import 'package:digitalnote/screens/donut_screen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
@@ -42,6 +43,19 @@ class _BugAdminScreenState extends ConsumerState<BugAdminScreen> {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   const Header(header: 'Bug Admin'),
+                  Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: FlatCustomButton(
+                      radius: 8.0,
+                     height: 30.0,
+                      width: 200.0,
+                     color: Colors.lime,
+                     onTap: () {
+                       Navigator.of(context).pushNamed(DonutScreen.route);
+                     },
+                      child: const Text('3D Donut', style: TextStyle(color: Colors.black87),),
+                    ),
+                  ),
                   Expanded(
                     child: bugs.when(
                       data: (data) {
@@ -269,10 +283,9 @@ class _BugAdminScreenState extends ConsumerState<BugAdminScreen> {
     sending = true;
     Map<String, dynamic> m = {"address": address, "amount": amount, "contact": "Bug report reward"};
     Map<String, dynamic> m2 = {"id": idBug, "comment": comment, "reward": amount};
-    print(m2);
     try {
       ComInterface interface = ComInterface();
-      // await interface.post("/user/send/contact", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
+      await interface.post("/user/send/contact", body: m, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
       await interface.post("/misc/bug/process", body: m2, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: true);
       sending = false;
       final ff = ref.read(bugAdminProvider.notifier);

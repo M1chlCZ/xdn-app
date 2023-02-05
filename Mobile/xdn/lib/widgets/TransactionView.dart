@@ -19,7 +19,8 @@ class TransactionView extends StatelessWidget {
     if (d == null) return "";
     var date = DateTime.parse(d);
     var format = DateFormat.yMd(Platform.localeName).add_jm();
-    return format.format(date);
+    return Utils.convertDate(d);
+    // return format.format(date);
   }
 
   const TransactionView({Key? key, this.transaction, this.customLocale}) : super(key: key);

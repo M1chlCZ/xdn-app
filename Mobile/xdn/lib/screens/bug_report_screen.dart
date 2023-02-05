@@ -57,11 +57,15 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
     try {
       Dialogs.openWaitBox(context);
       await net.post("/misc/bug/report", body: {"bugDesc": bugDesc, "bugLocation": bugLoc}, serverType: ComInterface.serverGoAPI);
-      if(mounted) Navigator.of(context).pop();
       _controller.clear();
       _controller2.clear();
+      focusNode.unfocus();
+      focusNode2.unfocus();
+      if(mounted) Navigator.of(context).pop();
       if(mounted) Dialogs.openAlertBox(context, "Success", "Bug report submitted");
     } catch (e) {
+      focusNode.unfocus();
+      focusNode2.unfocus();
       debugPrint(e.toString());
       if(mounted) Navigator.of(context).pop();
       var err = json.decode(e.toString());

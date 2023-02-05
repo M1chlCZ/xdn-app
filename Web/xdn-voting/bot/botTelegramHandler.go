@@ -1301,6 +1301,56 @@ func AnnouncementTelegram() {
 	}
 }
 
+func AnnouncementMNTelegram() {
+	LoadPictures()
+	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 3) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannel)
+	if err != nil {
+		utils.WrapErrorLog("xxx Error deleting message: xxx" + err.Error())
+		utils.WrapErrorLog(err.Error())
+	}
+	if lastPost.Id != 0 {
+		dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+		_, err := bot.Send(dl)
+		if err != nil {
+			utils.WrapErrorLog("xxx Error deleting message: xxx" + err.Error() + fmt.Sprintf("id: %d", lastPost.IdMessage) + fmt.Sprintf("channel: %d", lastPost.IdChannel))
+			utils.ReportMessage(err.Error())
+		}
+	}
+
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 3 ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	postID := post.PostID
+	url := ""
+	if post.Picture.Valid {
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+	} else {
+		randNum := utils.RandNum(len(PictureANN))
+		url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", randNum)
+	}
+	utils.ReportMessage(fmt.Sprintf("Announcement url: %s", url))
+	msg := tgbotapi.NewPhoto(MainChannel, tgbotapi.FileURL(url))
+	var rows []tgbotapi.InlineKeyboardButton
+	rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👍🏻", fmt.Sprintf("likeAnn:%d", postID)))
+	//rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👎🏻", fmt.Sprintf("dislikeAnn:%d", postID)))
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows)
+	msg.ParseMode = tgbotapi.ModeMarkdown
+
+	msg.Caption = post.Message
+	mess, err := bot.Send(msg)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+
+	_, err = database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+	}
+}
+
 func AnnNFTTelegram() {
 	LoadPictures()
 	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 1) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannel)
@@ -1471,6 +1521,64 @@ func AnnOtherChannelTelegram() {
 	}
 	for _, channel := range channels {
 		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		if lastPost.Id != 0 {
+			dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+			_, err := bot.Send(dl)
+			if err != nil {
+				utils.ReportMessage(fmt.Sprintf("Error deleting message: channelID: %d messageID: %d", lastPost.IdChannel, int(lastPost.IdMessage)))
+				utils.ReportMessage(fmt.Sprintf("BOT DELETE PROBLEMO %s", err.Error()))
+				utils.ReportMessage(err.Error())
+			}
+		}
+		postID := post.PostID
+		url := ""
+		if post.Picture.Valid {
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", post.Picture.String)
+		} else {
+			randNum := utils.RandNum(len(PictureANN))
+			url = fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file/gram?file=%d&type=3", randNum)
+		}
+		utils.ReportMessage(fmt.Sprintf("Announcement url: %s", url))
+		msg := tgbotapi.NewPhoto(channel.IdChannel, tgbotapi.FileURL(url))
+		var rows []tgbotapi.InlineKeyboardButton
+		rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👍🏻", fmt.Sprintf("likeAnn:%d", postID)))
+		//rows = append(rows, tgbotapi.NewInlineKeyboardButtonData("👎🏻", fmt.Sprintf("dislikeAnn:%d", postID)))
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows)
+		msg.ParseMode = tgbotapi.ModeMarkdown
+
+		msg.Caption = "*This is one per day post on non-XDN channels using XDN-bot, only important announcement* \n ! Rewards work on other channels as well !\n\n" + post.Message
+		mess, err := bot.Send(msg)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+		id, err := database.InsertSQl("INSERT INTO bot_post_activity (idPost, idMessage, idChannel) VALUES (?,?,?)", post.PostID, mess.MessageID, mess.Chat.ID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+		}
+		utils.ReportMessage(fmt.Sprintf("Posting messageID:%d channelID: %d messageID: %d", id, mess.Chat.ID, mess.MessageID))
+	}
+}
+
+func AnnMNOtherChannelTelegram() {
+	LoadPictures()
+
+	post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 3 ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+
+	channels, err := database.ReadArrayStruct[models.Channel]("SELECT idChannel FROM uses_bot_activity WHERE idChannel < 0 AND idChannel !=? AND idChannel !=? GROUP BY idChannel", TestChannel, MainChannel)
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return
+	}
+	for _, channel := range channels {
+		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 3) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 		}

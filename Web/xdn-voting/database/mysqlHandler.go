@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
+	"time"
 	"xdn-voting/utils"
 )
 
@@ -23,6 +24,9 @@ func New() {
 	if errDB != nil {
 		log.Fatal(errDB)
 	}
+	db.SetConnMaxIdleTime(time.Minute * 2)
+	db.SetMaxOpenConns(100)
+	db.SetMaxIdleConns(100)
 	// Configure any package-level settings
 	Database = &DB{db}
 }

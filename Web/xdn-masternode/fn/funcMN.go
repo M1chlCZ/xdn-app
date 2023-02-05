@@ -477,8 +477,8 @@ mainNon:
 						ActiveTime: uint32(mn.Activetime),
 					}
 					lastSeen = append(lastSeen, m)
-					utils.ReportMessage(fmt.Sprintf("[OK @ %s!]", daemon.Folder))
-					break mainNon
+					utils.ReportMessage(fmt.Sprintf("[NC OK @ %s!]", daemon.Folder))
+					continue mainNon
 				}
 			}
 		}
@@ -739,9 +739,8 @@ main:
 		//}
 
 	}
+inactive:
 	for _, daemon := range daemonFinalInactive {
-		utils.ReportMessage(fmt.Sprintf("%s is inactive", daemon.Folder))
-
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip", daemon.Folder)).Output()
 		_, _ = exec.Command("bash", "-c", fmt.Sprintf("rm $HOME/.%s/*.zip.1", daemon.Folder)).Output()
 
@@ -756,7 +755,7 @@ main:
 				utils.WrapErrorLog(errScript.Error())
 				continue
 			}
-			time.Sleep(time.Minute * 5)
+			time.Sleep(time.Second * 30)
 			priv, err := privateKey(daemon.NodeID)
 			if err != nil {
 				utils.WrapErrorLog(err.Error())
@@ -772,12 +771,12 @@ main:
 			continue
 		}
 
-		blk, errBlock := coind.WrapDaemon(daemon, 5, "getblockcount")
-		if errBlock != nil || string(blk) == "nul" {
-			utils.WrapErrorLog(errBlock.Error())
-			go snapInactive(daemon.Folder, daemon.CoinID)
-			continue
-		}
+		//blk, errBlock := coind.WrapDaemon(daemon, 5, "getblockcount")
+		//if errBlock != nil || string(blk) == "nul" {
+		//	utils.WrapErrorLog(errBlock.Error())
+		//	go snapInactive(daemon.Folder, daemon.CoinID)
+		//	continue
+		//}
 
 		if daemon.CoinID == 0 {
 			blk2, erBlockXDN := coind.WrapDaemon(daemon, 1, "getblockcount")
@@ -785,16 +784,16 @@ main:
 			if erBlockXDN != nil {
 				utils.WrapErrorLog(erBlockXDN.Error())
 				go snapInactive(daemon.Folder, daemon.CoinID)
-				continue
+				continue inactive
 			}
 
 			if !(blockhashXDN < (bnmXDN + 10)) || !(blockhashXDN > (bnmXDN - 10)) {
 				utils.ReportMessage(fmt.Sprintf("SHIT BLOCK COUNT: Have %d, should have %d", bnmXDN, blockhashXDN))
 				go snapInactive(daemon.Folder, daemon.CoinID)
-				continue
+				continue inactive
 			}
-			utils.ReportMessage(fmt.Sprintf("OK @ %s!", daemon.Folder))
-			continue
+			utils.ReportMessage(fmt.Sprintf("OK innactive @ %s!", daemon.Folder))
+			continue inactive
 		}
 
 		var ing models.GetInfo

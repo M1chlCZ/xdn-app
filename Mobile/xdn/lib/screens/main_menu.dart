@@ -8,6 +8,7 @@ import 'package:digitalnote/screens/addrScreen.dart';
 import 'package:digitalnote/screens/auth_req_screen.dart';
 import 'package:digitalnote/screens/bug_admin_screen.dart';
 import 'package:digitalnote/screens/bug_report_screen.dart';
+import 'package:digitalnote/screens/donut_screen.dart';
 import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
 import 'package:digitalnote/screens/message_screen.dart';
@@ -212,7 +213,12 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     if (initialMessage != null) {
       if (initialMessage.data['func'] == "req") {
         String idReq = initialMessage.data['fr'];
-        if (mounted) Navigator.pushNamed(context, AuthReqScreen.route, arguments: idReq);
+        if (context.mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+              AdminScreen.route,
+                  (route) =>
+              route.isCurrent && route.settings.name == AdminScreen.route ? false : true, arguments: idReq);
+        }
         return;
       }
     }
@@ -220,7 +226,13 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     FirebaseMessaging.onMessageOpenedApp.listen((message) async {
       if (message.data['func'] == "req") {
         String idReq = message.data['fr'];
-        if (mounted) Navigator.pushNamed(context, AuthReqScreen.route, arguments: idReq);
+        if (context.mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+              AdminScreen.route,
+                  (route) =>
+              route.isCurrent && route.settings.name == AdminScreen.route ? false : true, arguments: idReq);
+        }
+        return;
       }
     });
   }
@@ -303,6 +315,10 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
 
   void gotoBugScreen() {
     Navigator.of(context).pushNamed(BugAdminScreen.route, arguments: "shit").then((value) => refreshBalance());
+  }
+
+  void gotoDonutScreen() {
+    Navigator.of(context).pushNamed(DonutScreen.route, arguments: "shit").then((value) => refreshBalance());
   }
 
   void gotoMasternodeScreen() {

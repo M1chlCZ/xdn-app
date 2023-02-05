@@ -143,6 +143,7 @@ func main() {
 	app.Get("api/v1/masternode/non/list", auth.Authorized(listNonMN))
 	app.Post("api/v1/masternode/non/restart", auth.Authorized(restartNonMN))
 	app.Post("api/v1/masternode/non/tx", auth.Authorized(txNonMn))
+	app.Post("api/v1/masternode/non/config", auth.Authorized(nonMNConfig))
 
 	app.Get("api/v1/price/data", auth.Authorized(getPriceData))
 
@@ -253,6 +254,31 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func nonMNConfig(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	type Req struct {
+		ID int `json:"idNode"`
+	}
+	var req Req
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	mn, err := database.ReadStruct[models.MNNonCustodial]("SELECT a.*, b.ip FROM mn_non_custodial as a, mn_clients as b WHERE a.idNode = b.id and a.idNode = ?", req.ID)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	}
+	str := fmt.Sprintf("MN%d [%s]:%d %s %s %d", mn.IdNode, mn.IP, 18092, mn.MnKey, mn.Txid, mn.Vout)
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"config":     str,
+	})
 }
 
 func processBug(c *fiber.Ctx) error {
@@ -1631,10 +1657,11 @@ func getMNInfo(c *fiber.Ctx) error {
 	}
 	collateralAmount, _ := database.ReadArray[models.Collateral]("SELECT collateral FROM mn_info WHERE idCoin = ?", 0)
 	numberOfNodes, _ := database.ReadValue[int]("SELECT COUNT(id) FROM mn_clients WHERE active = 1 AND coin_id = ?", 0)
-	perDay, _ := database.ReadValue[float32]("SELECT AVG(amount) as amount FROM (SELECT idNode, sum(amount) AS amount FROM payouts_masternode WHERE idCoin = ? AND datetime BETWEEN DATE_SUB(CURDATE(),INTERVAL 1 DAY) AND CURDATE() group by idNode)as t", 0)
+	perWeek, _ := database.ReadValue[float32]("SELECT AVG(amount) as amount FROM (SELECT idNode, sum(amount) AS amount FROM payouts_masternode WHERE idCoin = ? AND datetime BETWEEN DATE_SUB(CURDATE(),INTERVAL 7 DAY) AND CURDATE() group by idNode)as t", 0)
 	userNodeCount, _ := database.ReadValue[int64]("SELECT IFNULL(COUNT(id), 0) FROM users_mn WHERE idUser = ? AND idCoin = ? AND active = 1", userID, 0)
-	averageReward := perDay * float32(userNodeCount)
-
+	averageReward := (perWeek / 7) * float32(userNodeCount)
+	avgRewad := database.ReadValueEmpty[float32]("SELECT AVG(t1.count) as avg FROM (SELECT idNode, count(id) as count FROM masternode_tx WHERE amount > 0 AND date_created BETWEEN DATE_SUB(CURDATE(),INTERVAL 7 DAY) AND CURDATE() GROUP BY idNode) as t1")
+	avgRewardCountDay := (avgRewad / 7) * float32(userNodeCount)
 	rewardPerDay, _ := database.ReadValue[float64](`SELECT AVG(amount) FROM
 														(SELECT DATE_FORMAT(datetime, '%Y-%m-%d') as theday, SUM(amount) as amount FROM payouts_masternode WHERE idCoin = ? GROUP BY idNode, DATE_FORMAT(datetime, '%Y-%m-%d')) as t1
 														WHERE theday >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 7 DAY), '%Y-%m-%d')`, 0)
@@ -1662,6 +1689,7 @@ func getMNInfo(c *fiber.Ctx) error {
 		CollateralTiers:     colArr,
 		NodeRewards:         returnArrr,
 		AutoStake:           autoStake,
+		CountRewardDay:      avgRewardCountDay,
 	}
 	return c.Status(fiber.StatusOK).JSON(&resp)
 }

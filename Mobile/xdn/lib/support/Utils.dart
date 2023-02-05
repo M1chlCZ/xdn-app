@@ -19,36 +19,36 @@ class Utils {
 
   static String convertDate(String? d) {
     if(d == null) return "";
-    DateTime dt = DateTime.now();
-    int offset = dt.timeZoneOffset.inHours;
-    var date = DateTime.parse(d).toLocal();
-    var newDate = DateTime(date.year, date.month, date.day,
-        date.hour + offset, date.minute, date.second);
+    // DateTime dt = DateTime.now();
+    // int offset = dt.timeZoneOffset.inHours;
+    // var date = DateTime.parse(d).toLocal();
+    // var newDate = DateTime(date.year, date.month, date.day,
+    //     date.hour + offset, date.minute, date.second);
+    DateTime utcTime = DateTime.parse(d);
+    int offset = int.parse(DateTime.now().timeZoneOffset.inHours.toString().split('.').first);
+
+    DateTime localTime = utcTime.add(Duration(hours: offset));
     var format = DateFormat.yMMMMd(Platform.localeName).add_jm();
-    return format.format(newDate);
+    return format.format(localTime);
   }
 
   static DateTime convertDateTime(String? d) {
     String nullDate = "1970-00-01 00:00:01";
     if(d == null) return DateTime.parse(nullDate);
-    DateTime dt = DateTime.now();
-    int offset = dt.timeZoneOffset.inHours;
-    var date = DateTime.parse(d).toLocal();
-    var newDate = DateTime(date.year, date.month, date.day,
-        date.hour + offset, date.minute, date.second);
-    var format = DateFormat.yMMMMd(Platform.localeName).add_jm();
-    return newDate;
+    DateTime utcTime = DateTime.parse(d);
+    int offset = int.parse(DateTime.now().timeZoneOffset.inHours.toString().split('.').first);
+    DateTime localTime = utcTime.add(Duration(hours: offset));
+    // var format = DateFormat.yMMMMd(Platform.localeName).add_jm();
+    return localTime;
   }
 
   static String convertDateTimeMessage(String? d) {
     String nullDate = "1970-00-01 00:00:01";
     if(d == null) return DateTime.parse(nullDate).toIso8601String();
-    DateTime dt = DateTime.now();
-    int offset = dt.timeZoneOffset.inHours * -1;
-    var date = DateTime.parse(d).toLocal();
-    var newDate = DateTime(date.year, date.month, date.day,
-        date.hour + offset, date.minute, date.second);
-    return newDate.toIso8601String();
+    DateTime utcTime = DateTime.parse(d);
+    int offset = int.parse(DateTime.now().timeZoneOffset.inHours.toString().split('.').first);
+    DateTime localTime = utcTime.add(Duration(hours: offset));
+    return localTime.toIso8601String();
   }
 
 

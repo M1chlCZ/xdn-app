@@ -21,6 +21,16 @@ func AnnNFTBotOtherChannel() {
 	bot.AnnouncementOtherNFTDiscord()
 }
 
+func ANNMNBot() {
+	bot.AnnouncementMNTelegram()
+	bot.AnnouncementMNDiscord()
+}
+
+func ANNMNOtherChanne() {
+	bot.AnnMNOtherChannelTelegram()
+	bot.AnnouncementMNOtherDiscord()
+}
+
 func GiftBot() {
 	bot.GiftTelegramBot()
 	bot.GiftDiscordBot()

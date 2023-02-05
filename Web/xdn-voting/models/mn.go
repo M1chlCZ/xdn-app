@@ -110,6 +110,7 @@ type MNInfoResponse struct {
 	CollateralTiers     []int64      `json:"collateral_tiers"`
 	NodeRewards         []MNList     `json:"node_rewards"`
 	AutoStake           bool         `json:"auto_stake"`
+	CountRewardDay      float32      `json:"count_reward_day"`
 }
 
 type MNInfoStruct struct {
@@ -236,4 +237,5 @@ type MNNonCustodial struct {
 	MnKey  string `json:"mnKey" db:"mnKey"`
 	Txid   string `json:"txid" db:"txid"`
 	Vout   int    `json:"vout" db:"vout"`
+	IP     string `json:"ip" db:"ip"`
 }

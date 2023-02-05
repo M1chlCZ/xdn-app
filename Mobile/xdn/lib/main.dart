@@ -10,6 +10,7 @@ import 'package:digitalnote/screens/auth_screen.dart';
 import 'package:digitalnote/screens/blockchain_info.dart';
 import 'package:digitalnote/screens/bug_admin_screen.dart';
 import 'package:digitalnote/screens/bug_report_screen.dart';
+import 'package:digitalnote/screens/donut_screen.dart';
 import 'package:digitalnote/screens/main_menu.dart';
 import 'package:digitalnote/screens/masternode_screen.dart';
 import 'package:digitalnote/screens/message_detail_screen.dart';
@@ -445,6 +446,8 @@ class MyAppState extends State<MyApp> {
         return MaterialPageRoute(builder: (_) => const AdminScreen());
       case BugAdminScreen.route:
         return MaterialPageRoute(builder: (_) => const BugAdminScreen());
+      case DonutScreen.route:
+        return MaterialPageRoute(builder: (_) => const DonutScreen());
       default:
         return MaterialPageRoute(builder: (_) => const LoginPage());
     }
