@@ -1531,7 +1531,7 @@ func GiftDiscordBot() {
 	} else if luckyNumber == 3 {
 		text = "third"
 	} else {
-		text = strconv.FormatInt(int64(luckyNumber), 10) + "th"
+		text = strconv.FormatInt(luckyNumber, 10) + "th"
 	}
 	message := fmt.Sprintf(post.Message, text)
 	messageBold := strings.ReplaceAll(message, "*", "**")
@@ -1760,11 +1760,11 @@ func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Running = false
 			return
 		}
-		winningAmount := 100
+		winningAmount := 100.0
 		luck := false
 		chance := utils.RandNum(100)
 		if chance < 30 {
-			winningAmount = 1000
+			winningAmount = 1000.0
 			luck = true
 		}
 		wonPic := "win"
@@ -1786,7 +1786,7 @@ func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
-		_, err = coind.SendCoins(addressTo, addressFrom.String, 100.0, true)
+		_, err = coind.SendCoins(addressTo, addressFrom.String, winningAmount, true)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			Running = false

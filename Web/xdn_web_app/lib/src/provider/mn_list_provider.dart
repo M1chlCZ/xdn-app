@@ -18,7 +18,6 @@ final itemsProvider = FutureProvider<List<dynamic>>((ref) async {
     lret.add("end");
     return lret;
   } catch (e) {
-    print(e);
     return [];
   }
 });

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class TutorialOverlay extends ModalRoute<void> {
   @override
-  Duration get transitionDuration => Duration(milliseconds: 200);
+  Duration get transitionDuration => const Duration(milliseconds: 200);
 
   @override
   bool get opaque => false;
@@ -40,13 +40,13 @@ class TutorialOverlay extends ModalRoute<void> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Text(
+          const Text(
             'This is a nice overlay',
             style: TextStyle(color: Colors.white, fontSize: 30.0),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Dismiss'),
+            child: const Text('Dismiss'),
           )
         ],
       ),

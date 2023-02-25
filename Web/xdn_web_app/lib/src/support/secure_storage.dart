@@ -17,7 +17,6 @@ class SecureStorage {
         return mstorage.read(key: key, iOptions: optionsApple, aOptions: optionsAndroid, webOptions: webOptions, mOptions: macOptions);
       }
     } catch (e) {
-      print(e);
       return Future.value(null);
     }
   }
@@ -36,7 +35,6 @@ class SecureStorage {
         return mstorage.write(key: key, value: value, iOptions: optionsApple, aOptions: optionsAndroid, webOptions: webOptions, mOptions: macOptions);
       }
     } catch (e) {
-      print(e);
       return Future.value(null);
     }
   }
@@ -55,7 +53,6 @@ class SecureStorage {
         return mstorage.delete(key: key, iOptions: optionsApple, aOptions: optionsAndroid, webOptions: webOptions, mOptions: macOptions);
       }
     } catch (e) {
-      print(e);
       return Future.value(null);
     }
   }
@@ -74,7 +71,6 @@ class SecureStorage {
         return mstorage.deleteAll(iOptions: optionsApple, aOptions: optionsAndroid, webOptions: webOptions, mOptions: macOptions);
       }
     } catch (e) {
-      print(e);
       return Future.value(null);
     }
   }

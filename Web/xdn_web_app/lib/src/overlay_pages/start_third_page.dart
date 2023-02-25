@@ -17,7 +17,7 @@ class ThirdOvrPage extends StatelessWidget {
           style: TextStyle(color: Colors.white70, fontSize: 24.0),
         ),
         gapH16,
-        Column(
+         Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

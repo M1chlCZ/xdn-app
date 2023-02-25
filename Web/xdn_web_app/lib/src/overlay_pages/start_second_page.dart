@@ -17,10 +17,10 @@ class SecondOvrPage extends StatelessWidget {
           style: TextStyle(color: Colors.white70, fontSize: 24.0),
         ),
         gapH16,
-        Row(
+         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
+          children: [
+            const Text(
               'Open debug console in your QT wallet ',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, fontSize: 14.0),

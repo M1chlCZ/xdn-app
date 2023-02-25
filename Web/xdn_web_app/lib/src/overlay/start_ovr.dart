@@ -140,7 +140,6 @@ class StartOverlay extends ModalRoute<void> {
                                 onTap: () {
                                   if (block.isLoading) {
                                     showAlertDialog(title: 'Alert', content: 'Please complete this step to proceed', context: context);
-                                    print('BLOCKED');
                                     return;
                                   }
                                   var index = _activePage + 1;

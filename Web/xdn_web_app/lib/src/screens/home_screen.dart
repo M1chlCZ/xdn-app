@@ -84,16 +84,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ))),
                 Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(
-                        width: 200,
-                        child: Image.asset(
-                          "assets/images/logo.png",
-                          color: Colors.white70,
-                        )),
-                    gapH12,
+                    gapH96,
                     Text(
                       "Non-Custodial Masternode Hosting",
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white70, fontWeight: FontWeight.w100, fontSize: 12),
@@ -105,7 +99,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Padding(
+                             Padding(
                               padding: const EdgeInsets.fromLTRB(Sizes.p20, Sizes.p20, Sizes.p24, 0),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -191,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                       ),
                                                       Row(
                                                         children: [
-                                                          Text(Utils.formatDuration(Duration(seconds: data.activeTime!)).toString() ?? "port"),
+                                                          Text(Utils.formatDuration(Duration(seconds: data.activeTime!)).toString()),
                                                           gapW48,
                                                           gapW12,
                                                           Text(Utils.convertDate(data.lastSeen.toString())),

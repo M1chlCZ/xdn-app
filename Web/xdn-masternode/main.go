@@ -40,9 +40,9 @@ func main() {
 		appWallet := fiber.New(fiber.Config{AppName: "XDN MN API", StrictRouting: true})
 		appWallet.Post("/txsubmit", submitTransaction)
 		appWallet.Post("/masternode/register", registerMasternode)
-		appWallet.Post("/removeMasternode", removeMasternode)
+		appWallet.Post("/removeMasternode", fn.RemoveMasternode)
 
-		_ = utils.ScheduleFunc(fn.ScanMasternodes, time.Minute*60)
+		_ = utils.ScheduleFunc(fn.ScanMasternodes, time.Minute*360)
 
 		go func() {
 			err := appWallet.Listen("127.0.0.1:6600")
@@ -51,7 +51,7 @@ func main() {
 				panic(err)
 			}
 		}()
-		go fn.ScanMasternodes()
+		//go fn.ScanMasternodes()
 
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
@@ -64,48 +64,6 @@ func main() {
 		os.Exit(0)
 	}
 	utils.WrapErrorLog("Couldn't connect to server")
-}
-
-func removeMasternode(c *fiber.Ctx) error {
-	folder := c.Get("folder")
-
-	if len(folder) == 0 {
-		return utils.ReportError(c, "No node_id provided", http.StatusBadRequest)
-
-	}
-	daemons, err := database.GetAllDaemons()
-	if err != nil {
-		return utils.ReportError(c, "Can't get daemons", http.StatusBadRequest)
-	}
-	nodeID := -1
-	for _, daemon := range *daemons {
-		if folder == daemon.Folder {
-			nodeID = daemon.NodeID
-			break
-		}
-	}
-	if nodeID == -1 {
-		return utils.ReportError(c, "Node not found", http.StatusBadRequest)
-
-	}
-
-	tx := &grpcModels.RemoveMasternodeRequest{NodeID: uint32(nodeID)}
-	masternode, err := grpcClient.RemoveMasternode(tx)
-	if err != nil {
-		return err
-	}
-	if masternode.Code == 200 {
-		daemon, err := database.RemoveDaemon(nodeID)
-		if err != nil {
-			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
-		}
-		row, _ := daemon.RowsAffected()
-		return c.Status(http.StatusOK).JSON(fiber.Map{
-			"status": "ok",
-			"rows":   row,
-		})
-	}
-	return utils.ReportError(c, "Error on Server", int(masternode.Code))
 }
 
 // FUNCTION HANDLERS

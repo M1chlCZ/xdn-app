@@ -3,8 +3,10 @@ package fn
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"io"
 	"log"
+	"net/http"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -458,19 +460,21 @@ mainNon:
 		bnm, errBlock := strconv.Atoi(strings.Trim(string(blk), "\""))
 		if errBlock != nil {
 			utils.WrapErrorLog(errBlock.Error())
+			_, _ = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(daemon.NodeID), Error: errBlock.Error()})
 			go snapInactive(daemon.Folder, daemon.CoinID)
 			continue
 		}
 
 		if !(blockhashXDN < (bnm + 10)) || !(blockhashXDN > (bnm - 10)) {
 			utils.ReportMessage(fmt.Sprintf("SHIT BLOCK COUNT: Have %d, should have %d", bnm, blockhashXDN))
+			_, _ = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(daemon.NodeID), Error: "SHIT BLOCK COUNT"})
 			go snapInactive(daemon.Folder, daemon.CoinID)
 			continue
 		}
 
 		for _, mn := range mnList {
 			for _, ing := range mnListServer.Mn {
-				if ing.Address == mn.Addr && mn.Status == "ENABLED" {
+				if daemon.NodeID == int(ing.Id) && ing.Address == mn.Addr && mn.Status == "ENABLED" {
 					m := &grpcModels.LastSeenRequest_LastSeen{
 						Id:         uint32(daemon.NodeID),
 						LastSeen:   uint32(mn.Lastseen),
@@ -488,6 +492,7 @@ mainNon:
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			utils.ReportMessage(fmt.Sprintf("error status masternode %s, %d, %d", daemon.Folder, daemon.CoinID, daemon.NodeID))
+			_, _ = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(daemon.NodeID), Error: err.Error()})
 			go snapInactive(daemon.Folder, daemon.CoinID)
 			continue
 		}
@@ -650,7 +655,7 @@ main:
 
 		for _, mn := range mnList {
 			for _, ing := range mnListServer.Mn {
-				if ing.Address == mn.Addr && mn.Status == "ENABLED" {
+				if daemon.NodeID == int(ing.Id) && ing.Address == mn.Addr && mn.Status == "ENABLED" {
 					m := &grpcModels.LastSeenRequest_LastSeen{
 						Id:         uint32(daemon.NodeID),
 						LastSeen:   uint32(mn.Lastseen),
@@ -879,4 +884,47 @@ func snapInactive(folder string, coinID int) {
 		utils.WrapErrorLog("Unknown coin")
 		return
 	}
+}
+
+func RemoveMasternode(c *fiber.Ctx) error {
+	//curl -X POST -H "folder:$1" http://localhost:6600/removeMasternode
+	folder := c.Get("folder")
+
+	if len(folder) == 0 {
+		return utils.ReportError(c, "No node_id provided", http.StatusBadRequest)
+
+	}
+	daemons, err := database.GetAllDaemons()
+	if err != nil {
+		return utils.ReportError(c, "Can't get daemons", http.StatusBadRequest)
+	}
+	nodeID := -1
+	for _, daemon := range *daemons {
+		if folder == daemon.Folder {
+			nodeID = daemon.NodeID
+			break
+		}
+	}
+	if nodeID == -1 {
+		return utils.ReportError(c, "Node not found", http.StatusBadRequest)
+
+	}
+
+	tx := &grpcModels.RemoveMasternodeRequest{NodeID: uint32(nodeID)}
+	masternode, err := grpcClient.RemoveMasternode(tx)
+	if err != nil {
+		return err
+	}
+	if masternode.Code == 200 {
+		daemon, err := database.RemoveDaemon(nodeID)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+		}
+		row, _ := daemon.RowsAffected()
+		return c.Status(http.StatusOK).JSON(fiber.Map{
+			"status": "ok",
+			"rows":   row,
+		})
+	}
+	return utils.ReportError(c, "Error on Server", int(masternode.Code))
 }

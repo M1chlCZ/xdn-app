@@ -15,7 +15,7 @@ class AuthRepository {
   Stream<AppUser?> authStateChanges() => _authState.stream;
 
   AppUser? get currentUser => _authState.value;
-  void set currentUser(AppUser? user) {
+  set currentUser(AppUser? user) {
     _authState.value = user;
   }
 
@@ -88,7 +88,6 @@ class AuthRepository {
                 : false,
       );
     } else {
-      print("double shit");
     }
   }
 

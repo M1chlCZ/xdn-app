@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+// ignore: depend_on_referenced_packages
 import 'package:intl/intl.dart';
 import 'package:universal_io/io.dart';
 import 'package:url_launcher/url_launcher.dart';

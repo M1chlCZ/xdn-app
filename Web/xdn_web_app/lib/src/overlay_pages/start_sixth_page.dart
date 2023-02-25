@@ -107,8 +107,8 @@ class _SixthOvrPageState extends ConsumerState<SixthOvrPage> {
                 gapH8,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       "Please wait until tx will have 15 confirmations, this screen will automatically refresh, don't close the window",
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white70, fontSize: 14.0),
@@ -163,7 +163,6 @@ class _SixthOvrPageState extends ConsumerState<SixthOvrPage> {
           var conf = res['confirmations'];
           return conf ?? 0;
       } catch (e) {
-        print(e);
         return 0;
       }
     }).asyncMap((event) async => await event);

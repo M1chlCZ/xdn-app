@@ -78,7 +78,7 @@ Future<void> showWaitDialog({
                 child: CircularProgressIndicator(color: Colors.black87,strokeWidth: 2.0,),
               ),
             ),
-            actions: <Widget>[
+            actions: const <Widget>[
             ],
           ),
     );
@@ -117,7 +117,7 @@ Future<bool?> showQRAlertDialog({
                 ),
               ),
             ),
-            actions: <Widget>[
+            actions: const <Widget>[
             ],
           ),
     );

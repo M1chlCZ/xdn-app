@@ -44,6 +44,7 @@ dependencies:
   vector_math: ^2.1.4
   font_awesome_flutter: ^10.4.0
   flutter_countdown_timer: ^4.1.0
+  shared_preferences: ^2.0.18
   badges: ^3.0.2
   crypto: any
   mobile_scanner: ^2.1.0

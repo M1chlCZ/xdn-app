@@ -92,9 +92,25 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 							utils.WrapErrorLog(errUpdate.Error())
 							return &grpcModels.Response{Code: 400}, errUpdate
 						}
+						check := database.ReadValueEmpty[int]("SELECT COUNT(id) FROM users_stake WHERE idUser = ? AND active = 1", idUser)
+						if check == 0 {
+							smax, err := database.ReadValue[float64]("SELECT IFNULL(MAX(session), 0) as smax FROM users_stake WHERE idUser = ?", idUser)
+							if err != nil {
+								utils.WrapErrorLog(err.Error())
+								return &grpcModels.Response{Code: 400}, errUpdate
+							}
+							if smax == 0 {
+								_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", idUser, txRes.Amount, 1, 1)
+							} else {
+								_, _ = database.InsertSQl("INSERT INTO users_stake (idUser, amount, active, session) VALUES (?, ?, ?, ?)", idUser, txRes.Amount, 1, smax+1)
+							}
+						}
 
+						amountpre := database.ReadValueEmpty[float64]("SELECT amount FROM users_stake WHERE idUser = ? AND active = 1", idUser)
 						_, _ = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", txRes.Amount, idUser)
-						utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d %f}-", idUser, txRes.Amount))
+						amountpost := database.ReadValueEmpty[float64]("SELECT amount FROM users_stake WHERE idUser = ? AND active = 1", idUser)
+						utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d %f %f %f}-", idUser, txRes.Amount, amountpre, amountpost))
+						//utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d %f}-", idUser, txRes.Amount))
 						_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
 						continue
 					}

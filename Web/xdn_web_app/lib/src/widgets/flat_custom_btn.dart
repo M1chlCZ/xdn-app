@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+typedef GetHover = Widget Function(bool value);
+
 class FlatCustomButton extends StatefulWidget {
   final double radius;
   final Color? color;
@@ -16,8 +18,9 @@ class FlatCustomButton extends StatefulWidget {
   final EdgeInsets? padding;
   final double? borderWidth;
   final CrossAxisAlignment alignment;
+  final GetHover? getHover;
 
-  const FlatCustomButton({Key? key, this.color, this.onTap, this.icon, this.imageIcon, this.splashColor, this.animIcon, this.radius = 4.0, this.child, this.borderColor, this.height, this.width, this.padding, this.borderWidth, this.onLongPress, this.alignment = CrossAxisAlignment.center}) : super(key: key);
+  const FlatCustomButton({Key? key, this.color, this.onTap, this.icon, this.imageIcon, this.splashColor, this.animIcon, this.radius = 4.0, this.child, this.borderColor, this.height, this.width, this.padding, this.borderWidth, this.onLongPress, this.alignment = CrossAxisAlignment.center, this.getHover}) : super(key: key);
 
   @override
   State<FlatCustomButton> createState() => _FlatCustomButtonState();
@@ -25,6 +28,7 @@ class FlatCustomButton extends StatefulWidget {
 
 class _FlatCustomButtonState extends State<FlatCustomButton> {
   var isHover = false;
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -65,6 +69,7 @@ class _FlatCustomButtonState extends State<FlatCustomButton> {
                   crossAxisAlignment: widget.alignment,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
+                    widget.getHover?.call(isHover) ?? Container(),
                     widget.animIcon ?? Container(),
                     widget.icon ?? Container(),
                     widget.imageIcon ?? Container(),

@@ -14,7 +14,6 @@ final configProvider = FutureProvider.family<String?, int>((ref, id) async {
       return null;
     }
   } catch (e) {
-    print(e);
     return null;
   }
 });

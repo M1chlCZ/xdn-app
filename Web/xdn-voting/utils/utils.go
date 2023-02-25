@@ -80,17 +80,17 @@ func ReportError(c *fiber.Ctx, err string, statusCode int) error {
 		STATUS:         FAIL,
 		ERROR:          true,
 	}
-
-	if !strings.Contains(err, "tx_id_UNIQUE") || strings.Contains(err, "Invalid Token, id User") {
-		logToFile("")
-		logToFile("//// - HTTP ERROR - ////")
-		logToFile("HTTP call failed : " + err + "  Status code: " + fmt.Sprintf("%d", statusCode))
-		logToFile("////==========////")
+	if statusCode == 500 {
+		if !strings.Contains(err, "tx_id_UNIQUE") || strings.Contains(err, "Invalid Token, id User") {
+			logToFile(fmt.Sprintf("[WARNING] %s %s %s %s", "HTTP call failed : ", err, "  Status code: ", fmt.Sprintf("%d", statusCode)))
+		}
+	} else {
+		//logToFile("//// - ERROR - ////")
+		logToFile(fmt.Sprintf("[WARNING] %s %s %s %s", "HTTP call failed : ", err, "  Status code: ", fmt.Sprintf("%d", statusCode)))
+		//logToFile("////===========////")
 		logToFile("")
 	}
-
 	return c.Status(statusCode).JSON(json)
-	// json.NewEncoder(w).Encode(err)
 }
 
 func ReportOK(w http.ResponseWriter, err string, statusCode int) {
@@ -207,18 +207,16 @@ func logToFile(message string) {
 
 func WrapErrorLog(message string) {
 	if !strings.Contains(message, "tx_id_UNIQUE") {
-		logToFile("//// - ERROR - ////")
-		logToFile(message)
-		logToFile("////===========////")
+		//logToFile("//// - ERROR - ////")
+		logToFile(fmt.Sprintf("[ERROR] %s", message))
+		//logToFile("////===========////")
 		logToFile("")
 	}
 }
 
 func ReportMessage(message string) {
-	go func() {
-		logToFile(message)
-		logToFile("")
-	}()
+	logToFile(fmt.Sprintf("[INFO] %s", message))
+	logToFile("")
 }
 
 func round(num float64) int {

@@ -44,7 +44,7 @@ class StartOvrPage extends StatelessWidget {
                   Utils.openLink('https://digitalnote.org/#wallets');
                 },
                 child: Padding(
-                  padding: const EdgeInsets.all(4.0),
+                  padding: EdgeInsets.all(4.0),
                   child: Row(
                     children: const [
 
@@ -67,7 +67,7 @@ class StartOvrPage extends StatelessWidget {
           style: TextStyle(color: Colors.red, fontSize: 10.0),
         ),
         gapH16,
-        Row(
+         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
             Text(
@@ -88,7 +88,7 @@ class StartOvrPage extends StatelessWidget {
           ],
         ),
         gapH24,
-        Row(
+         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
             Text(

@@ -157,6 +157,8 @@ func main() {
 	app.Post("api/v1/user/send/contact", auth.Authorized(sendContactTransaction))
 	app.Post("api/v1/user/send", auth.Authorized(sendTransaction))
 
+	app.Get("api/v1/user/permissions", auth.Authorized(getPermissions))
+
 	app.Get("api/v1/user/xls", auth.Authorized(getTxXLS))
 
 	app.Get("api/v1/user/messages/group", auth.Authorized(getMessageGroup))
@@ -254,6 +256,36 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func getPermissions(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	admin := false
+	mnPermission := false
+	stealthPermission := false
+	value := database.ReadValueEmpty[sql.NullInt64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
+	if value.Valid {
+		mnPermission = true
+	}
+	value2 := database.ReadValueEmpty[sql.NullInt64]("SELECT stealth FROM users_permission WHERE idUser = ?", userID)
+	if value2.Valid {
+		stealthPermission = true
+	}
+
+	value3 := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if value3 {
+		admin = true
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+		"admin":      admin,
+		"mn":         mnPermission,
+		"stealth":    stealthPermission,
+	})
 }
 
 func nonMNConfig(c *fiber.Ctx) error {
@@ -2614,13 +2646,13 @@ func loginAPI(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
 	}
 	if user.Username == "" {
-		return utils.ReportErrorSilent(c, "User not found", http.StatusNotFound)
+		return utils.ReportError(c, "User not found", http.StatusNotFound)
 	}
 	if user.Password != password {
-		return utils.ReportErrorSilent(c, "Wrong password", http.StatusNotFound)
+		return utils.ReportError(c, "Wrong password", http.StatusNotFound)
 	}
 	if user.Banned == 1 {
-		return utils.ReportErrorSilent(c, "User banned", http.StatusConflict)
+		return utils.ReportError(c, "User banned", http.StatusConflict)
 	}
 	if remoteIP == "" {
 		remoteIP = c.IP()

@@ -3,14 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xdn_web_app/src/screens/admin_panel.dart';
 import 'package:xdn_web_app/src/screens/home_screen.dart';
+import 'package:xdn_web_app/src/screens/mainmenu_screen.dart';
 import 'package:xdn_web_app/src/screens/not_found.dart';
 import 'package:xdn_web_app/src/screens/splash.dart';
+import 'package:xdn_web_app/src/screens/web_wallet_screen.dart';
 import 'package:xdn_web_app/src/support/auth_repo.dart';
 import 'package:xdn_web_app/src/support/go_router_refresh_stream.dart';
 
 enum AppRoute {
   home,
   splash,
+  masternode,
+  wallet,
   admin,
   account,
   signIn,
@@ -120,13 +124,31 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'home',
             name: AppRoute.home.name,
-            builder: (context, state) => const HomeScreen(),
+            builder: (context, state) => const MainMenuScreen(),
             pageBuilder: (context, state) => buildPageWithDefaultTransition<void>(
               context: context,
               state: state,
-              child: const HomeScreen(),
+              child: const MainMenuScreen(),
             ),
             routes: [
+              GoRoute(
+                path: 'masternode',
+                name: AppRoute.masternode.name,
+                builder: (context, state) => const HomeScreen(),
+                pageBuilder: (context, state) => buildPageWithDefaultTransition<void>(
+                  context: context,
+                  state: state,
+                  child: const HomeScreen(),
+                ),),
+              GoRoute(
+                path: 'wallet',
+                name: AppRoute.wallet.name,
+                builder: (context, state) => const WebWalletScreen(),
+                pageBuilder: (context, state) => buildPageWithDefaultTransition<void>(
+                  context: context,
+                  state: state,
+                  child: const WebWalletScreen(),
+                ),),
               GoRoute(
                 path: 'admin',
                 name: AppRoute.admin.name,

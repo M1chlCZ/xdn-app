@@ -31,7 +31,6 @@ void getRequest() async {
     var list = l.map((item) => Requests.fromJson(item)).toList();
     state = AsyncValue.data(list);
   } catch (e) {
-    print(e);
     state = const AsyncValue.data([]);
   }
 }

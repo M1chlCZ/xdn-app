@@ -45,12 +45,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     } catch (e) {
       if (mounted) context.pop();
       showExceptionAlertDialog(context: context, title: "Error", exception: e.toString());
-      print(e);
     }
   }
 
   void vote(int id, bool upvote) async {
-    print("vote: $id, $upvote");
     final net = ref.read(networkProvider);
     final p = ref.read(requestProvider.notifier);
     try {
@@ -62,7 +60,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     } catch (e) {
       if (mounted) context.pop();
       showExceptionAlertDialog(context: context, title: "Error", exception: e.toString());
-      print(e);
     }
   }
 
@@ -78,7 +75,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     } catch (e) {
       if (mounted) context.pop();
       showExceptionAlertDialog(context: context, title: "Error", exception: e.toString());
-      print(e);
     }
   }
 
@@ -94,7 +90,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     } catch (e) {
       if (mounted) context.pop();
       showExceptionAlertDialog(context: context, title: "Error", exception: e.toString());
-      print(e);
     }
   }
 
@@ -349,9 +344,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             child: Padding(
               padding: const EdgeInsets.all(5.0),
               child: Row(
-                children: const [
-                  Icon(Icons.arrow_back_ios_new, color: Colors.white70),
-                  SizedBox(width: 5),
+                children: [
+                  const Icon(Icons.arrow_back_ios_new, color: Colors.white70),
+                  const SizedBox(width: 5),
                 ],
               ),
             ),

@@ -21,7 +21,7 @@ type BugsAdmin struct {
 	DateProcess string  `db:"dateProcess" json:"dateProcess"`
 	Processed   int     `db:"processed" json:"processed"`
 	Comment     *string `db:"comment" json:"comment"`
-	Reward      int     `db:"reward" json:"reward"`
+	Reward      float64 `db:"reward" json:"reward"`
 	Addr        string  `db:"addr" json:"addr"`
 	Username    string  `db:"username" json:"username"`
 }

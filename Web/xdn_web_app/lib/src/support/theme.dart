@@ -213,7 +213,6 @@ ThemeData themeNine(Brightness mode, bool useMaterial3) => ThemeData.from(
 ThemeData themeTen(Brightness mode, bool useMaterial3) =>
     mode == Brightness.light
         ? ThemeData(
-      colorScheme: mySchemeLight,
       primaryColor: mySchemeLight.primary,
       primaryColorLight: Color.alphaBlend(
           Colors.white.withAlpha(0x66), mySchemeLight.primary),
@@ -221,13 +220,9 @@ ThemeData themeTen(Brightness mode, bool useMaterial3) =>
           Colors.black.withAlpha(0x66), mySchemeLight.primary),
       secondaryHeaderColor: Color.alphaBlend(
           Colors.white.withAlpha(0xCC), mySchemeLight.primary),
-      toggleableActiveColor:
-      useMaterial3 ? mySchemeLight.primary : mySchemeLight.secondary,
       scaffoldBackgroundColor: mySchemeLight.background,
       canvasColor: mySchemeLight.background,
-      backgroundColor: mySchemeLight.background,
       cardColor: mySchemeLight.surface,
-      bottomAppBarColor: mySchemeLight.surface,
       dialogBackgroundColor: mySchemeLight.surface,
       indicatorColor: useMaterial3
           ? mySchemeLight.onSurface
@@ -240,7 +235,30 @@ ThemeData themeTen(Brightness mode, bool useMaterial3) =>
       tabBarTheme: TabBarTheme(
           labelColor: useMaterial3
               ? mySchemeLight.onSurface
-              : mySchemeLight.onPrimary),
+              : mySchemeLight.onPrimary), checkboxTheme: CheckboxThemeData(
+ fillColor: MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
+ if (states.contains(MaterialState.disabled)) { return null; }
+ if (states.contains(MaterialState.selected)) { return useMaterial3 ? mySchemeLight.primary : mySchemeLight.secondary; }
+ return null;
+ }),
+ ), radioTheme: RadioThemeData(
+ fillColor: MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
+ if (states.contains(MaterialState.disabled)) { return null; }
+ if (states.contains(MaterialState.selected)) { return useMaterial3 ? mySchemeLight.primary : mySchemeLight.secondary; }
+ return null;
+ }),
+ ), switchTheme: SwitchThemeData(
+ thumbColor: MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
+ if (states.contains(MaterialState.disabled)) { return null; }
+ if (states.contains(MaterialState.selected)) { return useMaterial3 ? mySchemeLight.primary : mySchemeLight.secondary; }
+ return null;
+ }),
+ trackColor: MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
+ if (states.contains(MaterialState.disabled)) { return null; }
+ if (states.contains(MaterialState.selected)) { return useMaterial3 ? mySchemeLight.primary : mySchemeLight.secondary; }
+ return null;
+ }),
+ ), colorScheme: mySchemeLight.copyWith(background: mySchemeLight.background), bottomAppBarTheme: BottomAppBarTheme(color: mySchemeLight.surface),
     )
         : ThemeData(
       colorScheme: mySchemeDark,
