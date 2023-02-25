@@ -214,10 +214,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
       if (initialMessage.data['func'] == "req") {
         String idReq = initialMessage.data['fr'];
         if (context.mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-              AdminScreen.route,
-                  (route) =>
-              route.isCurrent && route.settings.name == AdminScreen.route ? false : true, arguments: idReq);
+          _navigateToRoute(AdminScreen.route, idReq);
         }
         return;
       }
@@ -227,14 +224,20 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
       if (message.data['func'] == "req") {
         String idReq = message.data['fr'];
         if (context.mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-              AdminScreen.route,
-                  (route) =>
-              route.isCurrent && route.settings.name == AdminScreen.route ? false : true, arguments: idReq);
+          _navigateToRoute(AdminScreen.route, idReq);
         }
         return;
       }
     });
+  }
+
+  Future<void> _navigateToRoute(String routeName, String idReq) async {
+    final currentRouteName = ModalRoute.of(context)?.settings.name;
+    if (currentRouteName == routeName) {
+      return;
+    }
+
+    await Navigator.of(context).pushNamed(routeName, arguments: idReq);
   }
 
   getPriceData() async {

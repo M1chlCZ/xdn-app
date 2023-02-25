@@ -39,6 +39,10 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -46,7 +50,7 @@ android {
 
     defaultConfig {
         applicationId "com.m1chl.xdn"
-        minSdkVersion 21
+        minSdkVersion 22
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -89,6 +93,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.biometric:biometric:1.2.0-alpha05'
-    implementation "androidx.window:window:1.1.0-alpha04"
-    implementation "androidx.window:window-java:1.1.0-alpha04"
+    implementation "androidx.window:window:1.1.0-alpha06"
+    implementation "androidx.window:window-java:1.1.0-alpha06"
 }

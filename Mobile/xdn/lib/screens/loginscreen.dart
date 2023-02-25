@@ -140,7 +140,6 @@ class _LoginState extends State<LoginPage> {
         }
         return;
       }
-
       if (res.statusCode == 200) {
         Map<String, dynamic> r = json.decode(res.body.toString());
         var username = r["username"];
@@ -215,10 +214,10 @@ class _LoginState extends State<LoginPage> {
         }
         return;
       }
-    } catch (e) {
+    } catch (e, stack) {
       Navigator.of(context).pop();
       Dialogs.openAlertBox(
-          context, AppLocalizations.of(context)!.error_occur, e.toString());
+          context, AppLocalizations.of(context)!.error_occur, "$e\n$stack");
       return;
     }
   }

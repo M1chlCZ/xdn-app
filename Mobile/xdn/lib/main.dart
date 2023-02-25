@@ -65,7 +65,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-
+  setupLocator();
+  try {
+    await GetIt.I.allReady();
+  } catch (e) {
+    debugPrint(e.toString());
+  }
   if (Platform.isAndroid) {
     await FlutterDisplayMode.setHighRefreshRate();
     var androidInfo = await DeviceInfoPlugin().androidInfo;
@@ -82,8 +87,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // await Firebase.initializeApp();
-  setupLocator();
+  final firebaseMessaging = GetIt.I.get<FCM>();
+  await firebaseMessaging.setNotifications();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await SystemChrome.setPreferredOrientations(
     [
@@ -91,8 +96,7 @@ void main() async {
       DeviceOrientation.portraitDown,
     ],
   );
-  await NotificationService().init();
-  FCM().setNotifications();
+
   runApp(
     Phoenix(
       child: const ProviderScope(child: MyApp()),

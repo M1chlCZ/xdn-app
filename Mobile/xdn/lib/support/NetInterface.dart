@@ -115,7 +115,8 @@ class NetInterface {
     }
   }
 
-  static Future<void> registerFirebaseToken(String token) async {
+  static Future<void> registerFirebaseToken(String? token) async {
+    if (token == null) return;
     ComInterface interface = ComInterface();
     try {
     await interface.post("/firebase",

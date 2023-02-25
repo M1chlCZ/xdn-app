@@ -79,7 +79,6 @@ class BarcodeScannerState extends State<BarcodeScanner> {
         child: Stack(
           children: [
             MobileScanner(
-                allowDuplicates: false,
                 controller: cameraController,
                 onDetect: (barcode, args) {
                   if (barcode.rawValue == null) {

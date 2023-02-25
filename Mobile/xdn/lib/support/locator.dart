@@ -1,14 +1,10 @@
-import 'dart:io';
-
 import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/bsc_connector.dart';
 import 'package:digitalnote/support/notification_helper.dart';
 import 'package:digitalnote/support/wallet_connector.dart';
 import 'package:digitalnote/support/wxdn_connector.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
-import 'package:http/io_client.dart';
 
 GetIt locator = GetIt.instance;
 
