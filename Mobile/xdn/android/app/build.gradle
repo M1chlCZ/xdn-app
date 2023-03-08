@@ -69,8 +69,9 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            minifyEnabled true
             shrinkResources true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         debug {
@@ -88,7 +89,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.google.android.material:material:1.8.0'
     implementation platform('com.google.firebase:firebase-bom') // Firebase platform
-    implementation 'com.google.firebase:firebase-messaging:23.1.1'
+    implementation 'com.google.firebase:firebase-messaging:23.1.2'
     implementation 'com.google.firebase:firebase-iid:21.1.0'
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'androidx.multidex:multidex:2.0.1'
@@ -96,4 +97,6 @@ dependencies {
     implementation "androidx.window:window:1.1.0-alpha06"
     implementation "androidx.window:window-java:1.1.0-alpha06"
     implementation 'androidx.work:work-runtime-ktx:2.8.0'
+    implementation 'androidx.appcompat:appcompat-resources:1.6.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 }

@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/providers/req_provider.dart';
+import 'package:digitalnote/providers/wallet_balance_provider.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/widgets/backgroundWidget.dart';
@@ -9,6 +11,7 @@ import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 class AdminScreen extends ConsumerStatefulWidget {
   static const String route = "home/admin";
@@ -95,6 +98,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     final reqProvider = ref.watch(requestProvider);
+    final bal = ref.watch(allBalanceProvider);
     return Stack(
       children: [
         const BackgroundWidget(
@@ -105,6 +109,38 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           body: SafeArea(
             child: Column(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
               const Header(header: "Withdraw Requests"),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: 80,
+                decoration: const BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                ),
+                child: bal.when(
+                    data: (data) {
+                      return Center(
+                          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        AutoSizeText(
+                          "Wallet: ${NumberFormat("#,###.##", "en_US").format(double.parse(data['wallet'].toString()))} XDN",
+                          style: const TextStyle(fontSize: 16.0),
+                          maxLines: 1,
+                          minFontSize: 8.0,
+                        ),
+                        AutoSizeText(
+                          "Stale wallet: ${NumberFormat("#,###.##", "en_US").format(double.parse(data['stakeWallet'].toString()))} XDN",
+                          style: const TextStyle(fontSize: 16.0),
+                          maxLines: 1,
+                          minFontSize: 8.0,
+                        ),
+                      ]));
+                    },
+                    error: (err, st) {
+                      var error = json.decode(err.toString());
+                      return Center(child: Text(error['errorMessage'], style: const TextStyle(fontSize: 14.0)));
+                    },
+                    loading: () => const Center(child: Text("Loading wallet data..."))),
+              ),
+              SizedBox(height: 15.0,),
               Flexible(
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),

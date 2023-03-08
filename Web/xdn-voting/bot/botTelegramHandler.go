@@ -332,6 +332,8 @@ func StartTelegramBot() {
 			}
 			if err == nil {
 				if strings.Contains(update.CallbackQuery.Data, "likeAnn") || strings.Contains(update.CallbackQuery.Data, "dislikeAnn") {
+					utils.ReportMessage(fmt.Sprintf("AnnCallBack: User %d, TelChannel: %d MessageID: %d",
+						update.CallbackQuery.From.ID, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID))
 					Running = true
 					dataSplit := strings.Split(update.CallbackQuery.Data, ":")
 					idPostage, _ := strconv.Atoi(dataSplit[1])
@@ -392,6 +394,8 @@ func StartTelegramBot() {
 
 				}
 				if strings.Contains(update.CallbackQuery.Data, "giftBot") {
+					utils.ReportMessage(fmt.Sprintf("GiftCallBack: User %d, TelChannel: %d MessageID: %d",
+						update.CallbackQuery.From.ID, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID))
 					idU := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_bot WHERE idSocial = ?", update.CallbackQuery.From.UserName)
 					if !idU.Valid {
 						utils.ReportMessage("User not found")
@@ -1259,7 +1263,7 @@ func AnnouncementTelegram() {
 		utils.WrapErrorLog(err.Error())
 	}
 	if lastPost.Id != 0 {
-		dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+		dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, lastPost.IdMessage)
 		_, err := bot.Send(dl)
 		if err != nil {
 			utils.WrapErrorLog("xxx Error deleting message: xxx" + err.Error() + fmt.Sprintf("id: %d", lastPost.IdMessage) + fmt.Sprintf("channel: %d", lastPost.IdChannel))
@@ -1358,10 +1362,14 @@ func AnnNFTTelegram() {
 		utils.WrapErrorLog(err.Error())
 	}
 	if lastPost.Id != 0 {
-		dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+		dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, lastPost.IdMessage)
 		_, err := bot.Send(dl)
 		if err != nil {
+			utils.ReportMessage(fmt.Sprintf("Error deleting message in MainChannel: DB(channelID: %d messageID: %d) Telegram(channelID: %s)", lastPost.IdChannel, int(lastPost.IdMessage), "Main Channel"))
+			utils.ReportMessage(fmt.Sprintf("BOT DELETE PROBLEMO %s", err.Error()))
 			utils.ReportMessage(err.Error())
+		} else {
+			utils.ReportMessage(fmt.Sprintf("Message deleted: DB(channelID: %d messageID: %d) Telegram(channelID: %s)", lastPost.IdChannel, lastPost.IdMessage, "Main Channel"))
 		}
 	}
 
@@ -1525,12 +1533,14 @@ func AnnOtherChannelTelegram() {
 			utils.WrapErrorLog(err.Error())
 		}
 		if lastPost.Id != 0 {
-			dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+			dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, lastPost.IdMessage)
 			_, err := bot.Send(dl)
 			if err != nil {
-				utils.ReportMessage(fmt.Sprintf("Error deleting message: channelID: %d messageID: %d", lastPost.IdChannel, int(lastPost.IdMessage)))
+				utils.ReportMessage(fmt.Sprintf("Error deleting message: DB(channelID: %d messageID: %d) Telegram(channelID: %d)", lastPost.IdChannel, int(lastPost.IdMessage), channel.IdChannel))
 				utils.ReportMessage(fmt.Sprintf("BOT DELETE PROBLEMO %s", err.Error()))
 				utils.ReportMessage(err.Error())
+			} else {
+				utils.ReportMessage(fmt.Sprintf("Message deleted: DB(channelID: %d messageID: %d) Telegram(channelID: %d)", lastPost.IdChannel, lastPost.IdMessage, channel.IdChannel))
 			}
 		}
 		postID := post.PostID

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/providers/bug_admin_provider.dart';
-import 'package:digitalnote/screens/donut_screen.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:digitalnote/widgets/BackgroundWidget.dart';
@@ -43,19 +42,29 @@ class _BugAdminScreenState extends ConsumerState<BugAdminScreen> {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   const Header(header: 'Bug Admin'),
-                  Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: FlatCustomButton(
-                      radius: 8.0,
-                     height: 30.0,
-                      width: 200.0,
-                     color: Colors.lime,
-                     onTap: () {
-                       Navigator.of(context).pushNamed(DonutScreen.route);
-                     },
-                      child: const Text('3D Donut', style: TextStyle(color: Colors.black87),),
-                    ),
-                  ),
+                  // Padding(
+                  //   padding: const EdgeInsets.all(2.0),
+                  //   child: FlatCustomButton(
+                  //     radius: 8.0,
+                  //    height: 30.0,
+                  //     width: 200.0,
+                  //    color: Colors.lime,
+                  //    onTap: () {
+                  //      Navigator.of(context).pushNamed(DonutScreen.route);
+                  //    },
+                  //     child: const Text('3D Donut', style: TextStyle(color: Colors.black87),),
+                  //   ),
+                  // ),
+                  // Padding(
+                  //   padding: const EdgeInsets.all(2.0),
+                  //   child: SliderWidget(
+                  //     height: 100.0,
+                  //     width: 200.0,
+                  //     onChanged: (progress, preciseProgress) {
+                  //       print("progress: $progress, preciseProgress: $preciseProgress");
+                  //     },
+                  //   ),
+                  // ),
                   Expanded(
                     child: bugs.when(
                       data: (data) {

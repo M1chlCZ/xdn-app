@@ -132,7 +132,9 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
         Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center, children: [
               const Text("New Withdrawal Request"),
               const SizedBox(height: 50),
               Padding(

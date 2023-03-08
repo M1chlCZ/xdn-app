@@ -24,7 +24,7 @@ class Utils {
     var date = DateTime.parse(d).toLocal();
     var newDate = DateTime(date.year, date.month, date.day,
         date.hour + offset, date.minute, date.second);
-    var format = DateFormat.yMMMMd(Platform.localeName).add_jm();
+    var format = DateFormat.yMMMMd().add_jm();
     return format.format(date);
   }
 
@@ -36,7 +36,7 @@ class Utils {
     var date = DateTime.parse(d).toLocal();
     var newDate = DateTime(date.year, date.month, date.day,
         date.hour + offset, date.minute, date.second);
-    var format = DateFormat.yMMMMd(Platform.localeName).add_jm();
+    var format = DateFormat.yMMMMd().add_jm();
     return newDate;
   }
 

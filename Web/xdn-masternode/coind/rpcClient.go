@@ -141,7 +141,7 @@ func (c *rpcClient) call(method string, params any) (rr rpcResponse, err error) 
 		return
 	}
 	if resp.StatusCode != 200 {
-		utils.ReportMessage("RPC response: %s", string(data))
+		utils.ReportMessage(fmt.Sprintf("RPC response: %s", string(data)))
 		utils.ReportMessage(fmt.Sprintf("RPC response: %d", resp.StatusCode))
 	}
 

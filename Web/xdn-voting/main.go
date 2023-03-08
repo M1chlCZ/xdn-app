@@ -119,6 +119,7 @@ func main() {
 	app.Get("api/v1/misc/bug/user", auth.Authorized(getBugList))
 	app.Get("api/v1/misc/bug/admin", auth.Authorized(getBugListAdmin))
 	app.Post("api/v1/misc/bug/process", auth.Authorized(processBug))
+	app.Get("api/v1/misc/admin/wallet", auth.Authorized(adminBalance))
 
 	app.Post("api/v1/twofactor", auth.Authorized(twofactor))
 	app.Post("api/v1/twofactor/activate", auth.Authorized(twofactorVerify))
@@ -256,6 +257,44 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+func adminBalance(c *fiber.Ctx) error {
+	userID := c.Get("User_id")
+	if userID == "" {
+		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
+	}
+	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
+	if adm == false {
+		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
+	}
+	walletDaemon := utils.DaemonWallet
+	walletStakeDaemon := utils.DaemonStakeWallet
+	stakeWallet, err := coind.WrapDaemon(walletStakeDaemon, 1, "getbalance")
+	if err != nil {
+		return utils.ReportError(c, "stake wallet"+err.Error(), http.StatusBadRequest)
+	}
+
+	wallet, err := coind.WrapDaemon(walletDaemon, 1, "getbalance")
+	if err != nil {
+		return utils.ReportError(c, "wallet"+err.Error(), http.StatusBadRequest)
+	}
+
+	walletBalance, err := strconv.ParseFloat(string(wallet), 32)
+	if err != nil {
+		walletBalance = 0.0
+	}
+	stakeWalletBalance, err := strconv.ParseFloat(string(stakeWallet), 32)
+	if err != nil {
+		stakeWalletBalance = 0.0
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:   false,
+		utils.STATUS:  utils.OK,
+		"wallet":      walletBalance,
+		"stakeWallet": stakeWalletBalance,
+	})
 }
 
 func getPermissions(c *fiber.Ctx) error {
@@ -1600,8 +1639,8 @@ func getGithubRelease(c *fiber.Ctx) error {
 	}
 	for _, asset := range result.Assets {
 		if strings.Contains(asset.Name, formValue) {
-			utils.ReportMessage(asset.BrowserDownloadURL)
-			utils.ReportMessage(asset.Name)
+			//utils.ReportMessage(asset.BrowserDownloadURL)
+			//utils.ReportMessage(asset.Name)
 			return c.Redirect(asset.BrowserDownloadURL, fiber.StatusSeeOther)
 		}
 	}
@@ -2767,10 +2806,11 @@ func loginQRAuthAPI(c *fiber.Ctx) error {
 }
 
 func loginQRAPI(c *fiber.Ctx) error {
+	ip := c.Get("CF-Connecting-IP")
 	tk := utils.GenerateSocialsToken(8)
 	token := fmt.Sprintf("%s-%s", tk, utils.GenerateSecureToken(8))
 
-	_, err := database.InsertSQl("INSERT INTO `qr_login` (`token`,`ip` ) VALUES (?, ?)", token, c.IP())
+	_, err := database.InsertSQl("INSERT INTO `qr_login` (`token`,`ip` ) VALUES (?, ?)", token, ip)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
 			utils.ERROR:  true,

@@ -75,7 +75,7 @@ void main() async {
     await FlutterDisplayMode.setHighRefreshRate();
     var androidInfo = await DeviceInfoPlugin().androidInfo;
     var sdkInt = androidInfo.version.sdkInt;
-    if (sdkInt < 26) {
+    if (sdkInt < 28) {
       ByteData data = await PlatformAssetBundle().load('assets/lets-encrypt-r3.pem');
       SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
     } else {

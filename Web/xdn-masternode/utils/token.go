@@ -3,8 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"log"
-	"os"
 	"time"
 )
 
@@ -15,22 +13,22 @@ type JWT struct {
 
 var JWTTOKEN JWT
 
-func NewJWT() {
-	pubKey, err := os.ReadFile(".cert/id_rsa.pub")
-	if err != nil {
-		WrapErrorLog("Error reading public key")
-		log.Fatalln(err)
-	}
-	prvKey, err := os.ReadFile(".cert/id_rsa")
-	if err != nil {
-		WrapErrorLog("Error reading private key")
-		log.Fatalln(err)
-	}
-	JWTTOKEN = JWT{
-		privateKey: prvKey,
-		publicKey:  pubKey,
-	}
-}
+//func NewJWT() {
+//	pubKey, err := os.ReadFile(".cert/id_rsa.pub")
+//	if err != nil {
+//		WrapErrorLog("Error reading public key")
+//		log.Fatalln(err)
+//	}
+//	prvKey, err := os.ReadFile(".cert/id_rsa")
+//	if err != nil {
+//		WrapErrorLog("Error reading private key")
+//		log.Fatalln(err)
+//	}
+//	JWTTOKEN = JWT{
+//		privateKey: prvKey,
+//		publicKey:  pubKey,
+//	}
+//}
 
 func CreateKeyToken(userid uint64) (string, error) {
 	key, err := jwt.ParseRSAPrivateKeyFromPEM(JWTTOKEN.privateKey)

@@ -84,7 +84,6 @@ class _SendWidgetState extends State<SendWidget> {
                           Expanded(
                             child: AutoSizeTextField(
                               controller: _controllerAddress,
-                              keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
                               maxLines: 1,
                               minFontSize: 10,
                               stepGranularity: 0.1,
@@ -118,7 +117,6 @@ class _SendWidgetState extends State<SendWidget> {
                             child: AutoSizeTextField(
                               key: _textFieldAmountKey,
                               controller: _controllerAmount,
-                              keyboardType: Platform.isIOS ? const TextInputType.numberWithOptions(signed: true) : TextInputType.number,
                               maxLength: 40,
                               maxLines: 1,
                               minFontSize: 10,

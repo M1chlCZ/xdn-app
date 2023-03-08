@@ -1,8 +1,6 @@
-import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -17,7 +15,7 @@ class TransactionView extends StatelessWidget {
   String _getMeDate(String? d) {
     if (d == null) return "";
     var date = DateTime.parse(d);
-    var format = DateFormat.yMd(Platform.localeName).add_jm();
+    var format = DateFormat.yMd().add_jm();
     return Utils.convertDate(d);
     // return format.format(date);
   }

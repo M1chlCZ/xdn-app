@@ -170,17 +170,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  "assets/images/logo.png",
-                  color: Colors.white.withOpacity(0.85),
-                  width: 400,
-                  height: 120,
-                ),
-                Text(
-                  "Non-custodial MN service console".hardcoded,
-                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white.withOpacity(0.85)),
-                ),
-                /**/
                 ResponsiveScrollableCard(
                   child: FocusScope(
                     node: _node,
