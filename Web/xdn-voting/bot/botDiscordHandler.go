@@ -571,6 +571,9 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 	case "smartnode":
 		tierNum = 1
 		numAddr = 50
+	case "solo":
+		tierNum = 1
+		numAddr = 0
 	default:
 		return "", errors.New("Invalid tier")
 	}
@@ -1773,7 +1776,7 @@ func giftBotHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		url := fmt.Sprintf("https://dex.digitalnote.org/api/api/v1/file?file=%s", wonPic)
 
-		_, err := s.ChannelMessageSendEmbeds(i.ChannelID, []*discordgo.MessageEmbed{WinEmbed(fmt.Sprintf("%s", i.Member.User.ID), fmt.Sprintf("%d", winningAmount), i.Member.User.AvatarURL("128"), i.Member.User.Username, url)})
+		_, err := s.ChannelMessageSendEmbeds(i.ChannelID, []*discordgo.MessageEmbed{WinEmbed(fmt.Sprintf("%s", i.Member.User.ID), fmt.Sprintf("%f", winningAmount), i.Member.User.AvatarURL("128"), i.Member.User.Username, url)})
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
 			Running = false

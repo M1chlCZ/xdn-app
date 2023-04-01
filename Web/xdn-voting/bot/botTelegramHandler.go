@@ -774,6 +774,9 @@ func grant(username string, from *tgbotapi.Message) (string, error) {
 	case "smartnode":
 		tierNum = 1
 		numAddr = 50
+	case "solo":
+		tierNum = 1
+		numAddr = 0
 	default:
 		return "", errors.New("Invalid tier")
 	}

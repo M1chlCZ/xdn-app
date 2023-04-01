@@ -13,10 +13,6 @@ import (
 	"xdn-voting/utils"
 )
 
-func init() {
-
-}
-
 var mu sync.Mutex
 
 func SendCoins(addressReceive string, addressSend string, amount float64, stakeWallet bool) (string, error) {

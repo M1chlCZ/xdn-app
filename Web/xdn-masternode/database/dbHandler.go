@@ -283,6 +283,24 @@ func (db *DBClient) getDAEMONFolder(Folder string) (*models.Daemon, error) {
 	return &dm, nil
 }
 
+func (db *DBClient) getLastCoinDaemons(coinID int) (*models.Daemon, error) {
+	insertStudentSQL := `SELECT * FROM DAEMON_TABLE WHERE coin_id = ? AND node_id = (SELECT MAX(node_id) FROM DAEMON_TABLE WHERE coin_id = ?)`
+	rows, _ := db.client.Query(insertStudentSQL, coinID, coinID)
+
+	var dm models.Daemon
+	for rows.Next() {
+		err := rows.Scan(&dm.ID, &dm.WalletUser, &dm.WalletPass, &dm.WalletPort, &dm.Folder, &dm.NodeID, &dm.CoinID, &dm.Conf, &dm.MnPort, &dm.IP, &dm.PassPhrase)
+		if err != nil {
+			utils.WrapErrorLog(fmt.Sprintf("err: %v\n", err))
+			return &dm, err
+			//log.Fatalln(err.Error())
+		}
+	}
+
+	_ = rows.Close()
+	return &dm, nil
+}
+
 func (db *DBClient) getDAEMONStaking(NodeID int) (*models.Daemon, error) {
 	insertStudentSQL := `SELECT * FROM STAKING_DAEMON_TABLE WHERE coin_id = ?`
 	rows, _ := db.client.Query(insertStudentSQL, NodeID)
@@ -567,6 +585,23 @@ func RemoveDaemon(NodeID int) (sql.Result, error) {
 	if errdb != nil {
 		fmt.Println(errdb.Error())
 		return res, errdb
+	}
+	return res, nil
+	//clientDb.SetupTables()
+}
+
+func GetLastDaemon(coinID int) (*models.Daemon, error) {
+	clientDb, err := InitDB()
+	if err != nil {
+		fmt.Println(err)
+		fmt.Printf("Error creating DB")
+
+	}
+
+	res, errdb := clientDb.getLastCoinDaemons(coinID)
+	if errdb != nil {
+		fmt.Println(errdb.Error())
+		return &models.Daemon{}, errdb
 	}
 	return res, nil
 	//clientDb.SetupTables()

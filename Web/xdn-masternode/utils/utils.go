@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	firebase2 "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
 	"fmt"
@@ -23,6 +24,7 @@ import (
 	mathRand "math/rand"
 	"net/http"
 	"os"
+	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
@@ -129,6 +131,11 @@ func CreateToken(userId uint64) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+func ReturnError(err string) error {
+	go logToFile(fmt.Sprintf("[ERROR] %s ", err))
+	return errors.New(err)
 }
 
 func GenerateSecureToken(length int) string {
@@ -435,4 +442,31 @@ func RandNum(elements int) int {
 	r := mathRand.New(mathRand.NewSource(int64(new(maphash.Hash).Sum64())))
 	r = mathRand.New(mathRand.NewSource(int64(new(maphash.Hash).Sum64())))
 	return r.Intn(elements)
+}
+
+func GetUrl() (string, error) {
+	nodeF, err := exec.Command("bash", "-c", "ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\\.){3}[0-9]*).*/\\2/p'").Output()
+	if err != nil {
+		return "", err
+	}
+	node := strings.TrimSpace(string(nodeF))
+	return node, nil
+}
+
+func RemoveElement(slice []string, element string) []string {
+	// Find the index of the element
+	index := -1
+	for i, value := range slice {
+		if value == element {
+			index = i
+			break
+		}
+	}
+
+	// Remove the element
+	if index != -1 {
+		slice = append(slice[:index], slice[index+1:]...)
+	}
+
+	return slice
 }

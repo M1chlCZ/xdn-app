@@ -10,6 +10,7 @@ import (
 	"xdn-masternode/database"
 	"xdn-masternode/fn"
 	"xdn-masternode/grpcModels"
+	"xdn-masternode/models"
 	"xdn-masternode/utils"
 )
 
@@ -115,4 +116,22 @@ func (s *Server) MasternodeStatus(_ context.Context, wdmn *grpcModels.Masternode
 	//go fn.MasternodeStatus(int(wdmn.NodeID))
 	//return &grpcModels.MasternodeStatusResponse{Code: 200}, nil
 	return &grpcModels.MasternodeStatusResponse{Code: 200, Status: 100}, nil
+}
+
+func (s *Server) AddMasternode(_ context.Context, in *grpcModels.AddMasternodeRequest) (*grpcModels.AddMasternodeResponse, error) {
+	err := fn.AddMN(models.AddMNConfig{
+		CoinFolder:       in.CoinFolder,
+		PortPrefix:       int(in.PortPrefix),
+		MasternodePort:   int(in.MasternodePort),
+		BlockchainFolder: in.BlockchainFolder,
+		ConfigFile:       in.ConfigName,
+		DaemonName:       in.DaemonName,
+		CliName:          in.CliName,
+		CoinID:           int(in.CoinID),
+	})
+	if err != nil {
+		utils.WrapErrorLog(err.Error())
+		return &grpcModels.AddMasternodeResponse{Code: 400, Message: err.Error()}, nil
+	}
+	return &grpcModels.AddMasternodeResponse{Code: 200, Message: "OK"}, nil
 }

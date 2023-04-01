@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -326,6 +328,36 @@ func RetryServerPayload(attempts int, sleep time.Duration, serverURL string, end
 	} else {
 		return nil, err
 	}
+}
+
+func IPv6Equal(ip1, ip2 string) bool {
+	// Parse IP addresses and CIDR notation
+	cidrNum := 0
+	if strings.Contains(ip1, "/") {
+		cidrNum, _ = strconv.Atoi(strings.Split(ip1, "/")[1])
+	}
+
+	if strings.Contains(ip2, "/") {
+		cidrNum, _ = strconv.Atoi(strings.Split(ip2, "/")[1])
+	}
+	addr1, net1, err1 := net.ParseCIDR(ip1)
+	if err1 != nil {
+		addr1 = net.ParseIP(ip1)
+		net1 = &net.IPNet{IP: addr1, Mask: net.CIDRMask(cidrNum, 128)}
+	}
+
+	addr2, net2, err2 := net.ParseCIDR(ip2)
+	if err2 != nil {
+		addr2 = net.ParseIP(ip2)
+		net2 = &net.IPNet{IP: addr2, Mask: net.CIDRMask(cidrNum, 128)}
+	}
+
+	if addr1 == nil || addr2 == nil {
+		return false
+	}
+
+	// Check if addresses are in the same subnet
+	return net1.Contains(addr2) && net2.Contains(addr1)
 }
 
 //fn DecryptRequest(r *http.Request, url string) ([]byte, string, error) {

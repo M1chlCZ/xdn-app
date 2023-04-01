@@ -1762,7 +1762,7 @@ class Dialogs {
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
                                 minFontSize: 8.0,
-                                style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22.0, color: Colors.black87),
+                                style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 16.0, color: Colors.black87),
                               ),
                             ),
                           ),
@@ -1771,7 +1771,7 @@ class Dialogs {
                             child: Text(
                           '(${AppLocalizations.of(context)!.dl_share})',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 14.0, color: Colors.black54),
+                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 12.0, color: Colors.black54),
                         )),
                         const SizedBox(
                           height: 5.0,

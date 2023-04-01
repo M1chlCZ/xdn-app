@@ -49,6 +49,7 @@ service RegisterMasternodeService {
   rpc RestartMasternode (RestartMasternodeRequest) returns (RestartMasternodeResponse) {}
   rpc MasternodeStatus (MasternodeStatusRequest) returns (MasternodeStatusResponse) {}
   rpc MasternodeError (MasternodeErrorRequest) returns (MasternodeErrorResponse) {}
+  rpc AddMasternode (AddMasternodeRequest) returns (AddMasternodeResponse) {}
 }
 
 message RegisterMasternodeRequest {
@@ -203,4 +204,20 @@ message MasternodeErrorRequest {
 
 message MasternodeErrorResponse {
   uint32 code = 1;
+}
+
+message AddMasternodeRequest{
+  string coinFolder = 1;
+  uint32 masternodePort = 2;
+  string blockchainFolder = 3;
+  string configName = 4;
+  string daemonName = 5;
+  string cliName = 6;
+  uint32 coinID = 7;
+  uint32 portPrefix = 8;
+}
+
+message AddMasternodeResponse{
+  uint32 code = 1;
+  string message = 2;
 }

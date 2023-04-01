@@ -26,7 +26,7 @@ func ANNMNBot() {
 	bot.AnnouncementMNDiscord()
 }
 
-func ANNMNOtherChanne() {
+func ANNMNOtherChannel() {
 	bot.AnnMNOtherChannelTelegram()
 	bot.AnnouncementMNOtherDiscord()
 }

@@ -145,6 +145,7 @@ func main() {
 	app.Post("api/v1/masternode/non/restart", auth.Authorized(restartNonMN))
 	app.Post("api/v1/masternode/non/tx", auth.Authorized(txNonMn))
 	app.Post("api/v1/masternode/non/config", auth.Authorized(nonMNConfig))
+	app.Post("api/v1/masternode/add", auth.Authorized(addMasternodeAPI))
 
 	app.Get("api/v1/price/data", auth.Authorized(getPriceData))
 
@@ -257,6 +258,145 @@ func main() {
 	_ = app.Shutdown()
 	os.Exit(0)
 
+}
+
+//func removeMasternodeAPI(c *fiber.Ctx) error {
+//	type Request struct {
+//		NodeID int64 `json:"nodeID"`
+//		Force  bool  `json:"force"`
+//	}
+//	var req Request
+//	err := c.BodyParser(&req)
+//	if err != nil {
+//		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+//	}
+//	if req.NodeID == 0 {
+//		return utils.ReportError(c, "Node id is missing", fiber.StatusBadRequest)
+//	}
+//
+//	nodeIP, errCrypt := database.ReadValue[string]("SELECT node_ip FROM mn_clients WHERE id = ?", req.NodeID)
+//	if errCrypt != nil {
+//		utils.ReportMessage("1.0")
+//		return utils.ReportError(c, errCrypt.Error(), http.StatusInternalServerError)
+//	}
+//
+//	folder, errCrypt := database.ReadValue[string]("SELECT folder FROM mn_clients WHERE id = ?", req.NodeID)
+//	if errCrypt != nil {
+//		utils.ReportMessage("1.1")
+//		return utils.ReportError(c, errCrypt.Error(), http.StatusInternalServerError)
+//	}
+//
+//	check, err := database.ReadValue[bool]("SELECT active FROM mn_clients WHERE id = ?", req.NodeID)
+//	if err != nil {
+//		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+//	}
+//
+//	if check {
+//		if req.Force {
+//			userID, errUser := database.ReadValue[int64]("SELECT idUser FROM user_mn WHERE idNode = ?", req.NodeID)
+//			if errUser != nil {
+//				utils.ReportMessage("2")
+//				return utils.ReportError(c, errUser.Error(), http.StatusInternalServerError)
+//				//return nil, "", errUser
+//			}
+//
+//			addr, errCrypt := database.ReadValue[string]("SELECT addr FROM users WHERE id = ?", userID)
+//			if errCrypt != nil {
+//				utils.ReportMessage("3")
+//				return utils.ReportError(c, errCrypt.Error(), http.StatusInternalServerError)
+//				//return nil, "", errCrypt
+//			}
+//			_, err = database.InsertSQl("INSERT INTO masternode_tombstone (id) VALUES (?)", req.NodeID)
+//			if err != nil {
+//				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+//			}
+//
+//			tx := &grpcModels.WithdrawMasternodeRequest{
+//				NodeID:  uint32(req.NodeID),
+//				Address: addr,
+//				Amount:  1.0,
+//				Type:    1,
+//			}
+//
+//			mn, err := grpcClient.WithdrawMasternode(tx, nodeIP)
+//			if err != nil {
+//				return utils.ReportError(c, err.Error(), http.StatusInternalServerError)
+//			}
+//			if mn.Code != 200 {
+//				return utils.ReportError(c, "Withdraw unsuccessful", http.StatusInternalServerError)
+//			}
+//
+//			utils.ReportMessage(fmt.Sprintf(" |=> Forced withdrawal of MN id: %d by UserID: %d <=| ", req.NodeID, userID))
+//			return nil
+//		} else {
+//			return utils.ReportError(c, "Masternode is active", fiber.StatusBadRequest)
+//		}
+//	} else {
+//		m, err := grpcClient.PurgeMasternode(&grpcModels.PurgeMasternodeRequest{Folder: folder}, nodeIP)
+//		if err != nil {
+//			if m != nil {
+//				return utils.ReportError(c, m.Message, fiber.StatusConflict)
+//			} else {
+//				return utils.ReportError(c, err.Error(), fiber.StatusConflict)
+//			}
+//		}
+//	}
+//
+//	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+//		utils.ERROR:  false,
+//		utils.STATUS: utils.OK,
+//	})
+//}
+
+func addMasternodeAPI(c *fiber.Ctx) error {
+	type Request struct {
+		NodeIP string `json:"nodeIP"`
+		CoinID int64  `json:"coinID"`
+	}
+	var req Request
+	err := c.BodyParser(&req)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
+	}
+	if req.NodeIP == "" {
+		return utils.ReportError(c, "Node IP is empty", fiber.StatusBadRequest)
+	}
+	if req.CoinID == 0 {
+		return utils.ReportError(c, "Coin ID is empty", fiber.StatusBadRequest)
+	}
+	go func() {
+		coinTempate, err := database.ReadStruct[models.MasternodeTemplate]("SELECT * FROM mn_template WHERE coinID = ?", req.CoinID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return
+		}
+
+		m, err := grpc.AddMasternode(&grpcModels.AddMasternodeRequest{
+			CoinFolder:       coinTempate.CoinFolder,
+			MasternodePort:   uint32(coinTempate.MasternodePort),
+			BlockchainFolder: coinTempate.BlockchainFolder,
+			ConfigName:       coinTempate.ConfigFile,
+			DaemonName:       coinTempate.DaemonPath,
+			CliName:          coinTempate.CliPath,
+			CoinID:           uint32(coinTempate.CoinID),
+			PortPrefix:       uint32(coinTempate.PortPrefix),
+		}, req.NodeIP)
+
+		if err != nil {
+			if m != nil {
+				utils.WrapErrorLog(m.Message)
+				return
+			} else {
+				utils.WrapErrorLog(err.Error())
+				return
+			}
+		}
+
+	}()
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		utils.ERROR:  false,
+		utils.STATUS: utils.OK,
+	})
 }
 
 func adminBalance(c *fiber.Ctx) error {
@@ -646,7 +786,7 @@ FROM with_req as a
 LEFT JOIN users as b ON a.idUser = b.id
 LEFT JOIN with_req_voting as c ON a.id = c.idReq
 LEFT JOIN (SELECT idReq, SUM(upvote) as upvote, SUM(downvote) as downvote FROM with_req_votes GROUP BY upvote, downvote, idReq) AS d on d.idReq = a.id
-WHERE a.idUserAuth IS NULL AND a.id = ?
+WHERE a.processed = 0 AND a.id = ?
 ORDER BY a.datePosted`, userID, req.ID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
@@ -663,7 +803,7 @@ func allowRequest(c *fiber.Ctx) error {
 	if userID == "" {
 		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
 	}
-
+	split := 2000000.0 // in case need to split transaction
 	var req struct {
 		ID int `json:"id"`
 	}
@@ -690,26 +830,55 @@ func allowRequest(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
+	txId := ""
+
+	if request.Amount > split {
+		splitArr := make([]float64, 0)
+		amount := request.Amount
+		for {
+			splitAmount := amount - split
+			if splitAmount > split {
+				splitArr = append(splitArr, split)
+				amount = splitAmount
+			} else {
+				splitArr = append(splitArr, splitAmount)
+				break
+			}
+		}
+		for _, amnt := range splitArr {
+			tx, err := coind.SendCoins(userAddr, server, amnt, true)
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusConflict)
+			}
+			txId = tx
+			_, err = database.InsertSQl("UPDATE with_req SET amount = amount - ? WHERE id = ?", amnt, request.Id)
+			if err != nil {
+				return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+			}
+		}
+	} else {
+		tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusConflict)
+		}
+		txId = tx
+	}
 	_, err = database.InsertSQl("UPDATE with_req SET idUserAuth = ? WHERE id = ?", userID, request.Id)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
-	}
-	tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusConflict)
 	}
 	_, err = database.InsertSQl("UPDATE with_req SET processed = 1, auth = 1 WHERE id = ?", request.Id)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	_, err = database.InsertSQl("UPDATE with_req SET idTx = ? WHERE id = ?", tx, request.Id)
+	_, err = database.InsertSQl("UPDATE with_req SET idTx = ? WHERE id = ?", txId, request.Id)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	if request.WithdrawType == 0 {
-		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", tx, "receive")
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", txId, "receive")
 	} else if request.WithdrawType == 1 {
-		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode withdrawal", tx, "receive")
+		_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode withdrawal", txId, "receive")
 	} else {
 		//_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Masternode withdrawal", tx, "receive")
 	}
@@ -798,7 +967,7 @@ func withDrawRequest(c *fiber.Ctx) error {
 LEFT JOIN users as b ON a.idUser = b.id
 LEFT JOIN with_req_voting as c ON a.id = c.idReq
 LEFT JOIN (SELECT idReq, SUM(upvote) as upvote, SUM(downvote) as downvote FROM with_req_votes GROUP BY upvote, downvote, idReq) AS d on d.idReq = a.id
-WHERE a.idUserAuth IS NULL AND a.amount > 0.01
+WHERE a.processed = 0 AND a.amount > 0.01
 ORDER BY a.datePosted`, userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusConflict)

@@ -40,7 +40,6 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 	var client *Coind
 	var errClient error
 	tries := 0
-	//utils.ReportMessage(fmt.Sprintf("Calling %s %s", daemon.Folder, command))
 	for {
 		if tries != 0 {
 			utils.ReportMessage(fmt.Sprintf("Try %d of %d. CMD: %s Daemon: %s", tries, triesMax, command, daemon.Folder))
@@ -59,7 +58,6 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 				continue
 			}
 		}
-		//utils.ReportMessage(fmt.Sprintf("Calling %s %s %s", daemon.Folder, command, params))
 		p, er := client.Call(command, params)
 
 		if er != nil {
@@ -70,17 +68,14 @@ func callDaemon(c chan []byte, e chan error, wg *sync.WaitGroup, daemon *models.
 		if string(p) != "null" {
 			if len(p) != 0 {
 				if command == "getmasternodeoutputs" && string(p) == ("[]") {
-					//utils.ReportMessage("empty array")
 					time.Sleep(15 * time.Second)
 					continue
 				}
-				//utils.ReportMessage("success")
 				c <- p
 				return
 			}
 		} else {
 			if command == "walletpassphrase" || command == "walletlock" || command == "importkey" {
-				//utils.ReportMessage("success")
 				c <- []byte("ok")
 				return
 			}

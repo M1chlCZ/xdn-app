@@ -72,10 +72,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onTap: () async {
                           context.goNamed(AppRoute.admin.name);
                         },
-                        child: Padding(
-                          padding: const EdgeInsets.all(5.0),
+                        child: const Padding(
+                          padding: EdgeInsets.all(5.0),
                           child: Row(
-                            children: const [
+                            children: [
                               Icon(Icons.admin_panel_settings, color: Colors.white70),
                               SizedBox(width: 5),
                               Text("Admin Panel", style: TextStyle(color: Colors.white70)),
@@ -99,13 +99,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                             Padding(
-                              padding: const EdgeInsets.fromLTRB(Sizes.p20, Sizes.p20, Sizes.p24, 0),
+                             const Padding(
+                              padding: EdgeInsets.fromLTRB(Sizes.p20, Sizes.p20, Sizes.p24, 0),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
-                                    children: const [
+                                    children: [
                                       Text("ID"),
                                       gapW32,
                                       Text("IP"),
@@ -116,7 +116,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ],
                                   ),
                                   Row(
-                                    children: const [
+                                    children: [
                                       Text("Active Time"),
                                       gapW128,
                                       Text("Last Seen"),
