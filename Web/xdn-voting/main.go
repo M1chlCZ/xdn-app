@@ -1122,7 +1122,15 @@ func startNonMN(c *fiber.Ctx) error {
 
 	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
 	tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
-	count := database.ReadValueEmpty[int64]("SELECT COUNT(id) FROM users_mn WHERE idUser = ? AND (active = 1 OR dateStart between NOW() - INTERVAL 10 HOUR AND NOW())", userID)
+	count := database.ReadValueEmpty[int64](`SELECT SUM(t1.count) as count FROM (SELECT COUNT(id) as count
+                        FROM users_mn
+                        WHERE idUser = 117
+                          AND active = 1
+                        UNION ALL
+                        SELECT COUNT(id) as count
+                        FROM mn_incoming_tx
+                        WHERE idUser = 117
+                          AND processed = 0) as t1`, userID)
 	utils.ReportMessage(fmt.Sprintf("User %s has %d MNs with tier %d (admin: %d)", userID, count, tier, admin))
 
 	nodesCount := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(id),0) FROM mn_clients WHERE locked = 0 AND active = 0")
@@ -1630,7 +1638,15 @@ func startMN(c *fiber.Ctx) error {
 
 	admin := database.ReadValueEmpty[int64]("SELECT admin FROM users WHERE id = ?", userID)
 	tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
-	count := database.ReadValueEmpty[int64]("SELECT COUNT(id) FROM users_mn WHERE idUser = ? AND (active = 1 OR dateStart between NOW() - INTERVAL 10 HOUR AND NOW())", userID)
+	count := database.ReadValueEmpty[int64](`SELECT SUM(t1.count) as count FROM (SELECT COUNT(id) as count
+                        FROM users_mn
+                        WHERE idUser = 117
+                          AND active = 1
+                        UNION ALL
+                        SELECT COUNT(id) as count
+                        FROM mn_incoming_tx
+                        WHERE idUser = 117
+                          AND processed = 0) as t1`, userID)
 	utils.ReportMessage(fmt.Sprintf("User %s has %d MNs with tier %d (admin: %d)", userID, count, tier, admin))
 
 	if admin == 0 && tier <= count {
