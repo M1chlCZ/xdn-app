@@ -545,7 +545,7 @@ func grantDiscord(from *discordgo.MessageCreate) (string, error) {
 		return "", errors.New("You can specify only one tier")
 	}
 	tierName := strings.TrimSpace(tier[0])
-	if tierName != "bronze" && tierName != "silver" && tierName != "gold" && tierName != "smartnode" {
+	if tierName != "bronze" && tierName != "silver" && tierName != "gold" && tierName != "smartnode" && tierName != "solo" {
 		return "", errors.New("Invalid tier name")
 	}
 

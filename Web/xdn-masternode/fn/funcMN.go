@@ -253,7 +253,6 @@ func StartRemoteMasternode(nodeID int, mnKey string) {
 
 	//XDN
 	res, errMNstart := coind.WrapDaemon(*daemon, 125, "masternode", "start")
-	utils.ReportMessage(fmt.Sprintf("%s", res))
 	if errMNstart != nil {
 		_, errMNstart = grpcClient.MasternodeError(&grpcModels.MasternodeErrorRequest{NodeID: uint32(nodeID), Error: errMNstart.Error()})
 		utils.WrapErrorLog(errMNstart.Error())

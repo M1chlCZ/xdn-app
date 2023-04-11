@@ -803,7 +803,7 @@ func allowRequest(c *fiber.Ctx) error {
 	if userID == "" {
 		return utils.ReportError(c, "Unauthorized", http.StatusBadRequest)
 	}
-	split := 2000000.0 // in case need to split transaction
+	//split := 2000000.0 // in case need to split transaction
 	var req struct {
 		ID int `json:"id"`
 	}
@@ -831,7 +831,12 @@ func allowRequest(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	txId := ""
-
+	//tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
+	//if err != nil {
+	//	return utils.ReportError(c, err.Error(), http.StatusConflict)
+	//}
+	//txId = tx
+	split := 2000000.0
 	if request.Amount > split {
 		splitArr := make([]float64, 0)
 		amount := request.Amount
@@ -1124,13 +1129,13 @@ func startNonMN(c *fiber.Ctx) error {
 	tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
 	count := database.ReadValueEmpty[int64](`SELECT SUM(t1.count) as count FROM (SELECT COUNT(id) as count
                         FROM users_mn
-                        WHERE idUser = 117
+                        WHERE idUser = ?
                           AND active = 1
                         UNION ALL
                         SELECT COUNT(id) as count
                         FROM mn_incoming_tx
-                        WHERE idUser = 117
-                          AND processed = 0) as t1`, userID)
+                        WHERE idUser = ?
+                          AND processed = 0) as t1`, userID, userID)
 	utils.ReportMessage(fmt.Sprintf("User %s has %d MNs with tier %d (admin: %d)", userID, count, tier, admin))
 
 	nodesCount := database.ReadValueEmpty[int64]("SELECT IFNULL(COUNT(id),0) FROM mn_clients WHERE locked = 0 AND active = 0")
@@ -1640,13 +1645,13 @@ func startMN(c *fiber.Ctx) error {
 	tier := database.ReadValueEmpty[int64]("SELECT mn FROM users_permission WHERE idUser = ?", userID)
 	count := database.ReadValueEmpty[int64](`SELECT SUM(t1.count) as count FROM (SELECT COUNT(id) as count
                         FROM users_mn
-                        WHERE idUser = 117
+                        WHERE idUser = ?
                           AND active = 1
                         UNION ALL
                         SELECT COUNT(id) as count
                         FROM mn_incoming_tx
-                        WHERE idUser = 117
-                          AND processed = 0) as t1`, userID)
+                        WHERE idUser = ?
+                          AND processed = 0) as t1`, userID, userID)
 	utils.ReportMessage(fmt.Sprintf("User %s has %d MNs with tier %d (admin: %d)", userID, count, tier, admin))
 
 	if admin == 0 && tier <= count {
