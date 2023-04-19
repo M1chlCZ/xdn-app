@@ -10,6 +10,7 @@ type WithReq struct {
 	IdUser       int            `db:"idUser" json:"idUser"`
 	Username     string         `db:"username" json:"username"`
 	Amount       float64        `db:"amount" json:"amount"`
+	SentAmount   float64        `db:"sentAmount" json:"sentAmount"`
 	Address      string         `db:"address" json:"address"`
 	Auth         int            `db:"auth" json:"auth"`
 	Send         int            `db:"send" json:"send"`
@@ -39,6 +40,7 @@ type WithReqVote struct {
 	Upvote       sql.NullInt64  `db:"upvote" json:"upvotes"`
 	Downvote     sql.NullInt64  `db:"downvote" json:"downvotes"`
 	CurrentUser  bool           `db:"currentUser" json:"currentUser"`
+	SentAmount   float64        `db:"sentAmount" json:"sentAmount"`
 }
 
 func (w *WithReqVote) MarshalJSON() ([]byte, error) {

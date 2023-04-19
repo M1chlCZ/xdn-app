@@ -53,6 +53,7 @@ func main() {
 	utils.NewJWT()
 	web3.New()
 	daemons.InitCron()
+	//daemons.InitQueue()
 
 	//debug time
 	debugTime = false
@@ -213,6 +214,7 @@ func main() {
 	})
 	go daemons.DaemonStatus()
 	go daemons.MNStatistic()
+	//go daemons.SendRestDaemon()
 	utils.ScheduleFunc(daemons.SaveTokenTX, time.Minute*10)
 	utils.ScheduleFunc(daemons.DaemonStatus, time.Minute*10)
 	utils.ScheduleFunc(daemons.PriceData, time.Minute*5)
@@ -831,42 +833,55 @@ func allowRequest(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	txId := ""
-	//tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
-	//if err != nil {
-	//	return utils.ReportError(c, err.Error(), http.StatusConflict)
+	tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
+	if err != nil {
+		return utils.ReportError(c, err.Error(), http.StatusConflict)
+	}
+	txId = tx
+	//split := 2000000.0
+	//if request.Amount > split {
+	//	splitArr := make([]float64, 0)
+	//	amount := request.Amount
+	//	tries := 0
+	//	for {
+	//		splitAmount := amount - split
+	//		if splitAmount > split {
+	//			splitArr = append(splitArr, split)
+	//			amount = splitAmount
+	//		} else {
+	//			splitArr = append(splitArr, splitAmount)
+	//			break
+	//		}
+	//	}
+	//	for _, amnt := range splitArr {
+	//		if tries > 5 {
+	//			value := database.ReadValueEmpty[float64]("SELECT amount - sentAmount FROM with_req WHERE id = ?", request.Id)
+	//			//daemons.FailedRequest(userAddr, value)
+	//			return utils.ReportError(c, "Error sending coins to user", http.StatusConflict)
+	//		}
+	//		tx, err := coind.SendCoins(userAddr, server, amnt, true)
+	//		if err != nil {
+	//			time.Sleep(10 * time.Second)
+	//			utils.ReportMessage("Error sending coins to user, waiting")
+	//			tries++
+	//			continue
+	//		}
+	//		txId = tx
+	//		_, errDB := database.InsertSQl("UPDATE with_req SET sentAmount = sentAmount + ? WHERE id = ?", amnt, request.Id)
+	//		if errDB != nil {
+	//			return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+	//		}
+	//	}
+	//} else {
+	//	tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
+	//	if err != nil {
+	//		return utils.ReportError(c, err.Error(), http.StatusConflict)
+	//	}
+	//	txId = tx
 	//}
-	//txId = tx
-	split := 2000000.0
-	if request.Amount > split {
-		splitArr := make([]float64, 0)
-		amount := request.Amount
-		for {
-			splitAmount := amount - split
-			if splitAmount > split {
-				splitArr = append(splitArr, split)
-				amount = splitAmount
-			} else {
-				splitArr = append(splitArr, splitAmount)
-				break
-			}
-		}
-		for _, amnt := range splitArr {
-			tx, err := coind.SendCoins(userAddr, server, amnt, true)
-			if err != nil {
-				return utils.ReportError(c, err.Error(), http.StatusConflict)
-			}
-			txId = tx
-			_, err = database.InsertSQl("UPDATE with_req SET amount = amount - ? WHERE id = ?", amnt, request.Id)
-			if err != nil {
-				return utils.ReportError(c, err.Error(), http.StatusBadRequest)
-			}
-		}
-	} else {
-		tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
-		if err != nil {
-			return utils.ReportError(c, err.Error(), http.StatusConflict)
-		}
-		txId = tx
+	_, errDB := database.InsertSQl("UPDATE with_req SET sentAmount = sentAmount + ? WHERE id = ?", request.Amount, request.Id)
+	if errDB != nil {
+		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	_, err = database.InsertSQl("UPDATE with_req SET idUserAuth = ? WHERE id = ?", userID, request.Id)
 	if err != nil {

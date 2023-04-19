@@ -1534,8 +1534,18 @@ func GiftDiscordBot() {
 	} else if luckyNumber == 3 {
 		text = "third"
 	} else {
-		text = strconv.FormatInt(luckyNumber, 10) + "th"
+		//text = strconv.FormatInt(luckyNumber, 10) + "th"
+		if luckyNumber%10 == 1 && luckyNumber != 11 {
+			text = strconv.FormatInt(luckyNumber, 10) + "st"
+		} else if luckyNumber%10 == 2 && luckyNumber != 12 {
+			text = strconv.FormatInt(luckyNumber, 10) + "nd"
+		} else if luckyNumber%10 == 3 && luckyNumber != 13 {
+			text = strconv.FormatInt(luckyNumber, 10) + "rd"
+		} else {
+			text = strconv.FormatInt(luckyNumber, 10) + "th"
+		}
 	}
+
 	message := fmt.Sprintf(post.Message, text)
 	messageBold := strings.ReplaceAll(message, "*", "**")
 
@@ -1633,7 +1643,16 @@ func GiftAnotherDiscordBot() {
 		} else if luckyNumber == 3 {
 			text = "third"
 		} else {
-			text = strconv.FormatInt(int64(luckyNumber), 10) + "th"
+			if luckyNumber%10 == 1 && luckyNumber != 11 {
+				text = strconv.FormatInt(luckyNumber, 10) + "st"
+			} else if luckyNumber%10 == 2 && luckyNumber != 12 {
+				text = strconv.FormatInt(luckyNumber, 10) + "nd"
+			} else if luckyNumber%10 == 3 && luckyNumber != 13 {
+				text = strconv.FormatInt(luckyNumber, 10) + "rd"
+			} else {
+				text = strconv.FormatInt(luckyNumber, 10) + "th"
+			}
+			//text = strconv.FormatInt(int64(luckyNumber), 10) + "th"
 		}
 		message := fmt.Sprintf(post.Message, text)
 		messageBold := strings.ReplaceAll(message, "*", "**")
