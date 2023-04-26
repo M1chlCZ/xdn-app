@@ -116,7 +116,7 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
           // _leftTitlesInterval = (_maxY / 2);
           _minX = 0.0;
         } else if (_dropdownValue == 2) {
-          _maxX = Duration(days: Jiffy().daysInMonth).inDays.toDouble();
+          _maxX = Duration(days: Jiffy.now().daysInMonth).inDays.toDouble();
           // _leftTitlesInterval = (_maxY / 2);
           _minX = 1.0;
         } else if (_dropdownValue == 3) {
@@ -323,7 +323,7 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
       return '${_getMeTime("0000-00-00 ${Duration(minutes: time).toHoursMinutes()}", "HH:mm")}\n';
     } else if (_dropdownValue == 1) {
       DateTime date = DateTime.parse("1970-00-00");
-      DateTime d = Jiffy(date).add(duration: Duration(days: time)).dateTime;
+      DateTime d = Jiffy.parseFromDateTime(date).add(days:  time).dateTime;
       return '${DateFormat.EEEE(_locale).format(d)}\n';
     } else if (_dropdownValue == 2) {
       List<String> dateParts = _date.toString().split("-");

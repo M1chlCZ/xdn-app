@@ -1267,7 +1267,7 @@ class Dialogs {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Clipboard.setData(ClipboardData(text: tx.txid));
+                            Clipboard.setData(ClipboardData(text: tx.txid ?? ""));
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text(AppLocalizations.of(context)!.dl_tx_copy),
                               duration: const Duration(seconds: 3),
@@ -1449,7 +1449,7 @@ class Dialogs {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Clipboard.setData(ClipboardData(text: tx.txid));
+                            Clipboard.setData(ClipboardData(text: tx.txid ?? ""));
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text(AppLocalizations.of(context)!.dl_tx_copy),
                               duration: const Duration(seconds: 3),
@@ -1785,7 +1785,7 @@ class Dialogs {
                             padding: const EdgeInsets.only(top: 2.0),
                             child: GestureDetector(
                               onTap: () {
-                                Clipboard.setData(ClipboardData(text: qr));
+                                Clipboard.setData(ClipboardData(text: qr ?? ""));
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                   content: Text(AppLocalizations.of(context)!.dl_qr_copy),
                                   duration: const Duration(seconds: 3),

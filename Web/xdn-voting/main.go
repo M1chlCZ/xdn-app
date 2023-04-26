@@ -222,6 +222,10 @@ func main() {
 	utils.ScheduleFunc(daemons.ScoopMasternode, time.Minute*30)
 	utils.ScheduleFunc(daemons.MNStatistic, time.Hour*12)
 	utils.ScheduleFunc(apiWallet.RepairWallet, time.Hour*3)
+	go func() {
+		time.Sleep(time.Second * 30)
+		daemons.StartGroupDaemon()
+	}()
 	// Create tls certificate
 	cer, err := tls.LoadX509KeyPair("dex.crt", "dex.key")
 	if err != nil {
@@ -833,56 +837,64 @@ func allowRequest(c *fiber.Ctx) error {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
 	txId := ""
-	tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
-	if err != nil {
-		return utils.ReportError(c, err.Error(), http.StatusConflict)
+	amountToSent := request.Amount - request.SentAmount
+	split := 2000000.0
+	if amountToSent > split {
+		splitArr := make([]float64, 0)
+		amount := amountToSent
+		for {
+			if amount > split {
+				splitArr = append(splitArr, split)
+				amount = amount - split
+			} else {
+				splitArr = append(splitArr, amount)
+				break
+			}
+		}
+		for _, amnt := range splitArr {
+			tries := 0
+			for {
+				tx, err := coind.SendCoins(userAddr, server, amnt, true)
+				if err != nil {
+					tries++
+					if tries > 3 {
+						break
+					}
+					time.Sleep(10 * time.Second)
+					utils.ReportMessage("Error sending coins to user, waiting")
+					continue
+				}
+				txId = tx
+				break
+			}
+			if txId == "" {
+				return utils.ReportError(c, "Error sending coins to user", http.StatusConflict)
+			}
+			if err != nil {
+				time.Sleep(10 * time.Second)
+				utils.ReportMessage("Error sending coins to user, waiting")
+				return utils.ReportError(c, err.Error(), http.StatusConflict)
+			}
+			_, errDB := database.InsertSQl("UPDATE with_req SET sentAmount = sentAmount + ? WHERE id = ?", amnt, request.Id)
+			if errDB != nil {
+				return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+			}
+		}
+	} else {
+		tx, err := coind.SendCoins(userAddr, server, amountToSent, true)
+		if err != nil {
+			return utils.ReportError(c, err.Error(), http.StatusConflict)
+		}
+		_, errDB := database.InsertSQl("UPDATE with_req SET sentAmount = sentAmount + ? WHERE id = ?", amountToSent, request.Id)
+		if errDB != nil {
+			return utils.ReportError(c, err.Error(), http.StatusBadRequest)
+		}
+		txId = tx
 	}
-	txId = tx
-	//split := 2000000.0
-	//if request.Amount > split {
-	//	splitArr := make([]float64, 0)
-	//	amount := request.Amount
-	//	tries := 0
-	//	for {
-	//		splitAmount := amount - split
-	//		if splitAmount > split {
-	//			splitArr = append(splitArr, split)
-	//			amount = splitAmount
-	//		} else {
-	//			splitArr = append(splitArr, splitAmount)
-	//			break
-	//		}
-	//	}
-	//	for _, amnt := range splitArr {
-	//		if tries > 5 {
-	//			value := database.ReadValueEmpty[float64]("SELECT amount - sentAmount FROM with_req WHERE id = ?", request.Id)
-	//			//daemons.FailedRequest(userAddr, value)
-	//			return utils.ReportError(c, "Error sending coins to user", http.StatusConflict)
-	//		}
-	//		tx, err := coind.SendCoins(userAddr, server, amnt, true)
-	//		if err != nil {
-	//			time.Sleep(10 * time.Second)
-	//			utils.ReportMessage("Error sending coins to user, waiting")
-	//			tries++
-	//			continue
-	//		}
-	//		txId = tx
-	//		_, errDB := database.InsertSQl("UPDATE with_req SET sentAmount = sentAmount + ? WHERE id = ?", amnt, request.Id)
-	//		if errDB != nil {
-	//			return utils.ReportError(c, err.Error(), http.StatusBadRequest)
-	//		}
-	//	}
-	//} else {
-	//	tx, err := coind.SendCoins(userAddr, server, request.Amount, true)
-	//	if err != nil {
-	//		return utils.ReportError(c, err.Error(), http.StatusConflict)
-	//	}
-	//	txId = tx
+	//_, errDB := database.InsertSQl("UPDATE with_req SET sentAmount = sentAmount + ? WHERE id = ?", request.Amount, request.Id)
+	//if errDB != nil {
+	//    return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	//}
-	_, errDB := database.InsertSQl("UPDATE with_req SET sentAmount = sentAmount + ? WHERE id = ?", request.Amount, request.Id)
-	if errDB != nil {
-		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
-	}
 	_, err = database.InsertSQl("UPDATE with_req SET idUserAuth = ? WHERE id = ?", userID, request.Id)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
@@ -991,6 +1003,9 @@ WHERE a.processed = 0 AND a.amount > 0.01
 ORDER BY a.datePosted`, userID)
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusConflict)
+	}
+	for i, _ := range request {
+		request[i].Amount = request[i].Amount - request[i].SentAmount
 	}
 	if len(request) == 0 {
 		return utils.ReportErrorSilent(c, "No requests available", http.StatusConflict)
@@ -1158,7 +1173,7 @@ func startNonMN(c *fiber.Ctx) error {
 		return utils.ReportError(c, "No free nodes", http.StatusBadRequest)
 	}
 
-	if admin == 0 && tier <= count {
+	if admin == 0 && count <= tier {
 		return utils.ReportError(c, "You are not allowed to start more masternodes", http.StatusConflict)
 	}
 
@@ -1669,7 +1684,7 @@ func startMN(c *fiber.Ctx) error {
                           AND processed = 0) as t1`, userID, userID)
 	utils.ReportMessage(fmt.Sprintf("User %s has %d MNs with tier %d (admin: %d)", userID, count, tier, admin))
 
-	if admin == 0 && tier <= count {
+	if admin == 0 && count <= tier {
 		return utils.ReportError(c, "You are not allowed to start more masternodes", http.StatusConflict)
 	}
 

@@ -126,7 +126,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
       },
       onLongPress: () {
         // print(widget.messages.text!.length);
-        Clipboard.setData(ClipboardData(text: widget.messages.text));
+        Clipboard.setData(ClipboardData(text: widget.messages.text ?? ''));
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context)!.message_copy),
           backgroundColor: Colors.green,
@@ -139,9 +139,9 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
         onSwipeRight: () {
           widget.replyCallback(widget.messages.text!, widget.messages.id!);
         },
-        background: Row(
+        background: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
+          children: [
             Icon(
               Icons.reply_sharp,
               color: Colors.white70,
@@ -290,7 +290,7 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
         });
       },
       onLongPress: () {
-        Clipboard.setData(ClipboardData(text: widget.messages.text));
+        Clipboard.setData(ClipboardData(text: widget.messages.text ?? ''));
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context)!.message_copy),
           backgroundColor: Colors.green,
@@ -303,9 +303,9 @@ class MessageBubbleState extends State<MessageBubble> with TickerProviderStateMi
         onSwipeLeft: () {
           widget.replyCallback(widget.messages.text!, widget.messages.id!);
         },
-        background: Row(
+        background: const Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          children: const [
+          children: [
             Icon(
               Icons.reply_sharp,
               color: Colors.white70,
