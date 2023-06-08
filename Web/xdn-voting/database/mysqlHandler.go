@@ -320,16 +320,23 @@ func getZeroArray[T any]() []T {
 }
 
 func InsertSQl(SQL string, params ...interface{}) (int64, error) {
-	//db, err := sqlx.Open("mysql", utils.GetENV("DB_CONN"))
-	//if err != nil {
-	//	return 0, err
-	//}
-	query, errStmt := Database.Exec(SQL, params...)
-	//res, errStmt := query.Exec(params...)
+	q, err := Database.Begin()
+	if err != nil {
+		return 0, err
+	}
+	query, errStmt := q.Exec(SQL, params...)
 	if errStmt != nil {
-		//utils.WrapErrorLog(errStmt.Error())
-		//fmt.Printf("Can't Insert shit")
+		errRollback := q.Rollback()
+		if errRollback != nil {
+			utils.WrapErrorLog("Rollback error: " + errRollback.Error())
+			return 0, errRollback
+		}
 		return 0, errStmt
+	}
+	errCommit := q.Commit()
+	if errCommit != nil {
+		utils.WrapErrorLog("Commit error: " + errCommit.Error())
+		return 0, errCommit
 	}
 	id, errLastID := query.LastInsertId()
 	if errLastID != nil {

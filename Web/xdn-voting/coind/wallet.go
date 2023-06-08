@@ -46,7 +46,7 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 	for _, unspent := range ing {
 		if unspent.Address == addressSend {
 			if unspent.Spendable == true {
-				//utils.ReportMessage(fmt.Sprintf("Found unspent input: %f", unspent.Amount))
+				utils.ReportMessage(fmt.Sprintf("Found unspent input: %f", unspent.Amount))
 				totalCoins += unspent.Amount
 				myUnspent = append(myUnspent, unspent)
 				if totalCoins >= amount {
@@ -56,23 +56,24 @@ func SendCoins(addressReceive string, addressSend string, amount float64, stakeW
 		}
 	}
 
-	if amount == 2000000 {
-		amount += 0.01
-	}
+	//if amount == 2000000 {
+	//    amount += 0.01
+	//}
 
 	fee := 0.01
 	inputs := make([]models.ListUnspent, 0)
 	inputsAmount := 0.0
 	for _, spent := range myUnspent {
 		inputsAmount += spent.Amount
+		utils.ReportMessage(fmt.Sprintf("Found final input: %f", spent.Amount))
 		inputs = append(inputs, spent)
-		if inputsAmount > (amount + fee) {
+		if inputsAmount > (amount) {
 			break
 		}
 	}
 
 	amountSend := amount - fee
-	txBack := inputsAmount - amountSend
+	txBack := inputsAmount - amount
 
 	if amountSend < 0 {
 		return "", errors.New("amountSend is negative")
