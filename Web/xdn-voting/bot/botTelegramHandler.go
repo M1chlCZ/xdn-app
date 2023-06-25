@@ -311,7 +311,7 @@ func StartTelegramBot() {
 					if err != nil {
 						msg.Text = "Error: " + err.Error()
 					} else {
-						msg.Text = "Unliked successfully!"
+						msg.Text = "Unlinked successfully!"
 					}
 					if _, err := bot.Send(msg); err != nil {
 						utils.WrapErrorLog(err.Error())
