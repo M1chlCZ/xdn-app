@@ -3663,17 +3663,38 @@ func unstake(c *fiber.Ctx) error {
 		if amountToSend < 0.1 {
 			return utils.ReportError(c, "Amount is too small, withdraw at least 0.1 XDN", http.StatusConflict)
 		}
-		//tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
-		//if err != nil {
-		//	return utils.ReportError(c, err.Error(), http.StatusConflict)
-		//}
 
 		if r.Type == 1 {
 			utils.ReportMessage("UNSTAKING")
 			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND id <> 0", 1, userID)
 			idd, _ := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)
-			go service.SendAdminsReq(idd)
-			return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
+			asdf, err := database.ReadValue[int](`	 SELECT count(auth)
+														 FROM with_req
+														 WHERE auth = 1 and idUser=?
+														 GROUP BY idUser
+														 HAVING MIN(send) = 1`, userID)
+			if err != nil {
+				go service.SendAdminsReq(idd)
+				return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
+			} else {
+				if asdf > 15 {
+					server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+					tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
+					if err != nil {
+						return utils.ReportError(c, err.Error(), http.StatusConflict)
+					}
+					_, _ = database.InsertSQl("UPDATE with_req SET auth = 1, send = 1, idTx = ? WHERE id = ?", tx, idd)
+
+				} else {
+					go service.SendAdminsReq(idd)
+					return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
+				}
+				return c.Status(fiber.StatusOK).JSON(fiber.Map{
+					utils.ERROR:  false,
+					utils.STATUS: utils.OK,
+				})
+			}
+
 		} else if r.Type == 2 {
 			return utils.ReportError(c, "Not implemented", http.StatusConflict)
 		} else {
@@ -3681,8 +3702,33 @@ func unstake(c *fiber.Ctx) error {
 			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND id <> 0", 1, userID)
 			_, _ = database.InsertSQl("UPDATE users_stake SET active = 0 WHERE idUser = ?", userID)
 			idd, _ := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)
-			go service.SendAdminsReq(idd)
-			return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
+			asdf, err := database.ReadValue[int](`	 SELECT count(auth)
+														 FROM with_req
+														 WHERE auth = 1 and idUser = ?
+														 GROUP BY idUser
+														 HAVING MIN(send) = 1`, userID)
+			if err != nil {
+				go service.SendAdminsReq(idd)
+				return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
+			} else {
+				if asdf > 15 {
+					server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+					tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
+					if err != nil {
+						return utils.ReportError(c, err.Error(), http.StatusConflict)
+					}
+					_, _ = database.InsertSQl("UPDATE with_req SET auth = 1, send = 1, idTx = ? WHERE id = ?", tx, idd)
+				} else {
+					go service.SendAdminsReq(idd)
+					return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
+				}
+				return c.Status(fiber.StatusOK).JSON(fiber.Map{
+					utils.ERROR:  false,
+					utils.STATUS: utils.OK,
+				})
+			}
+			//go service.SendAdminsReq(idd)
+			//return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
 		}
 		//_, _ = database.InsertSQl("UPDATE transaction SET contactName = ? WHERE txid = ? AND category = ? AND id <> 0 LIMIT 1", "Staking withdrawal", tx, "receive")
 		//time.Sleep(time.Second * 1)

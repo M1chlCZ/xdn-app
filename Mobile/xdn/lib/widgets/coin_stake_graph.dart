@@ -352,7 +352,7 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
         isStrokeCapRound: true,
         isCurved: true,
         curveSmoothness: 0.25,
-        dotData: FlDotData(show: false),
+        dotData: const FlDotData(show: false),
         belowBarData: BarAreaData(
             show: true,
             gradient: LinearGradient(
@@ -376,8 +376,8 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
           ]),
           titlesData: FlTitlesData(
             show: true,
-            topTitles: AxisTitles(sideTitles: SideTitles()),
-            rightTitles: AxisTitles(sideTitles: SideTitles()),
+            topTitles: const AxisTitles(sideTitles: SideTitles()),
+            rightTitles: const AxisTitles(sideTitles: SideTitles()),
             bottomTitles: _bottomTitles(),
             leftTitles: _leftTitles(),
           ),
@@ -422,7 +422,7 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
               getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
                 return spotIndexes.map((spotIndex) {
                   return TouchedSpotIndicatorData(
-                    FlLine(color: Colors.white54, strokeWidth: 0.8),
+                    const FlLine(color: Colors.white54, strokeWidth: 0.8),
                     FlDotData(
                         show: true,
                         getDotPainter: (FlSpot spot, double radius, LineChartBarData lc, int i) {
@@ -472,8 +472,8 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
             )
           : LineChart(
               mainData(),
-              swapAnimationDuration: const Duration(milliseconds: 300),
-              swapAnimationCurve: Curves.linearToEaseOut,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.linearToEaseOut,
             ),
     );
   }
@@ -551,13 +551,13 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
       drawVerticalLine: true,
       drawHorizontalLine: true,
       getDrawingHorizontalLine: (value) {
-        return FlLine(
+        return const FlLine(
           color: Colors.white12,
           strokeWidth: 0.2,
         );
       },
       getDrawingVerticalLine: (value) {
-        return FlLine(
+        return const FlLine(
           color: Colors.white12,
           strokeWidth: 0.2,
         );

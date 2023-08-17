@@ -80,11 +80,12 @@ class BarcodeScannerState extends State<BarcodeScanner> {
           children: [
             MobileScanner(
                 controller: cameraController,
-                onDetect: (barcode, args) {
-                  if (barcode.rawValue == null) {
+                onDetect: (capture) {
+                  if (capture.barcodes.isEmpty) {
                     debugPrint('Failed to scan Barcode');
                   } else {
-                    final String code = barcode.rawValue!;
+                    final List<Barcode> barcodes = capture.barcodes;
+                    final String code = barcodes[0].rawValue!;
                     widget.scanResult(code);
                     cameraController!.stop();
                     Navigator.maybePop(context);

@@ -1809,7 +1809,7 @@ class Dialogs {
                               },
                               child: Screenshot(
                                 controller: screenshotController,
-                                child: QrImage(
+                                child: QrImageView(
                                   dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
                                   eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
                                   errorCorrectionLevel: QrErrorCorrectLevel.H,
@@ -1967,7 +1967,7 @@ class Dialogs {
                             Share.share(qr);
                             Navigator.pop(context);
                           },
-                          child: QrImage(
+                          child: QrImageView(
                             dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
                             eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
                             errorCorrectionLevel: QrErrorCorrectLevel.H,
@@ -2054,7 +2054,7 @@ class Dialogs {
                             Share.share(qr);
                             Navigator.pop(context);
                           },
-                          child: QrImage(
+                          child: QrImageView(
                             dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
                             eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
                             errorCorrectionLevel: QrErrorCorrectLevel.H,
@@ -2141,7 +2141,7 @@ class Dialogs {
                             Share.share(qr);
                             Navigator.pop(context);
                           },
-                          child: QrImage(
+                          child: QrImageView(
                             dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square),
                             eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square),
                             errorCorrectionLevel: QrErrorCorrectLevel.H,
