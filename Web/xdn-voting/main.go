@@ -84,12 +84,14 @@ func main() {
 		EnablePrintRoutes: true,
 	})
 	app.Use(logger.New(logger.Config{
-		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
+		Format:     "[${header:CF-Connecting-IP}] ${status} - ${method} ${latency} ${path}",
+		TimeFormat: "15:04:05",
+		TimeZone:   "Local",
 		Done: func(c *fiber.Ctx, logString []byte) {
 			if c.Response().StatusCode() != 200 {
 				utils.WrapErrorLog(string(logString))
 			} else {
-				utils.WrapErrorLog(string(logString))
+				utils.ReportMessage(string(logString))
 			}
 		},
 	}))

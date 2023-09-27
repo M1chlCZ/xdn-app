@@ -30,7 +30,7 @@ require (
 	github.com/bits-and-blooms/bitset v1.9.0 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.11.2 // indirect
-	github.com/crate-crypto/go-kzg-4844 v0.4.0 // indirect
+	github.com/crate-crypto/go-kzg-4844 v0.3.0 // indirect
 	github.com/ethereum/c-kzg-4844 v0.3.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
