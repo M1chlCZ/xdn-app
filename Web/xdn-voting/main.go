@@ -85,6 +85,13 @@ func main() {
 	})
 	app.Use(logger.New(logger.Config{
 		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
+		Done: func(c *fiber.Ctx, logString []byte) {
+			if c.Response().StatusCode() != 200 {
+				utils.WrapErrorLog(string(logString))
+			} else {
+				utils.WrapErrorLog(string(logString))
+			}
+		},
 	}))
 	app.Use(cors.New())
 	utils.ReportMessage("Rest API v" + utils.VERSION + " - XDN DAO API | SERVER")
@@ -2738,7 +2745,6 @@ func changePassword(c *fiber.Ctx) error {
 }
 
 func forgotPassword(c *fiber.Ctx) error {
-	utils.ReportMessage("1")
 	var data models.ForgotPassword
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ReportError(c, err.Error(), fiber.StatusBadRequest)
