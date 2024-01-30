@@ -1,0 +1,157 @@
+{
+  "bs": [
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "cs": [
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "de": [
+    "social_accounts",
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "es": [
+    "social_accounts",
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "fi": [
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "hi": [
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "hr": [
+    "social_accounts",
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "ja": [
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "nl": [
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "pa": [
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "ru": [
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "sr": [
+    "social_accounts",
+    "join_discord",
+    "send_discord",
+    "socials_info",
+    "socials_info_add",
+    "unlink",
+    "socials_popup",
+    "mn_your_mns",
+    "all_mn",
+    "mn_day_reward",
+    "mn_average_payrate",
+    "mn_average_start",
+    "mn_time_to_start",
+    "mn_lock",
+    "mn_start",
+    "mn_manage",
+    "mn_reward",
+    "mn_collateral",
+    "mn_uncofirmed",
+    "mn_roi",
+    "mn_free",
+    "settings_socials",
+    "mn_withdraw_box",
+    "mn_coins_month",
+    "mn_coins_year",
+    "mn_withdraw_reward",
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "sr_Cyrl": [
+    "social_accounts",
+    "join_discord",
+    "send_discord",
+    "socials_info",
+    "socials_info_add",
+    "unlink",
+    "socials_popup",
+    "mn_your_mns",
+    "all_mn",
+    "mn_day_reward",
+    "mn_average_payrate",
+    "mn_average_start",
+    "mn_time_to_start",
+    "mn_lock",
+    "mn_start",
+    "mn_manage",
+    "mn_reward",
+    "mn_collateral",
+    "mn_uncofirmed",
+    "mn_roi",
+    "mn_free",
+    "settings_socials",
+    "mn_withdraw_box",
+    "mn_coins_month",
+    "mn_coins_year",
+    "mn_withdraw_reward",
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "sr_Latn": [
+    "social_accounts",
+    "join_discord",
+    "send_discord",
+    "socials_info",
+    "socials_info_add",
+    "unlink",
+    "socials_popup",
+    "mn_your_mns",
+    "all_mn",
+    "mn_day_reward",
+    "mn_average_payrate",
+    "mn_average_start",
+    "mn_time_to_start",
+    "mn_lock",
+    "mn_start",
+    "mn_manage",
+    "mn_reward",
+    "mn_collateral",
+    "mn_uncofirmed",
+    "mn_roi",
+    "mn_free",
+    "settings_socials",
+    "mn_withdraw_box",
+    "mn_coins_month",
+    "mn_coins_year",
+    "mn_withdraw_reward",
+    "st_adjust",
+    "st_amount"
+  ],
+
+  "uk": [
+    "st_adjust",
+    "st_amount"
+  ]
+}
