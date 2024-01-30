@@ -140,7 +140,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     },
                     loading: () => const Center(child: Text("Loading wallet data..."))),
               ),
-              SizedBox(height: 15.0,),
+              const SizedBox(height: 15.0,),
               Flexible(
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),

@@ -31,7 +31,6 @@ import 'package:digitalnote/support/AppDatabase.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/locator.dart';
 import 'package:digitalnote/support/notification_helper.dart';
-import 'package:digitalnote/support/notification_service.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -378,7 +377,7 @@ class MyAppState extends State<MyApp> {
     switch (uri.path) {
       case WalletScreen.route:
         return MaterialPageRoute(
-            builder: (_) => WalletScreen());
+            builder: (_) => const WalletScreen());
       case AddressScreen.route:
         return MaterialPageRoute(builder: (_) => const AddressScreen());
       case StakingScreen.route:

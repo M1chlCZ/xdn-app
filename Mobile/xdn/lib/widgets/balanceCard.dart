@@ -161,8 +161,8 @@ class BalanceCardState extends ConsumerState<BalanceCard> {
                   }, error: (Object error, StackTrace stackTrace) {
                     return Center(child: Text(error.toString(), style: Theme.of(context).textTheme.displayLarge!.copyWith(fontSize: 12.0, color: Colors.redAccent)));
                   }, loading: () {
-                    return Center(
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
+                    return const Center(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
                         SizedBox(
                             height: 75.0,
                             width: 75.0,

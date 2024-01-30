@@ -1815,7 +1815,7 @@ class Dialogs {
                                   errorCorrectionLevel: QrErrorCorrectLevel.H,
                                   data: qrData.toString(),
                                   embeddedImage: const AssetImage('images/logo_qr.png'),
-                                  embeddedImageStyle: QrEmbeddedImageStyle(size: const Size(40, 40)),
+                                  embeddedImageStyle: const QrEmbeddedImageStyle(size: Size(40, 40)),
                                   foregroundColor: Colors.black87,
                                   version: QrVersions.auto,
                                   size: 240,
@@ -2310,7 +2310,7 @@ class Dialogs {
                             child: FutureBuilder(
                                 future: AppDatabase().getShareContactList(name),
                                 builder: (context, snapshot) {
-                                  var list = snapshot.data as List<Contact>?;
+                                  var list = snapshot.data;
                                   if (snapshot.hasData) {
                                     return ListView.builder(
                                         shrinkWrap: true,
@@ -2503,7 +2503,7 @@ class Dialogs {
             if (kDebugMode) {
               controllerAddr.text = "dTLBddTWKviRuWEiPfVy7kUKeq1pbN15a2";
             }
-            void _openQRScanner() async {
+            void openQRScanner() async {
               FocusScope.of(context).unfocus();
               Navigator.of(context).push(PageRouteBuilder(pageBuilder: (BuildContext context, _, __) {
                 return BarcodeScanner(
@@ -2516,7 +2516,7 @@ class Dialogs {
               }));
             }
 
-            void _saveUsers(String name, String addr) async {
+            void saveUsers(String name, String addr) async {
               try {
                 if (addr.length != 34 || !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(addr) || addr[0] != 'd') {
                   Future.delayed(const Duration(milliseconds: 100), () {
@@ -2633,7 +2633,7 @@ class Dialogs {
                               width: 40,
                               color: const Color(0xFF22283A),
                               onTap: () {
-                                _openQRScanner();
+                                openQRScanner();
                               },
                               splashColor: Colors.black45,
                               icon: const Icon(
@@ -2669,7 +2669,7 @@ class Dialogs {
                                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                             RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                                     onPressed: () {
-                                      _saveUsers(controller.text, controllerAddr.text);
+                                      saveUsers(controller.text, controllerAddr.text);
                                     },
                                   ),
                                 ),
@@ -2702,7 +2702,7 @@ class Dialogs {
             onTap: () {
               func(addr, textController.text.isEmpty ? 0 : int.parse(textController.text), idEntry);
             },
-            header: "${AppLocalizations.of(context)!.amount}",
+            header: AppLocalizations.of(context)!.amount,
             child: Padding(
               padding: const EdgeInsets.only(top: 8.0, bottom: 0, left: 8.0, right: 8.0),
               child: Container(

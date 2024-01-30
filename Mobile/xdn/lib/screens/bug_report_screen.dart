@@ -216,10 +216,10 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
                                             color: Colors.black12,
                                             borderRadius: BorderRadius.circular(10),
                                           ),
-                                          child: Center(
+                                          child: const Center(
                                             child: Column(
                                               mainAxisSize: MainAxisSize.max,
-                                              children: const [
+                                              children: [
                                                 Text("< Reward for submitting bug >", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white70)),
                                                 SizedBox(height: 10.0),
                                                 Text("Security bug 10k XDN", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.pink)),
@@ -240,11 +240,11 @@ class _BugReportScreenState extends ConsumerState<BugReportScreen> {
                                           onTap: () {
                                             submit();
                                           },
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
+                                          child: const Padding(
+                                            padding: EdgeInsets.all(8.0),
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.center,
-                                              children: const [
+                                              children: [
                                                 Text("Submit", style: TextStyle(color: Colors.white70)),
                                                 SizedBox(width: 10),
                                                 Icon(Icons.send, color: Colors.white70),

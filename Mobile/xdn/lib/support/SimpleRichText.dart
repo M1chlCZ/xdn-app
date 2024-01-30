@@ -370,9 +370,7 @@ class SimpleRichText extends StatelessWidget {
           maxLines: maxLines,
           overflow: textOverflow ?? TextOverflow.clip,
           text: TextSpan(children: children),
-          textAlign: textAlign ?? TextAlign.start,
-          textScaleFactor:
-          textScaleFactor ?? MediaQuery.of(context).textScaleFactor);
+          textAlign: textAlign ?? TextAlign.start, textScaler: TextScaler.linear(textScaleFactor ?? MediaQuery.of(context).textScaleFactor));
     } // else
   } // build
 

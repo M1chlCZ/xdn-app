@@ -817,6 +817,8 @@ ORDER BY a.datePosted`, userID, req.ID)
 	return c.Status(fiber.StatusOK).Send(js)
 }
 
+var allowMap sync.Map
+
 func allowRequest(c *fiber.Ctx) error {
 	userID := c.Get("User_id")
 	if userID == "" {
@@ -830,6 +832,11 @@ func allowRequest(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, "Invalid data", http.StatusBadRequest)
 	}
+	if _, active := allowMap.Load(req.ID); active {
+		return utils.ReportError(c, "Transaction already in progress", fiber.StatusBadRequest)
+	}
+	allowMap.Store(req.ID, true)
+	defer allowMap.Delete(req.ID)
 	adm := database.ReadValueEmpty[bool]("SELECT admin FROM users WHERE id = ?", userID)
 	if adm == false {
 		return utils.ReportError(c, "You are not admin", http.StatusBadRequest)
@@ -1186,7 +1193,7 @@ func startNonMN(c *fiber.Ctx) error {
 		return utils.ReportError(c, "No free nodes", http.StatusBadRequest)
 	}
 
-	if admin == 0 && count <= tier {
+	if admin == 0 && count >= tier {
 		return utils.ReportError(c, "You are not allowed to start more masternodes", http.StatusConflict)
 	}
 
@@ -1605,7 +1612,7 @@ func withdrawMN(c *fiber.Ctx) error {
 
 	userNode, _ := database.ReadValue[int64]("SELECT COUNT(*) FROM users_mn WHERE idUser = ? AND idNode = ? AND active = 1", userID, stakeReq.IdNode)
 	if userNode == 0 {
-		return utils.ReportError(c, "Selected node does not belong to the user", http.StatusConflict)
+		return utils.ReportError(c, "Masternode has been successfully withdrawn", http.StatusConflict)
 
 	}
 
@@ -1697,7 +1704,7 @@ func startMN(c *fiber.Ctx) error {
                           AND processed = 0) as t1`, userID, userID)
 	utils.ReportMessage(fmt.Sprintf("User %s has %d MNs with tier %d (admin: %d)", userID, count, tier, admin))
 
-	if admin == 0 && count <= tier {
+	if admin == 0 && count >= tier {
 		return utils.ReportError(c, "You are not allowed to start more masternodes", http.StatusConflict)
 	}
 
@@ -3710,30 +3717,30 @@ func unstake(c *fiber.Ctx) error {
 			_, _ = database.InsertSQl("UPDATE payouts_stake SET credited = ? WHERE idUser = ? AND id <> 0", 1, userID)
 			_, _ = database.InsertSQl("UPDATE users_stake SET active = 0 WHERE idUser = ?", userID)
 			idd, _ := database.InsertSQl("INSERT with_req (idUser, amount, address) VALUES (?, ?, ?)", userID, amountToSend, userAddr)
-			asdf, err := database.ReadValue[int](`	 SELECT count(auth)
-														 FROM with_req
-														 WHERE auth = 1 and idUser = ?
-														 GROUP BY idUser
-														 HAVING MIN(send) = 1`, userID)
+			//asdf, err := database.ReadValue[int](`	 SELECT count(auth)
+			//											 FROM with_req
+			//											 WHERE auth = 1 and idUser = ?
+			//											 GROUP BY idUser
+			//											 HAVING MIN(send) = 1`, userID)
 			if err != nil {
 				go service.SendAdminsReq(idd)
 				return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
 			} else {
-				if asdf > 15 {
-					server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
-					tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
-					if err != nil {
-						return utils.ReportError(c, err.Error(), http.StatusConflict)
-					}
-					_, _ = database.InsertSQl("UPDATE with_req SET auth = 1, send = 1, idTx = ? WHERE id = ?", tx, idd)
-				} else {
-					go service.SendAdminsReq(idd)
-					return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
-				}
-				return c.Status(fiber.StatusOK).JSON(fiber.Map{
-					utils.ERROR:  false,
-					utils.STATUS: utils.OK,
-				})
+				//if asdf > 15 {
+				//	server, err := database.ReadValue[string]("SELECT addr FROM servers_stake WHERE id = 1")
+				//	tx, err := coind.SendCoins(userAddr, server, amountToSend, true)
+				//	if err != nil {
+				//		return utils.ReportError(c, err.Error(), http.StatusConflict)
+				//	}
+				//	_, _ = database.InsertSQl("UPDATE with_req SET auth = 1, send = 1, idTx = ? WHERE id = ?", tx, idd)
+				//} else {
+				go service.SendAdminsReq(idd)
+				return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)
+				//}
+				//return c.Status(fiber.StatusOK).JSON(fiber.Map{
+				//	utils.ERROR:  false,
+				//	utils.STATUS: utils.OK,
+				//})
 			}
 			//go service.SendAdminsReq(idd)
 			//return utils.ReportError(c, "Your withdraw request is on review", http.StatusConflict)

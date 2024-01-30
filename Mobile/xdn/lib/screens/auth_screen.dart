@@ -257,9 +257,9 @@ class AuthScreenState extends State<AuthScreen> {
                             SecureStorage.deleteStorage(key:"PIN");
                             Navigator.pop(context);
                           }, // labelLarge pressed
-                          child: Column(
+                          child: const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const <Widget>[
+                            children: <Widget>[
                               Icon(Icons.close, color: Colors.white70,),
                             ],
                           ),

@@ -59,20 +59,19 @@ class _VotingMenuWidgetState extends State<VotingMenuWidget> {
                 child: Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: AvatarGlow(
-                    glowColor: Colors.white.withOpacity(0.6),
-                    endRadius: 12.5,
-                    duration: const Duration(seconds: 2),
-                    repeat: true,
-                    showTwoGlows: true,
-                    curve: Curves.easeOut,
-                    repeatPauseDuration: const Duration(milliseconds: 1000),
-                    child: Container(
-                      height: 6.0,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                    )),
+                      glowColor: Colors.white,
+                      glowBorderRadius: BorderRadius.circular(5.5),
+                      duration: const Duration(milliseconds: 1500),
+                      repeat: true,
+                      animate: true,
+                      curve: Curves.easeOut,
+                      child: Container(
+                        height: 5.0,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                      )),
                 ),),
             )
           ],

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -135,10 +134,11 @@ class _BalanceCardMainMenuState extends ConsumerState<BalanceCardMainMenu> {
                     },
                     error: (Object error, StackTrace stackTrace) {
                       Center(child: Text("There was an error retrieving you balance", style: Theme.of(context).textTheme.displayLarge!.copyWith(color: Colors.white, fontSize: 14)));
+                      return null;
                     },
                     loading: () {
-                      return Center(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
+                      return const Center(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
                           SizedBox(
                               height: 25.0,
                               width: 25.0,

@@ -272,10 +272,10 @@ class MessageScreenState extends LifecycleWatcherState<MessageScreen> {
                               width: MediaQuery.of(context).size.width,
                               margin: const EdgeInsets.only(left: 5.0, right: 5.0),
                               color: Colors.transparent,
-                              child: Column(
+                              child: const Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const <Widget>[
+                                  children: <Widget>[
                                     SizedBox(height: 50.0, width: 50.0, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0)),
                                   ]),
                             );

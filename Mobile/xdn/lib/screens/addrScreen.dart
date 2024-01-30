@@ -337,10 +337,10 @@ class AddressScreenState extends State<AddressScreen> {
                                   height: MediaQuery.of(context).size.height,
                                   width: MediaQuery.of(context).size.width,
                                   margin: const EdgeInsets.all(10.0),
-                                  child: Column(
+                                  child: const Column(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       mainAxisAlignment: MainAxisAlignment.center,
-                                      children: const <Widget>[
+                                      children: <Widget>[
                                         SizedBox(height: 50.0, width: 50.0, child: CircularProgressIndicator()),
                                       ]),
                                 );

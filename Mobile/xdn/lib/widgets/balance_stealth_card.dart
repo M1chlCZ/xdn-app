@@ -137,8 +137,8 @@ class BalanceStealthCardMenuState extends ConsumerState<BalanceStealthCardMenu> 
                                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14.0, color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.w800),
                                 )));
                       }, loading: () {
-                        return Center(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[
+                        return const Center(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
                             SizedBox(
                                 height: 25.0,
                                 width: 25.0,

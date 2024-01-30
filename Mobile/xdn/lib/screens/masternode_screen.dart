@@ -8,7 +8,6 @@ import 'package:digitalnote/generated/phone.pb.dart';
 import 'package:digitalnote/models/MasternodeInfo.dart';
 import 'package:digitalnote/models/MasternodeLock.dart';
 import 'package:digitalnote/net_interface/api_response.dart';
-import 'package:digitalnote/net_interface/app_exception.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/screens/mn_manage_screen.dart';
 import 'package:digitalnote/support/Utils.dart';
@@ -412,12 +411,11 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                   children: [
                                     AvatarGlow(
                                         glowColor: Colors.white,
-                                        endRadius: 5.5,
+                                        glowBorderRadius: BorderRadius.circular(5.5),
                                         duration: const Duration(milliseconds: 1500),
                                         repeat: true,
-                                        showTwoGlows: true,
+                                        animate: true,
                                         curve: Curves.easeOut,
-                                        repeatPauseDuration: const Duration(milliseconds: 100),
                                         child: Container(
                                           height: 5.0,
                                           decoration: BoxDecoration(
@@ -500,8 +498,8 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                                         style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 12, color: Colors.red),
                                       ));
                                     } else {
-                                      return Center(
-                                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
+                                      return const Center(
+                                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
                                           SizedBox(
                                               height: 24.0,
                                               width: 24.0,

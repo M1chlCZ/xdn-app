@@ -654,17 +654,16 @@ class _VotingScreenState extends State<VotingScreen> with TickerProviderStateMix
                                                 Padding(
                                                   padding: const EdgeInsets.only(top: 1.0),
                                                   child: AvatarGlow(
-                                                      glowColor: Colors.green,
-                                                      endRadius: 8.5,
+                                                      glowColor: Colors.white,
+                                                      glowBorderRadius: BorderRadius.circular(5.5),
                                                       duration: const Duration(milliseconds: 1500),
                                                       repeat: true,
-                                                      showTwoGlows: true,
+                                                      animate: true,
                                                       curve: Curves.easeOut,
-                                                      repeatPauseDuration: const Duration(milliseconds: 100),
                                                       child: Container(
-                                                        height: 6.0,
+                                                        height: 5.0,
                                                         decoration: BoxDecoration(
-                                                          color: Colors.green.withOpacity(0.7),
+                                                          color: Colors.white.withOpacity(0.5),
                                                           shape: BoxShape.circle,
                                                         ),
                                                       )),

@@ -227,7 +227,7 @@ class MessageComposeScreenState extends State<MessageComposeScreen> {
                           );
                         },
                         onSuggestionSelected: (suggestion) {
-                          _recipient = suggestion as Contact;
+                          _recipient = suggestion;
                           _controllerAddress.text = _recipient!.getName()!;
                         },
                       ),

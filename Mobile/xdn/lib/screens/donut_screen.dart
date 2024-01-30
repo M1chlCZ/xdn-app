@@ -7,7 +7,7 @@ class DonutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.transparent,
       body: ModelViewer(
         src: 'assets/Donut.glb',

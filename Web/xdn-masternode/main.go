@@ -51,7 +51,7 @@ func main() {
 				panic(err)
 			}
 		}()
-		//go fn.ScanMasternodes()
+		go fn.ScanMasternodes()
 
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)

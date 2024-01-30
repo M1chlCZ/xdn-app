@@ -342,7 +342,7 @@ class _DataBarState extends State<DataBar> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Color(0xFFE8C826),
+                color: const Color(0xFFE8C826),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(

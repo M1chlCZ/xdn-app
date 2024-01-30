@@ -363,10 +363,10 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
             onTap: () {
               Navigator.of(context).pop();
             },
-            child: Padding(
-              padding: const EdgeInsets.all(5.0),
+            child: const Padding(
+              padding: EdgeInsets.all(5.0),
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.arrow_back_ios_new, color: Colors.white70),
                   SizedBox(width: 5),
                 ],
@@ -388,12 +388,12 @@ class _AuthReqScreenState extends State<AuthReqScreen> {
                 duration: const Duration(milliseconds: 600),
                 curve: Curves.easeInOutBack,
                 scale: anim ? 1 : 0,
-                child: Center(
+                child: const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.check, color: Colors.lime, size: 150,),
                       Text("Success", style: TextStyle(fontSize: 30, color: Colors.white),),
                     ],

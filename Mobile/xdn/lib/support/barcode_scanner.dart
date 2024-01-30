@@ -45,7 +45,7 @@ class BarcodeScannerState extends State<BarcodeScanner> {
                 icon: ValueListenableBuilder(
                   valueListenable: cameraController!.torchState,
                   builder: (context, state, child) {
-                    switch (state as TorchState) {
+                    switch (state) {
                       case TorchState.off:
                         return const Icon(Icons.flash_off, color: Colors.white54);
                       case TorchState.on:
@@ -61,7 +61,7 @@ class BarcodeScannerState extends State<BarcodeScanner> {
                 icon: ValueListenableBuilder(
                   valueListenable: cameraController!.cameraFacingState,
                   builder: (context, state, child) {
-                    switch (state as CameraFacing) {
+                    switch (state) {
                       case CameraFacing.front:
                         return Icon(FontAwesomeIcons.cameraRotate, color: Colors.white.withOpacity(0.9),);
                       case CameraFacing.back:

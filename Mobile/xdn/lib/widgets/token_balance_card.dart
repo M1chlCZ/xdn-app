@@ -62,9 +62,9 @@ class _TokenBalanceCardState extends State<TokenBalanceCard> {
                     ),
                   ],
                 ),
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  children: const [
+                  children: [
                     Expanded(
                       child: Align(alignment: Alignment.centerRight, child: CoinBadge(text: "XDN")),
                     ),

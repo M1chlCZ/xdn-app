@@ -20,7 +20,12 @@ func DaemonStatus() {
 	}
 
 	bodyXDN, _ := io.ReadAll(blkReqXDN.Body)
-	blockhashXDN, _ := strconv.Atoi(string(bodyXDN))
+	blockhashXDN, err := strconv.Atoi(string(bodyXDN))
+	if err != nil {
+		utils.WrapErrorLog("DAEMON STATUS " + err.Error())
+		return
+	}
+	utils.ReportMessage("DAEMON STATUS " + strconv.Itoa(blockhashXDN))
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -68,7 +73,7 @@ func DaemonStatus() {
 		return
 	}
 	var stakeInfo models.StakingInfo
-	err := json.Unmarshal(stake, &stakeInfo)
+	err = json.Unmarshal(stake, &stakeInfo)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 	}

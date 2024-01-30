@@ -1,5 +1,4 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/widgets/button_flat.dart';
 import 'package:digitalnote/widgets/coin_badge.dart';
@@ -63,9 +62,9 @@ class _StealthBalanceCardState extends State<StealthBalanceCard> {
                     ),
                   ],
                 ),
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  children: const [
+                  children: [
                     Expanded(
                       child: Align(alignment: Alignment.centerRight, child: CoinBadge(text: "XDN")),
                     ),

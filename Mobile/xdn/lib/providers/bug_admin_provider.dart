@@ -1,4 +1,3 @@
-import 'package:digitalnote/models/Bugs.dart';
 import 'package:digitalnote/models/BugsAdmin.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

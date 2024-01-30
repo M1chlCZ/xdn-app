@@ -60,7 +60,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
 
   int endTime = 0;
   String _lockedText = '';
-  int _serverStatus = 0;
+  final int _serverStatus = 0;
 
   String _balance = "";
   String _imature = "";
@@ -69,7 +69,7 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
   bool _paused = false;
   bool _imatureVisible = false;
   bool _pendingVisible = false;
-  bool _adjustReward = false;
+  final bool _adjustReward = false;
   bool _hideLoad = false;
   int _countNot = 0;
   bool _awaitingNot = false;
@@ -509,12 +509,11 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                   children: [
                                     AvatarGlow(
                                         glowColor: Colors.white,
-                                        endRadius: 5.5,
+                                        glowBorderRadius: BorderRadius.circular(5.5),
                                         duration: const Duration(milliseconds: 1500),
                                         repeat: true,
-                                        showTwoGlows: true,
+                                        animate: true,
                                         curve: Curves.easeOut,
-                                        repeatPauseDuration: const Duration(milliseconds: 100),
                                         child: Container(
                                           height: 5.0,
                                           decoration: BoxDecoration(
@@ -597,8 +596,8 @@ class StakingScreenState extends LifecycleWatcherState<StakingScreen> {
                                         style: GoogleFonts.montserrat(fontStyle: FontStyle.normal, fontSize: 24, color: Colors.red),
                                       ));
                                     } else {
-                                      return Center(
-                                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: const <Widget>[
+                                      return const Center(
+                                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <Widget>[
                                           SizedBox(
                                               height: 24.0,
                                               width: 24.0,

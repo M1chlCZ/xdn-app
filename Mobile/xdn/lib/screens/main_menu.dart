@@ -5,7 +5,6 @@ import 'package:digitalnote/generated/phone.pbgrpc.dart';
 import 'package:digitalnote/net_interface/interface.dart';
 import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/screens/addrScreen.dart';
-import 'package:digitalnote/screens/auth_req_screen.dart';
 import 'package:digitalnote/screens/bug_admin_screen.dart';
 import 'package:digitalnote/screens/bug_report_screen.dart';
 import 'package:digitalnote/screens/donut_screen.dart';
