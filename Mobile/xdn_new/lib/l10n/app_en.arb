@@ -243,5 +243,6 @@
   "mn_coins_year": "Coins earned this year",
   "mn_withdraw_reward": "Withdraw reward",
   "st_adjust" : "Adjust staking balance",
-  "st_amount": "Subtract amount"
+  "st_amount": "Subtract amount",
+  "set_privacy": "Privacy"
 }

@@ -42,7 +42,7 @@ func WithDraw(wdmn *grpcModels.WithdrawRequest) {
 	}
 
 	amount := 0.0
-	res, err := coind.WrapDaemon(*daemon, 2, "listunspent")
+	res, err := coind.WrapDaemon(*daemon, 9, "listunspent")
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
 		return

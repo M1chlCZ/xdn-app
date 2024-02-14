@@ -1,60 +1,71 @@
 {
   "bs": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "cs": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "de": [
     "social_accounts",
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "es": [
     "social_accounts",
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "fi": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "hi": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "hr": [
     "social_accounts",
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "ja": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "nl": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "pa": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "ru": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "sr": [
@@ -85,7 +96,8 @@
     "mn_coins_year",
     "mn_withdraw_reward",
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "sr_Cyrl": [
@@ -116,7 +128,8 @@
     "mn_coins_year",
     "mn_withdraw_reward",
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "sr_Latn": [
@@ -147,11 +160,13 @@
     "mn_coins_year",
     "mn_withdraw_reward",
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ],
 
   "uk": [
     "st_adjust",
-    "st_amount"
+    "st_amount",
+    "set_privacy"
   ]
 }
