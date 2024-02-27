@@ -3,7 +3,7 @@ description: DigitalNote App Wallet
 
 publish_to: 'none'
 
-version: 1.1.56+137
+version: 1.1.57+138
 
 environment:
   sdk: '>=3.3.0-279.2.beta <4.0.0'
@@ -25,10 +25,10 @@ dependencies:
   sprintf: ^7.0.0
   get_it: ^7.6.7
   auto_size_text: ^3.0.0
-  share_plus: ^7.2.1
+  share_plus: ^7.2.2
   vibration: ^1.8.4
-  flutter_udid: ^2.1.1
-  url_launcher: ^6.2.4
+  flutter_udid: ^3.0.0
+  url_launcher: ^6.2.5
   image_cropper: ^5.0.1
   image_picker: ^1.0.7
   path_provider: ^2.1.2
@@ -51,29 +51,25 @@ dependencies:
   badges: ^3.1.2
   crypto: any
   mobile_scanner: ^4.0.0
-  fl_chart: ^0.66.1
+  fl_chart: ^0.66.2
   jiffy: ^6.2.1
-  permission_handler: ^11.2.0
-  local_auth: ^2.1.8
+  permission_handler: ^11.3.0
+  local_auth: ^2.2.0
   walletconnect_qrcode_modal_dart: ^0.4.3
   web3dart: ^2.7.1
   decimal: ^2.3.3
   rxdart: ^0.27.7
-  open_filex: ^4.3.4
+  open_filex: ^4.4.0
   external_path: ^1.0.3
-  path: ^1.8.3
+  path: ^1.9.0
   avatar_glow: ^3.0.1
   styled_text: ^8.1.0
   package_info_plus: ^5.0.1
-  device_info_plus: ^9.1.1
-  flutter_displaymode: ^0.6.0
-  slide_to_act:
-    git:
-      url: https://github.com/ChargePlus/flutter-slide-to-act
-      ref: master
+  device_info_plus: ^9.1.2
+  slide_to_act: any
   flutter_native_splash: ^2.3.10
   screenshot: ^2.1.0
-  flutter_riverpod: ^2.4.9
+  flutter_riverpod: ^2.4.10
   grpc: ^3.2.4
   model_viewer_plus: ^1.7.0
   flutter_biometrics:

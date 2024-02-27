@@ -1,5 +1,7 @@
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class VotingMenuWidget extends StatefulWidget {
@@ -52,26 +54,34 @@ class _VotingMenuWidgetState extends State<VotingMenuWidget> {
                   width: 85,
                   child: Image.asset("images/voting_big.png")),
             ),
-            Visibility(
-              visible: widget.isVoting,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: AvatarGlow(
-                      glowColor: Colors.white,
-                      duration: const Duration(milliseconds: 1500),
-                      repeat: true,
-                      animate: true,
-                      curve: Curves.easeOut,
-                      child: Container(
-                        height: 5.0,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                        ),
-                      )),
-                ),),
+            Positioned(
+              left: 8,
+              top: 5,
+              child: Visibility(
+                visible: widget.isVoting,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    height: 15.0,
+                    width: 15.0,
+                    padding: const EdgeInsets.all(4.0),
+                    child: AvatarGlow(
+                        glowColor: Colors.white70,
+                        glowCount: 2,
+                        glowRadiusFactor: 1.2,
+                        duration: const Duration(milliseconds: 2500),
+                        repeat: true,
+                        animate: true,
+                        curve: Curves.easeOut,
+                        child: Container(
+                          height: 5.0,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                        )),
+                  ),),
+              ),
             )
           ],
         ),

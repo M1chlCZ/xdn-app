@@ -125,7 +125,8 @@ class _SettingsState extends State<SettingsScreen> {
   _getTwoFactor() async {
     try {
       ComInterface ci = ComInterface();
-      Map<String, dynamic> m = await ci.get("/twofactor/check", request: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+      Map<String, dynamic> m = await ci.get("/twofactor/check",
+          request: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
       Future.delayed(Duration.zero, () {
         setState(() {
           twoFactor = m['twoFactor'];
@@ -133,7 +134,7 @@ class _SettingsState extends State<SettingsScreen> {
       });
     } catch (e) {
       if (kDebugMode) {
-        print(e);
+        debugPrint(e.toString());
       }
     }
   }
@@ -155,7 +156,10 @@ class _SettingsState extends State<SettingsScreen> {
   void _saveFile() async {
     var status = await Permission.storage.status;
     if (await Permission.storage.isPermanentlyDenied) {
-      if (mounted) await Dialogs.openAlertBoxReturn(context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.storage_perm);
+      if (mounted) {
+        await Dialogs.openAlertBoxReturn(
+            context, AppLocalizations.of(context)!.warning, AppLocalizations.of(context)!.storage_perm);
+      }
       openAppSettings();
     } else if (status.isDenied) {
       _downloadFile();
@@ -200,14 +204,15 @@ class _SettingsState extends State<SettingsScreen> {
       var f = await File(filePath).writeAsBytes(buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
       if (mounted) Navigator.of(context).pop();
       var result = await OpenFilex.open(f.path);
-      print(result.type);
       if (result.type == ResultType.noAppToOpen) {
-        if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_csv_no_app);
+        if (mounted)
+          Dialogs.openAlertBox(
+              context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_csv_no_app);
       }
     } catch (e) {
       Navigator.of(context).pop();
       if (kDebugMode) {
-        print(e);
+        debugPrint(e.toString());
       }
     }
   }
@@ -285,7 +290,8 @@ class _SettingsState extends State<SettingsScreen> {
                                             if (valid) {
                                               Navigator.of(context).pushNamed(SocialScreen.route);
                                             } else {
-                                              Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "This section is not allowed while running app  in vm or emulator");
+                                              Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
+                                                  "This section is not allowed while running app  in vm or emulator");
                                             }
                                           },
                                           // labelLarge pressed
@@ -308,7 +314,10 @@ class _SettingsState extends State<SettingsScreen> {
                                               SizedBox(
                                                 width: MediaQuery.of(context).size.width - 100.0,
                                                 child: AutoSizeText(
-                                                  AppLocalizations.of(context)!.socials_popup.toLowerCase().capitalize(),
+                                                  AppLocalizations.of(context)!
+                                                      .socials_popup
+                                                      .toLowerCase()
+                                                      .capitalize(),
                                                   style: const TextStyle(fontSize: 20, color: Colors.white70),
                                                   minFontSize: 8,
                                                   maxLines: 1,
@@ -419,7 +428,9 @@ class _SettingsState extends State<SettingsScreen> {
                                             SizedBox(
                                               width: MediaQuery.of(context).size.width - 100.0,
                                               child: AutoSizeText(
-                                                twoFactor ? AppLocalizations.of(context)!.remove_2fa : AppLocalizations.of(context)!.set_2fa, //TODO set unset 2FA
+                                                twoFactor
+                                                    ? AppLocalizations.of(context)!.remove_2fa
+                                                    : AppLocalizations.of(context)!.set_2fa, //TODO set unset 2FA
                                                 style: const TextStyle(fontSize: 20, color: Colors.white70),
                                                 minFontSize: 8,
                                                 maxLines: 1,
@@ -853,40 +864,61 @@ class _SettingsState extends State<SettingsScreen> {
                                               children: [
                                                 Text(
                                                   'Daemon version:',
-                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyLarge!
+                                                      .copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 Text(
                                                   getInfo!.version ?? 'unknown',
-                                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium!
+                                                      .copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 const SizedBox(
                                                   height: 10,
                                                 ),
                                                 Text(
                                                   'Developed by:',
-                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyLarge!
+                                                      .copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 Text(
                                                   'M1chlCZ, Nessie',
-                                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium!
+                                                      .copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 const SizedBox(
                                                   height: 10,
                                                 ),
                                                 Text(
                                                   'App version:',
-                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyLarge!
+                                                      .copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 Text(
                                                   packageInfo!.version,
-                                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium!
+                                                      .copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                                 const SizedBox(
                                                   height: 10,
                                                 ),
                                                 Text(
                                                   '©DigitalNote Team 2022',
-                                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: 12.0),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium!
+                                                      .copyWith(color: Colors.black, fontSize: 12.0),
                                                 ),
                                               ]);
                                         },
@@ -941,7 +973,7 @@ class _SettingsState extends State<SettingsScreen> {
                                         splashColor: Colors.white54,
                                         // splash color
                                         onTap: () {
-                                          openLink("https://digitalnote.biz/privacy-policy");
+                                          openLink("https://digitalnote.org/privacy-policy/");
                                         },
                                         // labelLarge pressed
                                         child: Row(
@@ -1090,14 +1122,6 @@ class _SettingsState extends State<SettingsScreen> {
     ]);
   }
 
-  // void _restartApp() async {
-  //   Phoenix.rebirth(context);
-  // }
-  //
-  // _onPasscodeCancelled() {
-  //   Navigator.maybePop(context);
-  // }
-
   @override
   void dispose() {
     _verificationNotifier.close();
@@ -1121,7 +1145,8 @@ class _SettingsState extends State<SettingsScreen> {
       } else {
         if (mounted) {
           Navigator.of(context).pop();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
+          Dialogs.openAlertBox(
+              context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
         }
       }
       if (tempPass != null && pin != null) {
@@ -1147,7 +1172,8 @@ class _SettingsState extends State<SettingsScreen> {
       } else {
         if (mounted) {
           Navigator.of(context).pop();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
+          Dialogs.openAlertBox(
+              context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
         }
       }
       if (tempPass != null && pin != null) {
@@ -1180,12 +1206,14 @@ class _SettingsState extends State<SettingsScreen> {
       try {
         await f.delete();
       } catch (e) {
-        print(e);
+        debugPrint(e.toString());
       }
       if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
     } else {
       runDelete = false;
-      if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, "We were unable to delete your account, please contact support");
+      if (mounted)
+        Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error,
+            "We were unable to delete your account, please contact support");
     }
   }
 
@@ -1216,13 +1244,15 @@ class _SettingsState extends State<SettingsScreen> {
         } else {
           if (mounted) {
             Navigator.of(context).pop();
-            Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_priv_error);
+            Dialogs.openAlertBox(
+                context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_priv_error);
           }
         }
       } else {
         if (mounted) {
           Navigator.of(context).pop();
-          Dialogs.openAlertBox(context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
+          Dialogs.openAlertBox(
+              context, AppLocalizations.of(context)!.error, AppLocalizations.of(context)!.set_pass_error);
         }
       }
       if (tempPass != null && pin != null) {
@@ -1242,13 +1272,14 @@ class _SettingsState extends State<SettingsScreen> {
   _get2FACode() async {
     try {
       ComInterface interface = ComInterface();
-      Map<String, dynamic> m = await interface.post("/twofactor", body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+      Map<String, dynamic> m = await interface.post("/twofactor",
+          body: {}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
 
       _set2FA(m['code']);
     } catch (e) {
       Dialogs.openAlertBox(context, "Error", "2FA already turned on");
       if (kDebugMode) {
-        print(e);
+        debugPrint(e.toString());
       }
     }
   }
@@ -1262,7 +1293,8 @@ class _SettingsState extends State<SettingsScreen> {
       run = true;
       try {
         ComInterface interface = ComInterface();
-        http.Response res = await interface.post("/twofactor/activate", body: {"code": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
+        http.Response res = await interface.post("/twofactor/activate",
+            body: {"code": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typeJson, debug: false);
         if (res.statusCode == 200) {
           if (mounted) Navigator.of(context).pop();
           setState(() {
@@ -1272,7 +1304,7 @@ class _SettingsState extends State<SettingsScreen> {
         }
       } catch (e) {
         if (kDebugMode) {
-          print(e);
+          debugPrint(e.toString());
         }
       }
     }
@@ -1288,7 +1320,8 @@ class _SettingsState extends State<SettingsScreen> {
     Navigator.of(context).pop();
     try {
       ComInterface interface = ComInterface();
-      http.Response res = await interface.post("/twofactor/remove", body: {"token": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
+      http.Response res = await interface.post("/twofactor/remove",
+          body: {"token": s}, serverType: ComInterface.serverGoAPI, type: ComInterface.typePlain, debug: false);
       if (res.statusCode == 200) {
         setState(() {
           twoFactor = false;
@@ -1332,7 +1365,10 @@ class _SettingsState extends State<SettingsScreen> {
     if (b == ssl) {
       return;
     } else {
-      if (mounted) Dialogs.openAlertBox(context, AppLocalizations.of(context)!.alert, "App needs to be restarted for changes to be applied");
+      if (mounted) {
+        Dialogs.openAlertBox(
+            context, AppLocalizations.of(context)!.alert, "App needs to be restarted for changes to be applied");
+      }
       await SecureStorage.write(key: "SSL", value: b.toString());
     }
   }

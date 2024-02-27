@@ -37,7 +37,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
-import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
@@ -71,14 +70,11 @@ void main() async {
     debugPrint(e.toString());
   }
   if (Platform.isAndroid) {
-    await FlutterDisplayMode.setHighRefreshRate();
     var androidInfo = await DeviceInfoPlugin().androidInfo;
     var sdkInt = androidInfo.version.sdkInt;
     if (sdkInt < 28) {
       ByteData data = await PlatformAssetBundle().load('assets/lets-encrypt-r3.pem');
       SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
-    } else {
-      await FlutterDisplayMode.setHighRefreshRate();
     }
   }
 
@@ -200,7 +196,6 @@ class MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    _setOptimalDisplayMode();
     super.initState();
     _getSetLang();
     _manageStorage();
@@ -226,22 +221,6 @@ class MyAppState extends State<MyApp> {
         _locale = value;
       });
     });
-  }
-
-  Future<void> _setOptimalDisplayMode() async {
-    try {
-      final List<DisplayMode> supported = await FlutterDisplayMode.supported;
-      final DisplayMode active = await FlutterDisplayMode.active;
-
-      final List<DisplayMode> sameResolution = supported.where((DisplayMode m) => m.width == active.width && m.height == active.height).toList()
-        ..sort((DisplayMode a, DisplayMode b) => b.refreshRate.compareTo(a.refreshRate));
-
-      final DisplayMode mostOptimalMode = sameResolution.isNotEmpty ? sameResolution.first : active;
-
-      await FlutterDisplayMode.setPreferredMode(mostOptimalMode);
-    } catch (e) {
-      debugPrint(e.toString());
-    }
   }
 
   @override
@@ -328,7 +307,8 @@ class MyAppState extends State<MyApp> {
                       color: Colors.white70,
                       fontWeight: FontWeight.w200,
                     ),
-                    headlineSmall: GoogleFonts.montserrat(color: Colors.white70, fontWeight: FontWeight.w300, letterSpacing: 1.0),
+                    headlineSmall:
+                        GoogleFonts.montserrat(color: Colors.white70, fontWeight: FontWeight.w300, letterSpacing: 1.0),
                     titleMedium: GoogleFonts.montserrat(
                       color: Colors.white70,
                       fontWeight: FontWeight.normal,
@@ -376,8 +356,7 @@ class MyAppState extends State<MyApp> {
     var uri = Uri.parse(settings.name!);
     switch (uri.path) {
       case WalletScreen.route:
-        return MaterialPageRoute(
-            builder: (_) => const WalletScreen());
+        return MaterialPageRoute(builder: (_) => const WalletScreen());
       case AddressScreen.route:
         return MaterialPageRoute(builder: (_) => const AddressScreen());
       case StakingScreen.route:
