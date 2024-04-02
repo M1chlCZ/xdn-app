@@ -82,10 +82,10 @@ func Setup() {
 
 func buttonHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.Type {
-	//case discordgo.InteractionApplicationCommand:
-	//	if h, ok := commandsHandlers[i.ApplicationCommandData().Name]; ok {
-	//		h(s, i)
-	//	}
+	case discordgo.InteractionApplicationCommand:
+		if h, ok := componentsHandlers[i.ApplicationCommandData().Name]; ok {
+			h(s, i)
+		}
 	case discordgo.InteractionMessageComponent:
 		if h, ok := componentsHandlers[i.MessageComponentData().CustomID]; ok {
 			h(s, i)
@@ -118,6 +118,7 @@ func reactionRemoveHandler(s *discordgo.Session, r *discordgo.MessageReactionRem
 	}
 }
 
+//nolint:funlen
 func messageHandler(s *discordgo.Session, mes *discordgo.MessageCreate) {
 	go func(m *discordgo.MessageCreate) {
 		if m.Author.ID == botID {
@@ -1072,6 +1073,7 @@ func AnnouncementDiscord() {
 	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
+		return
 	}
 	if lastPost.Id != 0 {
 		err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
@@ -1098,7 +1100,7 @@ func AnnouncementDiscord() {
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
 				discordgo.Button{
-					Emoji: discordgo.ComponentEmoji{
+					Emoji: &discordgo.ComponentEmoji{
 						Name: "👍🏻",
 					},
 					Label:    "Like",
@@ -1159,6 +1161,7 @@ func AnnouncementMNDiscord() {
 	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 3) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
+		return
 	}
 	if lastPost.Id != 0 {
 		err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
@@ -1185,7 +1188,7 @@ func AnnouncementMNDiscord() {
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
 				discordgo.Button{
-					Emoji: discordgo.ComponentEmoji{
+					Emoji: &discordgo.ComponentEmoji{
 						Name: "👍🏻",
 					},
 					Label:    "Like",
@@ -1237,15 +1240,17 @@ func AnnouncementOtherDiscord() {
 		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 0) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
+			continue
+		}
 
-			if lastPost.Id != 0 {
-				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
-				_, err := bot.Send(dl)
-				if err != nil {
-					utils.ReportMessage(err.Error())
-				}
+		if lastPost.Id != 0 {
+			dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+			_, err := bot.Send(dl)
+			if err != nil {
+				utils.ReportMessage(err.Error())
 			}
 		}
+
 		post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 0 ORDER BY RAND() LIMIT 1")
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
@@ -1264,7 +1269,7 @@ func AnnouncementOtherDiscord() {
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.Button{
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name: "👍🏻",
 						},
 						Label:    "Like",
@@ -1317,15 +1322,17 @@ func AnnouncementMNOtherDiscord() {
 		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 3) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
+			continue
+		}
 
-			if lastPost.Id != 0 {
-				dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
-				_, err := bot.Send(dl)
-				if err != nil {
-					utils.ReportMessage(err.Error())
-				}
+		if lastPost.Id != 0 {
+			dl := tgbotapi.NewDeleteMessage(lastPost.IdChannel, int(lastPost.IdMessage))
+			_, err := bot.Send(dl)
+			if err != nil {
+				utils.ReportMessage(err.Error())
 			}
 		}
+
 		post, err := database.ReadStruct[Post]("SELECT * FROM bot_post WHERE category = 3 ORDER BY RAND() LIMIT 1")
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
@@ -1344,7 +1351,7 @@ func AnnouncementMNOtherDiscord() {
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.Button{
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name: "👍🏻",
 						},
 						Label:    "Like",
@@ -1391,6 +1398,7 @@ func AnnouncementNFTDiscord() {
 	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 1) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
+		return
 	}
 	if lastPost.Id != 0 {
 		err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
@@ -1452,6 +1460,7 @@ func AnnouncementOtherNFTDiscord() {
 		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 1) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
+			return
 		}
 		if lastPost.Id != 0 {
 			err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
@@ -1508,6 +1517,7 @@ func GiftDiscordBot() {
 	lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel = ? ORDER BY id DESC LIMIT 1", MainChannelID)
 	if err != nil {
 		utils.WrapErrorLog(err.Error())
+		return
 	}
 	if lastPost.Id != 0 {
 		err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
@@ -1561,7 +1571,7 @@ func GiftDiscordBot() {
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
 				discordgo.Button{
-					Emoji: discordgo.ComponentEmoji{
+					Emoji: &discordgo.ComponentEmoji{
 						Name: "🎁",
 					},
 					Label:    "Try your luck",
@@ -1617,6 +1627,7 @@ func GiftAnotherDiscordBot() {
 		lastPost, err := database.ReadStruct[ActivityBotStruct]("SELECT * FROM bot_post_activity WHERE idPost IN (SELECT id FROM bot_post WHERE category = 2) AND idChannel = ? ORDER BY id DESC LIMIT 1", channel.IdChannel)
 		if err != nil {
 			utils.WrapErrorLog(err.Error())
+			return
 		}
 		if lastPost.Id != 0 {
 			err := goBot.ChannelMessageDelete(fmt.Sprintf("%d", lastPost.IdChannel), fmt.Sprintf("%d", lastPost.IdMessage))
@@ -1669,7 +1680,7 @@ func GiftAnotherDiscordBot() {
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.Button{
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name: "🎁",
 						},
 						Label:    "Try your luck",
