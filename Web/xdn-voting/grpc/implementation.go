@@ -19,6 +19,7 @@ type Server struct {
 	grpcModels.UnimplementedRegisterMasternodeServiceServer
 }
 
+//nolint:funlen
 func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest) (*grpcModels.Response, error) {
 	var id int64
 	var errUpdate error
@@ -26,7 +27,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 	if txDaemon.IdCoin == 40 {
 		idCoin = int(txDaemon.IdCoin)
 	}
-	if txDaemon.Generated == true {
+	if txDaemon.Generated {
 		amountMain := txDaemon.Amount + txDaemon.Fee
 		amount := amountMain * 1.0
 		amountFee := amountMain - amount
@@ -45,7 +46,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 		}
 	}
 
-	if txDaemon.Generated == true {
+	if txDaemon.Generated {
 		s, errDB := database.ReadSql("SELECT * FROM masternode_tx WHERE id = ?", id)
 		if errDB != nil {
 			utils.WrapErrorLog(errDB.Error())
@@ -64,7 +65,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 				return &grpcModels.Response{Code: 400}, errUpdate
 			}
 			type ReadUsers struct {
-				IdUser    sql.NullInt64 `db:"idUser"`
+				IDUser    sql.NullInt64 `db:"idUser"`
 				Session   sql.NullInt64 `db:"session"`
 				Custodial int64         `db:"custodial"`
 				AutoStake bool          `db:"autostake"`
@@ -72,10 +73,10 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 			for readUsers.Next() {
 				var ru ReadUsers
 				if err := readUsers.StructScan(&ru); err != nil {
-					utils.WrapErrorLog(errDB.Error())
+					utils.WrapErrorLog(err.Error())
 					return &grpcModels.Response{Code: 400}, errUpdate
 				}
-				idUser := ru.IdUser.Int64
+				idUser := ru.IDUser.Int64
 				session := ru.Session.Int64
 				custodial := ru.Custodial
 
@@ -86,7 +87,7 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 
 				if idUser != 0 {
 					dt := time.Now().UTC().Format("2006-01-02 15:04:05")
-					if ru.AutoStake == true {
+					if ru.AutoStake {
 						_, errUpdate = database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime, credited) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt, 1)
 						if errUpdate != nil {
 							utils.WrapErrorLog(errUpdate.Error())
@@ -110,8 +111,8 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 						_, _ = database.InsertSQl("UPDATE users_stake SET amount = amount + ? WHERE idUser = ?", txRes.Amount, idUser)
 						amountpost := database.ReadValueEmpty[float64]("SELECT amount FROM users_stake WHERE idUser = ? AND active = 1", idUser)
 						utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d %f %f %f}-", idUser, txRes.Amount, amountpre, amountpost))
-						//utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d %f}-", idUser, txRes.Amount))
-						_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
+						// utils.ReportMessage(fmt.Sprintf("-{ Autostake share added to user %d %f}-", idUser, txRes.Amount))
+						_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IDUser, id)
 						continue
 					}
 					_, errUpdate := database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime) VALUES (?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt)
@@ -119,18 +120,30 @@ func (s *Server) SubmitTX(_ context.Context, txDaemon *grpcModels.SubmitRequest)
 						utils.WrapErrorLog(errUpdate.Error())
 						return &grpcModels.Response{Code: 400}, errUpdate
 					}
-					_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
+					_, erUpdate := database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IDUser, id)
+					if erUpdate != nil {
+						utils.WrapErrorLog(erUpdate.Error())
+						return &grpcModels.Response{Code: 400}, erUpdate
+					}
 					user, _ := database.ReadValue[string]("SELECT nickname FROM users WHERE id = ?", idUser)
-					utils.ReportMessage(fmt.Sprintf("-{ MN TX from node id: %d added, coin id: %d amount: %f | user: %s (uid: %d)}-", txDaemon.NodeId, idCoin, txRes.Amount, user, ru.IdUser.Int64))
+					utils.ReportMessage(fmt.Sprintf("-{ MN TX from node id: %d added, coin id: %d amount: %f | user: %s (uid: %d)}-", txDaemon.NodeId, idCoin, txRes.Amount, user, ru.IDUser.Int64))
 				} else {
 					dt := time.Now().UTC().Format("2006-01-02 15:04:05")
-					_, errUpdate := database.InsertSQl("INSERT INTO treasury(txid, amount, datetime) VALUES (?, ?, ?)", txRes.TXID, txRes.Amount, dt)
+					_, erUpdate := database.InsertSQl("INSERT INTO treasury(txid, amount, datetime) VALUES (?, ?, ?)", txRes.TXID, txRes.Amount, dt)
+					if erUpdate != nil {
+						utils.WrapErrorLog(erUpdate.Error())
+						return &grpcModels.Response{Code: 400}, erUpdate
+					}
 					_, errUpdate = database.InsertSQl("INSERT INTO payouts_masternode(idUser, idCoin, idNode, tx_id, session, amount, datetime) VALUES (?, ?, ?, ?, ?, ?, ?)", idUser, idCoin, txRes.IdNode, txRes.TXID, session, txRes.Amount, dt)
 					if errUpdate != nil {
 						utils.WrapErrorLog(errUpdate.Error())
 						return &grpcModels.Response{Code: 400}, errUpdate
 					}
-					_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IdUser, id)
+					_, errUpdate = database.InsertSQl("UPDATE masternode_tx SET idUser = ? WHERE id = ?", ru.IDUser, id)
+					if errUpdate != nil {
+						utils.WrapErrorLog(errUpdate.Error())
+						return &grpcModels.Response{Code: 400}, errUpdate
+					}
 					utils.ReportMessage(fmt.Sprintf("-{ MN TX from node id: %d added to treasury }-", txDaemon.NodeId))
 				}
 				_ = readUsers.Close()
@@ -272,11 +285,11 @@ func (s *Server) Ping(_ context.Context, request *grpcModels.PingRequest) (*grpc
 
 func (s *Server) RemoveMasternode(_ context.Context, request *grpcModels.RemoveMasternodeRequest) (*grpcModels.RemoveMasternodeResponse, error) {
 	active := database.ReadValueEmpty[bool]("SELECT active FROM mn_clients WHERE id = ?", request.NodeID)
-	if active == true {
+	if active {
 		return &grpcModels.RemoveMasternodeResponse{Code: 400}, errors.New("masternode is active")
 	}
 	locked := database.ReadValueEmpty[bool]("SELECT locked FROM mn_clients WHERE id = ?", request.NodeID)
-	if locked == true {
+	if locked {
 		return &grpcModels.RemoveMasternodeResponse{Code: 400}, errors.New("masternode is active")
 	}
 
@@ -293,7 +306,7 @@ func (s *Server) MasternodeStarted(_ context.Context, request *grpcModels.Master
 	if err != nil {
 		return &grpcModels.MasternodeStartedResponse{Code: 400}, err
 	}
-	if isError == true {
+	if isError {
 		go func() {
 			utils.ReportMessage(fmt.Sprintf("! Masternode %d restart !", request.NodeID))
 			userID := database.ReadValueEmpty[sql.NullInt64]("SELECT idUser FROM users_mn WHERE idNode = ? AND active = 1", request.NodeID)
@@ -316,7 +329,15 @@ func (s *Server) MasternodeStarted(_ context.Context, request *grpcModels.Master
 			}
 		}()
 		_, err = database.InsertSQl("UPDATE mn_clients SET active = 1 WHERE id = ?", request.NodeID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return &grpcModels.MasternodeStartedResponse{Code: 400}, err
+		}
 		_, err = database.InsertSQl("UPDATE mn_clients SET error = 0 WHERE id = ?", request.NodeID)
+		if err != nil {
+			utils.WrapErrorLog(err.Error())
+			return &grpcModels.MasternodeStartedResponse{Code: 400}, err
+		}
 	} else {
 		_, err = database.InsertSQl("UPDATE mn_clients SET active = 1 WHERE id = ?", request.NodeID)
 		if err != nil {

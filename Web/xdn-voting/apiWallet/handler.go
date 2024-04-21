@@ -66,9 +66,11 @@ func submitStakeTransaction(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ReportError(c, err.Error(), http.StatusBadRequest)
 	}
-	if txID.Generated == true {
-		//utils.ReportMessage("Transaction is stake")
+	if txID.Generated {
 		_, err = database.InsertSQl("INSERT INTO transaction_stake_wallet(txid, amount) VALUES (?, ?)", txID.Txid, 100)
+		if err != nil {
+			return utils.ReportErrorSilent(c, err.Error(), http.StatusBadRequest)
+		}
 		_, err = database.InsertSQl("INSERT INTO transaction_stake(txid, amount) VALUES (?, ?)", txID.Txid, 90)
 		if err != nil {
 			//utils.ReportMessage(err.Error())
