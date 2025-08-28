@@ -5,7 +5,7 @@ import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/auto_size_text_field.dart';
 import 'package:digitalnote/support/barcode_scanner.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class SendStealthWidget extends StatefulWidget {
@@ -103,8 +103,8 @@ class _SendStealthWidgetState extends State<SendStealthWidget> {
                         ),
                         label: Text('QR  ', style: Theme.of(context).textTheme.bodyMedium),
                         style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.resolveWith((states) => qrColors(states)),
-                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            backgroundColor: WidgetStateProperty.resolveWith((states) => qrColors(states)),
+                            shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                         onPressed: () => _openQRScanner(),
                       ),
@@ -162,8 +162,8 @@ class _SendStealthWidgetState extends State<SendStealthWidget> {
                           style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 16.0),
                         ),
                         style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.resolveWith((states) => amountColors(states)),
-                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            backgroundColor: WidgetStateProperty.resolveWith((states) => amountColors(states)),
+                            shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0), side: const BorderSide(color: Colors.transparent)))),
                         onPressed: ()  {
                           widget.send(_controllerAddress.text, _controllerAmount.text);
@@ -180,11 +180,11 @@ class _SendStealthWidgetState extends State<SendStealthWidget> {
     );
   }
 
-  Color amountColors(Set<MaterialState> states) {
-    const Set<MaterialState> interactiveStates = <MaterialState>{
-      MaterialState.pressed,
-      MaterialState.hovered,
-      MaterialState.focused,
+  Color amountColors(Set<WidgetState> states) {
+    const Set<WidgetState> interactiveStates = <WidgetState>{
+      WidgetState.pressed,
+      WidgetState.hovered,
+      WidgetState.focused,
     };
     if (states.any(interactiveStates.contains)) {
       return Colors.green;
@@ -281,11 +281,11 @@ class _SendStealthWidgetState extends State<SendStealthWidget> {
     return data;
   }
 
-  Color qrColors(Set<MaterialState> states) {
-    const Set<MaterialState> interactiveStates = <MaterialState>{
-      MaterialState.pressed,
-      MaterialState.hovered,
-      MaterialState.focused,
+  Color qrColors(Set<WidgetState> states) {
+    const Set<WidgetState> interactiveStates = <WidgetState>{
+      WidgetState.pressed,
+      WidgetState.hovered,
+      WidgetState.focused,
     };
     if (states.any(interactiveStates.contains)) {
       return Colors.blue;

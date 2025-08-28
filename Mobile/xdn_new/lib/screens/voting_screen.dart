@@ -14,7 +14,7 @@ import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/coin_badge.dart';
 import 'package:digitalnote/widgets/data_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 

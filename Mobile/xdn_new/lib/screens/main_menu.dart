@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_badge_plus/app_badge_plus.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/generated/phone.pbgrpc.dart';
 import 'package:digitalnote/net_interface/interface.dart';
@@ -42,8 +43,7 @@ import 'package:digitalnote/widgets/voting_menu_widget.dart';
 import 'package:digitalnote/widgets/withdrawal_card.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app_badger/flutter_app_badger.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:grpc/grpc.dart';
@@ -118,7 +118,7 @@ class _MainMenuNewState extends LifecycleWatcherState<MainMenuNew> {
     _getLocale();
     super.initState();
     loginDao();
-    FlutterAppBadger.removeBadge();
+    AppBadgePlus.updateBadge(0);
     getMNPermission();
     Future.delayed(Duration.zero, () {
       getNotification();

@@ -4,7 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BalanceCardMainMenu extends ConsumerStatefulWidget {

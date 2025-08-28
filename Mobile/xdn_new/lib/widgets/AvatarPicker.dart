@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_native_image/flutter_native_image.dart';
+import 'package:flutter_native_image_v2/flutter_native_image.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -180,13 +180,7 @@ class AvatarPickerState extends State<AvatarPicker> {
   Future<void> _cropImage() async {
     CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: _imageFile!.path,
-        aspectRatioPresets: Platform.isAndroid
-            ? [
-                CropAspectRatioPreset.square,
-              ]
-            : [
-                CropAspectRatioPreset.square,
-              ],
+        aspectRatio:CropAspectRatio(ratioX: 1, ratioY: 1),
         uiSettings: [
           AndroidUiSettings(toolbarTitle: '', toolbarColor: Colors.deepPurpleAccent, toolbarWidgetColor: Colors.white, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: true),
           IOSUiSettings(

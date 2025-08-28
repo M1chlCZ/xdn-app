@@ -19,7 +19,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:slide_to_act/slide_to_act.dart';
@@ -1106,8 +1106,8 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                             // Dialogs.openUserQR(context);
                           },
                           style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.resolveWith((states) => getColor(states)),
-                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                              backgroundColor: WidgetStateProperty.resolveWith((states) => getColor(states)),
+                              shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10.0),
                                   side: BorderSide(color: Theme.of(context).konjHeaderColor)))),
                           child: Text(
@@ -1135,8 +1135,8 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
                         // Dialogs.openUserQR(context);
                       },
                       style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.resolveWith((states) => getColorAll(states)),
-                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                          backgroundColor: WidgetStateProperty.resolveWith((states) => getColorAll(states)),
+                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10.0),
                               side: const BorderSide(color: Colors.transparent)))),
                       child: Text(
@@ -1287,11 +1287,11 @@ class MasternodeScreenState extends LifecycleWatcherState<MasternodeScreen> {
   }
 }
 
-Color getColor(Set<MaterialState> states) {
-  const Set<MaterialState> interactiveStates = <MaterialState>{
-    MaterialState.pressed,
-    MaterialState.hovered,
-    MaterialState.focused,
+Color getColor(Set<WidgetState> states) {
+  const Set<WidgetState> interactiveStates = <WidgetState>{
+    WidgetState.pressed,
+    WidgetState.hovered,
+    WidgetState.focused,
   };
   if (states.any(interactiveStates.contains)) {
     return Colors.white.withOpacity(0.8);
@@ -1299,11 +1299,11 @@ Color getColor(Set<MaterialState> states) {
   return const Color(0xff4d884f);
 }
 
-Color getColorAll(Set<MaterialState> states) {
-  const Set<MaterialState> interactiveStates = <MaterialState>{
-    MaterialState.pressed,
-    MaterialState.hovered,
-    MaterialState.focused,
+Color getColorAll(Set<WidgetState> states) {
+  const Set<WidgetState> interactiveStates = <WidgetState>{
+    WidgetState.pressed,
+    WidgetState.hovered,
+    WidgetState.focused,
   };
   if (states.any(interactiveStates.contains)) {
     return Colors.white.withOpacity(0.8);
@@ -1311,11 +1311,11 @@ Color getColorAll(Set<MaterialState> states) {
   return Colors.blueAccent;
 }
 
-Color qrColors(Set<MaterialState> states) {
-  const Set<MaterialState> interactiveStates = <MaterialState>{
-    MaterialState.pressed,
-    MaterialState.hovered,
-    MaterialState.focused,
+Color qrColors(Set<WidgetState> states) {
+  const Set<WidgetState> interactiveStates = <WidgetState>{
+    WidgetState.pressed,
+    WidgetState.hovered,
+    WidgetState.focused,
   };
   if (states.any(interactiveStates.contains)) {
     return Colors.blue;

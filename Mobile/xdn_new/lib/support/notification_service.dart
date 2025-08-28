@@ -6,8 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 class NotificationService {
   //NotificationService a singleton object
   static final NotificationService _notificationService =
-  NotificationService._internal();
-
+      NotificationService._internal();
 
   factory NotificationService() {
     return _notificationService;
@@ -16,7 +15,7 @@ class NotificationService {
   NotificationService._internal();
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
     if (Platform.isAndroid) {
@@ -31,7 +30,10 @@ class NotificationService {
         ledColor: Colors.white,
       );
 
-      await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!.createNotificationChannel(channel);
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()!
+          .createNotificationChannel(channel);
 
       AndroidNotificationChannel channel2 = const AndroidNotificationChannel(
         'xdn2', // id
@@ -44,13 +46,22 @@ class NotificationService {
         ledColor: Colors.white,
       );
 
-      await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!.createNotificationChannel(channel2);
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()!
+          .createNotificationChannel(channel2);
     }
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_notification');
-    final DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(onDidReceiveLocalNotification: _onDidReceiveLocalNotification);
-    final InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings,  onDidReceiveNotificationResponse: _onDidReceiveLocalNotificationResponse);
-
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('ic_notification');
+    final DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings();
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsIOS);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse:
+            _onDidReceiveLocalNotificationResponse);
   }
 
   FlutterLocalNotificationsPlugin getPlugin() {
@@ -113,7 +124,8 @@ class NotificationService {
   //   }
   // }
 
-  Future _onDidReceiveLocalNotification(int id, String? title, String? body, String? payload) async {
+  Future _onDidReceiveLocalNotification(
+      int id, String? title, String? body, String? payload) async {
     // _refreshBalance();
     // _setBadge();
     // _imagesave = false;

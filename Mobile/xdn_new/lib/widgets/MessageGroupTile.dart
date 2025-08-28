@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/models/MessageGroup.dart';
 import 'package:digitalnote/widgets/AvatarPicker.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 
 
 import '../support/SimpleRichText.dart';

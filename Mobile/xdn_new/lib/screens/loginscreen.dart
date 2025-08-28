@@ -11,7 +11,7 @@ import 'package:digitalnote/widgets/BackgroundWidget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart';

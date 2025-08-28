@@ -12,7 +12,7 @@ import 'package:digitalnote/widgets/send_stealth_widget.dart';
 import 'package:digitalnote/widgets/stealth_tx_view.dart';
 import 'package:digitalnote/widgets/token_balance_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 
 class StealthScreen extends StatefulWidget {
   static const String route = "menu/stealth";

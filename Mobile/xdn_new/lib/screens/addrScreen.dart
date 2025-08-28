@@ -8,7 +8,7 @@ import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/widgets/ContactTile.dart';
 import 'package:digitalnote/widgets/card_header.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:http/http.dart';
 
 import '../globals.dart' as globals;
@@ -415,11 +415,11 @@ class AddressScreenState extends State<AddressScreen> {
         });
   }
 
-  Color getColor(Set<MaterialState> states) {
-    const Set<MaterialState> interactiveStates = <MaterialState>{
-      MaterialState.pressed,
-      MaterialState.hovered,
-      MaterialState.focused,
+  Color getColor(Set<WidgetState> states) {
+    const Set<WidgetState> interactiveStates = <WidgetState>{
+      WidgetState.pressed,
+      WidgetState.hovered,
+      WidgetState.focused,
     };
     if (states.any(interactiveStates.contains)) {
       return Colors.blue;

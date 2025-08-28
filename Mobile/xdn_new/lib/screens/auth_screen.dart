@@ -2,7 +2,7 @@ import 'package:digitalnote/screens/screen_lock.dart';
 import 'package:digitalnote/support/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:digitalnote/globals.dart' as globals;
 

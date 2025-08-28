@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:app_badge_plus/app_badge_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:digitalnote/models/MasternodeInfo.dart';
 import 'package:digitalnote/models/MessageGroup.dart';
@@ -36,8 +37,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_app_badger/flutter_app_badger.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,6 +45,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
 import 'globals.dart' as globals;
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'screens/loginscreen.dart';
 import 'support/MaterialColorGenerator.dart';
 import 'widgets/BackgroundWidget.dart';
@@ -53,9 +53,9 @@ import 'widgets/BackgroundWidget.dart';
 bool pinUsed = false;
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  bool b = await FlutterAppBadger.isAppBadgeSupported();
+  bool b = await AppBadgePlus.isSupported();
   if (b) {
-    FlutterAppBadger.updateBadgeCount(1);
+    AppBadgePlus.updateBadge(1);
   }
   SecureStorage.write(key: globals.APP_NOT, value: "yes");
   debugPrint("Handling a background message: ${message.messageId}");
@@ -161,7 +161,7 @@ class MyAppState extends State<MyApp> {
     return s;
   }
 
-  precache() {
+  void precache() {
     precacheImage(const AssetImage('images/logo.png'), context);
     precacheImage(const AssetImage('images/logo_send.png'), context);
     precacheImage(const AssetImage('images/wallet_big.png'), context);
@@ -173,7 +173,7 @@ class MyAppState extends State<MyApp> {
     precacheImage(const AssetImage('images/test_pattern.png'), context);
   }
 
-  getPin() async {
+  Future<void> getPin() async {
     final String? pin = await getPinFuture();
     if (pin != null) pinUsed = true;
   }

@@ -1,7 +1,8 @@
 
-import 'package:digitalnote/support/barcode_overlay.dart';
+import 'package:digitalnote/support/barcode_overlay.dart' as bo;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/src/foundation/change_notifier.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -18,6 +19,17 @@ class BarcodeScannerState extends State<BarcodeScanner> {
   // QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   MobileScannerController? cameraController;
+
+  void Function(BarcodeCapture barcodes) get _handleBarcode => (BarcodeCapture barcodes) {;
+    final String code = barcodes.barcodes.first.rawValue ?? '---';
+    widget.scanResult(code);
+    cameraController?.stop();
+    Navigator.of(context).pop();
+  };
+
+  ValueListenable<Object?> get torchEnabled => ValueNotifier(TorchState.off);
+
+  ValueListenable<CameraFacing> get cameraFacing => ValueNotifier(CameraFacing.back);
 
   @override
   void initState() {
@@ -43,7 +55,7 @@ class BarcodeScannerState extends State<BarcodeScanner> {
               IconButton(
                 color: Colors.white,
                 icon: ValueListenableBuilder(
-                  valueListenable: cameraController!.torchState,
+                  valueListenable: torchEnabled,
                   builder: (context, state, child) {
                     switch (state) {
                       case TorchState.off:
@@ -51,6 +63,7 @@ class BarcodeScannerState extends State<BarcodeScanner> {
                       case TorchState.on:
                         return const Icon(Icons.flash_on, color: Colors.white);
                     }
+                    return const Icon(Icons.flash_off, color: Colors.white54);
                   },
                 ),
                 iconSize: 32.0,
@@ -59,13 +72,17 @@ class BarcodeScannerState extends State<BarcodeScanner> {
               IconButton(
                 color: Colors.white,
                 icon: ValueListenableBuilder(
-                  valueListenable: cameraController!.cameraFacingState,
+                  valueListenable: cameraFacing,
                   builder: (context, state, child) {
                     switch (state) {
                       case CameraFacing.front:
-                        return Icon(FontAwesomeIcons.cameraRotate, color: Colors.white.withOpacity(0.9),);
+                        return Icon(FontAwesomeIcons.cameraRotate, color: Colors.white.withValues(alpha: 0.9),);
                       case CameraFacing.back:
-                        return Icon(FontAwesomeIcons.cameraRotate, color: Colors.white.withOpacity(0.9));
+                        return Icon(FontAwesomeIcons.cameraRotate, color: Colors.white.withValues(alpha: 0.9));
+                        case CameraFacing.external:
+                        return Icon(FontAwesomeIcons.cameraRotate, color: Colors.white.withValues(alpha: 0.5));
+                        case CameraFacing.unknown:
+                        return Icon(FontAwesomeIcons.cameraRotate, color: Colors.white.withValues(alpha: 0.5));
                     }
                   },
                 ),
@@ -78,23 +95,10 @@ class BarcodeScannerState extends State<BarcodeScanner> {
         color: const Color(0xFF2f2b5e),
         child: Stack(
           children: [
-            MobileScanner(
-                controller: cameraController,
-                onDetect: (capture) {
-                  if (capture.barcodes.isEmpty) {
-                    debugPrint('Failed to scan Barcode');
-                  } else {
-                    final List<Barcode> barcodes = capture.barcodes;
-                    final String code = barcodes[0].rawValue!;
-                    widget.scanResult(code);
-                    cameraController!.stop();
-                    Navigator.maybePop(context);
-                    debugPrint('Barcode found! $code');
-                  }
-                }),
+            MobileScanner(onDetect: _handleBarcode),
             Container(
             decoration: ShapeDecoration(
-            shape: BarcodeOverlay(
+            shape: bo.BarcodeOverlay(
               borderColor: Colors.deepPurple,
               borderRadius: 10,
               borderLength: 30,

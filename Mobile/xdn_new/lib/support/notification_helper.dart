@@ -29,8 +29,8 @@ class FCM {
   final streamCtlr = StreamController<String>.broadcast();
   final titleCtlr = StreamController<String>.broadcast();
   final bodyCtlr = StreamController<String>.broadcast();
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   setNotifications() async {
     FirebaseMessaging.onBackgroundMessage(onBackgroundMessage);
@@ -48,7 +48,8 @@ class FCM {
       );
 
       await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()!
           .createNotificationChannel(channel);
 
       AndroidNotificationChannel channel2 = const AndroidNotificationChannel(
@@ -63,15 +64,20 @@ class FCM {
       );
 
       await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()!
           .createNotificationChannel(channel2);
     }
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@drawable/ic_notification');
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@drawable/ic_notification');
     final DarwinInitializationSettings initializationSettingsIOS =
-    DarwinInitializationSettings(onDidReceiveLocalNotification: _onDidReceiveLocalNotification);
+        DarwinInitializationSettings();
     final InitializationSettings initializationSettings =
-    InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
-    flutterLocalNotificationsPlugin.initialize(initializationSettings, onDidReceiveNotificationResponse: (payload) {
+        InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse: (payload) {
       print(payload.toString());
     });
     FirebaseMessaging.instance.requestPermission(
@@ -82,16 +88,25 @@ class FCM {
     );
 
     FirebaseMessaging.onMessage.listen(
-          (message) async {
+      (message) async {
         if (message.notification?.title != null) {
           flutterLocalNotificationsPlugin.show(
             message.hashCode,
             message.notification!.title,
             message.notification!.body,
             const NotificationDetails(
-                android: AndroidNotificationDetails("xdn1", "XDN Deposit/Withdrawal Info",
-                    importance: Importance.max, priority: Priority.high, playSound: true, enableVibration: true, icon: "@drawable/ic_notification"),
-                iOS: DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true, sound: "default")),
+                android: AndroidNotificationDetails(
+                    "xdn1", "XDN Deposit/Withdrawal Info",
+                    importance: Importance.max,
+                    priority: Priority.high,
+                    playSound: true,
+                    enableVibration: true,
+                    icon: "@drawable/ic_notification"),
+                iOS: DarwinNotificationDetails(
+                    presentAlert: true,
+                    presentBadge: true,
+                    presentSound: true,
+                    sound: "default")),
             payload: message.data["func"],
           );
         }
@@ -119,13 +134,9 @@ class FCM {
     }
   }
 
-  void _onDidReceiveLocalNotification(int id, String? title, String? body, String? payload) {
-    // Dialogs.openAlertBox(context, "Alert", payload!);
-  }
-
   onNotificationRegister() {
     FirebaseMessaging.onMessage.listen(
-          (message) async {
+      (message) async {
         if (message.data.containsKey('data')) {
           streamCtlr.sink.add(message.data['data']);
         }
@@ -138,7 +149,7 @@ class FCM {
     );
   }
 
-  void _tokenUpload(String? token) async{
+  void _tokenUpload(String? token) async {
     try {
       await NetInterface.registerFirebaseToken(token);
     } catch (e) {

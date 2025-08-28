@@ -5,7 +5,7 @@ import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/support/NetInterface.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 

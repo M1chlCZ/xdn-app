@@ -14,7 +14,7 @@ import 'package:digitalnote/widgets/card_header.dart';
 import 'package:digitalnote/widgets/token_balance_card.dart';
 import 'package:digitalnote/widgets/token_tx_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:get_it/get_it.dart';
 
 enum ConState {

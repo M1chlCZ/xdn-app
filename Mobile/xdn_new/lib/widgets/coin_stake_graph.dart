@@ -6,7 +6,7 @@ import 'package:digitalnote/support/duration_extension.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
@@ -432,10 +432,9 @@ class CoinStakeGraphState extends State<CoinStakeGraph> {
                 }).toList();
               },
               touchTooltipData: LineTouchTooltipData(
-                  tooltipRoundedRadius: 5,
                   fitInsideVertically: true,
                   fitInsideHorizontally: true,
-                  tooltipBgColor: Colors.black12,
+                  getTooltipColor: (barSpot) => Colors.black12,
                   getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                     return touchedBarSpots.map((barSpot) {
                       final flSpot = barSpot;

@@ -4,7 +4,7 @@ import 'package:digitalnote/providers/balance_provider.dart';
 import 'package:digitalnote/support/Dialogs.dart';
 import 'package:digitalnote/support/Utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:digitalnote/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BalanceTokenCardMenu extends ConsumerStatefulWidget {
